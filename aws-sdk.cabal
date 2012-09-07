@@ -16,18 +16,27 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:   AWS
-  ghc-options: -Wall
+                   , AWS.EC2
+                   , AWS.EC2.Types
+  ghc-options: -Wall -fno-warn-unused-do-bind
   -- other-modules:       
   hs-source-dirs:    src
-  build-depends:     base ==4.5.*,
-                     SHA,
-                     bytestring,
-                     dataenc,
-                     conduit,
-                     transformers,
-                     time,
-                     old-locale,
-                     http-conduit
+  build-depends:     base ==4.5.*
+                   , SHA
+                   , bytestring
+                   , dataenc
+                   , conduit
+                   , transformers
+                   , time
+                   , old-locale
+                   , http-conduit
+                   , data-default
+                   , xml-conduit
+                   , xml-types
+                   , text
+                   , monad-control
+                   , safe
+
 test-suite test
     type:              exitcode-stdio-1.0
     main-is:           main.hs
