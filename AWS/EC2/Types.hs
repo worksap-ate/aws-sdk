@@ -78,7 +78,7 @@ data BlockDeviceMapping = BlockDeviceMapping
   deriving (Show)
 
 data EbsBlockDevice = EbsBlockDevice
-    { snapshotId :: Text
+    { snapshotId :: Maybe Text
     , volumeSize :: Int
     , deleteOnTermination :: Bool
     , volumeType :: VolumeType

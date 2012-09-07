@@ -50,6 +50,7 @@ params a t =
     , ("ImageId.5", "ami-03d37c6a")
     , ("ImageId.6", "aki-f5c1219c")
     , ("ImageId.7", "ari-f606f39f")
+    , ("ImageId.8", "ami-8a3cc9e3")
     , ("Timestamp", wrap Url.encode t)
     , ("Version", "2012-07-20")
     , ("SignatureVersion", "2")
@@ -195,7 +196,7 @@ blockDeviceMapping = do
     ebsParser :: MonadThrow m
         => Pipe Event Event o u m (Maybe EbsBlockDevice)
     ebsParser = element "ebs" $ do
-        sid <- getT "snapshotId"
+        sid <- getMT "snapshotId"
         vs <- getF "volumeSize" t2dec
         dot <- getF "deleteOnTermination" t2bool
         vt <- getF "volumeType" t2volumeType
@@ -239,9 +240,14 @@ productCodeConduit = do
 stateReasonSink :: MonadThrow m
     => Pipe Event Event o u m (Maybe StateReason)
 stateReasonSink = do
-    element "stateReason" $ do
-        return Nothing
-    return Nothing
+    msr <- element "stateReason" $ do
+        c <- getT "code"
+        m <- getT "message"
+        return StateReason
+            { stateReasonCode = c
+            , stateReasonMessage = m
+            }
+    return msr
 
 getF :: MonadThrow m
     => Text
