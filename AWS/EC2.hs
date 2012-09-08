@@ -4,74 +4,59 @@
 module AWS.EC2
     ( module AWS.EC2.Types
     , Ec2Endpoint(..)
-    , queryStr
-    , params
-    , wrap
+    , mkUrl
     , describeImages
     ) where
 
-import           Data.ByteString.Lazy (ByteString)
-import qualified Data.ByteString.Lazy as L
+import           Data.ByteString (ByteString)
 import           Data.ByteString.Lazy.Char8 ()
-import qualified Data.ByteString.Lazy.Char8 as LC
-import           Data.Word (Word8)
-import           Data.Monoid
+import qualified Data.ByteString.Char8 as BSC
 
-import qualified Codec.Binary.Url as Url
-
+import Data.Monoid
 import Data.XML.Types
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Read
 import Data.Conduit
 import qualified Data.Conduit.List as CL
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control
 import Network.HTTP.Conduit
 import Text.XML.Stream.Parse
 import Safe
+import Data.Time (UTCTime, getCurrentTime)
+import qualified Data.Map.Strict as Map
 
+import AWS
+import AWS.Types
 import AWS.EC2.Types
 
-wrap :: ([Word8] -> String) -> ByteString -> ByteString
-wrap f = LC.pack . f . L.unpack
-
-type Param = (ByteString, ByteString)
-
-data Ec2Endpoint = UsEast1
-                 | ApNortheast1
-
-params :: ByteString -> ByteString -> [Param]
-params a t =
+params :: QueryParams
+params = Map.fromList
     [ ("Action", "DescribeImages")
-    , ("ImageId.1", "ami-e565ba8c")
-    , ("ImageId.2", "ami-6678da0f")
-    , ("ImageId.3", "ami-0067ca69")
-    , ("ImageId.4", "ami-f21aff9b")
-    , ("ImageId.5", "ami-03d37c6a")
-    , ("ImageId.6", "aki-f5c1219c")
-    , ("ImageId.7", "ari-f606f39f")
-    , ("ImageId.8", "ami-8a3cc9e3")
-    , ("Timestamp", wrap Url.encode t)
     , ("Version", "2012-07-20")
     , ("SignatureVersion", "2")
     , ("SignatureMethod", "HmacSHA256")
-    , ("AWSAccessKeyId", a)
     ]
 
-queryStr :: [Param] -> ByteString
-queryStr = join "&" . map param
+mkUrl :: Endpoint end
+      => end -> Credential -> UTCTime -> [ByteString] -> ByteString
+mkUrl endpoint cred time imageIds = mkUrl' endpoint cred time pars
   where
-    param :: Param -> ByteString
-    param (k, v) = mconcat [k, "=", v]
-    join :: ByteString -> [ByteString] -> ByteString
-    join sep = foldl1 $ \a b -> mconcat [a, sep, b]
+    pars = Map.union params $ Map.fromList
+        [("ImageId." `mappend` (BSC.pack $ show i), imgId) | (i, imgId) <- zip [1..] imageIds]
 
 describeImages 
-    :: (MonadResource m, MonadBaseControl IO m)
-    => Request m
-    -> Manager
+    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
+    => Manager
+    -> Credential
+    -> end
+    -> [ByteString]
     -> m (DescribeImagesResponse (Source m Image))
-describeImages request manager = do
+describeImages manager cred endpoint imageIds = do
+    time <- liftIO getCurrentTime
+    let url = mkUrl endpoint cred time imageIds
+    request <- liftIO $ parseUrl (BSC.unpack url)
     response <- http request manager
     (res, _) <- unwrapResumable $ responseBody response
     (src, rid) <- res $= parseBytes def
