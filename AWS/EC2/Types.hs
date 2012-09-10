@@ -115,3 +115,14 @@ data Region = Region
     }
   deriving (Show)
 
+{- DescriveAvailabilityZones -}
+data AvailabilityZone = AvailabilityZone
+    { zoneName :: Text
+    , zoneState :: Text
+    , zoneRegionName :: Text
+    , messageSet :: [AvailabilityZoneMessage]
+    }
+  deriving (Show)
+
+type AvailabilityZoneMessage = Text
+
