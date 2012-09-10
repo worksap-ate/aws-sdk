@@ -16,14 +16,16 @@ cabal-version:       >=1.8
 
 library
   exposed-modules:   AWS
+                   , AWS.Util
                    , AWS.EC2
                    , AWS.EC2.Types
   ghc-options: -Wall -fno-warn-unused-do-bind
   -- other-modules:       
   build-depends:     base ==4.5.*
                    , SHA
+                   , base64-bytestring >= 1.0.0.0
                    , bytestring
-                   , dataenc
+                   , http-types
                    , conduit
                    , transformers
                    , time

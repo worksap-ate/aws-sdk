@@ -4,20 +4,13 @@
 module AWS.EC2
     ( module AWS.EC2.Types
     , Ec2Endpoint(..)
-    , queryStr
-    , params
-    , wrap
+    , mkUrl
     , describeImages
+    , describeRegions
     ) where
 
-import           Data.ByteString.Lazy (ByteString)
-import qualified Data.ByteString.Lazy as L
+import           Data.ByteString (ByteString)
 import           Data.ByteString.Lazy.Char8 ()
-import qualified Data.ByteString.Lazy.Char8 as LC
-import           Data.Word (Word8)
-import           Data.Monoid
-
-import qualified Codec.Binary.Url as Url
 
 import Data.XML.Types
 import Data.Text (Text)
@@ -26,22 +19,16 @@ import Data.Text.Read
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Control
-import Network.HTTP.Conduit
+import qualified Network.HTTP.Conduit as H
 import Text.XML.Stream.Parse
 import Safe
+import Data.Time (UTCTime)
 
+import AWS
 import AWS.EC2.Types
 
-wrap :: ([Word8] -> String) -> ByteString -> ByteString
-wrap f = LC.pack . f . L.unpack
-
-type Param = (ByteString, ByteString)
-
-data Ec2Endpoint = UsEast1
-                 | ApNortheast1
-
-params :: ByteString -> ByteString -> [Param]
-params a t =
+params :: [QueryParam]
+params =
     [ ("Action", "DescribeImages")
     , ("ImageId.1", "ami-e565ba8c")
     , ("ImageId.2", "ami-6678da0f")
@@ -51,46 +38,39 @@ params a t =
     , ("ImageId.6", "aki-f5c1219c")
     , ("ImageId.7", "ari-f606f39f")
     , ("ImageId.8", "ami-8a3cc9e3")
-    , ("Timestamp", wrap Url.encode t)
     , ("Version", "2012-07-20")
     , ("SignatureVersion", "2")
     , ("SignatureMethod", "HmacSHA256")
-    , ("AWSAccessKeyId", a)
     ]
 
-queryStr :: [Param] -> ByteString
-queryStr = join "&" . map param
-  where
-    param :: Param -> ByteString
-    param (k, v) = mconcat [k, "=", v]
-    join :: ByteString -> [ByteString] -> ByteString
-    join sep = foldl1 $ \a b -> mconcat [a, sep, b]
+mkUrl :: Endpoint end
+      => end -> Credential -> UTCTime -> ByteString
+mkUrl endpoint cred time = mkUrl' endpoint cred time params
 
 describeImages 
     :: (MonadResource m, MonadBaseControl IO m)
-    => Request m
-    -> Manager
-    -> m (DescribeImagesResponse (Source m Image))
+    => H.Request m
+    -> H.Manager
+    -> m (EC2Response (Source m Image))
 describeImages request manager = do
-    response <- http request manager
-    (res, _) <- unwrapResumable $ responseBody response
-    (src, rid) <- res $= parseBytes def
-        $$+ describeImagesResponseHeader
+    response <- H.http request manager
+    (res, _) <- unwrapResumable $ H.responseBody response
+    (src, rid) <- res $= parseBytes def $$+ sinkRequestId
     (src1, _) <- unwrapResumable src
-    return $ DescribeImagesResponse
+    return $ EC2Response
         { requestId = rid
-        , imagesSet = src1 $= imagesSetConduit
+        , responseBody = src1 $= imagesSetConduit
         }
 
-describeImagesResponseHeader :: MonadThrow m
-    => Pipe Event Event o u m Text
-describeImagesResponseHeader = do
+sinkRequestId :: MonadThrow m
+    => GLSink Event m Text
+sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
     tagContentF "requestId"
 
 imagesSetConduit :: MonadThrow m
-    => Pipe Event Event Image u m ()
+    => GLConduit Event m Image
 imagesSetConduit = elementF "imagesSet" $ items imageItem
 
 items :: MonadThrow m
@@ -128,7 +108,7 @@ awaitWhile f =
         )
 
 imageItem :: MonadThrow m
-    => Pipe Event Event o u m Image
+    => GLSink Event m Image
 imageItem = elementF "item" $ do
     i <- getT "imageId"
     l <- getT "imageLocation"
@@ -176,7 +156,7 @@ imageItem = elementF "item" $ do
         }
 
 blockDeviceMapping :: MonadThrow m
-    => Pipe Event Event BlockDeviceMapping u m ()
+    => GLConduit Event m BlockDeviceMapping
 blockDeviceMapping = do
     element "blockDeviceMapping" $ items blockDeviceMappingItem
     return ()
@@ -210,7 +190,7 @@ blockDeviceMapping = do
             }
 
 resourceTagConduit :: MonadThrow m
-    => Pipe Event Event ResourceTag u m ()
+    => GLConduit Event m ResourceTag
 resourceTagConduit = do
     element "tagSet" $ items tagSetsItem
     return ()
@@ -224,7 +204,7 @@ resourceTagConduit = do
             }
 
 productCodeConduit :: MonadThrow m
-    => Pipe Event Event ProductCode u m ()
+    => GLConduit Event m ProductCode
 productCodeConduit = do
     element "productCodes" $ items pcItem
     return ()
@@ -285,12 +265,12 @@ elementF name inner = force "parse error" $ element name inner
 
 tagContent :: MonadThrow m
     => Text
-    -> Pipe Event Event o u m (Maybe Text)
+    -> GLSink Event m (Maybe Text)
 tagContent name = tagNoAttr (ec2Name name) content
 
 tagContentF :: MonadThrow m
     => Text
-    -> Pipe Event Event o u m Text
+    -> GLSink Event m Text
 tagContentF = force "parse error" . tagContent
 
 ec2Name :: Text -> Name
@@ -368,4 +348,37 @@ t2productCodeType t
     | t == "marketplace" = Marketplace
     | t == "devpay"      = Devpay
     | otherwise          = err "product code type" t
+
+
+{----------------------------------------------------
+ - DescribeRegions
+ ---------------------------------------------------}
+describeRegions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => H.Request m
+    -> H.Manager
+    -> m (EC2Response (Source m Region))
+describeRegions request manager = do
+    response <- H.http request manager
+    (res, _) <- unwrapResumable $ H.responseBody response
+    (src, rid) <- res $= parseBytes def $$+ sinkRequestId
+    (src1, _) <- unwrapResumable src
+    return $ EC2Response
+        { requestId = rid
+        , responseBody = src1 $= regionInfoConduit
+        }
+
+regionInfoConduit :: MonadThrow m
+    => GLConduit Event m Region
+regionInfoConduit = elementF "regionInfo" $ items regionItem
+  where
+    regionItem :: MonadThrow m
+        => GLSink Event m Region
+    regionItem = elementF "item" $ do
+        name <- getT "regionName"
+        ep <- getT "regionEndpoint"
+        return Region
+            { regionName = name
+            , regionEndpoint = ep
+            }
 

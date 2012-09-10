@@ -5,9 +5,9 @@ module AWS.EC2.Types where
 import Data.Default (Default(..))
 import Data.Text (Text)
 
-data DescribeImagesResponse body = DescribeImagesResponse
+data EC2Response body = EC2Response
     { requestId :: Text
-    , imagesSet :: body
+    , responseBody :: body
     }
   deriving (Show)
 
@@ -107,3 +107,11 @@ data ResourceTag = ResourceTag
 data Hipervisor = OVM
                 | Xen
   deriving (Show)
+
+{- DescribeRegions -}
+data Region = Region
+    { regionName :: Text
+    , regionEndpoint :: Text
+    }
+  deriving (Show)
+
