@@ -72,7 +72,7 @@ sinkRequestId = do
 
 imagesSetConduit :: MonadThrow m
     => GLConduit Event m Image
-imagesSetConduit = elementF "imagesSet" $ items imageItem
+imagesSetConduit = "imagesSet" >< items imageItem
 
 items :: MonadThrow m
     => Pipe Event Event o u m o
@@ -82,7 +82,7 @@ items p = do
         leftover e
         if isBeginTagName "item" e
             then do
-                elementF "item" (p >>= yield)
+                "item" >< p >>= yield
                 items p
             else return ()
         )
@@ -159,7 +159,7 @@ imageItem = do
 blockDeviceMapping :: MonadThrow m
     => GLConduit Event m BlockDeviceMapping
 blockDeviceMapping = do
-    element "blockDeviceMapping" $ items $ do
+    "blockDeviceMapping" >|< items $ do
         n <- getT "deviceName"
         v <- getMT "virutalName"
         e <- ebsParser
@@ -172,7 +172,7 @@ blockDeviceMapping = do
   where
     ebsParser :: MonadThrow m
         => Pipe Event Event o u m (Maybe EbsBlockDevice)
-    ebsParser = element "ebs" $ do
+    ebsParser = "ebs" >|< do
         sid <- getMT "snapshotId"
         vs <- getF "volumeSize" t2dec
         dot <- getF "deleteOnTermination" t2bool
@@ -189,7 +189,7 @@ blockDeviceMapping = do
 resourceTagConduit :: MonadThrow m
     => GLConduit Event m ResourceTag
 resourceTagConduit = do
-    element "tagSet" $ items $ do
+    "tagSet" >|< items $ do
         k <- getT "key"
         v <- getT "value"
         return ResourceTag
@@ -201,7 +201,7 @@ resourceTagConduit = do
 productCodeConduit :: MonadThrow m
     => GLConduit Event m ProductCode
 productCodeConduit = do
-    element "productCodes" $ items $ do
+    "productCodes" >|< items $ do
         c <- getT "productCode"
         t <- getF "type" t2productCodeType
         return ProductCode
@@ -213,7 +213,7 @@ productCodeConduit = do
 stateReasonSink :: MonadThrow m
     => Pipe Event Event o u m (Maybe StateReason)
 stateReasonSink = do
-    msr <- element "stateReason" $ do
+    msr <- "stateReason" >|< do
         c <- getT "code"
         m <- getT "message"
         return StateReason
@@ -243,6 +243,20 @@ getMT :: MonadThrow m
     => Text
     -> Pipe Event Event o u m (Maybe Text)
 getMT name = getM name id
+
+infixr 0 ><
+(><) :: MonadThrow m
+    => Text
+    -> Pipe Event Event o u m a
+    -> Pipe Event Event o u m a
+name >< inner = elementF name inner
+
+infixr 0 >|<
+(>|<) :: MonadThrow m
+    => Text
+    -> Pipe Event Event o u m a
+    -> Pipe Event Event o u m (Maybe a)
+name >|< inner = element name inner
 
 element :: MonadThrow m
     => Text
@@ -363,7 +377,7 @@ describeRegions request manager = do
   where
     regionInfoConduit :: MonadThrow m
         => GLConduit Event m Region
-    regionInfoConduit = elementF "regionInfo" $ items $ do
+    regionInfoConduit = "regionInfo" >< items $ do
         name <- getT "regionName"
         ep <- getT "regionEndpoint"
         return Region
@@ -392,7 +406,7 @@ describeAvailabilityZones request manager = do
     availabilityZoneInfo :: MonadThrow m
         => GLConduit Event m AvailabilityZone
     availabilityZoneInfo =
-        elementF "availabilityZoneInfo" $ items $ do
+        "availabilityZoneInfo" >< items $ do
             name <- getT "zoneName"
             state <- getT "zoneState"
             region <- getT "regionName"
@@ -407,6 +421,6 @@ describeAvailabilityZones request manager = do
     zoneMessageSet :: MonadThrow m
         => GLConduit Event m AvailabilityZoneMessage
     zoneMessageSet = do
-        element "messageSet" $ items $ getT "message"
+        "messageSet" >|< items $ getT "message"
         return ()
 
