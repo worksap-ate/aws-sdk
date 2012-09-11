@@ -6,6 +6,8 @@ module AWS.EC2
     , Ec2Endpoint(..)
     , mkUrl
     , describeImages
+    , describeRegions
+    , describeAvailabilityZones
     ) where
 
 import           Data.ByteString (ByteString)
@@ -21,11 +23,11 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control
-import Network.HTTP.Conduit
+import qualified Network.HTTP.Conduit as HTTP
 import Text.XML.Stream.Parse
 import Safe
 import Data.Time (UTCTime, getCurrentTime)
-import qualified Data.Map.Strict as Map
+import qualified Data.Map as Map
 
 import AWS
 import AWS.Types
@@ -48,35 +50,35 @@ mkUrl endpoint cred time imageIds = mkUrl' endpoint cred time pars
 
 describeImages 
     :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
-    => Manager
+    => HTTP.Manager
     -> Credential
     -> end
     -> [ByteString]
-    -> m (DescribeImagesResponse (Source m Image))
+    -> m (EC2Response (Source m Image))
 describeImages manager cred endpoint imageIds = do
     time <- liftIO getCurrentTime
     let url = mkUrl endpoint cred time imageIds
-    request <- liftIO $ parseUrl (BSC.unpack url)
-    response <- http request manager
-    (res, _) <- unwrapResumable $ responseBody response
+    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
+    response <- HTTP.http request manager
+    (res, _) <- unwrapResumable $ HTTP.responseBody response
     (src, rid) <- res $= parseBytes def
-        $$+ describeImagesResponseHeader
+        $$+ sinkRequestId
     (src1, _) <- unwrapResumable src
-    return $ DescribeImagesResponse
+    return $ EC2Response
         { requestId = rid
-        , imagesSet = src1 $= imagesSetConduit
+        , responseBody = src1 $= imagesSetConduit
         }
 
-describeImagesResponseHeader :: MonadThrow m
-    => Pipe Event Event o u m Text
-describeImagesResponseHeader = do
+sinkRequestId :: MonadThrow m
+    => GLSink Event m Text
+sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
     tagContentF "requestId"
 
 imagesSetConduit :: MonadThrow m
-    => Pipe Event Event Image u m ()
-imagesSetConduit = elementF "imagesSet" $ items imageItem
+    => GLConduit Event m Image
+imagesSetConduit = "imagesSet" >< items imageItem
 
 items :: MonadThrow m
     => Pipe Event Event o u m o
@@ -86,7 +88,7 @@ items p = do
         leftover e
         if isBeginTagName "item" e
             then do
-                p >>= yield
+                "item" >< p >>= yield
                 items p
             else return ()
         )
@@ -113,8 +115,8 @@ awaitWhile f =
         )
 
 imageItem :: MonadThrow m
-    => Pipe Event Event o u m Image
-imageItem = elementF "item" $ do
+    => GLSink Event m Image
+imageItem = do
     i <- getT "imageId"
     l <- getT "imageLocation"
     s <- getF "imageState" t2imageState
@@ -161,14 +163,9 @@ imageItem = elementF "item" $ do
         }
 
 blockDeviceMapping :: MonadThrow m
-    => Pipe Event Event BlockDeviceMapping u m ()
+    => GLConduit Event m BlockDeviceMapping
 blockDeviceMapping = do
-    element "blockDeviceMapping" $ items blockDeviceMappingItem
-    return ()
-  where
-    blockDeviceMappingItem :: MonadThrow m
-        => Pipe Event Event o u m BlockDeviceMapping
-    blockDeviceMappingItem = elementF "item" $ do
+    "blockDeviceMapping" >|< items $ do
         n <- getT "deviceName"
         v <- getMT "virutalName"
         e <- ebsParser
@@ -177,10 +174,11 @@ blockDeviceMapping = do
             , virtualName = v
             , ebs = e
             }
-
+    return ()
+  where
     ebsParser :: MonadThrow m
         => Pipe Event Event o u m (Maybe EbsBlockDevice)
-    ebsParser = element "ebs" $ do
+    ebsParser = "ebs" >|< do
         sid <- getMT "snapshotId"
         vs <- getF "volumeSize" t2dec
         dot <- getF "deleteOnTermination" t2bool
@@ -195,37 +193,33 @@ blockDeviceMapping = do
             }
 
 resourceTagConduit :: MonadThrow m
-    => Pipe Event Event ResourceTag u m ()
+    => GLConduit Event m ResourceTag
 resourceTagConduit = do
-    element "tagSet" $ items tagSetsItem
-    return ()
-  where
-    tagSetsItem = elementF "item" $ do
+    "tagSet" >|< items $ do
         k <- getT "key"
         v <- getT "value"
         return ResourceTag
             { resourceKey = k
             , resourceValue = v
             }
+    return ()
 
 productCodeConduit :: MonadThrow m
-    => Pipe Event Event ProductCode u m ()
+    => GLConduit Event m ProductCode
 productCodeConduit = do
-    element "productCodes" $ items pcItem
-    return ()
-  where
-    pcItem = elementF "item" $ do
+    "productCodes" >|< items $ do
         c <- getT "productCode"
         t <- getF "type" t2productCodeType
         return ProductCode
             { productCode = c
             , productCodeType = t
             }
+    return ()
 
 stateReasonSink :: MonadThrow m
     => Pipe Event Event o u m (Maybe StateReason)
 stateReasonSink = do
-    msr <- element "stateReason" $ do
+    msr <- "stateReason" >|< do
         c <- getT "code"
         m <- getT "message"
         return StateReason
@@ -256,6 +250,20 @@ getMT :: MonadThrow m
     -> Pipe Event Event o u m (Maybe Text)
 getMT name = getM name id
 
+infixr 0 ><
+(><) :: MonadThrow m
+    => Text
+    -> Pipe Event Event o u m a
+    -> Pipe Event Event o u m a
+name >< inner = elementF name inner
+
+infixr 0 >|<
+(>|<) :: MonadThrow m
+    => Text
+    -> Pipe Event Event o u m a
+    -> Pipe Event Event o u m (Maybe a)
+name >|< inner = element name inner
+
 element :: MonadThrow m
     => Text
     -> Pipe Event Event o u m a
@@ -270,12 +278,12 @@ elementF name inner = force "parse error" $ element name inner
 
 tagContent :: MonadThrow m
     => Text
-    -> Pipe Event Event o u m (Maybe Text)
+    -> GLSink Event m (Maybe Text)
 tagContent name = tagNoAttr (ec2Name name) content
 
 tagContentF :: MonadThrow m
     => Text
-    -> Pipe Event Event o u m Text
+    -> GLSink Event m Text
 tagContentF = force "parse error" . tagContent
 
 ec2Name :: Text -> Name
@@ -353,4 +361,72 @@ t2productCodeType t
     | t == "marketplace" = Marketplace
     | t == "devpay"      = Devpay
     | otherwise          = err "product code type" t
+
+
+{----------------------------------------------------
+ - DescribeRegions
+ ---------------------------------------------------}
+describeRegions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => HTTP.Request m
+    -> HTTP.Manager
+    -> m (EC2Response (Source m Region))
+describeRegions request manager = do
+    response <- HTTP.http request manager
+    (res, _) <- unwrapResumable $ HTTP.responseBody response
+    (src, rid) <- res $= parseBytes def $$+ sinkRequestId
+    (src1, _) <- unwrapResumable src
+    return $ EC2Response
+        { requestId = rid
+        , responseBody = src1 $= regionInfoConduit
+        }
+  where
+    regionInfoConduit :: MonadThrow m
+        => GLConduit Event m Region
+    regionInfoConduit = "regionInfo" >< items $ do
+        name <- getT "regionName"
+        ep <- getT "regionEndpoint"
+        return Region
+            { regionName = name
+            , regionEndpoint = ep
+            }
+
+{----------------------------------------------------
+ - DescribeRegions
+ ---------------------------------------------------}
+describeAvailabilityZones
+    :: (MonadResource m, MonadBaseControl IO m)
+    => HTTP.Request m
+    -> HTTP.Manager
+    -> m (EC2Response (Source m AvailabilityZone))
+describeAvailabilityZones request manager = do
+    response <- HTTP.http request manager
+    (res, _) <- unwrapResumable $ HTTP.responseBody response
+    (src, rid) <- res $= parseBytes def $$+ sinkRequestId
+    (src1, _) <- unwrapResumable src
+    return $ EC2Response
+        { requestId = rid
+        , responseBody = src1 $= availabilityZoneInfo
+        }
+  where
+    availabilityZoneInfo :: MonadThrow m
+        => GLConduit Event m AvailabilityZone
+    availabilityZoneInfo =
+        "availabilityZoneInfo" >< items $ do
+            name <- getT "zoneName"
+            state <- getT "zoneState"
+            region <- getT "regionName"
+            msgs <- zoneMessageSet >+> CL.consume
+            return AvailabilityZone
+                { zoneName = name
+                , zoneState = state
+                , zoneRegionName = region
+                , messageSet = msgs
+                }
+
+    zoneMessageSet :: MonadThrow m
+        => GLConduit Event m AvailabilityZoneMessage
+    zoneMessageSet = do
+        "messageSet" >|< items $ getT "message"
+        return ()
 

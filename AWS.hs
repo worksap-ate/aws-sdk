@@ -4,28 +4,17 @@ module AWS where
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BSC
 import           Data.ByteString.Lazy.Char8 ()
-import qualified Data.ByteString.Lazy.Char8 as BSLC
 import           Data.Monoid
 import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64.Lazy as BASE
-import qualified Data.Map.Strict as Map
+import qualified Data.Map as Map
 import qualified Network.HTTP.Types as HTTP
 
-import System.IO (IOMode(..), withFile)
 import System.Locale (defaultTimeLocale, iso8601DateFormat)
 import Data.Time (UTCTime, formatTime)
 
 import AWS.Types
 import AWS.Util
-
-loadCredential :: IO Credential
-loadCredential = withFile (BSLC.unpack "aws.config") ReadMode $ \h -> do
-    a <- BSC.hGetLine h
-    s <- BSC.hGetLine h
-    return $ Credential
-        { accessKey = a
-        , secretAccessKey = s
-        }
 
 queryStr :: QueryParams -> ByteString
 queryStr = concatWithSep "&" . Map.foldlWithKey concatWithEqual []

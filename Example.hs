@@ -1,16 +1,32 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Example where
 
 import Data.ByteString.Char8 ()
-import qualified Data.ByteString.Char8 as BSC
 import Data.Conduit
 import qualified Data.Conduit.List as CL
-import Network.HTTP.Conduit (def, newManager)
+import qualified Network.HTTP.Conduit as HTTP
 import Control.Monad.IO.Class (liftIO)
-import Data.Time (getCurrentTime)
 
-import AWS
+import AWS.Credential
+import AWS.Types
 import AWS.EC2
+
+paramsRegions :: [QueryParam]
+paramsRegions =
+    [ ("Action", "DescribeRegions")
+    , ("Version", "2012-07-20")
+    , ("SignatureVersion", "2")
+    , ("SignatureMethod", "HmacSHA256")
+    ]
+
+paramsZones :: [QueryParam]
+paramsZones =
+    [ ("Action", "DescribeAvailabilityZones")
+    , ("Version", "2012-07-20")
+    , ("SignatureVersion", "2")
+    , ("SignatureMethod", "HmacSHA256")
+    ]
 
 main :: IO ()
 main = do
@@ -26,9 +42,9 @@ main = do
             ]
     cred <- loadCredential
     doc <- runResourceT $ do
-        manager <- liftIO $ newManager def
+        manager <- liftIO $ HTTP.newManager HTTP.def
         response <- describeImages manager cred UsEast1 imageIds
-        imagesSet response $$ CL.consume
+        responseBody response $$ CL.consume
     print doc
     putStr "Length: "
     print $ length doc
