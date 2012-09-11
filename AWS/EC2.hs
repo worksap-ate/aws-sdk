@@ -26,6 +26,7 @@ import Safe
 import Data.Time (UTCTime)
 
 import AWS
+import AWS.Credential
 import AWS.EC2.Types
 
 params :: [QueryParam]

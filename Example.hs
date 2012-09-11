@@ -11,6 +11,7 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Time
 
 import AWS
+import AWS.Credential
 import AWS.EC2
 
 paramsRegions :: [QueryParam]
