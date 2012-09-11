@@ -26,27 +26,101 @@ import Control.Monad.Trans.Control
 import qualified Network.HTTP.Conduit as HTTP
 import Text.XML.Stream.Parse
 import Safe
-import Data.Time (UTCTime, getCurrentTime)
+import Data.Time (UTCTime, formatTime, getCurrentTime)
+import System.Locale (defaultTimeLocale, iso8601DateFormat)
 import qualified Data.Map as Map
+import Data.Map (Map)
+import qualified Network.HTTP.Types as H
+import qualified Data.Digest.Pure.SHA as SHA
+import qualified Data.ByteString.Base64.Lazy as BASE
 
-import AWS
 import AWS.Types
+import AWS.Util
 import AWS.EC2.Types
 
-params :: QueryParams
-params = Map.fromList
-    [ ("Action", "DescribeImages")
+data QueryParams
+    = ArrayParams ByteString [ByteString]
+
+queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
+queryHeader action time credential =
+    [ ("Action", action)
     , ("Version", "2012-07-20")
     , ("SignatureVersion", "2")
     , ("SignatureMethod", "HmacSHA256")
+    , ("Timestamp", H.urlEncode True $ awsTimeFormat time)
+    , ("AWSAccessKeyId", accessKey credential)
     ]
 
 mkUrl :: Endpoint end
-      => end -> Credential -> UTCTime -> [ByteString] -> ByteString
-mkUrl endpoint cred time imageIds = mkUrl' endpoint cred time pars
+      => end
+      -> Credential
+      -> UTCTime
+      -> ByteString
+      -> [QueryParams]
+      -> ByteString
+mkUrl endpoint cred time action params = mconcat
+    [ "https://"
+    , endpointStr endpoint
+    , "/?"
+    , qparam
+    , "&Signature="
+    , signature endpoint (secretAccessKey cred) qparam
+    ]
   where
-    pars = Map.union params $ Map.fromList
-        [("ImageId." `mappend` (BSC.pack $ show i), imgId) | (i, imgId) <- zip [1..] imageIds]
+    qheader = Map.fromList $ queryHeader action time cred
+    qparam = queryStr $ Map.unions (qheader:map toArrayParams params)
+
+toArrayParams :: QueryParams -> Map ByteString ByteString
+toArrayParams (ArrayParams name params) = Map.fromList 
+    [(name <> "." <> (BSC.pack $ show i), param)
+     | (i, param) <- zip [1..] params]
+
+queryStr :: Map ByteString ByteString -> ByteString
+queryStr = concatWithSep "&" . Map.foldlWithKey concatWithEqual []
+  where
+    concatWithEqual acc key val = acc ++ [key <> "=" <> val] -- FIXME not to use ++
+    concatWithSep :: ByteString -> [ByteString] -> ByteString
+    concatWithSep sep = foldl1 $ \a b -> mconcat [a, sep, b]
+
+awsTimeFormat :: UTCTime -> ByteString
+awsTimeFormat time = BSC.pack $ formatTime defaultTimeLocale (iso8601DateFormat $ Just "%XZ") time
+
+signature :: Endpoint end 
+          => end -> SecretAccessKey -> ByteString -> ByteString
+signature endpoint secret query = urlstring
+  where
+    stringToSign = mconcat
+        [ "GET\n"
+        , endpointStr endpoint
+        , "\n/\n"
+        , query
+        ]
+    signedString = SHA.hmacSha256 (toL secret) (toL stringToSign)
+    base64string = BASE.encode $ SHA.bytestringDigest signedString
+    urlstring = H.urlEncode True (toS base64string)
+
+ec2Query
+    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
+    => HTTP.Manager
+    -> Credential
+    -> end
+    -> ByteString
+    -> [QueryParams]
+    -> Conduit Event m o
+    -> m (EC2Response (Source m o))
+ec2Query manager cred endpoint action params conduit = do
+    time <- liftIO getCurrentTime
+    let url = mkUrl endpoint cred time action params
+    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
+    response <- HTTP.http request manager
+    (res, _) <- unwrapResumable $ HTTP.responseBody response
+    (src, rid) <- res $= parseBytes def
+        $$+ sinkRequestId
+    (src1, _) <- unwrapResumable src
+    return $ EC2Response
+        { requestId = rid
+        , responseBody = src1 $= conduit
+        }
 
 describeImages 
     :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
@@ -56,18 +130,9 @@ describeImages
     -> [ByteString]
     -> m (EC2Response (Source m Image))
 describeImages manager cred endpoint imageIds = do
-    time <- liftIO getCurrentTime
-    let url = mkUrl endpoint cred time imageIds
-    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
-    response <- HTTP.http request manager
-    (res, _) <- unwrapResumable $ HTTP.responseBody response
-    (src, rid) <- res $= parseBytes def
-        $$+ sinkRequestId
-    (src1, _) <- unwrapResumable src
-    return $ EC2Response
-        { requestId = rid
-        , responseBody = src1 $= imagesSetConduit
-        }
+    ec2Query manager cred endpoint "DescribeImages" params imagesSetConduit
+  where
+    params = [ArrayParams "ImageId" imageIds]
 
 sinkRequestId :: MonadThrow m
     => GLSink Event m Text
@@ -367,20 +432,17 @@ t2productCodeType t
  - DescribeRegions
  ---------------------------------------------------}
 describeRegions
-    :: (MonadResource m, MonadBaseControl IO m)
-    => HTTP.Request m
-    -> HTTP.Manager
+    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
+    => HTTP.Manager
+    -> Credential
+    -> end
+    -> [ByteString]
     -> m (EC2Response (Source m Region))
-describeRegions request manager = do
-    response <- HTTP.http request manager
-    (res, _) <- unwrapResumable $ HTTP.responseBody response
-    (src, rid) <- res $= parseBytes def $$+ sinkRequestId
-    (src1, _) <- unwrapResumable src
-    return $ EC2Response
-        { requestId = rid
-        , responseBody = src1 $= regionInfoConduit
-        }
+describeRegions manager cred endpoint regions =
+    ec2Query manager cred endpoint "DescribeRegions" params regionInfoConduit
   where
+    params = [ArrayParams "RegionName" regions]
+
     regionInfoConduit :: MonadThrow m
         => GLConduit Event m Region
     regionInfoConduit = "regionInfo" >< items $ do
@@ -395,20 +457,17 @@ describeRegions request manager = do
  - DescribeRegions
  ---------------------------------------------------}
 describeAvailabilityZones
-    :: (MonadResource m, MonadBaseControl IO m)
-    => HTTP.Request m
-    -> HTTP.Manager
+    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
+    => HTTP.Manager
+    -> Credential
+    -> end
+    -> [ByteString]
     -> m (EC2Response (Source m AvailabilityZone))
-describeAvailabilityZones request manager = do
-    response <- HTTP.http request manager
-    (res, _) <- unwrapResumable $ HTTP.responseBody response
-    (src, rid) <- res $= parseBytes def $$+ sinkRequestId
-    (src1, _) <- unwrapResumable src
-    return $ EC2Response
-        { requestId = rid
-        , responseBody = src1 $= availabilityZoneInfo
-        }
+describeAvailabilityZones manager cred endpoint zones =
+    ec2Query manager cred endpoint "DescribeAvailabilityZones" params availabilityZoneInfo
   where
+    params = [ArrayParams "ZoneName" zones]
+
     availabilityZoneInfo :: MonadThrow m
         => GLConduit Event m AvailabilityZone
     availabilityZoneInfo =
