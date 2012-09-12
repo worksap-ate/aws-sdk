@@ -5,12 +5,11 @@ module Example where
 import Data.ByteString.Char8 ()
 import Data.Conduit
 import qualified Data.Conduit.List as CL
-import qualified Network.HTTP.Conduit as HTTP
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
 import Data.ByteString (ByteString)
 
 import AWS.Credential
-import AWS.Types
 import AWS.EC2
 
 imageIds :: [ByteString]
@@ -29,11 +28,12 @@ main :: IO ()
 main = do
     cred <- loadCredential
     doc <- runResourceT $ do
-        manager <- liftIO $ HTTP.newManager HTTP.def
---        response <- describeRegions manager cred UsEast1 []
---        response <- describeAvailabilityZones manager cred UsEast1 []
-        response <- describeImages manager cred UsEast1 imageIds
-        responseBody response $$ CL.consume
+        ctx <- liftIO $ newEC2Context cred
+        runEC2 ctx $ do
+--            response <- describeAvailabilityZones []
+--            response <- describeRegions []
+            response <- describeImages imageIds
+            lift $ responseBody response $$ CL.consume
     print doc
     putStr "Length: "
     print $ length doc
