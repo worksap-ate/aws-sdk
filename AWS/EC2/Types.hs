@@ -4,6 +4,7 @@ module AWS.EC2.Types where
 
 import Data.Default (Default(..))
 import Data.Text (Text)
+import Data.Time
 
 data EC2Response body = EC2Response
     { requestId :: Text
@@ -17,28 +18,29 @@ data Image = Image
     , imageState :: ImageState
     , imageOwnerId :: Text
     , isPublic :: Bool
-    , productCodes :: [ProductCode]
-    , architecture :: Text
+    , imageProductCodes :: [ProductCode]
+    , imageArchitecture :: Text
     , imageType :: ImageType
     , kernelId :: Maybe Text
     , ramdiskId :: Maybe Text
     , platform :: Platform
-    , stateReason :: Maybe StateReason
+    , imageStateReason :: Maybe StateReason
     , imageOwnerAlias :: Maybe Text
-    , imageName :: Maybe Text
-    , description :: Maybe Text
+    , imageName :: Text
+    , description :: Text
     , rootDeviceType :: RootDeviceType
     , rootDeviceName :: Maybe Text
     , blockDeviceMappings :: [BlockDeviceMapping]
     , virtualizationType :: VirtualizationType
-    , tagSet :: [ResourceTag]
+    , imageTagSet :: [ResourceTag]
     , hipervisor :: Hipervisor
     }
   deriving (Show)
 
-data ImageState = Available
-                | Pending
-                | Failed
+data ImageState
+    = ImageAvailable
+    | ImagePending
+    | ImageFailed
   deriving (Show)
 
 data ProductCode = ProductCode
@@ -78,9 +80,9 @@ data BlockDeviceMapping = BlockDeviceMapping
   deriving (Show)
 
 data EbsBlockDevice = EbsBlockDevice
-    { snapshotId :: Maybe Text
+    { ebsSnapshotId :: Maybe Text
     , volumeSize :: Int
-    , deleteOnTermination :: Bool
+    , ebsDeleteOnTermination :: Bool
     , volumeType :: VolumeType
     , iops :: Maybe Int
     }
@@ -115,7 +117,7 @@ data Region = Region
     }
   deriving (Show)
 
-{- DescriveAvailabilityZones -}
+{- DescribeAvailabilityZones -}
 data AvailabilityZone = AvailabilityZone
     { zoneName :: Text
     , zoneState :: Text
@@ -125,4 +127,168 @@ data AvailabilityZone = AvailabilityZone
   deriving (Show)
 
 type AvailabilityZoneMessage = Text
+
+{- DescribeInstances -}
+data Reservation = Reservation
+    { reservationId :: Text
+    , ownerId :: Text
+    , groupSet :: [Group]
+    , instanceSet :: [Instance]
+    , requesterId :: Maybe Text
+    }
+  deriving (Show)
+
+data Instance = Instance
+    { instanceId :: Text
+    , instanceImageId :: Text
+    , instanceState :: InstanceState
+    , privateDnsName :: Text
+    , dnsName :: Text
+    , reason :: Text
+    , keyName :: Text
+    , amiLaunchIndex :: Text
+    , instanceProductCodes :: [ProductCode]
+    , instanceType :: Text
+    , launchTime :: UTCTime
+    , instancePlacement :: Placement
+    , instanceKernelId :: Maybe Text
+    , instanceRamdiskId :: Maybe Text
+    , instancePlatform :: Maybe Text
+    , monitoring :: InstanceMonitoringState
+    , subnetId :: Maybe Text
+    , vpcId :: Maybe Text
+    , privateIpAddress :: Maybe Text
+    , ipAddress :: Maybe Text
+    , sourceDestCheck :: Maybe Bool
+    , vpcGroupSet :: [Group]
+    , instanceStateReason :: Maybe StateReason
+    , instanceArchitecture :: Architecture
+    , instanceRootDeviceType :: RootDeviceType
+    , instanceRootDeviceName :: Text
+    , instanceBlockDeviceMappings :: [InstanceBlockDeviceMapping]
+    , instanceLifecycle :: InstanceLifecycle
+    , spotInstanceRequestId :: Maybe Text
+    , instanceVirtualizationType :: VirtualizationType
+    , clientToken :: Text
+    , instanceTagSet :: [ResourceTag]
+    , instanceHypervisor :: Hipervisor
+    , instanceNetworkInterfaceSet :: [InstanceNetworkInterface]
+    , iamInstanceProfile :: Maybe IamInstanceProfile
+    , ebsOptimized :: Bool -- default: false
+    }
+  deriving (Show)
+
+data Group = Group
+    { groupId :: Text
+    , groupName :: Text
+    }
+  deriving (Show)
+
+data InstanceState
+    = Pending
+    | Running
+    | ShuttingDown
+    | Terminated
+    | Stopping
+    | Stopped
+  deriving (Show)
+
+instanceStateCodes :: [(Int, InstanceState)]
+instanceStateCodes =
+    [ (0, Pending)
+    , (16, Running)
+    , (32, ShuttingDown)
+    , (48, Terminated)
+    , (64, Stopping)
+    , (80, Stopped)
+    ]
+
+codeToState :: Int -> InstanceState
+codeToState code = case lookup code instanceStateCodes of
+    Nothing -> error "invalid state code"
+    Just st -> st
+
+data Placement = Placement
+    { availabilityZone :: Text
+    , placementGroupName :: Text
+    , tenancy :: Text
+    }
+  deriving (Show)
+
+data InstanceMonitoringState
+    = MonitoringDisabled
+    | MonitoringEnable
+    | MonitoringPending
+  deriving (Show)
+
+data Architecture = I386 | X86_64 deriving (Show)
+
+data InstanceBlockDeviceMapping = InstanceBlockDeviceMapping
+    { instanceDeviceName :: Text
+    , instanceEbs :: InstanceEbsBlockDevice
+    }
+  deriving (Show)
+
+data InstanceEbsBlockDevice = InstanceEbsBlockDevice
+    { instanceEbsVolumeId :: Text
+    , instanceEbsState :: VolumeState
+    , instanceEbsAttachTime :: UTCTime
+    , instanceEbsDeleteOnTermination :: Bool
+    }
+  deriving (Show)
+
+data VolumeState
+    = VolumeAttaching
+    | VolumeAttached
+    | VolumeDetaching
+    | VolumeDetached
+  deriving (Show)
+
+data InstanceLifecycle = LifeCycleSpot | LifeCycleNone
+  deriving (Show)
+
+data InstanceNetworkInterface = InstanceNetworkInterface
+    { instanceNetworkInterfaceId :: Text
+    , iniSubnetId :: Text
+    , iniVpcId :: Text
+    , iniDescription :: Text
+    , iniOwnerId :: Text
+    , iniStatus :: Text
+    , iniPrivateIpAddress :: Text
+    , iniPrivateDnsName :: Maybe Text
+    , iniSourceDestCheck :: Bool
+    , iniGroupSet :: [Group]
+    , iniAttachment :: NetworkInterfaceAttachment
+    , iniAssociation :: Maybe NetworkInterfaceAssociation
+    , iniPrivateIpAddressSet :: [InstancePrivateIpAddress]
+    }
+  deriving (Show)
+
+data NetworkInterfaceAttachment = NetworkInterfaceAttachment
+    { niatAttachmentId :: Text
+    , niatDeviceIndex :: Int
+    , niatStatus :: Text
+    , niatAttachTime :: UTCTime
+    , niatDeleteOnTermination :: Bool
+    }
+  deriving (Show)
+
+data NetworkInterfaceAssociation = NetworkInterfaceAssociation
+    { niasPublicIp :: Text
+    , niasIpOwnerId :: Text
+    }
+  deriving (Show)
+
+data InstancePrivateIpAddress = InstancePrivateIpAddress
+    { iPrivateIpAddress :: Text
+    , iPrimary :: Bool
+    , iAssociation :: Maybe NetworkInterfaceAssociation
+    }
+  deriving (Show)
+
+data IamInstanceProfile = IamInstanceProfile
+    { iipArn :: Text
+    , iipId :: Text
+    }
+  deriving (Show)
 

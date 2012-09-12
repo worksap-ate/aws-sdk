@@ -38,6 +38,10 @@ import AWS.EC2.Types
 import AWS.Types
 import AWS.Util
 
+{- Debug
+import qualified Data.Conduit.Binary as CB
+--}
+
 data EC2Context = EC2Context
     { manager :: HTTP.Manager
     , credential :: Credential
