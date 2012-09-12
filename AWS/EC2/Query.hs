@@ -2,7 +2,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module AWS.EC2.Query
-    ( ec2Query
+    ( EC2Context
+    , EC2
+    , newEC2Context
+    , setEndpoint
+    , ec2Query
     , ec2Name
     , tagContentF
     , tagContent
@@ -17,7 +21,6 @@ import Data.Monoid
 import Data.XML.Types
 import Data.Text (Text)
 import Data.Conduit
-import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control
 import qualified Network.HTTP.Conduit as HTTP
 import Text.XML.Stream.Parse
@@ -28,22 +31,47 @@ import Data.Map (Map)
 import qualified Network.HTTP.Types as H
 import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64.Lazy as BASE
+import Control.Monad.State
 
 import AWS.EC2.Types
 import AWS.Types
 import AWS.Util
 
+data EC2Context = EC2Context
+    { manager :: HTTP.Manager
+    , credential :: Credential
+    , endpoint :: EC2Endpoint
+    }
+
+type EC2 m = StateT EC2Context m
+
+setEndpoint
+    :: (MonadResource m, MonadBaseControl IO m)
+    => EC2Endpoint -> EC2 m ()
+setEndpoint ep = do
+    ctx <- get
+    put ctx{endpoint = ep}
+
+newEC2Context :: Credential -> IO EC2Context
+newEC2Context cred = do
+    mgr <- HTTP.newManager HTTP.def
+    return EC2Context
+        { manager = mgr
+        , credential = cred
+        , endpoint = UsEast1
+        }
+
 data QueryParams
     = ArrayParams ByteString [ByteString]
 
 queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
-queryHeader action time credential =
+queryHeader action time cred =
     [ ("Action", action)
     , ("Version", "2012-07-20")
     , ("SignatureVersion", "2")
     , ("SignatureMethod", "HmacSHA256")
     , ("Timestamp", H.urlEncode True $ awsTimeFormat time)
-    , ("AWSAccessKeyId", accessKey credential)
+    , ("AWSAccessKeyId", accessKey cred)
     ]
 
 mkUrl :: Endpoint end
@@ -53,13 +81,13 @@ mkUrl :: Endpoint end
       -> ByteString
       -> [QueryParams]
       -> ByteString
-mkUrl endpoint cred time action params = mconcat
+mkUrl ep cred time action params = mconcat
     [ "https://"
-    , endpointStr endpoint
+    , endpointStr ep
     , "/?"
     , qparam
     , "&Signature="
-    , signature endpoint (secretAccessKey cred) qparam
+    , signature ep (secretAccessKey cred) qparam
     ]
   where
     qheader = Map.fromList $ queryHeader action time cred
@@ -82,11 +110,11 @@ awsTimeFormat time = BSC.pack $ formatTime defaultTimeLocale (iso8601DateFormat 
 
 signature :: Endpoint end 
           => end -> SecretAccessKey -> ByteString -> ByteString
-signature endpoint secret query = urlstring
+signature ep secret query = urlstring
   where
     stringToSign = mconcat
         [ "GET\n"
-        , endpointStr endpoint
+        , endpointStr ep
         , "\n/\n"
         , query
         ]
@@ -120,25 +148,26 @@ ec2Name name = Name
     }
 
 ec2Query
-    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
-    => HTTP.Manager
-    -> Credential
-    -> end
-    -> ByteString
+    :: (MonadResource m, MonadBaseControl IO m)
+    => ByteString
     -> [QueryParams]
     -> Conduit Event m o
-    -> m (EC2Response (Source m o))
-ec2Query manager cred endpoint action params conduit = do
-    time <- liftIO getCurrentTime
-    let url = mkUrl endpoint cred time action params
-    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
-    response <- HTTP.http request manager
-    (res, _) <- unwrapResumable $ HTTP.responseBody response
-    (src, rid) <- res $= parseBytes def
-        $$+ sinkRequestId
-    (src1, _) <- unwrapResumable src
-    return $ EC2Response
-        { requestId = rid
-        , responseBody = src1 $= conduit
-        }
+    -> EC2 m (EC2Response (Source m o))
+ec2Query action params cond = do
+    ctx <- get
+    lift $ do
+        let mgr = manager ctx
+        let cred = credential ctx
+        let ep = endpoint ctx
+        time <- liftIO getCurrentTime
+        let url = mkUrl ep cred time action params
+        request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
+        response <- HTTP.http request mgr
+        (res, _) <- unwrapResumable $ HTTP.responseBody response
+        (src, rid) <- res $= parseBytes def $$+ sinkRequestId
+        (src1, _) <- unwrapResumable src
+        return $ EC2Response
+            { requestId = rid
+            , responseBody = src1 $= cond
+            }
 

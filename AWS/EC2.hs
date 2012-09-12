@@ -3,7 +3,11 @@
 
 module AWS.EC2
     ( module AWS.EC2.Types
-    , Ec2Endpoint(..)
+    , EC2Endpoint(..)
+    , EC2
+    , EC2Context
+    , newEC2Context
+    , runEC2
     , describeImages
     , describeRegions
     , describeAvailabilityZones
@@ -19,23 +23,27 @@ import Data.Text.Read
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Control
-import qualified Network.HTTP.Conduit as HTTP
 import Text.XML.Stream.Parse
 import Safe
+import Control.Monad.State
 
 import AWS.Types
 import AWS.EC2.Types
 import AWS.EC2.Query
 
-describeImages 
-    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
-    => HTTP.Manager
-    -> Credential
-    -> end
-    -> [ByteString]
-    -> m (EC2Response (Source m Image))
-describeImages manager cred endpoint imageIds = do
-    ec2Query manager cred endpoint "DescribeImages" params imagesSetConduit
+runEC2
+    :: (MonadResource m, MonadBaseControl IO m)
+    => EC2Context
+    -> EC2 m a
+    -> m a
+runEC2 ctx = flip evalStateT ctx
+
+describeImages
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [ByteString]
+    -> EC2 m (EC2Response (Source m Image))
+describeImages imageIds =
+    ec2Query "DescribeImages" params imagesSetConduit
   where
     params = [ArrayParams "ImageId" imageIds]
 
@@ -312,14 +320,11 @@ t2productCodeType t
  - DescribeRegions
  ---------------------------------------------------}
 describeRegions
-    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
-    => HTTP.Manager
-    -> Credential
-    -> end
-    -> [ByteString]
-    -> m (EC2Response (Source m Region))
-describeRegions manager cred endpoint regions =
-    ec2Query manager cred endpoint "DescribeRegions" params regionInfoConduit
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [ByteString]
+    -> EC2 m (EC2Response (Source m Region))
+describeRegions regions =
+    ec2Query "DescribeRegions" params regionInfoConduit
   where
     params = [ArrayParams "RegionName" regions]
 
@@ -327,24 +332,21 @@ describeRegions manager cred endpoint regions =
         => GLConduit Event m Region
     regionInfoConduit = "regionInfo" >< items $ do
         name <- getT "regionName"
-        ep <- getT "regionEndpoint"
+        rep <- getT "regionEndpoint"
         return Region
             { regionName = name
-            , regionEndpoint = ep
+            , regionEndpoint = rep
             }
 
 {----------------------------------------------------
  - DescribeRegions
  ---------------------------------------------------}
 describeAvailabilityZones
-    :: (MonadResource m, MonadBaseControl IO m, Endpoint end)
-    => HTTP.Manager
-    -> Credential
-    -> end
-    -> [ByteString]
-    -> m (EC2Response (Source m AvailabilityZone))
-describeAvailabilityZones manager cred endpoint zones =
-    ec2Query manager cred endpoint "DescribeAvailabilityZones" params availabilityZoneInfo
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [ByteString]
+    -> EC2 m (EC2Response (Source m AvailabilityZone))
+describeAvailabilityZones zones =
+    ec2Query "DescribeAvailabilityZones" params availabilityZoneInfo
   where
     params = [ArrayParams "ZoneName" zones]
 
@@ -353,12 +355,12 @@ describeAvailabilityZones manager cred endpoint zones =
     availabilityZoneInfo =
         "availabilityZoneInfo" >< items $ do
             name <- getT "zoneName"
-            state <- getT "zoneState"
+            st <- getT "zoneState"
             region <- getT "regionName"
             msgs <- zoneMessageSet >+> CL.consume
             return AvailabilityZone
                 { zoneName = name
-                , zoneState = state
+                , zoneState = st
                 , zoneRegionName = region
                 , messageSet = msgs
                 }
