@@ -11,6 +11,7 @@ module AWS.EC2.Query
     , tagContentF
     , tagContent
     , QueryParams(..)
+    , Filter
     ) where
 
 import           Data.ByteString (ByteString)
@@ -63,6 +64,9 @@ newEC2Context cred = do
 
 data QueryParams
     = ArrayParams ByteString [ByteString]
+    | FilterParams [Filter]
+
+type Filter = (ByteString, [ByteString])
 
 queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
 queryHeader action time cred =
@@ -97,6 +101,16 @@ toArrayParams :: QueryParams -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 
     [(name <> "." <> (BSC.pack $ show i), param)
      | (i, param) <- zip [1..] params]
+toArrayParams (FilterParams fs) =
+    Map.fromList $ concat $ map f1 $ zip [1..] fs
+  where
+    f1 (n, (name, vals)) = 
+        (fname n <> ".Name", name):
+            [ (fname n <> ".Value." <> (BSC.pack $ show i), param)
+            | (i, param) <- zip [1..] vals
+            ]
+    
+    fname n = "Filter." <> (BSC.pack $ show n)
 
 queryStr :: Map ByteString ByteString -> ByteString
 queryStr = concatWithSep "&" . Map.foldlWithKey concatWithEqual []

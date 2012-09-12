@@ -30,9 +30,9 @@ main = do
     doc <- runResourceT $ do
         ctx <- liftIO $ newEC2Context cred
         runEC2 ctx $ do
---            response <- describeAvailabilityZones []
---            response <- describeRegions []
-            response <- describeImages imageIds
+--            response <- describeAvailabilityZones [] []
+--            response <- describeRegions [] []
+            response <- describeImages imageIds [] [] []
             lift $ responseBody response $$ CL.consume
     print doc
     putStr "Length: "

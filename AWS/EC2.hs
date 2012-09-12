@@ -6,6 +6,7 @@ module AWS.EC2
     , EC2Endpoint(..)
     , EC2
     , EC2Context
+    , Filter
     , newEC2Context
     , runEC2
     , describeImages
@@ -41,11 +42,19 @@ runEC2 ctx = flip evalStateT ctx
 describeImages
     :: (MonadResource m, MonadBaseControl IO m)
     => [ByteString]
+    -> [ByteString]
+    -> [ByteString]
+    -> [Filter]
     -> EC2 m (EC2Response (Source m Image))
-describeImages imageIds =
+describeImages imageIds owners execby filters =
     ec2Query "DescribeImages" params imagesSetConduit
   where
-    params = [ArrayParams "ImageId" imageIds]
+    params =
+        [ ArrayParams "ImageId" imageIds
+        , ArrayParams "Owner" owners
+        , ArrayParams "ExecutableBy" execby
+        , FilterParams filters
+        ]
 
 imagesSetConduit :: MonadThrow m
     => GLConduit Event m Image
@@ -322,11 +331,15 @@ t2productCodeType t
 describeRegions
     :: (MonadResource m, MonadBaseControl IO m)
     => [ByteString]
+    -> [Filter]
     -> EC2 m (EC2Response (Source m Region))
-describeRegions regions =
+describeRegions regions filters =
     ec2Query "DescribeRegions" params regionInfoConduit
   where
-    params = [ArrayParams "RegionName" regions]
+    params =
+        [ ArrayParams "RegionName" regions
+        , FilterParams filters
+        ]
 
     regionInfoConduit :: MonadThrow m
         => GLConduit Event m Region
@@ -344,11 +357,15 @@ describeRegions regions =
 describeAvailabilityZones
     :: (MonadResource m, MonadBaseControl IO m)
     => [ByteString]
+    -> [Filter]
     -> EC2 m (EC2Response (Source m AvailabilityZone))
-describeAvailabilityZones zones =
+describeAvailabilityZones zones filters =
     ec2Query "DescribeAvailabilityZones" params availabilityZoneInfo
   where
-    params = [ArrayParams "ZoneName" zones]
+    params =
+        [ ArrayParams "ZoneName" zones
+        , FilterParams filters
+        ]
 
     availabilityZoneInfo :: MonadThrow m
         => GLConduit Event m AvailabilityZone
