@@ -22,6 +22,7 @@ import qualified Data.ByteString.Char8 as BSC
 import Data.Monoid
 import Data.XML.Types
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Conduit
 import Control.Monad.Trans.Control
 import qualified Network.HTTP.Conduit as HTTP
@@ -73,10 +74,13 @@ data QueryParams
 
 type Filter = (ByteString, [ByteString])
 
+apiVersion :: String
+apiVersion = "2012-08-15"
+
 queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
 queryHeader action time cred =
     [ ("Action", action)
-    , ("Version", "2012-07-20")
+    , ("Version", BSC.pack apiVersion)
     , ("SignatureVersion", "2")
     , ("SignatureMethod", "HmacSHA256")
     , ("Timestamp", H.urlEncode True $ awsTimeFormat time)
@@ -160,7 +164,7 @@ ec2Name :: Text -> Name
 ec2Name name = Name
     { nameLocalName = name
     , nameNamespace =
-        Just "http://ec2.amazonaws.com/doc/2012-07-20/"
+        Just $ "http://ec2.amazonaws.com/doc/" <> T.pack apiVersion <> "/"
     , namePrefix = Nothing
     }
 
@@ -181,6 +185,7 @@ ec2Query action params cond = do
         request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
         response <- HTTP.http request mgr
         (res, _) <- unwrapResumable $ HTTP.responseBody response
+--        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
         (src, rid) <- res $= parseBytes def $$+ sinkRequestId
         (src1, _) <- unwrapResumable src
         return $ EC2Response

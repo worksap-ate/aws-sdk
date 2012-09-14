@@ -54,7 +54,8 @@ describeImages
     -> [Filter]
     -> EC2 m (EC2Response (Source m Image))
 describeImages imageIds owners execby filters =
-    ec2Query "DescribeImages" params imagesSetConduit
+    ec2Query "DescribeImages" params $
+        itemConduit "imagesSet" imageItem
   where
     params =
         [ ArrayParams "ImageId" imageIds
@@ -63,16 +64,12 @@ describeImages imageIds owners execby filters =
         , FilterParams filters
         ]
 
-imagesSetConduit :: MonadThrow m
-    => GLConduit Event m Image
-imagesSetConduit = itemConduit "imagesSet" imageItem
-
 itemConduit :: MonadThrow m
     => Text
     -> GLSink Event m o
     -> GLConduit Event m o
-itemConduit tag inner =
-    element tag (items inner)
+itemConduit tag inner = do
+    maybe (()) id <$> elementM tag (items inner)
   where
     items :: MonadThrow m
         => Pipe Event Event o u m o
@@ -136,7 +133,7 @@ imageItem = image
     <*> itemsSet "blockDeviceMapping" (
         blockDeviceMapping
         <$> getT "deviceName"
-        <*> getMT "virutalName"
+        <*> getMT "virtualName"
         <*> elementM "ebs" (
             ebsBlockDevice
             <$> getMT "snapshotId"
@@ -431,7 +428,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> stateReasonSink
     <*> getF "architecture" t2architecture
     <*> getF "rootDeviceType" t2deviceType
-    <*> getT "rootDeviceName"
+    <*> getMT "rootDeviceName"
     <*> itemsSet "blockDeviceMapping" (
         instanceBlockDeviceMapping
         <$> getT "deviceName"

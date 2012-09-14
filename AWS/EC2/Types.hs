@@ -164,7 +164,7 @@ data Instance = Instance
     , instanceStateReason :: Maybe StateReason
     , instanceArchitecture :: Architecture
     , instanceRootDeviceType :: RootDeviceType
-    , instanceRootDeviceName :: Text
+    , instanceRootDeviceName :: Maybe Text
     , instanceBlockDeviceMappings :: [InstanceBlockDeviceMapping]
     , instanceLifecycle :: InstanceLifecycle
     , spotInstanceRequestId :: Maybe Text
@@ -437,7 +437,7 @@ ec2Instance
     -> InstanceMonitoringState -> Maybe Text -> Maybe Text
     -> Maybe Text -> Maybe Text -> Maybe Bool -> [Group]
     -> Maybe StateReason -> Architecture -> RootDeviceType
-    -> Text -> [InstanceBlockDeviceMapping]
+    -> Maybe Text -> [InstanceBlockDeviceMapping]
     -> InstanceLifecycle -> Maybe Text -> VirtualizationType
     -> Text -> [ResourceTag] -> Hypervisor
     -> [InstanceNetworkInterface] -> Maybe IamInstanceProfile
