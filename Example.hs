@@ -34,7 +34,8 @@ main = do
 --            response <- describeAvailabilityZones [] []
 --            response <- describeRegions [] []
 --            response <- describeImages imageIds [] [] []
-            response <- describeInstances [] []
+            response <- describeAddresses [] [] []
+--            response <- describeInstances [] []
             lift $ responseBody response $$ CL.consume
     print doc
     putStr "Length: "

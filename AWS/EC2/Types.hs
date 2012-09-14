@@ -292,6 +292,34 @@ data IamInstanceProfile = IamInstanceProfile
     }
   deriving (Show)
 
+data Address = Address
+    { addrPublicIp :: Text
+    , addrAllocationId :: Maybe Text
+    , addrDomain :: AddressDomain
+    , addrInstanceId :: Maybe Text
+    , addrAssociationId :: Maybe Text
+    , addrNetworkInterfaceId :: Maybe Text
+    , addrNetworkInterfaceOwnerId :: Maybe Text
+    , addrPrivateIpAddress :: Maybe Text
+    }
+  deriving (Show)
+
+data AddressDomain = AddressDomainStandard | AddressDomainVPC
+  deriving (Show)
+
+address :: Text -> Maybe Text -> AddressDomain -> Maybe Text
+    -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
+    -> Address
+address pip alid dom iid asid niid nioid pips = Address
+    { addrPublicIp = pip
+    , addrAllocationId = alid
+    , addrDomain = dom
+    , addrInstanceId = iid
+    , addrAssociationId = asid
+    , addrNetworkInterfaceId = niid
+    , addrNetworkInterfaceOwnerId = nioid
+    , addrPrivateIpAddress = pips
+    }
 
 blockDeviceMapping :: Text -> Maybe Text -> Maybe EbsBlockDevice
     -> BlockDeviceMapping
