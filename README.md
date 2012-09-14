@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/worksap-ate/aws-sdk.png)](http://travis-ci.org/worksap-ate/aws-sdk)
+
 # AWS-SDK
 
 An AWS(Amazon Web Services) library for Haskell.
