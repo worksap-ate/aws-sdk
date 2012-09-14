@@ -15,6 +15,7 @@ module AWS.EC2.Query
     ) where
 
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import           Data.ByteString.Lazy.Char8 ()
 import qualified Data.ByteString.Char8 as BSC
 
@@ -117,11 +118,9 @@ toArrayParams (FilterParams fs) =
     fname n = "Filter." <> (BSC.pack $ show n)
 
 queryStr :: Map ByteString ByteString -> ByteString
-queryStr = concatWithSep "&" . Map.foldlWithKey concatWithEqual []
+queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
   where
-    concatWithEqual acc key val = acc ++ [key <> "=" <> val] -- FIXME not to use ++
-    concatWithSep :: ByteString -> [ByteString] -> ByteString
-    concatWithSep sep = foldl1 $ \a b -> mconcat [a, sep, b]
+    concatWithEqual key val acc = key <> "=" <> val : acc
 
 awsTimeFormat :: UTCTime -> ByteString
 awsTimeFormat time = BSC.pack $ formatTime defaultTimeLocale (iso8601DateFormat $ Just "%XZ") time
