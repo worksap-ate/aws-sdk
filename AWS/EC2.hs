@@ -71,8 +71,7 @@ itemConduit :: MonadThrow m
     -> GLSink Event m o
     -> GLConduit Event m o
 itemConduit tag inner =
---    element tag (items inner) >>= maybe (return ()) return
-    elementF tag (items inner)
+    element tag (items inner)
   where
     items :: MonadThrow m
         => Pipe Event Event o u m o
@@ -81,7 +80,7 @@ itemConduit tag inner =
         leftover e
         if isBeginTagName "item" e
             then do
-                elementF "item" $ p >>= yield
+                element "item" $ p >>= yield
                 items p
             else return ()
         )
@@ -115,103 +114,61 @@ awaitWhile f =
 
 imageItem :: MonadThrow m
     => GLSink Event m Image
-imageItem = do
-    i <- getT "imageId"
-    l <- getT "imageLocation"
-    s <- getF "imageState" t2imageState
-    oid <- getT "imageOwnerId"
-    p <- getF "isPublic" t2bool
-    pc <- productCodeSink
-    a <- getT "architecture"
-    t <- getF "imageType" t2imageType
-    kid <- getMT "kernelId"
-    rid <- getMT "ramdiskId"
-    pf <- getM "platform" t2platform
-    sr <- stateReasonSink
-    oa <- getMT "imageOwnerAlias"
-    n <- getM "name" t2emptxt
-    d <- getM "description" t2emptxt
-    rdt <- getF "rootDeviceType" t2rootDeviceType
-    rdn <- getMT "rootDeviceName"
-    bdms <- itemsSet "blockDeviceMapping" $ do
-        dname <- getT "deviceName"
-        v <- getMT "virutalName"
-        e <- element "ebs" $ do
-            sid <- getMT "snapshotId"
-            vs <- getF "volumeSize" t2dec
-            dot <- getF "deleteOnTermination" t2bool
-            vt <- getF "volumeType" t2volumeType
-            io <- getM "iops" t2iops
-            return $ EbsBlockDevice
-                { ebsSnapshotId = sid
-                , volumeSize = vs
-                , ebsDeleteOnTermination = dot
-                , volumeType = vt
-                , iops = io
-                }
-        return $ BlockDeviceMapping
-            { deviceName = dname
-            , virtualName = v
-            , ebs = e
-            }
-    vt <- getF "virtualizationType" t2virtualizationType
-    ts <- resourceTagSink
-    h <- getF "hypervisor" t2hipervisor
-    return $ Image
-        { imageId = i
-        , imageLocation = l
-        , imageState = s
-        , imageOwnerId = oid
-        , isPublic = p
-        , imageProductCodes = pc
-        , imageArchitecture = a
-        , imageType = t
-        , kernelId = kid
-        , ramdiskId = rid
-        , platform = pf
-        , imageStateReason = sr
-        , imageOwnerAlias = oa
-        , imageName = n
-        , description = d
-        , rootDeviceType = rdt
-        , rootDeviceName = rdn
-        , blockDeviceMappings = bdms
-        , virtualizationType = vt
-        , imageTagSet = ts
-        , hipervisor = h
-        }
+imageItem = image
+    <$> getT "imageId"
+    <*> getT "imageLocation"
+    <*> getF "imageState" t2imageState
+    <*> getT "imageOwnerId"
+    <*> getF "isPublic" t2bool
+    <*> productCodeSink
+    <*> getT "architecture"
+    <*> getF "imageType" t2imageType
+    <*> getMT "kernelId"
+    <*> getMT "ramdiskId"
+    <*> getM "platform" t2platform
+    <*> stateReasonSink
+    <*> getMT "imageOwnerAlias"
+    <*> getM "name" t2emptxt
+    <*> getM "description" t2emptxt
+    <*> getF "rootDeviceType" t2rootDeviceType
+    <*> getMT "rootDeviceName"
+    <*> itemsSet "blockDeviceMapping" (
+        blockDeviceMapping
+        <$> getT "deviceName"
+        <*> getMT "virutalName"
+        <*> elementM "ebs" (
+            ebsBlockDevice
+            <$> getMT "snapshotId"
+            <*> getF "volumeSize" t2dec
+            <*> getF "deleteOnTermination" t2bool
+            <*> getF "volumeType" t2volumeType
+            <*> getM "iops" t2iops
+            )
+        )
+    <*> getF "virtualizationType" t2virtualizationType
+    <*> resourceTagSink
+    <*> getF "hypervisor" t2hypervisor
 
 resourceTagSink :: MonadThrow m
     => GLSink Event m [ResourceTag]
-resourceTagSink = itemsSet "tagSet" $ do
-    k <- getT "key"
-    v <- getT "value"
-    return ResourceTag
-        { resourceKey = k
-        , resourceValue = v
-        }
+resourceTagSink = itemsSet "tagSet" $
+    resourceTag
+    <$> getT "key"
+    <*> getT "value"
 
 productCodeSink :: MonadThrow m
     => GLSink Event m [ProductCode]
-productCodeSink = itemsSet "productCodes" $ do
-    c <- getT "productCode"
-    t <- getF "type" t2productCodeType
-    return ProductCode
-        { productCode = c
-        , productCodeType = t
-        }
+productCodeSink = itemsSet "productCodes" $
+    productCode
+    <$> getT "productCode"
+    <*> getF "type" t2productCodeType
 
 stateReasonSink :: MonadThrow m
     => GLSink Event m (Maybe StateReason)
-stateReasonSink = do
-    msr <- element "stateReason" $ do
-        c <- getT "code"
-        m <- getT "message"
-        return StateReason
-            { stateReasonCode = c
-            , stateReasonMessage = m
-            }
-    return msr
+stateReasonSink = elementM "stateReason" $
+    stateReason
+    <$> getT "code"
+    <*> getT "message"
 
 getF :: MonadThrow m
     => Text
@@ -235,17 +192,17 @@ getMT :: MonadThrow m
     -> Pipe Event Event o u m (Maybe Text)
 getMT name = getM name id
 
-element :: MonadThrow m
+elementM :: MonadThrow m
     => Text
     -> Pipe Event Event o u m a
     -> Pipe Event Event o u m (Maybe a)
-element name inner = XML.tagNoAttr (ec2Name name) inner
+elementM name inner = XML.tagNoAttr (ec2Name name) inner
 
-elementF :: MonadThrow m
+element :: MonadThrow m
     => Text
     -> Pipe Event Event o u m a
     -> Pipe Event Event o u m a
-elementF name inner = XML.force "parse error" $ element name inner
+element name inner = XML.force "parse error" $ elementM name inner
 
 err :: String -> Text -> a
 err v m = error $ "unknown " ++ v ++ ": " ++ T.unpack m
@@ -294,11 +251,11 @@ t2virtualizationType t
     | t == "hvm"         = HVM
     | otherwise          = err "virtualization type" t
 
-t2hipervisor :: Text -> Hipervisor
-t2hipervisor t
+t2hypervisor :: Text -> Hypervisor
+t2hypervisor t
     | t == "xen" = Xen
     | t == "ovm" = OVM
-    | otherwise  = err "hipervisor" t
+    | otherwise  = err "hypervisor" t
 
 t2volumeType :: Text -> VolumeType
 t2volumeType t
@@ -323,6 +280,39 @@ t2time = readTime defaultTimeLocale fmt . T.unpack
 t2emptxt :: Maybe Text -> Text
 t2emptxt = maybe "" id
 
+t2volumeState :: Text -> VolumeState
+t2volumeState t
+    | t == "attached"  = VolumeAttached
+    | t == "attaching" = VolumeAttaching
+    | t == "detaching" = VolumeDetaching
+    | t == "detached"  = VolumeDetached
+    | otherwise        = err "volume state" t
+
+t2architecture :: Text -> Architecture
+t2architecture t
+    | t == "i386"   = I386
+    | t == "x86_64" = X86_64
+    | otherwise     = err "architecture" t
+
+t2deviceType :: Text -> RootDeviceType
+t2deviceType t
+    | t == "ebs"            = EBS
+    | t == "instance-store" = InstanceStore
+    | otherwise             = err "root device type" t
+
+t2monitoring :: Text -> InstanceMonitoringState
+t2monitoring t
+    | t == "disabled" = MonitoringDisabled
+    | t == "enabled"  = MonitoringEnabled
+    | t == "pending"  = MonitoringPending
+    | otherwise       = err "monitoring state" t
+
+t2lifecycle :: Maybe Text -> InstanceLifecycle
+t2lifecycle Nothing = LifecycleNone
+t2lifecycle (Just t)
+    | t == "spot"   = LifecycleSpot
+    | otherwise     = err "lifecycle" t
+
 {----------------------------------------------------
  - DescribeRegions
  ---------------------------------------------------}
@@ -341,16 +331,13 @@ describeRegions regions filters =
 
     regionInfoConduit :: MonadThrow m
         => GLConduit Event m Region
-    regionInfoConduit = itemConduit "regionInfo" $ do
-        name <- getT "regionName"
-        rep <- getT "regionEndpoint"
-        return Region
-            { regionName = name
-            , regionEndpoint = rep
-            }
+    regionInfoConduit = itemConduit "regionInfo" $
+        region
+        <$> getT "regionName"
+        <*> getT "regionEndpoint"
 
 {----------------------------------------------------
- - DescribeRegions
+ - DescribeAvailabilityZones
  ---------------------------------------------------}
 describeAvailabilityZones
     :: (MonadResource m, MonadBaseControl IO m)
@@ -367,17 +354,12 @@ describeAvailabilityZones zones filters =
 
     availabilityZoneInfo :: MonadThrow m
         => GLConduit Event m AvailabilityZone
-    availabilityZoneInfo = itemConduit "availabilityZoneInfo" $ do
-        name <- getT "zoneName"
-        st <- getT "zoneState"
-        region <- getT "regionName"
-        msgs <- itemsSet "messageSet" $ getT "message"
-        return AvailabilityZone
-            { zoneName = name
-            , zoneState = st
-            , zoneRegionName = region
-            , messageSet = msgs
-            }
+    availabilityZoneInfo = itemConduit "availabilityZoneInfo" $
+        availabilityZone
+        <$> getT "zoneName"
+        <*> getT "zoneState"
+        <*> getT "regionName"
+        <*> itemsSet "messageSet" (getT "message")
 
 {----------------------------------------------------
  - DescribeInstances
@@ -397,199 +379,116 @@ describeInstances instances filters =
 
 reservationSet :: MonadThrow m
     => GLConduit Event m Reservation
-reservationSet = itemConduit "reservationSet" $ do
-    i <- getT "reservationId"
-    o <- getT "ownerId"
-    g <- groupSetSink
-    iset <- instanceSetSink
-    rid <- getMT "requesterId"
-    return Reservation
-        { reservationId = i
-        , ownerId = o
-        , groupSet = g
-        , instanceSet = iset
-        , requesterId = rid
-        }
+reservationSet = itemConduit "reservationSet" $
+    reservation
+    <$> getT "reservationId"
+    <*> getT "ownerId"
+    <*> groupSetSink
+    <*> instanceSetSink
+    <*> getMT "requesterId"
 
 groupSetSink :: MonadThrow m => GLSink Event m [Group]
-groupSetSink = itemsSet "groupSet" $ do
-    i <- getT "groupId"
-    n <- getT "groupName"
-    return Group
-        { groupId = i
-        , groupName = n
-        }
+groupSetSink = itemsSet "groupSet" $ group
+    <$> getT "groupId"
+    <*> getT "groupName"
 
 instanceSetSink :: MonadThrow m
     => GLSink Event m [Instance]
-instanceSetSink = itemsSet "instancesSet" $ do
-    iid <- getT "instanceId"
-    image <- getT "imageId"
-    istate <- elementF "instanceState" $ do
-        code <- getF "code" t2dec
-        getT "name"
-        return $ codeToState code
-    pdns <- getT "privateDnsName"
-    dns <- getT "dnsName"
-    res <- getT "reason"
-    kname <- getT "keyName"
-    aidx <- getT "amiLaunchIndex"
-    pcode <- productCodeSink
-    itype <- getT "instanceType"
-    ltime <- getF "launchTime" t2time
-    placement <- elementF "placement" $ do
-        zone <- getT "availabilityZone"
-        gname <- getT "groupName"
-        ten <- getT "tenancy"
-        return Placement
-            { availabilityZone = zone
-            , placementGroupName = gname
-            , tenancy = ten
-            }
-    kid <- getMT "kernelId"
-    rid <- getMT "ramdiskId"
-    pf <- getMT "platform"
-    mon <- elementF "monitoring" $ getF "state" $ const MonitoringDisabled -- XXX
-    snid <- getMT "subnetId"
-    vpcid <- getMT "vpcId"
-    paddr <- getMT "privateIpAddress"
-    addr <- getMT "ipAddress"
-    sdc <- getM "sourceDestCheck" (t2bool <$>)
-    group <- groupSetSink
-    sreason <- stateReasonSink
-    arch <- getF "architecture" $ const I386 -- XXX
-    rdtype <- getF "rootDeviceType" $ const EBS -- XXX
-    rdname <- getT "rootDeviceName"
-    bdmap <- itemsSet "blockDeviceMapping" $ do
-        devname <- getT "deviceName"
-        iebs <- elementF "ebs" $ do
-            vid <- getT "volumeId"
-            vst <- getF "status" $ const VolumeAttached -- XXX
-            atime <- getF "attachTime" $ t2time
-            dot <- getF "deleteOnTermination" t2bool
-            return InstanceEbsBlockDevice
-                { instanceEbsVolumeId = vid
-                , instanceEbsState = vst
-                , instanceEbsAttachTime = atime
-                , instanceEbsDeleteOnTermination = dot
-                }
-        return InstanceBlockDeviceMapping
-            { instanceDeviceName = devname
-            , instanceEbs = iebs
-            }
-    life <- getM "instanceLifecycle" $ const LifeCycleNone
-    spotid <- getMT "spotInstanceRequestId"
-    vtype <- getF "virtualizationType" t2virtualizationType
-    ctoken <- getT "clientToken"
-    tset <- resourceTagSink
-    hv <- getF "hypervisor" t2hipervisor
-    nicset <- networkInterfaceSink
-    iam <- element "iamInstanceProfile" $ do
-        arn <- getT "arn"
-        iamid <- getT "id"
-        return IamInstanceProfile
-            { iipArn = arn
-            , iipId = iamid
-            }
-    eopt <- getF "ebsOptimized" t2bool
-    return Instance
-        { instanceId = iid
-        , instanceImageId = image
-        , instanceState = istate
-        , privateDnsName = pdns
-        , dnsName = dns
-        , reason = res
-        , keyName = kname
-        , amiLaunchIndex = aidx
-        , instanceProductCodes = pcode
-        , instanceType = itype
-        , launchTime = ltime
-        , instancePlacement = placement
-        , instanceKernelId = kid
-        , instanceRamdiskId = rid
-        , instancePlatform = pf
-        , monitoring = mon
-        , subnetId = snid
-        , vpcId = vpcid
-        , privateIpAddress = paddr
-        , ipAddress = addr
-        , sourceDestCheck = sdc
-        , vpcGroupSet = group
-        , instanceStateReason = sreason
-        , instanceArchitecture = arch
-        , instanceRootDeviceType = rdtype
-        , instanceRootDeviceName = rdname
-        , instanceBlockDeviceMappings = bdmap
-        , instanceLifecycle = life
-        , spotInstanceRequestId = spotid
-        , instanceVirtualizationType = vtype
-        , clientToken = ctoken
-        , instanceTagSet = tset
-        , instanceHypervisor = hv
-        , instanceNetworkInterfaceSet = nicset
-        , iamInstanceProfile = iam
-        , ebsOptimized = eopt
-        }
+instanceSetSink = itemsSet "instancesSet" $
+    ec2Instance
+    <$> getT "instanceId"
+    <*> getT "imageId"
+    <*> element "instanceState" (
+        codeToState
+        <$> getF "code" t2dec
+        <* getT "name"
+        )
+    <*> getT "privateDnsName"
+    <*> getT "dnsName"
+    <*> getT "reason"
+    <*> getT "keyName"
+    <*> getT "amiLaunchIndex"
+    <*> productCodeSink
+    <*> getT "instanceType"
+    <*> getF "launchTime" t2time
+    <*> element "placement" (
+        placement
+        <$> getT "availabilityZone"
+        <*> getT "groupName"
+        <*> getT "tenancy"
+        )
+    <*> getMT "kernelId"
+    <*> getMT "ramdiskId"
+    <*> getMT "platform"
+    <*> element "monitoring" (getF "state" t2monitoring)
+    <*> getMT "subnetId"
+    <*> getMT "vpcId"
+    <*> getMT "privateIpAddress"
+    <*> getMT "ipAddress"
+    <*> getM "sourceDestCheck" (t2bool <$>)
+    <*> groupSetSink
+    <*> stateReasonSink
+    <*> getF "architecture" t2architecture
+    <*> getF "rootDeviceType" t2deviceType
+    <*> getT "rootDeviceName"
+    <*> itemsSet "blockDeviceMapping" (
+        instanceBlockDeviceMapping
+        <$> getT "deviceName"
+        <*> element "ebs" (
+            instanceEbsBlockDevice
+            <$> getT "volumeId"
+            <*> getF "status" t2volumeState
+            <*> getF "attachTime" t2time
+            <*> getF "deleteOnTermination" t2bool
+            )
+        )
+    <*> getM "instanceLifecycle" t2lifecycle
+    <*> getMT "spotInstanceRequestId"
+    <*> getF "virtualizationType" t2virtualizationType
+    <*> getT "clientToken"
+    <*> resourceTagSink
+    <*> getF "hypervisor" t2hypervisor
+    <*> networkInterfaceSink
+    <*> elementM "iamInstanceProfile" (
+        iamInstanceProfile
+        <$> getT "arn"
+        <*> getT "id"
+        )
+    <*> getF "ebsOptimized" t2bool
 
 networkInterfaceSink :: MonadThrow m
     => GLSink Event m [InstanceNetworkInterface]
-networkInterfaceSink = itemsSet "networkInterfaceSet" $ do
-    iid <- getT "networkInterfaceId"
-    sid <- getT "subnetId"
-    vpcid <- getT "vpcId"
-    desc <- getM "description" t2emptxt
-    own <- getT "ownerId"
-    st <- getT "status"
-    paddr <- getT "privateIpAddress"
-    pdns <- getMT "privateDnsName"
-    sdc <- getF "sourceDestCheck" t2bool
-    grp <- groupSetSink
-    att <- elementF "attachment" $ do
-        aid <- getT "attachmentId"
-        didx <- getF "deviceIndex" t2dec
-        ast <- getT "status"
-        atime <- getF "attachTime" t2time
-        dot <- getF "deleteOnTermination" t2bool
-        return NetworkInterfaceAttachment
-            { niatAttachmentId = aid
-            , niatDeviceIndex = didx
-            , niatStatus = ast
-            , niatAttachTime = atime
-            , niatDeleteOnTermination = dot
-            }
-    asso <- niAssociationSink
-    pips <- itemsSet "privateIpAddressesSet" $ do
-        pip <- getT "privateIpAddress"
-        pr <- getF "primary" t2bool
-        passo <- niAssociationSink
-        return InstancePrivateIpAddress
-            { iPrivateIpAddress = pip
-            , iPrimary = pr
-            , iAssociation = passo
-            }
-    return InstanceNetworkInterface
-        { instanceNetworkInterfaceId = iid
-        , iniSubnetId = sid
-        , iniVpcId = vpcid
-        , iniDescription = desc
-        , iniOwnerId = own
-        , iniStatus = st
-        , iniPrivateIpAddress = paddr
-        , iniPrivateDnsName = pdns
-        , iniSourceDestCheck = sdc
-        , iniGroupSet = grp
-        , iniAttachment = att
-        , iniAssociation = asso
-        , iniPrivateIpAddressSet = pips
-        }
+networkInterfaceSink = itemsSet "networkInterfaceSet" $
+    instanceNetworkInterface
+    <$> getT "networkInterfaceId"
+    <*> getT "subnetId"
+    <*> getT "vpcId"
+    <*> getM "description" t2emptxt
+    <*> getT "ownerId"
+    <*> getT "status"
+    <*> getT "privateIpAddress"
+    <*> getMT "privateDnsName"
+    <*> getF "sourceDestCheck" t2bool
+    <*> groupSetSink
+    <*> element "attachment" (
+        networkInterfaceAttachment
+        <$> getT "attachmentId"
+        <*> getF "deviceIndex" t2dec
+        <*> getT "status"
+        <*> getF "attachTime" t2time
+        <*> getF "deleteOnTermination" t2bool
+        )
+    <*> niAssociationSink
+    <*> itemsSet "privateIpAddressesSet" (
+        instancePrivateIpAddress
+        <$> getT "privateIpAddress"
+        <*> getF "primary" t2bool
+        <*> niAssociationSink
+        )
 
 niAssociationSink :: MonadThrow m
     => GLSink Event m (Maybe NetworkInterfaceAssociation)
-niAssociationSink = element "association" $ do
-    aspip <- getT "publicIp"
-    asipown <- getT "ipOwnerId"
-    return NetworkInterfaceAssociation
-        { niasPublicIp = aspip
-        , niasIpOwnerId = asipown
-        }
-
+niAssociationSink = elementM "association" $
+    networkInterfaceAssociation
+    <$> getT "publicIp"
+    <*> getT "ipOwnerId"

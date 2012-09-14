@@ -19,4 +19,3 @@ data EC2Endpoint = UsEast1
 instance Endpoint EC2Endpoint where
     endpointStr UsEast1      = "ec2.us-east-1.amazonaws.com"
     endpointStr ApNortheast1 = "ec2.ap-northeast-1.amazonaws.com"
-

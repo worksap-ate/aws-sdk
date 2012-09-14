@@ -188,4 +188,3 @@ ec2Query action params cond = do
             { requestId = rid
             , responseBody = src1 $= cond
             }
-
