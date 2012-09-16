@@ -20,20 +20,20 @@ import           Data.ByteString.Lazy.Char8 ()
 import qualified Data.ByteString.Char8 as BSC
 
 import Data.Monoid
-import Data.XML.Types
+import Data.XML.Types (Name(..), Event(..))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Conduit
 import Control.Monad.Trans.Control
 import qualified Network.HTTP.Conduit as HTTP
-import Text.XML.Stream.Parse
+import qualified Text.XML.Stream.Parse as XmlP
 import Data.Time (UTCTime, formatTime, getCurrentTime)
 import System.Locale (defaultTimeLocale, iso8601DateFormat)
 import qualified Data.Map as Map
 import Data.Map (Map)
 import qualified Network.HTTP.Types as H
 import qualified Data.Digest.Pure.SHA as SHA
-import qualified Data.ByteString.Base64.Lazy as BASE
+import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.State
 
 import AWS.EC2.Types
@@ -118,7 +118,6 @@ toArrayParams (FilterParams fs) =
             [ (fname n <> ".Value." <> (BSC.pack $ show i), param)
             | (i, param) <- zip [1..] vals
             ]
-    
     fname n = "Filter." <> (BSC.pack $ show n)
 
 queryStr :: Map ByteString ByteString -> ByteString
@@ -131,7 +130,7 @@ awsTimeFormat time = BSC.pack $ formatTime defaultTimeLocale (iso8601DateFormat 
 
 signature :: Endpoint end 
           => end -> SecretAccessKey -> ByteString -> ByteString
-signature ep secret query = urlstring
+signature ep secret query = urlstr
   where
     stringToSign = mconcat
         [ "GET\n"
@@ -139,9 +138,8 @@ signature ep secret query = urlstring
         , "\n/\n"
         , query
         ]
-    signedString = SHA.hmacSha256 (toL secret) (toL stringToSign)
-    base64string = BASE.encode $ SHA.bytestringDigest signedString
-    urlstring = H.urlEncode True (toS base64string)
+    signedStr = toS . SHA.bytestringDigest $ SHA.hmacSha256 (toL secret) (toL stringToSign)
+    urlstr = H.urlEncode True . BASE.encode $ signedStr
 
 sinkRequestId :: MonadThrow m
     => GLSink Event m Text
@@ -153,12 +151,12 @@ sinkRequestId = do
 tagContent :: MonadThrow m
     => Text
     -> GLSink Event m (Maybe Text)
-tagContent name = tagNoAttr (ec2Name name) content
+tagContent name = XmlP.tagNoAttr (ec2Name name) XmlP.content
 
 tagContentF :: MonadThrow m
     => Text
     -> GLSink Event m Text
-tagContentF = force "parse error" . tagContent
+tagContentF = XmlP.force "parse error" . tagContent
 
 ec2Name :: Text -> Name
 ec2Name name = Name
@@ -186,7 +184,7 @@ ec2Query action params cond = do
         response <- HTTP.http request mgr
         (res, _) <- unwrapResumable $ HTTP.responseBody response
 --        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
-        (src, rid) <- res $= parseBytes def $$+ sinkRequestId
+        (src, rid) <- res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
         (src1, _) <- unwrapResumable src
         return $ EC2Response
             { requestId = rid
