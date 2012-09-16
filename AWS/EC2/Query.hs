@@ -104,21 +104,21 @@ mkUrl ep cred time action params = mconcat
     ]
   where
     qheader = Map.fromList $ queryHeader action time cred
-    qparam = queryStr $ Map.unions (qheader:map toArrayParams params)
+    qparam = queryStr $ Map.unions (qheader : map toArrayParams params)
 
 toArrayParams :: QueryParams -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 
-    [(name <> "." <> (BSC.pack $ show i), param)
-     | (i, param) <- zip [1..] params]
+    [ (name <> "." <> bsShow i, param)
+    | (i, param) <- zip [1..] params
+    ]
 toArrayParams (FilterParams fs) =
-    Map.fromList $ concat $ map f1 $ zip [1..] fs
+    Map.fromList . concat . map f1 $ zip [1..] fs
   where
-    f1 (n, (name, vals)) = 
-        (fname n <> ".Name", name):
-            [ (fname n <> ".Value." <> (BSC.pack $ show i), param)
-            | (i, param) <- zip [1..] vals
-            ]
-    fname n = "Filter." <> (BSC.pack $ show n)
+    f1 (n, (name, vals)) = (filt n <> ".Name", name) :
+        [ (filt n <> ".Value." <> bsShow i, param)
+        | (i, param) <- zip [1..] vals
+        ]
+    filt n = "Filter." <> bsShow n
 
 queryStr :: Map ByteString ByteString -> ByteString
 queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
@@ -126,7 +126,7 @@ queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
     concatWithEqual key val acc = key <> "=" <> val : acc
 
 awsTimeFormat :: UTCTime -> ByteString
-awsTimeFormat time = BSC.pack $ formatTime defaultTimeLocale (iso8601DateFormat $ Just "%XZ") time
+awsTimeFormat = BSC.pack . formatTime defaultTimeLocale (iso8601DateFormat $ Just "%XZ")
 
 signature :: Endpoint end 
           => end -> SecretAccessKey -> ByteString -> ByteString
