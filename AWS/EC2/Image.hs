@@ -1,0 +1,73 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+
+module AWS.EC2.Image
+    ( describeImages
+    ) where
+
+import           Data.ByteString (ByteString)
+import           Data.ByteString.Lazy.Char8 ()
+
+import Data.XML.Types
+import Data.Conduit
+import Control.Monad.Trans.Control
+import Control.Applicative
+
+import AWS.EC2.Types
+import AWS.EC2.Query
+import AWS.EC2.Parser
+
+describeImages
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [ByteString]
+    -> [ByteString]
+    -> [ByteString]
+    -> [Filter]
+    -> EC2 m (EC2Response (Source m Image))
+describeImages imageIds owners execby filters =
+    ec2Query "DescribeImages" params $
+        itemConduit "imagesSet" imageItem
+  where
+    params =
+        [ ArrayParams "ImageId" imageIds
+        , ArrayParams "Owner" owners
+        , ArrayParams "ExecutableBy" execby
+        , FilterParams filters
+        ]
+
+imageItem :: MonadThrow m
+    => GLSink Event m Image
+imageItem = image
+    <$> getT "imageId"
+    <*> getT "imageLocation"
+    <*> getF "imageState" t2imageState
+    <*> getT "imageOwnerId"
+    <*> getF "isPublic" t2bool
+    <*> productCodeSink
+    <*> getT "architecture"
+    <*> getF "imageType" t2imageType
+    <*> getMT "kernelId"
+    <*> getMT "ramdiskId"
+    <*> getM "platform" t2platform
+    <*> stateReasonSink
+    <*> getMT "imageOwnerAlias"
+    <*> getM "name" t2emptxt
+    <*> getM "description" t2emptxt
+    <*> getF "rootDeviceType" t2rootDeviceType
+    <*> getMT "rootDeviceName"
+    <*> itemsSet "blockDeviceMapping" (
+        blockDeviceMapping
+        <$> getT "deviceName"
+        <*> getMT "virtualName"
+        <*> elementM "ebs" (
+            ebsBlockDevice
+            <$> getMT "snapshotId"
+            <*> getF "volumeSize" t2dec
+            <*> getF "deleteOnTermination" t2bool
+            <*> getF "volumeType" t2volumeType
+            <*> getM "iops" t2iops
+            )
+        )
+    <*> getF "virtualizationType" t2virtualizationType
+    <*> resourceTagSink
+    <*> getF "hypervisor" t2hypervisor

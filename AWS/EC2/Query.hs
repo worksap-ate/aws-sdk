@@ -2,14 +2,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module AWS.EC2.Query
-    ( EC2Context
+    ( EC2Context(..)
     , EC2
-    , newEC2Context
-    , setEndpoint
     , ec2Query
-    , ec2Name
-    , tagContentF
-    , tagContent
     , QueryParams(..)
     , Filter
     ) where
@@ -20,9 +15,8 @@ import           Data.ByteString.Lazy.Char8 ()
 import qualified Data.ByteString.Char8 as BSC
 
 import Data.Monoid
-import Data.XML.Types (Name(..), Event(..))
+import Data.XML.Types (Event(..))
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Conduit
 import Control.Monad.Trans.Control
 import qualified Network.HTTP.Conduit as HTTP
@@ -39,6 +33,7 @@ import Control.Monad.State
 import AWS.EC2.Types
 import AWS.Types
 import AWS.Util
+import AWS.EC2.Parser
 
 {- Debug
 import qualified Data.Conduit.Binary as CB
@@ -52,35 +47,16 @@ data EC2Context = EC2Context
 
 type EC2 m = StateT EC2Context m
 
-setEndpoint
-    :: (MonadResource m, MonadBaseControl IO m)
-    => EC2Endpoint -> EC2 m ()
-setEndpoint ep = do
-    ctx <- get
-    put ctx{endpoint = ep}
-
-newEC2Context :: Credential -> IO EC2Context
-newEC2Context cred = do
-    mgr <- HTTP.newManager HTTP.def
-    return EC2Context
-        { manager = mgr
-        , credential = cred
-        , endpoint = UsEast1
-        }
-
 data QueryParams
     = ArrayParams ByteString [ByteString]
     | FilterParams [Filter]
 
 type Filter = (ByteString, [ByteString])
 
-apiVersion :: String
-apiVersion = "2012-08-15"
-
 queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
 queryHeader action time cred =
     [ ("Action", action)
-    , ("Version", BSC.pack apiVersion)
+    , ("Version", apiVersion)
     , ("SignatureVersion", "2")
     , ("SignatureMethod", "HmacSHA256")
     , ("Timestamp", H.urlEncode True $ awsTimeFormat time)
@@ -147,24 +123,6 @@ sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
     tagContentF "requestId"
-
-tagContent :: MonadThrow m
-    => Text
-    -> GLSink Event m (Maybe Text)
-tagContent name = XmlP.tagNoAttr (ec2Name name) XmlP.content
-
-tagContentF :: MonadThrow m
-    => Text
-    -> GLSink Event m Text
-tagContentF = XmlP.force "parse error" . tagContent
-
-ec2Name :: Text -> Name
-ec2Name name = Name
-    { nameLocalName = name
-    , nameNamespace =
-        Just $ "http://ec2.amazonaws.com/doc/" <> T.pack apiVersion <> "/"
-    , namePrefix = Nothing
-    }
 
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)

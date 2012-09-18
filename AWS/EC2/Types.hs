@@ -4,6 +4,10 @@ module AWS.EC2.Types where
 
 import Data.Default (Default(..))
 import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Text.Read (decimal)
+import Safe (readMay)
+import System.Locale (defaultTimeLocale)
 import Data.Time
 
 data EC2Response body = EC2Response
@@ -573,3 +577,112 @@ networkInterfaceAssociation ip own =
         { niasPublicIp = ip
         , niasIpOwnerId = own
         }
+
+err :: String -> Text -> a
+err v m = error $ "unknown " ++ v ++ ": " ++ T.unpack m
+
+t2imageState :: Text -> ImageState
+t2imageState a
+    | a == "available" = ImageAvailable
+    | a == "pending"   = ImagePending
+    | a == "failed"    = ImageFailed
+    | otherwise        = err "image state" a
+
+t2bool :: Text -> Bool
+t2bool a
+    | a == "true"  = True
+    | a == "false" = False
+    | otherwise    = err "value" a
+
+t2dec :: Integral a => Text -> a
+t2dec t = either 
+    (const $ error "not decimal")
+    fst
+    (decimal t)
+
+t2imageType :: Text -> ImageType
+t2imageType t
+    | t == "machine"  = Machine
+    | t == "kernel"   = Kernel
+    | t == "ramdisk" = RamDisk
+    | otherwise       = err "image type" t
+
+t2platform :: Maybe Text -> Platform
+t2platform Nothing   = Other
+t2platform (Just t)
+    | t == "windows" = Windows
+    | otherwise      = Other
+
+t2rootDeviceType :: Text -> RootDeviceType
+t2rootDeviceType t
+    | t == "ebs"            = EBS
+    | t == "instance-store" = InstanceStore
+    | otherwise             = err "root device type" t
+
+t2virtualizationType :: Text -> VirtualizationType
+t2virtualizationType t
+    | t == "paravirtual" = Paravirtual
+    | t == "hvm"         = HVM
+    | otherwise          = err "virtualization type" t
+
+t2hypervisor :: Text -> Hypervisor
+t2hypervisor t
+    | t == "xen" = Xen
+    | t == "ovm" = OVM
+    | otherwise  = err "hypervisor" t
+
+t2volumeType :: Text -> VolumeType
+t2volumeType t
+    | t == "standard" = Standard
+    | t == "io1"      = IO1
+    | otherwise       = err "volume type" t
+
+t2iops :: Maybe Text -> Maybe Int
+t2iops mt = mt >>= readMay . T.unpack
+
+t2productCodeType :: Text -> ProductCodeType
+t2productCodeType t
+    | t == "marketplace" = Marketplace
+    | t == "devpay"      = Devpay
+    | otherwise          = err "product code type" t
+
+t2time :: Text -> UTCTime
+t2time = readTime defaultTimeLocale fmt . T.unpack
+  where
+    fmt = "%FT%T.000Z"
+
+t2emptxt :: Maybe Text -> Text
+t2emptxt = maybe "" id
+
+t2volumeState :: Text -> VolumeState
+t2volumeState t
+    | t == "attached"  = VolumeAttached
+    | t == "attaching" = VolumeAttaching
+    | t == "detaching" = VolumeDetaching
+    | t == "detached"  = VolumeDetached
+    | otherwise        = err "volume state" t
+
+t2architecture :: Text -> Architecture
+t2architecture t
+    | t == "i386"   = I386
+    | t == "x86_64" = X86_64
+    | otherwise     = err "architecture" t
+
+t2deviceType :: Text -> RootDeviceType
+t2deviceType t
+    | t == "ebs"            = EBS
+    | t == "instance-store" = InstanceStore
+    | otherwise             = err "root device type" t
+
+t2monitoring :: Text -> InstanceMonitoringState
+t2monitoring t
+    | t == "disabled" = MonitoringDisabled
+    | t == "enabled"  = MonitoringEnabled
+    | t == "pending"  = MonitoringPending
+    | otherwise       = err "monitoring state" t
+
+t2lifecycle :: Maybe Text -> InstanceLifecycle
+t2lifecycle Nothing = LifecycleNone
+t2lifecycle (Just t)
+    | t == "spot"   = LifecycleSpot
+    | otherwise     = err "lifecycle" t
