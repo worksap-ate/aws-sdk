@@ -4,9 +4,6 @@
 module AWS.EC2
     ( module AWS.EC2.Types
     , EC2Endpoint(..)
-    , EC2
-    , EC2Context
-    , Filter
     , newEC2Context
     , runEC2
     , setEndpoint
@@ -24,7 +21,6 @@ import qualified Network.HTTP.Conduit as HTTP
 
 import AWS.Types
 import AWS.EC2.Types
-import AWS.EC2.Query
 
 import AWS.EC2.Image
 import AWS.EC2.Region
