@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 
@@ -19,8 +18,8 @@ module AWS.EC2
     ) where
 
 import Data.Conduit
-import Control.Monad.Trans.Control
-import Control.Monad.State
+import Control.Monad.Trans.Control (MonadBaseControl)
+import qualified Control.Monad.State as ST
 import qualified Network.HTTP.Conduit as HTTP
 
 import AWS.Types
@@ -47,11 +46,11 @@ runEC2
     => EC2Context
     -> EC2 m a
     -> m a
-runEC2 ctx = flip evalStateT ctx
+runEC2 ctx = flip ST.evalStateT ctx
 
 setEndpoint
     :: (MonadResource m, MonadBaseControl IO m)
     => EC2Endpoint -> EC2 m ()
 setEndpoint ep = do
-    ctx <- get
-    put ctx{endpoint = ep}
+    ctx <- ST.get
+    ST.put ctx { endpoint = ep }

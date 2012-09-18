@@ -20,10 +20,18 @@ library
                    , AWS.Credential
                    , AWS.Types
                    , AWS.EC2
+                   , AWS.EC2.Address
+                   , AWS.EC2.AvailabilityZone
+                   , AWS.EC2.Image
+                   , AWS.EC2.Instance
+                   , AWS.EC2.Parser
+                   , AWS.EC2.Query
+                   , AWS.EC2.Region
                    , AWS.EC2.Types
   ghc-options: -Wall
                -fno-warn-unused-do-bind
   -- other-modules:       
+  extensions: OverloadedStrings
   build-depends:     base ==4.5.*
                    , containers
                    , SHA

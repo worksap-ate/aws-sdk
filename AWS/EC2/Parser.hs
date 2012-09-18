@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module AWS.EC2.Parser
     ( module AWS.EC2.Parser.Internal
     , resourceTagSink
@@ -9,7 +7,7 @@ module AWS.EC2.Parser
 
 import Control.Applicative
 import Data.Conduit
-import Data.XML.Types
+import Data.XML.Types (Event)
 
 import AWS.EC2.Types
 import AWS.EC2.Parser.Internal
@@ -34,4 +32,3 @@ stateReasonSink = elementM "stateReason" $
     stateReason
     <$> getT "code"
     <*> getT "message"
-

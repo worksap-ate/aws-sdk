@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module AWS.EC2.Types where
 
 import Data.Default (Default(..))
@@ -8,7 +6,7 @@ import qualified Data.Text as T
 import Data.Text.Read (decimal)
 import Safe (readMay)
 import System.Locale (defaultTimeLocale)
-import Data.Time
+import Data.Time (UTCTime, readTime)
 
 data EC2Response body = EC2Response
     { requestId :: Text

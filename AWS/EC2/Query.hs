@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module AWS.EC2.Query
@@ -18,7 +17,7 @@ import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Text (Text)
 import Data.Conduit
-import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
 import Data.Time (UTCTime, formatTime, getCurrentTime)
@@ -108,12 +107,7 @@ signature :: Endpoint end
           => end -> SecretAccessKey -> ByteString -> ByteString
 signature ep secret query = urlstr
   where
-    stringToSign = mconcat
-        [ "GET\n"
-        , endpointStr ep
-        , "\n/\n"
-        , query
-        ]
+    stringToSign = "GET\n" <> endpointStr ep <> "\n/\n" <> query
     signedStr = toS . SHA.bytestringDigest $ SHA.hmacSha256 (toL secret) (toL stringToSign)
     urlstr = H.urlEncode True . BASE.encode $ signedStr
 

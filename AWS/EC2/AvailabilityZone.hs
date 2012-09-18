@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module AWS.EC2.AvailabilityZone
@@ -7,9 +6,9 @@ module AWS.EC2.AvailabilityZone
 
 import           Data.ByteString (ByteString)
 
-import Data.XML.Types
+import Data.XML.Types (Event)
 import Data.Conduit
-import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Types
@@ -28,7 +27,6 @@ describeAvailabilityZones zones filters =
         [ ArrayParams "ZoneName" zones
         , FilterParams filters
         ]
-
     availabilityZoneInfo :: MonadThrow m
         => GLConduit Event m AvailabilityZone
     availabilityZoneInfo = itemConduit "availabilityZoneInfo" $

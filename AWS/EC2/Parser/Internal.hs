@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 module AWS.EC2.Parser.Internal where
@@ -7,7 +6,7 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BSC
 import           Data.ByteString.Lazy.Char8 ()
 
-import Data.XML.Types
+import Data.XML.Types (Event(..), Name(..))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Conduit

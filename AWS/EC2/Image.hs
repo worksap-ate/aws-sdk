@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module AWS.EC2.Image
@@ -8,9 +7,9 @@ module AWS.EC2.Image
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Lazy.Char8 ()
 
-import Data.XML.Types
+import Data.XML.Types (Event)
 import Data.Conduit
-import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Types
