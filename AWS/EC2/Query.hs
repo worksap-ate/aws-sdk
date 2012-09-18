@@ -1,11 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module AWS.EC2.Query
-    ( EC2Context(..)
-    , EC2
-    , ec2Query
+    ( ec2Query
     , QueryParams(..)
-    , Filter
     ) where
 
 import           Data.ByteString (ByteString)
@@ -27,7 +24,9 @@ import Data.Map (Map)
 import qualified Network.HTTP.Types as H
 import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64 as BASE
-import Control.Monad.State
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
+import qualified Control.Monad.State as ST
 
 import AWS.EC2.Types
 import AWS.Types
@@ -37,20 +36,6 @@ import AWS.EC2.Parser
 {- Debug
 import qualified Data.Conduit.Binary as CB
 --}
-
-data EC2Context = EC2Context
-    { manager :: HTTP.Manager
-    , credential :: Credential
-    , endpoint :: EC2Endpoint
-    }
-
-type EC2 m = StateT EC2Context m
-
-data QueryParams
-    = ArrayParams ByteString [ByteString]
-    | FilterParams [Filter]
-
-type Filter = (ByteString, [ByteString])
 
 queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
 queryHeader action time cred =
@@ -125,7 +110,7 @@ ec2Query
     -> Conduit Event m o
     -> EC2 m (EC2Response (Source m o))
 ec2Query action params cond = do
-    ctx <- get
+    ctx <- ST.get
     let mgr = manager ctx
     let cred = credential ctx
     let ep = endpoint ctx

@@ -1,12 +1,31 @@
 module AWS.EC2.Types where
 
+import Control.Monad.State (StateT)
+import Data.ByteString (ByteString)
 import Data.Default (Default(..))
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Network.HTTP.Conduit as HTTP
 import Data.Text.Read (decimal)
 import Safe (readMay)
 import System.Locale (defaultTimeLocale)
 import Data.Time (UTCTime, readTime)
+
+import AWS.Types
+
+data EC2Context = EC2Context
+    { manager :: HTTP.Manager
+    , credential :: Credential
+    , endpoint :: EC2Endpoint
+    }
+
+type EC2 m = StateT EC2Context m
+
+data QueryParams
+    = ArrayParams ByteString [ByteString]
+    | FilterParams [Filter]
+
+type Filter = (ByteString, [ByteString])
 
 data EC2Response body = EC2Response
     { requestId :: Text
