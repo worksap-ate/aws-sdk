@@ -2,6 +2,8 @@
 
 module AWS.EC2.Query
     ( ec2Query
+    , ec2Request
+    , responseParser
     , QueryParams(..)
     ) where
 
@@ -103,6 +105,37 @@ sinkRequestId = do
     await -- EventBeginElement DescribeImagesResponse
     tagContentF "requestId"
 
+ec2Request
+    :: (MonadResource m, MonadBaseControl IO m)
+    => EC2Context
+    -> ByteString
+    -> [QueryParams]
+    -> m (ResumableSource m ByteString)
+ec2Request ctx action params = do
+    let mgr = manager ctx
+    let cred = credential ctx
+    let ep = endpoint ctx
+    time <- liftIO getCurrentTime
+    let url = mkUrl ep cred time action params
+    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
+    response <- HTTP.http request mgr
+    return $ HTTP.responseBody response
+
+responseParser
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Conduit Event m o
+    -> ResumableSource m ByteString
+    -> m (EC2Response (Source m o))
+responseParser cond src = do
+    (res, _) <- unwrapResumable src
+--    res $$ CB.sinkFile "debug.txt" >>= fail "debug"
+    (src1, rid) <- res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
+    (src2, _) <- unwrapResumable src1
+    return $ EC2Response
+        { requestId = rid
+        , responseBody = src2 $= cond
+        }
+
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
@@ -111,19 +144,6 @@ ec2Query
     -> EC2 m (EC2Response (Source m o))
 ec2Query action params cond = do
     ctx <- ST.get
-    let mgr = manager ctx
-    let cred = credential ctx
-    let ep = endpoint ctx
-    time <- liftIO getCurrentTime
-    let url = mkUrl ep cred time action params
-    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
     lift $ do
-        response <- HTTP.http request mgr
-        (res, _) <- unwrapResumable $ HTTP.responseBody response
---        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
-        (src, rid) <- res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
-        (src1, _) <- unwrapResumable src
-        return $ EC2Response
-            { requestId = rid
-            , responseBody = src1 $= cond
-            }
+        response <- ec2Request ctx action params
+        responseParser cond response
