@@ -17,6 +17,7 @@ data EC2Context = EC2Context
     { manager :: HTTP.Manager
     , credential :: Credential
     , endpoint :: EC2Endpoint
+    , lastRequestId :: Maybe Text
     }
 
 type EC2 m = StateT EC2Context m
@@ -24,14 +25,9 @@ type EC2 m = StateT EC2Context m
 data QueryParams
     = ArrayParams ByteString [ByteString]
     | FilterParams [Filter]
+    | ValueParam ByteString ByteString
 
 type Filter = (ByteString, [ByteString])
-
-data EC2Response body = EC2Response
-    { requestId :: Text
-    , responseBody :: body
-    }
-  deriving (Show)
 
 data Image = Image
     { imageId :: Text
@@ -198,6 +194,110 @@ data Instance = Instance
     , ebsOptimized :: Bool -- default: false
     }
   deriving (Show)
+
+data InstanceStatus = InstanceStatus
+    { isInstanceId :: Text
+    , isAvailabilityZone :: Text
+    , isEventsSet :: [InstanceStatusEvent]
+    , isInstanceState :: InstanceState
+    , isSystemStatus :: InstanceStatusType
+    , isInstanceStatus :: InstanceStatusType
+    }
+  deriving (Show)
+
+instanceStatus :: Text -> Text -> [InstanceStatusEvent]
+    -> InstanceState -> InstanceStatusType
+    -> InstanceStatusType -> InstanceStatus
+instanceStatus iid az es ist sst iss = InstanceStatus
+    { isInstanceId = iid
+    , isAvailabilityZone = az
+    , isEventsSet = es
+    , isInstanceState = ist
+    , isSystemStatus = sst
+    , isInstanceStatus = iss
+    }
+
+data InstanceStatusEvent = InstanceStatusEvent
+    { iseCode :: InstanceStatusEventCode
+    , iseDescription :: Text
+    , iseNotBefore :: Maybe UTCTime
+    , iseNotAfter :: Maybe UTCTime
+    }
+  deriving (Show)
+
+instanceStatusEvent :: InstanceStatusEventCode
+    -> Text -> Maybe UTCTime -> Maybe UTCTime
+    -> InstanceStatusEvent
+instanceStatusEvent code desc before after = InstanceStatusEvent
+    { iseCode = code
+    , iseDescription = desc
+    , iseNotBefore = before
+    , iseNotAfter = after
+    }
+
+data InstanceStatusEventCode
+    = InstanceReboot
+    | InstanceStop
+    | SystemReboot
+    | InstanceRetirement
+  deriving (Show)
+
+instanceStatusEventCode :: Text -> InstanceStatusEventCode
+instanceStatusEventCode t
+    | t == "instance-reboot"     = InstanceReboot
+    | t == "instance-stop"       = InstanceStop
+    | t == "system-reboot"       = SystemReboot
+    | t == "instance-retirement" = InstanceRetirement
+    | otherwise                  = err "InstanceStatusEventCode" t
+
+data InstanceStatusType = InstanceStatusType
+    { isdStatus :: InstanceStatusTypeStatus
+    , isdDetails :: [InstanceStatusDetail]
+    }
+  deriving (Show)
+
+instanceStatusType :: InstanceStatusTypeStatus
+    -> [InstanceStatusDetail] -> InstanceStatusType
+instanceStatusType status details = InstanceStatusType
+    { isdStatus = status
+    , isdDetails = details
+    }
+
+data InstanceStatusTypeStatus
+    = InstanceStatusOK
+    | InstanceStatusImpaired
+    | InstanceStatusInsufficientData
+    | InstanceStatusNotApplicable
+  deriving (Show)
+
+instanceStatusTypeStatus :: Text -> InstanceStatusTypeStatus
+instanceStatusTypeStatus t
+    | t == "ok"                = InstanceStatusOK
+    | t == "impaired"          = InstanceStatusImpaired
+    | t == "insufficient-data" = InstanceStatusInsufficientData
+    | t == "not-applicable"    = InstanceStatusNotApplicable
+    | otherwise = err "instance status detail status" t
+
+data InstanceStatusDetail = InstanceStatusDetail
+    { isddName :: InstanceStatusDetailName
+    , isddStatus :: InstanceStatusDetailStatus
+    , isddImpairedSince :: Maybe UTCTime
+    }
+  deriving (Show)
+
+instanceStatusDetail :: InstanceStatusDetailName
+    -> InstanceStatusDetailStatus -> Maybe UTCTime
+    -> InstanceStatusDetail
+instanceStatusDetail name status since =
+    InstanceStatusDetail
+        { isddName = name
+        , isddStatus = status
+        , isddImpairedSince = since
+        }
+
+type InstanceStatusDetailName = Text
+
+type InstanceStatusDetailStatus = Text
 
 data Group = Group
     { groupId :: Text

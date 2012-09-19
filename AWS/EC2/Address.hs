@@ -23,7 +23,7 @@ describeAddresses
     => [ByteString]
     -> [ByteString]
     -> [Filter]
-    -> EC2 m (EC2Response (Source m Address))
+    -> EC2 m (Source m Address)
 describeAddresses pubIps alloIds filters =
     ec2Query "DescribeAddresses" params addressSet
   where

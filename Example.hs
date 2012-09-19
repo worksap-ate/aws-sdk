@@ -37,7 +37,8 @@ main = do
 --            response <- describeImages [] [] [] []
 --            response <- describeAddresses [] [] []
             response <- describeInstances [] []
-            lift $ responseBody response $$ CL.consume
+--            response <- describeInstanceStatus [] True []
+            lift $ response $$ CL.consume
     print doc
     putStr "Length: "
     print $ length doc

@@ -2,6 +2,7 @@
 
 module AWS.EC2.Instance
     ( describeInstances
+    , describeInstanceStatus
     ) where
 
 import           Data.ByteString (ByteString)
@@ -10,16 +11,20 @@ import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
+import Data.Text (Text)
 
 import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.EC2.Parser
 
+------------------------------------------------------------
+-- DescribeInstances
+------------------------------------------------------------
 describeInstances
     :: (MonadResource m, MonadBaseControl IO m)
     => [ByteString]
     -> [Filter]
-    -> EC2 m (EC2Response (Source m Reservation))
+    -> EC2 m (Source m Reservation)
 describeInstances instances filters =
     ec2Query "DescribeInstances" params reservationSet
   where
@@ -49,11 +54,7 @@ instanceSetSink = itemsSet "instancesSet" $
     ec2Instance
     <$> getT "instanceId"
     <*> getT "imageId"
-    <*> element "instanceState" (
-        codeToState
-        <$> getF "code" t2dec
-        <* getT "name"
-        )
+    <*> instanceStateSink
     <*> getT "privateDnsName"
     <*> getT "dnsName"
     <*> getT "reason"
@@ -107,6 +108,13 @@ instanceSetSink = itemsSet "instancesSet" $
         )
     <*> getF "ebsOptimized" t2bool
 
+instanceStateSink :: MonadThrow m
+    => GLSink Event m InstanceState
+instanceStateSink = element "instanceState" $
+    codeToState
+    <$> getF "code" t2dec
+    <* getT "name"
+
 networkInterfaceSink :: MonadThrow m
     => GLSink Event m [InstanceNetworkInterface]
 networkInterfaceSink = itemsSet "networkInterfaceSet" $
@@ -143,3 +151,54 @@ niAssociationSink = elementM "association" $
     networkInterfaceAssociation
     <$> getT "publicIp"
     <*> getT "ipOwnerId"
+
+------------------------------------------------------------
+-- DescribeInstanceStatus
+------------------------------------------------------------
+describeInstanceStatus
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [ByteString]
+    -> Bool
+    -> [Filter]
+    -> EC2 m (Source m InstanceStatus)
+describeInstanceStatus instanceIds isAll filters =
+    ec2Query "DescribeInstanceStatus" params instanceStatusSet
+  where
+    params =
+        [ ArrayParams "InstanceId" instanceIds
+        , ValueParam "IncludeAllInstances" $ bool isAll
+        , ValueParam "MaxResults" "10"
+        , FilterParams filters
+        ]
+    bool True  = "true"
+    bool False = "false"
+
+instanceStatusSet :: MonadThrow m
+    => GLConduit Event m InstanceStatus
+instanceStatusSet = do
+    itemConduit "instanceStatusSet" $
+        instanceStatus
+        <$> getT "instanceId"
+        <*> getT "availabilityZone"
+        <*> itemsSet "eventsSet" (
+            instanceStatusEvent
+            <$> getF "code" instanceStatusEventCode
+            <*> getT "description"
+            <*> getM "notBefore" (t2time <$>)
+            <*> getM "notAfter" (t2time <$>)
+            )
+        <*> instanceStateSink
+        <*> instanceStatusTypeSink "systemStatus"
+        <*> instanceStatusTypeSink "instanceStatus"
+
+instanceStatusTypeSink :: MonadThrow m
+    => Text -> GLSink Event m InstanceStatusType
+instanceStatusTypeSink name = element name $
+    instanceStatusType
+    <$> getF "status" instanceStatusTypeStatus
+    <*> itemsSet "details" (
+        instanceStatusDetail
+        <$> getT "name"
+        <*> getT "status"
+        <*> getM "impairedSince" (t2time <$>)
+        )

@@ -35,6 +35,7 @@ newEC2Context cred = do
         { manager = mgr
         , credential = cred
         , endpoint = UsEast1
+        , lastRequestId = Nothing
         }
 
 runEC2

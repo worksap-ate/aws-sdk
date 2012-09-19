@@ -22,7 +22,7 @@ describeImages
     -> [ByteString]
     -> [ByteString]
     -> [Filter]
-    -> EC2 m (EC2Response (Source m Image))
+    -> EC2 m (Source m Image)
 describeImages imageIds owners execby filters =
     ec2Query "DescribeImages" params $
         itemConduit "imagesSet" imageItem

@@ -20,7 +20,7 @@ describeRegions
     :: (MonadResource m, MonadBaseControl IO m)
     => [ByteString]
     -> [Filter]
-    -> EC2 m (EC2Response (Source m Region))
+    -> EC2 m (Source m Region)
 describeRegions regions filters =
     ec2Query "DescribeRegions" params regionInfoConduit
   where

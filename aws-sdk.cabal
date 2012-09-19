@@ -52,6 +52,7 @@ library
                    , simple-config >= 1.1.0
                    , parsec3
                    , mtl
+                   , lifted-base
 
 test-suite test
     type:              exitcode-stdio-1.0

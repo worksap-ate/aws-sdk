@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module AWS.EC2.Query
     ( ec2Query
     , ec2Request
-    , responseParser
     , QueryParams(..)
     ) where
 
@@ -29,6 +29,8 @@ import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.State as ST
+import Data.Typeable (Typeable)
+import Control.Exception.Lifted as E
 
 import AWS.EC2.Types
 import AWS.Types
@@ -36,8 +38,15 @@ import AWS.Util
 import AWS.EC2.Parser
 
 {- Debug
+import Debug.Trace
 import qualified Data.Conduit.Binary as CB
 --}
+
+data ResponseParserException
+    = NextToken Text
+  deriving (Show, Typeable)
+
+instance Exception ResponseParserException
 
 queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
 queryHeader action time cred =
@@ -81,6 +90,7 @@ toArrayParams (FilterParams fs) =
         | (i, param) <- zip [1..] vals
         ]
     filt n = "Filter." <> bsShow n
+toArrayParams (ValueParam k v) = Map.singleton k v
 
 queryStr :: Map ByteString ByteString -> ByteString
 queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
@@ -121,29 +131,20 @@ ec2Request ctx action params = do
     response <- HTTP.http request mgr
     return $ HTTP.responseBody response
 
-responseParser
-    :: (MonadResource m, MonadBaseControl IO m)
-    => Conduit Event m o
-    -> ResumableSource m ByteString
-    -> m (EC2Response (Source m o))
-responseParser cond src = do
-    (res, _) <- unwrapResumable src
---    res $$ CB.sinkFile "debug.txt" >>= fail "debug"
-    (src1, rid) <- res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
-    (src2, _) <- unwrapResumable src1
-    return $ EC2Response
-        { requestId = rid
-        , responseBody = src2 $= cond
-        }
-
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParams]
     -> Conduit Event m o
-    -> EC2 m (EC2Response (Source m o))
+    -> EC2 m (Source m o)
 ec2Query action params cond = do
     ctx <- ST.get
-    lift $ do
+    (src1, rid) <- lift $ do
         response <- ec2Request ctx action params
-        responseParser cond response
+        (res, _) <- unwrapResumable response
+--        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
+        res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
+    ST.put ctx{lastRequestId = Just rid}
+    lift $ do
+        (src2, _) <- unwrapResumable src1
+        return $ src2 $= cond
