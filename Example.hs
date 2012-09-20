@@ -39,6 +39,7 @@ main = do
             response <- describeInstances [] []
 --            response <- describeInstanceStatus [] True []
             lift $ response $$ CL.consume
+--            allocateAddress False
     print doc
     putStr "Length: "
     print $ length doc

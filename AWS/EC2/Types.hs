@@ -803,3 +803,19 @@ t2lifecycle Nothing = LifecycleNone
 t2lifecycle (Just t)
     | t == "spot"   = LifecycleSpot
     | otherwise     = err "lifecycle" t
+
+data AllocateAddressResponse = AllocateAddressResponse
+    { alaPublicIp :: Text
+    , alaDomain :: AddressDomain
+    , alaAllocationId :: Maybe Text
+    }
+  deriving (Show)
+
+allocateAddressResponse :: Text -> AddressDomain -> Maybe Text
+    -> AllocateAddressResponse
+allocateAddressResponse ip domain allid =
+    AllocateAddressResponse
+        { alaPublicIp = ip
+        , alaDomain = domain
+        , alaAllocationId = allid
+        }
