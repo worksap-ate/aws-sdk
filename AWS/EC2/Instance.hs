@@ -167,7 +167,7 @@ describeInstanceStatus instanceIds isAll filters =
     params =
         [ ArrayParams "InstanceId" instanceIds
         , ValueParam "IncludeAllInstances" $ bool isAll
-        , ValueParam "MaxResults" "10"
+--        , ValueParam "MaxResults" "10"
         , FilterParams filters
         ]
     bool True  = "true"
