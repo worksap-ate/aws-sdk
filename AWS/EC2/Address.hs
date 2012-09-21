@@ -28,8 +28,7 @@ describeAddresses
     -> [Text] -> [Filter]
     -> EC2 m (Source m Address)
 describeAddresses pubIps alloIds filters =
-    ec2Query "DescribeAddresses" params addressSet
-  where
+    ec2Query "DescribeAddresses" params addressSet where
     params =
         [ ArrayParams "PublicIp" pubIps
         , ArrayParams "AllocationId" alloIds
