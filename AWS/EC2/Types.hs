@@ -119,7 +119,7 @@ data VirtualizationType = Paravirtual
 
 data ResourceTag = ResourceTag
     { resourceKey :: Text
-    , resourceValue :: Text
+    , resourceValue :: Maybe Text
     }
   deriving (Show)
 
@@ -496,7 +496,7 @@ image i l s oid p pc a t kid rid pf
         , hypervisor = h
         }
 
-resourceTag :: Text -> Text -> ResourceTag
+resourceTag :: Text -> Maybe Text -> ResourceTag
 resourceTag k v =
     ResourceTag
         { resourceKey = k
@@ -827,3 +827,19 @@ ec2Return :: Text -> EC2Return
 ec2Return t
     | t == "true" = EC2Success
     | otherwise   = EC2Error t
+
+data Tag = Tag
+    { tagResourceId :: Text
+    , tagResourceType :: Text
+    , tagKey :: Text
+    , tagValue :: Maybe Text
+    }
+  deriving (Show)
+
+tag :: Text -> Text -> Text -> Maybe Text -> Tag
+tag tid ttype key value = Tag
+    { tagResourceId = tid
+    , tagResourceType = ttype
+    , tagKey = key
+    , tagValue = value
+    }

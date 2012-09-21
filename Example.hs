@@ -52,7 +52,8 @@ main = do
 --            response <- describeImages imageIds [] [] []
 --            response <- describeImages [] [] [] []
 --            response <- describeInstances [] []
-            response <- describeInstanceStatus [] True [] Nothing
+--            response <- describeInstanceStatus [] True [] Nothing
+            response <- describeTags []
             lift $ response $$ CL.consume
     print doc
     putStr "Length: "

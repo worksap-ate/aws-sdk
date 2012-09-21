@@ -17,7 +17,7 @@ resourceTagSink :: MonadThrow m
 resourceTagSink = itemsSet "tagSet" $
     resourceTag
     <$> getT "key"
-    <*> getT "value"
+    <*> getMT "value"
 
 productCodeSink :: MonadThrow m
     => GLSink Event m [ProductCode]

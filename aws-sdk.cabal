@@ -27,6 +27,7 @@ library
                    , AWS.EC2.Parser
                    , AWS.EC2.Query
                    , AWS.EC2.Region
+                   , AWS.EC2.Tag
                    , AWS.EC2.Types
   ghc-options: -Wall
                -fno-warn-unused-do-bind

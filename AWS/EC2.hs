@@ -12,6 +12,7 @@ module AWS.EC2
     , module AWS.EC2.AvailabilityZone
     , module AWS.EC2.Instance
     , module AWS.EC2.Address
+    , module AWS.EC2.Tag
     ) where
 
 import Data.Conduit
@@ -27,6 +28,7 @@ import AWS.EC2.Region
 import AWS.EC2.AvailabilityZone
 import AWS.EC2.Instance
 import AWS.EC2.Address
+import AWS.EC2.Tag
 
 newEC2Context :: Credential -> IO EC2Context
 newEC2Context cred = do
