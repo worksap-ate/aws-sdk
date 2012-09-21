@@ -14,7 +14,6 @@ import qualified Data.ByteString.Char8 as BSC
 
 import Data.Monoid
 import Data.XML.Types (Event(..))
-import Data.Text (Text)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Network.HTTP.Conduit as HTTP
@@ -31,6 +30,8 @@ import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.State as ST
 import Data.Typeable (Typeable)
 import Control.Exception.Lifted as E
+import Data.Text (Text)
+import qualified Data.Text as T
 
 import AWS.EC2.Types
 import AWS.Types
@@ -79,18 +80,22 @@ mkUrl ep cred time action params = mconcat
 
 toArrayParams :: QueryParams -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 
-    [ (name <> "." <> bsShow i, param)
+    [ (textToBS name <> "." <> bsShow i, textToBS param)
     | (i, param) <- zip [1..] params
     ]
 toArrayParams (FilterParams fs) =
     Map.fromList . concat . map f1 $ zip [1..] fs
   where
-    f1 (n, (name, vals)) = (filt n <> ".Name", name) :
-        [ (filt n <> ".Value." <> bsShow i, param)
+    f1 (n, (name, vals)) = (filt n <> ".Name", textToBS name) :
+        [ (filt n <> ".Value." <> bsShow i, textToBS param)
         | (i, param) <- zip [1..] vals
         ]
     filt n = "Filter." <> bsShow n
-toArrayParams (ValueParam k v) = Map.singleton k v
+toArrayParams (ValueParam k v) =
+    Map.singleton (textToBS k) (textToBS v)
+
+textToBS :: Text -> ByteString
+textToBS = BSC.pack . T.unpack
 
 queryStr :: Map ByteString ByteString -> ByteString
 queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []

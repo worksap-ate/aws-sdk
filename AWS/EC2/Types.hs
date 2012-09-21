@@ -1,7 +1,6 @@
 module AWS.EC2.Types where
 
 import Control.Monad.State (StateT)
-import Data.ByteString (ByteString)
 import Data.Default (Default(..))
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -23,11 +22,11 @@ data EC2Context = EC2Context
 type EC2 m = StateT EC2Context m
 
 data QueryParams
-    = ArrayParams ByteString [ByteString]
+    = ArrayParams Text [Text]
     | FilterParams [Filter]
-    | ValueParam ByteString ByteString
+    | ValueParam Text Text
 
-type Filter = (ByteString, [ByteString])
+type Filter = (Text, [Text])
 
 data Image = Image
     { imageId :: Text
@@ -819,3 +818,11 @@ allocateAddressResponse ip domain allid =
         , alaDomain = domain
         , alaAllocationId = allid
         }
+
+data EC2Return = EC2Success | EC2Error Text
+  deriving (Show)
+
+ec2Return :: Text -> EC2Return
+ec2Return t
+    | t == "true" = EC2Success
+    | otherwise   = EC2Error t

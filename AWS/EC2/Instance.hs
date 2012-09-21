@@ -5,13 +5,12 @@ module AWS.EC2.Instance
     , describeInstanceStatus
     ) where
 
-import           Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
-import Data.Text (Text)
 
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -22,10 +21,10 @@ import AWS.EC2.Parser
 ------------------------------------------------------------
 describeInstances
     :: (MonadResource m, MonadBaseControl IO m)
-    => [ByteString]
+    => [Text]
     -> [Filter]
     -> EC2 m (Source m Reservation)
-describeInstances instances filters =
+describeInstances instances filters = do
     ec2Query "DescribeInstances" params reservationSet
   where
     params =
@@ -157,7 +156,7 @@ niAssociationSink = elementM "association" $
 ------------------------------------------------------------
 describeInstanceStatus
     :: (MonadResource m, MonadBaseControl IO m)
-    => [ByteString]
+    => [Text]
     -> Bool
     -> [Filter]
     -> EC2 m (Source m InstanceStatus)

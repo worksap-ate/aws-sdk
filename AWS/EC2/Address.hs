@@ -5,7 +5,7 @@ module AWS.EC2.Address
     , allocateAddress
     ) where
 
-import           Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import Data.XML.Types (Event)
 import Data.Conduit
@@ -23,8 +23,8 @@ import AWS.EC2.Parser
 -----------------------------------------------------
 describeAddresses
     :: (MonadResource m, MonadBaseControl IO m)
-    => [ByteString]
-    -> [ByteString]
+    => [Text]
+    -> [Text]
     -> [Filter]
     -> EC2 m (Source m Address)
 describeAddresses pubIps alloIds filters =

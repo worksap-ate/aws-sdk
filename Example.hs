@@ -7,12 +7,12 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
-import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import AWS.Credential
 import AWS.EC2
 
-imageIds :: [ByteString]
+imageIds :: [Text]
 imageIds =
     [ "ami-e565ba8c"
     , "ami-6678da0f"

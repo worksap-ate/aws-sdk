@@ -4,8 +4,7 @@ module AWS.EC2.Region
     ( describeRegions
     ) where
 
-import           Data.ByteString (ByteString)
-import           Data.ByteString.Lazy.Char8 ()
+import Data.Text (Text)
 
 import Data.XML.Types (Event)
 import Data.Conduit
@@ -18,7 +17,7 @@ import AWS.EC2.Parser
 
 describeRegions
     :: (MonadResource m, MonadBaseControl IO m)
-    => [ByteString]
+    => [Text]
     -> [Filter]
     -> EC2 m (Source m Region)
 describeRegions regions filters =

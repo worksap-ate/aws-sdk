@@ -4,7 +4,7 @@ module AWS.EC2.AvailabilityZone
     ( describeAvailabilityZones
     ) where
 
-import           Data.ByteString (ByteString)
+import Data.Text (Text)
 
 import Data.XML.Types (Event)
 import Data.Conduit
@@ -17,7 +17,7 @@ import AWS.EC2.Parser
 
 describeAvailabilityZones
     :: (MonadResource m, MonadBaseControl IO m)
-    => [ByteString]
+    => [Text]
     -> [Filter]
     -> EC2 m (Source m AvailabilityZone)
 describeAvailabilityZones zones filters =

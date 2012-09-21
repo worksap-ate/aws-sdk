@@ -4,8 +4,7 @@ module AWS.EC2.Image
     ( describeImages
     ) where
 
-import           Data.ByteString (ByteString)
-import           Data.ByteString.Lazy.Char8 ()
+import Data.Text (Text)
 
 import Data.XML.Types (Event)
 import Data.Conduit
@@ -18,9 +17,9 @@ import AWS.EC2.Parser
 
 describeImages
     :: (MonadResource m, MonadBaseControl IO m)
-    => [ByteString]
-    -> [ByteString]
-    -> [ByteString]
+    => [Text]
+    -> [Text]
+    -> [Text]
     -> [Filter]
     -> EC2 m (Source m Image)
 describeImages imageIds owners execby filters =
