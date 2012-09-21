@@ -21,7 +21,7 @@ describeAvailabilityZones
     -> [Filter]
     -> EC2 m (Source m AvailabilityZone)
 describeAvailabilityZones zones filters =
-    ec2Query "DescribeAvailabilityZones" params availabilityZoneInfo
+    ec2QuerySource "DescribeAvailabilityZones" params availabilityZoneInfo
   where
     params =
         [ ArrayParams "ZoneName" zones

@@ -21,7 +21,7 @@ describeRegions
     -> [Filter]
     -> EC2 m (Source m Region)
 describeRegions regions filters =
-    ec2Query "DescribeRegions" params regionInfoConduit
+    ec2QuerySource "DescribeRegions" params regionInfoConduit
   where
     params =
         [ ArrayParams "RegionName" regions

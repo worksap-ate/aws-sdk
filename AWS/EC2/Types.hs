@@ -21,7 +21,7 @@ data EC2Context = EC2Context
 
 type EC2 m = StateT EC2Context m
 
-data QueryParams
+data QueryParam
     = ArrayParams Text [Text]
     | FilterParams [Filter]
     | ValueParam Text Text

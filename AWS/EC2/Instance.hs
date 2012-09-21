@@ -25,7 +25,7 @@ describeInstances
     -> [Filter]
     -> EC2 m (Source m Reservation)
 describeInstances instances filters = do
-    ec2Query "DescribeInstances" params reservationSet
+    ec2QuerySource "DescribeInstances" params reservationSet
   where
     params =
         [ ArrayParams "InstanceId" instances
@@ -161,7 +161,7 @@ describeInstanceStatus
     -> [Filter]
     -> EC2 m (Source m InstanceStatus)
 describeInstanceStatus instanceIds isAll filters =
-    ec2Query "DescribeInstanceStatus" params instanceStatusSet
+    ec2QuerySource "DescribeInstanceStatus" params instanceStatusSet
   where
     params =
         [ ArrayParams "InstanceId" instanceIds

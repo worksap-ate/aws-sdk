@@ -3,8 +3,9 @@
 
 module AWS.EC2.Query
     ( ec2Query
+    , ec2QuerySource
     , ec2Request
-    , QueryParams(..)
+    , QueryParam(..)
     ) where
 
 import           Data.ByteString (ByteString)
@@ -15,6 +16,7 @@ import qualified Data.ByteString.Char8 as BSC
 import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Conduit
+import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
@@ -64,7 +66,7 @@ mkUrl :: Endpoint end
       -> Credential
       -> UTCTime
       -> ByteString
-      -> [QueryParams]
+      -> [QueryParam]
       -> ByteString
 mkUrl ep cred time action params = mconcat
     [ "https://"
@@ -78,7 +80,7 @@ mkUrl ep cred time action params = mconcat
     qheader = Map.fromList $ queryHeader action time cred
     qparam = queryStr $ Map.unions (qheader : map toArrayParams params)
 
-toArrayParams :: QueryParams -> Map ByteString ByteString
+toArrayParams :: QueryParam -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 
     [ (textToBS name <> "." <> bsShow i, textToBS param)
     | (i, param) <- zip [1..] params
@@ -124,7 +126,7 @@ ec2Request
     :: (MonadResource m, MonadBaseControl IO m)
     => EC2Context
     -> ByteString
-    -> [QueryParams]
+    -> [QueryParam]
     -> m (ResumableSource m ByteString)
 ec2Request ctx action params = do
     let mgr = manager ctx
@@ -139,10 +141,20 @@ ec2Request ctx action params = do
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
-    -> [QueryParams]
+    -> [QueryParam]
+    -> Conduit Event m o
+    -> EC2 m o
+ec2Query action params cond = do
+    src <- ec2QuerySource action params cond
+    lift (src $$ CL.head) >>= maybe (fail "parse error") return
+
+ec2QuerySource
+    :: (MonadResource m, MonadBaseControl IO m)
+    => ByteString
+    -> [QueryParam]
     -> Conduit Event m o
     -> EC2 m (Source m o)
-ec2Query action params cond = do
+ec2QuerySource action params cond = do
     ctx <- ST.get
     (src1, rid) <- lift $ do
         response <- ec2Request ctx action params
