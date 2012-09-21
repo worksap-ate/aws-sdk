@@ -159,14 +159,14 @@ describeInstanceStatus
     => [Text]
     -> Bool
     -> [Filter]
+    -> Maybe Text
     -> EC2 m (Source m InstanceStatus)
-describeInstanceStatus instanceIds isAll filters =
-    ec2QuerySource "DescribeInstanceStatus" params instanceStatusSet
+describeInstanceStatus instanceIds isAll filters token =
+    ec2QuerySource' "DescribeInstanceStatus" params token instanceStatusSet
   where
     params =
         [ ArrayParams "InstanceId" instanceIds
         , ValueParam "IncludeAllInstances" $ bool isAll
---        , ValueParam "MaxResults" "10"
         , FilterParams filters
         ]
     bool True  = "true"

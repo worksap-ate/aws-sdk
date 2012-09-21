@@ -4,6 +4,7 @@
 module AWS.EC2.Query
     ( ec2Query
     , ec2QuerySource
+    , ec2QuerySource'
     , ec2Request
     , QueryParam(..)
     ) where
@@ -155,13 +156,35 @@ ec2QuerySource
     -> Conduit Event m o
     -> EC2 m (Source m o)
 ec2QuerySource action params cond = do
+    ec2QuerySource' action params Nothing cond
+
+ec2QuerySource'
+    :: (MonadResource m, MonadBaseControl IO m)
+    => ByteString
+    -> [QueryParam]
+    -> Maybe Text
+    -> Conduit Event m o
+    -> EC2 m (Source m o)
+ec2QuerySource' action params token cond = do
     ctx <- ST.get
     (src1, rid) <- lift $ do
-        response <- ec2Request ctx action params
+        response <- ec2Request ctx action params'
         (res, _) <- unwrapResumable response
 --        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
         res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
     ST.put ctx{lastRequestId = Just rid}
     lift $ do
         (src2, _) <- unwrapResumable src1
-        return $ src2 $= cond
+        return $ src2 $= (cond >> nextToken)
+  where
+    params' = maybe params
+        (\t -> ValueParam "NextToken" t:params) token
+
+    nextToken
+        :: (MonadResource m, MonadBaseControl IO m)
+        => Conduit Event m o
+    nextToken = do
+        mt <- getMT "nextToken"
+        case mt of
+            Nothing -> return ()
+            Just t  -> E.throw $ NextToken t
