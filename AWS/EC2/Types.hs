@@ -25,6 +25,7 @@ data QueryParams
     = ArrayParams Text [Text]
     | FilterParams [Filter]
     | ValueParam Text Text
+  deriving (Show)
 
 type Filter = (Text, [Text])
 

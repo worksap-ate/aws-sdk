@@ -8,6 +8,7 @@ import qualified Data.Conduit.List as CL
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Data.Text (Text)
+import Control.Monad.Trans.Control
 
 import AWS.Credential
 import AWS.EC2
@@ -24,22 +25,35 @@ imageIds =
     , "ami-8a3cc9e3"
     ]
 
+addressTest :: (MonadResource m, MonadBaseControl IO m)
+    => EC2 m [Address]
+addressTest = do
+    addr <- allocateAddress False
+    ret <- releaseAddress (Just $ alaPublicIp addr) Nothing
+    liftIO $ print ret
+
+    addr2 <- allocateAddress True
+    ret2 <- releaseAddress Nothing (alaAllocationId addr2)
+    liftIO $ print ret2
+
+    res <- describeAddresses [] [] []
+    lift $ res $$ CL.consume
+
 main :: IO ()
 main = do
     cred <- loadCredential
     doc <- runResourceT $ do
         ctx <- liftIO $ newEC2Context cred
         runEC2 ctx $ do
+            addressTest
 --            setEndpoint ApNortheast1
 --            response <- describeAvailabilityZones [] []
 --            response <- describeRegions [] []
 --            response <- describeImages imageIds [] [] []
 --            response <- describeImages [] [] [] []
---            response <- describeAddresses [] [] []
-            response <- describeInstances [] []
+--            response <- describeInstances [] []
 --            response <- describeInstanceStatus [] True []
-            lift $ response $$ CL.consume
---            allocateAddress False
+--            lift $ response $$ CL.consume
     print doc
     putStr "Length: "
     print $ length doc

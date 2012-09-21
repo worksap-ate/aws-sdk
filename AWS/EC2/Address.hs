@@ -3,6 +3,7 @@
 module AWS.EC2.Address
     ( describeAddresses
     , allocateAddress
+    , releaseAddress
     ) where
 
 import Data.Text (Text)
@@ -24,8 +25,7 @@ import AWS.EC2.Parser
 describeAddresses
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text]
-    -> [Text]
-    -> [Filter]
+    -> [Text] -> [Filter]
     -> EC2 m (Source m Address)
 describeAddresses pubIps alloIds filters =
     ec2Query "DescribeAddresses" params addressSet
@@ -48,7 +48,7 @@ describeAddresses pubIps alloIds filters =
         <*> getMT "privateIpAddress"
 
 -----------------------------------------------------
--- AllocateAddresses
+-- AllocateAddress
 -----------------------------------------------------
 allocateAddress
     :: (MonadResource m, MonadBaseControl IO m)
@@ -63,3 +63,22 @@ allocateAddress isVpc = do
     lift (src $$ CL.head) >>= maybe (fail "") return
   where
     params = if isVpc then [ValueParam "Domain" "vpc"] else []
+
+-----------------------------------------------------
+-- ReleaseAddress
+-----------------------------------------------------
+releaseAddress
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Maybe Text
+    -> Maybe Text
+    -> EC2 m EC2Return
+releaseAddress addr allocid = do
+    src <- ec2Query "ReleaseAddress" params $ do
+        yield =<< getF "return" ec2Return
+    lift (src $$ CL.head) >>= maybe (fail "") return
+  where
+    param name = maybe [] (\a -> [ValueParam name a])
+    params = uncurry param =<<
+        [ ("PublicIp", addr)
+        , ("AllocationId", allocid)
+        ]
