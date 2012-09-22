@@ -3,9 +3,9 @@
 
 module AWS.EC2
     ( module AWS.EC2.Types
+    , module AWS.EC2.Class
     , EC2Endpoint(..)
     , newEC2Context
-    , runEC2
     , setEndpoint
     , module AWS.EC2.Image
     , module AWS.EC2.Region
@@ -22,6 +22,7 @@ import qualified Network.HTTP.Conduit as HTTP
 
 import AWS.Types
 import AWS.EC2.Types
+import AWS.EC2.Class
 
 import AWS.EC2.Image
 import AWS.EC2.Region
@@ -39,13 +40,6 @@ newEC2Context cred = do
         , endpoint = UsEast1
         , lastRequestId = Nothing
         }
-
-runEC2
-    :: (MonadResource m, MonadBaseControl IO m)
-    => EC2Context
-    -> EC2 m a
-    -> m a
-runEC2 ctx = flip ST.evalStateT ctx
 
 setEndpoint
     :: (MonadResource m, MonadBaseControl IO m)

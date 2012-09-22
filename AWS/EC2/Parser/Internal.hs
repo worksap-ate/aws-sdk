@@ -57,12 +57,12 @@ isBeginTagName _ _ = False
 awaitWhile :: Monad m
     => (i -> Bool)
     -> Pipe l i o u m (Maybe i)
-awaitWhile f = 
-    await >>= maybe (return Nothing) (
-        \a -> if f a
-            then return $ Just a
-            else awaitWhile f
-        )
+awaitWhile f = await >>= g
+  where
+    g Nothing       = return Nothing
+    g (Just a)
+        | f a       = return $ Just a
+        | otherwise = awaitWhile f
 
 getF :: MonadThrow m
     => Text

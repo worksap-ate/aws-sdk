@@ -54,6 +54,7 @@ library
                    , parsec3
                    , mtl
                    , lifted-base
+                   , transformers-base
 
 test-suite test
     type:              exitcode-stdio-1.0
