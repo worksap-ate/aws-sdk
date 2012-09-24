@@ -8,6 +8,7 @@ import Data.Text.Read (decimal)
 import Safe (readMay)
 import System.Locale (defaultTimeLocale)
 import Data.Time (UTCTime, readTime)
+import Control.Applicative
 
 import AWS.Types
 
@@ -22,6 +23,7 @@ data QueryParam
     = ArrayParams Text [Text]
     | FilterParams [Filter]
     | ValueParam Text Text
+    | StructArrayParams Text [[(Text, Text)]]
   deriving (Show)
 
 type Filter = (Text, [Text])
@@ -95,16 +97,31 @@ data BlockDeviceMapping = BlockDeviceMapping
 
 data EbsBlockDevice = EbsBlockDevice
     { ebsSnapshotId :: Maybe Text
-    , volumeSize :: Int
+    , ebsVolumeSize :: Int
     , ebsDeleteOnTermination :: Bool
-    , volumeType :: VolumeType
-    , iops :: Maybe Int
+    , ebsVolumeType :: VolumeType
     }
   deriving (Show)
 
+ebsBlockDevice
+    :: Maybe Text -> Int -> Bool -> VolumeType
+    -> EbsBlockDevice
+ebsBlockDevice sid vs dot vt =
+    EbsBlockDevice
+        { ebsSnapshotId = sid
+        , ebsVolumeSize = vs
+        , ebsDeleteOnTermination = dot
+        , ebsVolumeType = vt
+        }
+
 data VolumeType = Standard
-                | IO1
+                | IO1 Int
   deriving (Show)
+
+volumeType :: Text -> Maybe Int -> VolumeType
+volumeType t Nothing  | t == "standard" = Standard
+volumeType t (Just i) | t == "io1"      = IO1 i
+volumeType t _ = err "volume type" t
 
 instance Default VolumeType
   where
@@ -448,18 +465,6 @@ blockDeviceMapping dname v e =
         , ebs = e
         }
 
-ebsBlockDevice
-    :: Maybe Text -> Int -> Bool -> VolumeType -> Maybe Int
-    -> EbsBlockDevice
-ebsBlockDevice sid vs dot vt io =
-    EbsBlockDevice
-        { ebsSnapshotId = sid
-        , volumeSize = vs
-        , ebsDeleteOnTermination = dot
-        , volumeType = vt
-        , iops = io
-        }
-
 image
     :: Text -> Text -> ImageState -> Text -> Bool
     -> [ProductCode] -> Text -> ImageType -> Maybe Text
@@ -745,12 +750,6 @@ t2hypervisor t
     | t == "ovm" = OVM
     | otherwise  = err "hypervisor" t
 
-t2volumeType :: Text -> VolumeType
-t2volumeType t
-    | t == "standard" = Standard
-    | t == "io1"      = IO1
-    | otherwise       = err "volume type" t
-
 t2iops :: Maybe Text -> Maybe Int
 t2iops mt = mt >>= readMay . T.unpack
 
@@ -840,3 +839,57 @@ tag tid ttype key value = Tag
     , tagKey = key
     , tagValue = value
     }
+
+data BlockDeviceMappingParam
+    = BlockDeviceMappingParamEBS
+        { bdmpEbsDeviceName :: Text
+        , bdmpEbsNoDevice :: Maybe Bool
+        , bdmpEbsSource :: EbsSource
+        , bdmpEbsDeleteOnTermination :: Maybe Bool
+        , bdmpEbsVolumeType :: Maybe VolumeType
+        }
+    | BlockDeviceMappingParamInstanceStore
+        { bdmpIsDeviceName :: Text
+        , bdmpIsNoDevice :: Maybe Bool
+        , bdmpIsVirtualName :: Maybe Text
+        }
+  deriving (Show)
+
+data EbsSource
+    = EbsSnapshotId Text
+    | EbsVolumeSize Int
+  deriving (Show)
+
+boolToText :: Bool -> Text
+boolToText True  = "true"
+boolToText False = "false"
+
+blockDeviceMappingParams
+    :: [BlockDeviceMappingParam] -> QueryParam
+blockDeviceMappingParams =
+    StructArrayParams "BlockDeviceMapping" . map kvs
+  where
+    kvs (BlockDeviceMappingParamEBS name dev src dot vtype) = 
+        [ ("Ebs.DeviceName", name)
+        , ebsSource src
+        ] ++ vtparam vtype ++ (uncurry f =<<
+            [ ("Ebs.NoDevice", boolToText <$> dev)
+            , ("Ebs.DeleteOnTermination", boolToText <$> dot)
+            ])
+    kvs (BlockDeviceMappingParamInstanceStore name dev vname) =
+        [("Ebs.DeviceName", name)] ++ (uncurry f =<<
+            [ ("Ebs.NoDevice", boolToText <$> dev)
+            , ("Ebs.VirtualName", vname)
+            ])
+
+    ebsSource (EbsSnapshotId sid) = ("Ebs.SnapshotId", sid)
+    ebsSource (EbsVolumeSize size) =
+        ("Ebs.VolumeSize", T.pack $ show size)
+
+    f n = maybe [] (\a -> [(n, a)])
+    vtparam Nothing = []
+    vtparam (Just Standard) = [("Ebs.VolumeType", "standard")]
+    vtparam (Just (IO1 iops)) =
+        [ ("Ebs.VolumeType", "io1")
+        , ("Ebs.Iops", T.pack $ show iops)
+        ]

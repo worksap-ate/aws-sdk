@@ -87,16 +87,24 @@ toArrayParams (ArrayParams name params) = Map.fromList
     [ (textToBS name <> "." <> bsShow i, textToBS param)
     | (i, param) <- zip [1..] params
     ]
-toArrayParams (FilterParams fs) =
-    Map.fromList . concat . map f1 $ zip [1..] fs
+toArrayParams (FilterParams kvs) =
+    Map.fromList . concat . map f1 $ zip [1..] kvs
   where
-    f1 (n, (name, vals)) = (filt n <> ".Name", textToBS name) :
+    f1 (n, (key, vals)) = (filt n <> ".Name", textToBS key) :
         [ (filt n <> ".Value." <> bsShow i, textToBS param)
         | (i, param) <- zip [1..] vals
         ]
     filt n = "Filter." <> bsShow n
 toArrayParams (ValueParam k v) =
     Map.singleton (textToBS k) (textToBS v)
+toArrayParams (StructArrayParams name vss) = Map.fromList l
+  where
+    bsName = textToBS name
+    struct n (k, v) = (n <> "." <> textToBS k, textToBS v)
+    l = mconcat
+        [ map (struct (bsName <> "." <> bsShow i)) kvs
+        | (i, kvs) <- zip [1..] vss
+        ]
 
 textToBS :: Text -> ByteString
 textToBS = BSC.pack . T.unpack

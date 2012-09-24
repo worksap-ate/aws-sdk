@@ -2,6 +2,7 @@
 
 module AWS.EC2.Image
     ( describeImages
+    , createImage
     ) where
 
 import Data.Text (Text)
@@ -63,10 +64,32 @@ imageItem = image
             <$> getMT "snapshotId"
             <*> getF "volumeSize" t2dec
             <*> getF "deleteOnTermination" t2bool
-            <*> getF "volumeType" t2volumeType
-            <*> getM "iops" t2iops
+            <*> (volumeType
+                 <$> getT "volumeType"
+                 <*> getM "iops" t2iops
+                )
             )
         )
     <*> getF "virtualizationType" t2virtualizationType
     <*> resourceTagSink
     <*> getF "hypervisor" t2hypervisor
+
+createImage
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InstanceId
+    -> Text -- ^ Name
+    -> Maybe Text -- ^ Description
+    -> Bool -- ^ NoReboot
+    -> [BlockDeviceMappingParam] -- ^ BlockDeviceMapping
+    -> EC2 m Text
+createImage iid name desc noReboot bdms =
+    ec2Query "CreateImage" params $
+        yield =<< getT "imageId"
+  where
+    param n = maybe [] (\a -> [ValueParam n a])
+    params =
+        [ ValueParam "InstanceId" iid
+        , ValueParam "Name" name
+        , ValueParam "NoReboot" (boolToText noReboot)
+        ] ++ param "Description" desc
+          ++ [blockDeviceMappingParams bdms]

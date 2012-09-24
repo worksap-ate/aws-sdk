@@ -167,11 +167,9 @@ describeInstanceStatus instanceIds isAll filters token =
   where
     params =
         [ ArrayParams "InstanceId" instanceIds
-        , ValueParam "IncludeAllInstances" $ bool isAll
+        , ValueParam "IncludeAllInstances" $ boolToText isAll
         , FilterParams filters
         ]
-    bool True  = "true"
-    bool False = "false"
 
 instanceStatusSet :: MonadThrow m
     => GLConduit Event m InstanceStatus
