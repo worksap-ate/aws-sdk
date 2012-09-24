@@ -1,6 +1,5 @@
 module AWS.EC2.Types where
 
-import Control.Monad.State (StateT)
 import Data.Default (Default(..))
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -18,8 +17,6 @@ data EC2Context = EC2Context
     , endpoint :: EC2Endpoint
     , lastRequestId :: Maybe Text
     }
-
-type EC2 m = StateT EC2Context m
 
 data QueryParam
     = ArrayParams Text [Text]

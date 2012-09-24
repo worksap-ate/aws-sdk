@@ -40,6 +40,7 @@ import AWS.EC2.Types
 import AWS.Types
 import AWS.Util
 import AWS.EC2.Parser
+import AWS.EC2.Class
 
 {- Debug
 import Debug.Trace
