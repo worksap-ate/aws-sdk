@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AWS.EC2.Query
     ( ec2Query
@@ -152,10 +152,10 @@ ec2Query
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParam]
-    -> Conduit Event m o
+    -> GLSink Event m o
     -> EC2 m o
-ec2Query action params cond = do
-    src <- ec2QuerySource action params cond
+ec2Query action params sink = do
+    src <- ec2QuerySource action params $ sink >>= yield
     lift (src $$ CL.head) >>= maybe (fail "parse error") return
 
 ec2QuerySource

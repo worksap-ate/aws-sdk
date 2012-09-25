@@ -85,8 +85,7 @@ createImage
     -> [BlockDeviceMappingParam] -- ^ BlockDeviceMapping
     -> EC2 m Text
 createImage iid name desc noReboot bdms =
-    ec2Query "CreateImage" params $
-        yield =<< getT "imageId"
+    ec2Query "CreateImage" params $ getT "imageId"
   where
     param n = maybe [] (\a -> [ValueParam n a])
     params =

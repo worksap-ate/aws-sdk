@@ -54,11 +54,11 @@ allocateAddress
     => Bool -- ^ is VPC?
     -> EC2 m AllocateAddressResponse
 allocateAddress isVpc = do
-    ec2Query "AllocateAddress" params $ do
-        yield =<< allocateAddressResponse
-            <$> getT "publicIp"
-            <*> getM "domain" addressDomain
-            <*> getMT "allocationId"
+    ec2Query "AllocateAddress" params $
+        allocateAddressResponse
+        <$> getT "publicIp"
+        <*> getM "domain" addressDomain
+        <*> getMT "allocationId"
   where
     params = if isVpc then [ValueParam "Domain" "vpc"] else []
 
@@ -71,8 +71,7 @@ releaseAddress
     -> Maybe Text -- ^ AllocationId
     -> EC2 m EC2Return
 releaseAddress addr allocid = do
-    ec2Query "ReleaseAddress" params $ do
-        yield =<< getF "return" ec2Return
+    ec2Query "ReleaseAddress" params $ getF "return" ec2Return
   where
     param name = maybe [] (\a -> [ValueParam name a])
     params = uncurry param =<<

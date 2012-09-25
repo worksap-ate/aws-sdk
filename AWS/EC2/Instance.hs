@@ -250,7 +250,6 @@ rebootInstances
     => [Text] -- ^ InstanceIds
     -> EC2 m Bool
 rebootInstances instanceIds =
-    ec2Query "RebootInstances" params $
-        yield =<< getF "return" textToBool
+    ec2Query "RebootInstances" params $ getF "return" textToBool
   where
     params = [ArrayParams "InstanceId" instanceIds]
