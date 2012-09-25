@@ -23,25 +23,25 @@ bsShow = BSC.pack . show
 err :: String -> Text -> a
 err v m = error $ "unknown " ++ v ++ ": " ++ T.unpack m
 
-t2bool :: Text -> Bool
-t2bool a
+textToBool :: Text -> Bool
+textToBool a
     | a == "true"  = True
     | a == "false" = False
     | otherwise    = err "value" a
 
-t2dec :: Integral a => Text -> a
-t2dec t = either 
+textToInt :: Integral a => Text -> a
+textToInt t = either 
     (const $ error "not decimal")
     fst
     (TR.decimal t)
 
-t2time :: Text -> UTCTime
-t2time = Time.readTime defaultTimeLocale fmt . T.unpack
+textToTime :: Text -> UTCTime
+textToTime = Time.readTime defaultTimeLocale fmt . T.unpack
   where
     fmt = "%FT%T.000Z"
 
-t2emptxt :: Maybe Text -> Text
-t2emptxt = maybe "" id
+orEmpty :: Maybe Text -> Text
+orEmpty = maybe "" id
 
 boolToText :: Bool -> Text
 boolToText True  = "true"

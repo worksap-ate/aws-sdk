@@ -63,7 +63,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getT "amiLaunchIndex"
     <*> productCodeSink
     <*> getT "instanceType"
-    <*> getF "launchTime" t2time
+    <*> getF "launchTime" textToTime
     <*> element "placement" (
         placement
         <$> getT "availabilityZone"
@@ -78,7 +78,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getMT "vpcId"
     <*> getMT "privateIpAddress"
     <*> getMT "ipAddress"
-    <*> getM "sourceDestCheck" (t2bool <$>)
+    <*> getM "sourceDestCheck" (textToBool <$>)
     <*> groupSetSink
     <*> stateReasonSink
     <*> getF "architecture" architecture
@@ -91,8 +91,8 @@ instanceSetSink = itemsSet "instancesSet" $
             instanceEbsBlockDevice
             <$> getT "volumeId"
             <*> getF "status" volumeState
-            <*> getF "attachTime" t2time
-            <*> getF "deleteOnTermination" t2bool
+            <*> getF "attachTime" textToTime
+            <*> getF "deleteOnTermination" textToBool
             )
         )
     <*> getM "instanceLifecycle" instanceLifecycle
@@ -107,13 +107,13 @@ instanceSetSink = itemsSet "instancesSet" $
         <$> getT "arn"
         <*> getT "id"
         )
-    <*> getF "ebsOptimized" t2bool
+    <*> getF "ebsOptimized" textToBool
 
 instanceStateSink :: MonadThrow m
     => GLSink Event m InstanceState
 instanceStateSink = element "instanceState" $
     codeToState
-    <$> getF "code" t2dec
+    <$> getF "code" textToInt
     <* getT "name"
 
 networkInterfaceSink :: MonadThrow m
@@ -123,26 +123,26 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <$> getT "networkInterfaceId"
     <*> getT "subnetId"
     <*> getT "vpcId"
-    <*> getM "description" t2emptxt
+    <*> getM "description" orEmpty
     <*> getT "ownerId"
     <*> getT "status"
     <*> getT "privateIpAddress"
     <*> getMT "privateDnsName"
-    <*> getF "sourceDestCheck" t2bool
+    <*> getF "sourceDestCheck" textToBool
     <*> groupSetSink
     <*> element "attachment" (
         networkInterfaceAttachment
         <$> getT "attachmentId"
-        <*> getF "deviceIndex" t2dec
+        <*> getF "deviceIndex" textToInt
         <*> getT "status"
-        <*> getF "attachTime" t2time
-        <*> getF "deleteOnTermination" t2bool
+        <*> getF "attachTime" textToTime
+        <*> getF "deleteOnTermination" textToBool
         )
     <*> niAssociationSink
     <*> itemsSet "privateIpAddressesSet" (
         instancePrivateIpAddress
         <$> getT "privateIpAddress"
-        <*> getF "primary" t2bool
+        <*> getF "primary" textToBool
         <*> niAssociationSink
         )
 
@@ -184,8 +184,8 @@ instanceStatusSet = do
             instanceStatusEvent
             <$> getF "code" instanceStatusEventCode
             <*> getT "description"
-            <*> getM "notBefore" (t2time <$>)
-            <*> getM "notAfter" (t2time <$>)
+            <*> getM "notBefore" (textToTime <$>)
+            <*> getM "notAfter" (textToTime <$>)
             )
         <*> instanceStateSink
         <*> instanceStatusTypeSink "systemStatus"
@@ -200,5 +200,5 @@ instanceStatusTypeSink name = element name $
         instanceStatusDetail
         <$> getT "name"
         <*> getT "status"
-        <*> getM "impairedSince" (t2time <$>)
+        <*> getM "impairedSince" (textToTime <$>)
         )

@@ -44,7 +44,7 @@ imageItem = image
     <*> getT "imageLocation"
     <*> getF "imageState" imageState
     <*> getT "imageOwnerId"
-    <*> getF "isPublic" t2bool
+    <*> getF "isPublic" textToBool
     <*> productCodeSink
     <*> getT "architecture"
     <*> getF "imageType" imageType
@@ -53,8 +53,8 @@ imageItem = image
     <*> getM "platform" platform
     <*> stateReasonSink
     <*> getMT "imageOwnerAlias"
-    <*> getM "name" t2emptxt
-    <*> getM "description" t2emptxt
+    <*> getM "name" orEmpty
+    <*> getM "description" orEmpty
     <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
     <*> itemsSet "blockDeviceMapping" (
@@ -64,11 +64,11 @@ imageItem = image
         <*> elementM "ebs" (
             ebsBlockDevice
             <$> getMT "snapshotId"
-            <*> getF "volumeSize" t2dec
-            <*> getF "deleteOnTermination" t2bool
+            <*> getF "volumeSize" textToInt
+            <*> getF "deleteOnTermination" textToBool
             <*> (volumeType
                  <$> getT "volumeType"
-                 <*> getM "iops" (t2dec <$>)
+                 <*> getM "iops" (textToInt <$>)
                 )
             )
         )
