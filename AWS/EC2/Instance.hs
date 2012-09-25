@@ -4,6 +4,7 @@ module AWS.EC2.Instance
     ( describeInstances
     , startInstances
     , stopInstances
+    , rebootInstances
     , describeInstanceStatus
     ) where
 
@@ -240,3 +241,16 @@ stopInstances instanceIds force =
     params =
         [ ArrayParams "InstanceId" instanceIds
         , ValueParam "Force" $ boolToText force]
+
+------------------------------------------------------------
+-- RebootInstances
+------------------------------------------------------------
+rebootInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> EC2 m Bool
+rebootInstances instanceIds =
+    ec2Query "RebootInstances" params $
+        yield =<< getF "return" textToBool
+  where
+    params = [ArrayParams "InstanceId" instanceIds]
