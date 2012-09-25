@@ -5,6 +5,7 @@ module AWS.EC2.Instance
     , startInstances
     , stopInstances
     , rebootInstances
+    , terminateInstances
     , describeInstanceStatus
     ) where
 
@@ -251,5 +252,18 @@ rebootInstances
     -> EC2 m Bool
 rebootInstances instanceIds =
     ec2Query "RebootInstances" params $ getF "return" textToBool
+  where
+    params = [ArrayParams "InstanceId" instanceIds]
+
+------------------------------------------------------------
+-- TerminateInstances
+------------------------------------------------------------
+terminateInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> EC2 m (Source m InstanceStateChange)
+terminateInstances instanceIds =
+    ec2QuerySource "TerminateInstances" params
+        instanceStateChangeSet
   where
     params = [ArrayParams "InstanceId" instanceIds]
