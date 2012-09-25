@@ -23,8 +23,9 @@ import AWS.EC2.Parser
 -----------------------------------------------------
 describeAddresses
     :: (MonadResource m, MonadBaseControl IO m)
-    => [Text]
-    -> [Text] -> [Filter]
+    => [Text] -- ^ PublicIps
+    -> [Text] -- ^ AllocationIds
+    -> [Filter] -- ^ Filters
     -> EC2 m (Source m Address)
 describeAddresses pubIps alloIds filters =
     ec2QuerySource "DescribeAddresses" params addressSet where
@@ -38,7 +39,7 @@ describeAddresses pubIps alloIds filters =
     addressSet = itemConduit "addressesSet" $ address
         <$> getT "publicIp"
         <*> getMT "allocationId"
-        <*> getF "domain" (const AddressDomainStandard)
+        <*> getM "domain" addressDomain
         <*> getMT "instanceId"
         <*> getMT "associationId"
         <*> getMT "networkInterfaceId"
@@ -50,13 +51,13 @@ describeAddresses pubIps alloIds filters =
 -----------------------------------------------------
 allocateAddress
     :: (MonadResource m, MonadBaseControl IO m)
-    => Bool
+    => Bool -- ^ is VPC?
     -> EC2 m AllocateAddressResponse
 allocateAddress isVpc = do
     ec2Query "AllocateAddress" params $ do
         yield =<< allocateAddressResponse
             <$> getT "publicIp"
-            <*> getM "domain" (const AddressDomainStandard)
+            <*> getM "domain" addressDomain
             <*> getMT "allocationId"
   where
     params = if isVpc then [ValueParam "Domain" "vpc"] else []
@@ -66,8 +67,8 @@ allocateAddress isVpc = do
 -----------------------------------------------------
 releaseAddress
     :: (MonadResource m, MonadBaseControl IO m)
-    => Maybe Text
-    -> Maybe Text
+    => Maybe Text -- ^ PublicIp
+    -> Maybe Text -- ^ AllocationId
     -> EC2 m EC2Return
 releaseAddress addr allocid = do
     ec2Query "ReleaseAddress" params $ do

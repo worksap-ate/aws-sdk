@@ -13,16 +13,18 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Types
+import AWS.EC2.Params
 import AWS.EC2.Class
 import AWS.EC2.Query
 import AWS.EC2.Parser
+import AWS.Util
 
 describeImages
     :: (MonadResource m, MonadBaseControl IO m)
-    => [Text]
-    -> [Text]
-    -> [Text]
-    -> [Filter]
+    => [Text] -- ^ ImageIds
+    -> [Text] -- ^ Owners (User Ids)
+    -> [Text] -- ^ ExecutedBy (User Ids)
+    -> [Filter] -- ^ Filers
     -> EC2 m (Source m Image)
 describeImages imageIds owners execby filters =
     ec2QuerySource "DescribeImages" params $
@@ -40,20 +42,20 @@ imageItem :: MonadThrow m
 imageItem = image
     <$> getT "imageId"
     <*> getT "imageLocation"
-    <*> getF "imageState" t2imageState
+    <*> getF "imageState" imageState
     <*> getT "imageOwnerId"
     <*> getF "isPublic" t2bool
     <*> productCodeSink
     <*> getT "architecture"
-    <*> getF "imageType" t2imageType
+    <*> getF "imageType" imageType
     <*> getMT "kernelId"
     <*> getMT "ramdiskId"
-    <*> getM "platform" t2platform
+    <*> getM "platform" platform
     <*> stateReasonSink
     <*> getMT "imageOwnerAlias"
     <*> getM "name" t2emptxt
     <*> getM "description" t2emptxt
-    <*> getF "rootDeviceType" t2rootDeviceType
+    <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
     <*> itemsSet "blockDeviceMapping" (
         blockDeviceMapping
@@ -66,13 +68,13 @@ imageItem = image
             <*> getF "deleteOnTermination" t2bool
             <*> (volumeType
                  <$> getT "volumeType"
-                 <*> getM "iops" t2iops
+                 <*> getM "iops" (t2dec <$>)
                 )
             )
         )
-    <*> getF "virtualizationType" t2virtualizationType
+    <*> getF "virtualizationType" virtualizationType
     <*> resourceTagSink
-    <*> getF "hypervisor" t2hypervisor
+    <*> getF "hypervisor" hypervisor
 
 createImage
     :: (MonadResource m, MonadBaseControl IO m)

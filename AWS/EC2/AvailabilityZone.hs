@@ -18,8 +18,8 @@ import AWS.EC2.Parser
 
 describeAvailabilityZones
     :: (MonadResource m, MonadBaseControl IO m)
-    => [Text]
-    -> [Filter]
+    => [Text] -- ^ ZoneNames
+    -> [Filter] -- ^ Filters
     -> EC2 m (Source m AvailabilityZone)
 describeAvailabilityZones zones filters =
     ec2QuerySource "DescribeAvailabilityZones" params availabilityZoneInfo

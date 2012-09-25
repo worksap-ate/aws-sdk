@@ -16,14 +16,15 @@ import AWS.EC2.Types
 import AWS.EC2.Class
 import AWS.EC2.Query
 import AWS.EC2.Parser
+import AWS.Util
 
 ------------------------------------------------------------
 -- DescribeInstances
 ------------------------------------------------------------
 describeInstances
     :: (MonadResource m, MonadBaseControl IO m)
-    => [Text]
-    -> [Filter]
+    => [Text] -- ^ InstanceIds
+    -> [Filter] -- ^ Filters
     -> EC2 m (Source m Reservation)
 describeInstances instances filters = do
     ec2QuerySource "DescribeInstances" params reservationSet
@@ -72,7 +73,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getMT "kernelId"
     <*> getMT "ramdiskId"
     <*> getMT "platform"
-    <*> element "monitoring" (getF "state" t2monitoring)
+    <*> element "monitoring" (getF "state" instanceMonitoringState)
     <*> getMT "subnetId"
     <*> getMT "vpcId"
     <*> getMT "privateIpAddress"
@@ -80,8 +81,8 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getM "sourceDestCheck" (t2bool <$>)
     <*> groupSetSink
     <*> stateReasonSink
-    <*> getF "architecture" t2architecture
-    <*> getF "rootDeviceType" t2deviceType
+    <*> getF "architecture" architecture
+    <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
     <*> itemsSet "blockDeviceMapping" (
         instanceBlockDeviceMapping
@@ -89,17 +90,17 @@ instanceSetSink = itemsSet "instancesSet" $
         <*> element "ebs" (
             instanceEbsBlockDevice
             <$> getT "volumeId"
-            <*> getF "status" t2volumeState
+            <*> getF "status" volumeState
             <*> getF "attachTime" t2time
             <*> getF "deleteOnTermination" t2bool
             )
         )
-    <*> getM "instanceLifecycle" t2lifecycle
+    <*> getM "instanceLifecycle" instanceLifecycle
     <*> getMT "spotInstanceRequestId"
-    <*> getF "virtualizationType" t2virtualizationType
+    <*> getF "virtualizationType" virtualizationType
     <*> getT "clientToken"
     <*> resourceTagSink
-    <*> getF "hypervisor" t2hypervisor
+    <*> getF "hypervisor" hypervisor
     <*> networkInterfaceSink
     <*> elementM "iamInstanceProfile" (
         iamInstanceProfile
@@ -155,12 +156,13 @@ niAssociationSink = elementM "association" $
 ------------------------------------------------------------
 -- DescribeInstanceStatus
 ------------------------------------------------------------
+-- | raise 'ResponseParserException'('NextToken' token)
 describeInstanceStatus
     :: (MonadResource m, MonadBaseControl IO m)
-    => [Text]
-    -> Bool
-    -> [Filter]
-    -> Maybe Text
+    => [Text] -- ^ InstanceIds
+    -> Bool  -- ^ is all instance? 'False': running instance only.
+    -> [Filter] -- ^ Filters
+    -> Maybe Text -- ^ next token
     -> EC2 m (Source m InstanceStatus)
 describeInstanceStatus instanceIds isAll filters token =
     ec2QuerySource' "DescribeInstanceStatus" params token instanceStatusSet

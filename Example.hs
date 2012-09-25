@@ -10,8 +10,9 @@ import Control.Monad.Trans.Class (lift)
 import Data.Text (Text)
 import Control.Monad.Trans.Control
 
-import AWS.Credential
+import AWS
 import AWS.EC2
+import AWS.EC2.Types
 
 imageIds :: [Text]
 imageIds =

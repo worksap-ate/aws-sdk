@@ -24,7 +24,7 @@ productCodeSink :: MonadThrow m
 productCodeSink = itemsSet "productCodes" $
     productCode
     <$> getT "productCode"
-    <*> getF "type" t2productCodeType
+    <*> getF "type" productCodeType
 
 stateReasonSink :: MonadThrow m
     => GLSink Event m (Maybe StateReason)

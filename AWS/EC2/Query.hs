@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 
 module AWS.EC2.Query
     ( ec2Query
@@ -31,7 +30,6 @@ import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.State as ST
-import Data.Typeable (Typeable)
 import Control.Exception.Lifted as E
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -41,17 +39,19 @@ import AWS.Types
 import AWS.Util
 import AWS.EC2.Parser
 import AWS.EC2.Class
+import AWS.Credential
 
 {- Debug
 import Debug.Trace
 import qualified Data.Conduit.Binary as CB
 --}
 
-data ResponseParserException
-    = NextToken Text
-  deriving (Show, Typeable)
-
-instance Exception ResponseParserException
+data QueryParam
+    = ArrayParams Text [Text]
+    | FilterParams [Filter]
+    | ValueParam Text Text
+    | StructArrayParams Text [[(Text, Text)]]
+  deriving (Show)
 
 queryHeader :: ByteString -> UTCTime -> Credential -> [(ByteString, ByteString)]
 queryHeader action time cred =

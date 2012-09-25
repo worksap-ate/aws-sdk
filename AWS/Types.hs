@@ -1,14 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module AWS.Types
-    ( module AWS.Credential
-    , Endpoint (..)
+    ( Endpoint (..)
     , EC2Endpoint (..)
     ) where
 
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 ()
-
-import AWS.Credential hiding (loadCredential)
 
 class Endpoint a where
     endpointStr :: a -> ByteString

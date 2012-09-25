@@ -15,7 +15,7 @@ import AWS.EC2.Parser
 
 describeTags
     :: (MonadResource m, MonadBaseControl IO m)
-    => [Filter]
+    => [Filter] -- ^ Filters
     -> EC2 m (Source m Tag)
 describeTags filters =
     ec2QuerySource "DescribeTags" params $ itemConduit "tagSet" $

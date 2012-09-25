@@ -2,56 +2,69 @@ module AWS.EC2.Types where
 
 import Data.Default (Default(..))
 import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Network.HTTP.Conduit as HTTP
-import Data.Text.Read (decimal)
-import Safe (readMay)
-import System.Locale (defaultTimeLocale)
-import Data.Time (UTCTime, readTime)
-import Control.Applicative
+import Data.Time (UTCTime)
 
-import AWS.Types
-
-data EC2Context = EC2Context
-    { manager :: HTTP.Manager
-    , credential :: Credential
-    , endpoint :: EC2Endpoint
-    , lastRequestId :: Maybe Text
-    }
-
-data QueryParam
-    = ArrayParams Text [Text]
-    | FilterParams [Filter]
-    | ValueParam Text Text
-    | StructArrayParams Text [[(Text, Text)]]
-  deriving (Show)
+import AWS.Util
 
 type Filter = (Text, [Text])
 
 data Image = Image
     { imageId :: Text
     , imageLocation :: Text
-    , imageState :: ImageState
+    , imageImageState :: ImageState
     , imageOwnerId :: Text
     , isPublic :: Bool
     , imageProductCodes :: [ProductCode]
     , imageArchitecture :: Text
-    , imageType :: ImageType
+    , imageImageType :: ImageType
     , kernelId :: Maybe Text
     , ramdiskId :: Maybe Text
-    , platform :: Platform
+    , imagePlatform :: Platform
     , imageStateReason :: Maybe StateReason
     , imageOwnerAlias :: Maybe Text
     , imageName :: Text
-    , description :: Text
-    , rootDeviceType :: RootDeviceType
-    , rootDeviceName :: Maybe Text
+    , imageDescription :: Text
+    , imageRootDeviceType :: RootDeviceType
+    , imageRootDeviceName :: Maybe Text
     , blockDeviceMappings :: [BlockDeviceMapping]
-    , virtualizationType :: VirtualizationType
+    , imageVirtualizationType :: VirtualizationType
     , imageTagSet :: [ResourceTag]
-    , hypervisor :: Hypervisor
+    , imageHypervisor :: Hypervisor
     }
   deriving (Show)
+
+image
+    :: Text -> Text -> ImageState -> Text -> Bool
+    -> [ProductCode] -> Text -> ImageType -> Maybe Text
+    -> Maybe Text -> Platform -> Maybe StateReason
+    -> Maybe Text -> Text -> Text -> RootDeviceType
+    -> Maybe Text -> [BlockDeviceMapping] -> VirtualizationType
+    -> [ResourceTag] -> Hypervisor -> Image
+image i l s oid p pc a t kid rid pf
+    sr oa n d rdt rdn bdms vt ts h =
+    Image
+        { imageId = i
+        , imageLocation = l
+        , imageImageState = s
+        , imageOwnerId = oid
+        , isPublic = p
+        , imageProductCodes = pc
+        , imageArchitecture = a
+        , imageImageType = t
+        , kernelId = kid
+        , ramdiskId = rid
+        , imagePlatform = pf
+        , imageStateReason = sr
+        , imageOwnerAlias = oa
+        , imageName = n
+        , imageDescription = d
+        , imageRootDeviceType = rdt
+        , imageRootDeviceName = rdn
+        , blockDeviceMappings = bdms
+        , imageVirtualizationType = vt
+        , imageTagSet = ts
+        , imageHypervisor = h
+        }
 
 data ImageState
     = ImageAvailable
@@ -59,24 +72,56 @@ data ImageState
     | ImageFailed
   deriving (Show)
 
+imageState :: Text -> ImageState
+imageState a
+    | a == "available" = ImageAvailable
+    | a == "pending"   = ImagePending
+    | a == "failed"    = ImageFailed
+    | otherwise        = err "image state" a
+
 data ProductCode = ProductCode
-    { productCodeCode :: Text
-    , productCodeType :: ProductCodeType
+    { pcCode :: Text
+    , pcType :: ProductCodeType
     }
   deriving (Show)
+
+productCode :: Text -> ProductCodeType -> ProductCode
+productCode c t = ProductCode
+    { pcCode = c
+    , pcType = t
+    }
 
 data ProductCodeType = Devpay
                      | Marketplace
   deriving (Show)
+
+productCodeType :: Text -> ProductCodeType
+productCodeType t
+    | t == "marketplace" = Marketplace
+    | t == "devpay"      = Devpay
+    | otherwise          = err "product code type" t
 
 data ImageType = Machine
                | Kernel
                | RamDisk
   deriving (Show)
 
+imageType :: Text -> ImageType
+imageType t
+    | t == "machine"  = Machine
+    | t == "kernel"   = Kernel
+    | t == "ramdisk" = RamDisk
+    | otherwise       = err "image type" t
+
 data Platform = Windows
               | Other
   deriving (Show)
+
+platform :: Maybe Text -> Platform
+platform Nothing   = Other
+platform (Just t)
+    | t == "windows" = Windows
+    | otherwise      = Other
 
 data StateReason = StateReason
     { stateReasonCode :: Text
@@ -84,9 +129,22 @@ data StateReason = StateReason
     }
   deriving (Show)
 
+stateReason :: Text -> Text -> StateReason
+stateReason c m =
+    StateReason
+        { stateReasonCode = c
+        , stateReasonMessage = m
+        }
+
 data RootDeviceType = EBS
                     | InstanceStore
   deriving (Show)
+
+rootDeviceType :: Text -> RootDeviceType
+rootDeviceType t
+    | t == "ebs"            = EBS
+    | t == "instance-store" = InstanceStore
+    | otherwise             = err "root device type" t
 
 data BlockDeviceMapping = BlockDeviceMapping
     { deviceName :: Text
@@ -94,6 +152,15 @@ data BlockDeviceMapping = BlockDeviceMapping
     , ebs :: Maybe EbsBlockDevice
     }
   deriving (Show)
+
+blockDeviceMapping :: Text -> Maybe Text -> Maybe EbsBlockDevice
+    -> BlockDeviceMapping
+blockDeviceMapping dname v e =
+    BlockDeviceMapping
+        { deviceName = dname
+        , virtualName = v
+        , ebs = e
+        }
 
 data EbsBlockDevice = EbsBlockDevice
     { ebsSnapshotId :: Maybe Text
@@ -131,15 +198,34 @@ data VirtualizationType = Paravirtual
                         | HVM
   deriving (Show)
 
+virtualizationType :: Text -> VirtualizationType
+virtualizationType t
+    | t == "paravirtual" = Paravirtual
+    | t == "hvm"         = HVM
+    | otherwise          = err "virtualization type" t
+
 data ResourceTag = ResourceTag
     { resourceKey :: Text
     , resourceValue :: Maybe Text
     }
   deriving (Show)
 
+resourceTag :: Text -> Maybe Text -> ResourceTag
+resourceTag k v =
+    ResourceTag
+        { resourceKey = k
+        , resourceValue = v
+        }
+
 data Hypervisor = OVM
                 | Xen
   deriving (Show)
+
+hypervisor :: Text -> Hypervisor
+hypervisor t
+    | t == "xen" = Xen
+    | t == "ovm" = OVM
+    | otherwise  = err "hypervisor" t
 
 {- DescribeRegions -}
 data Region = Region
@@ -147,6 +233,12 @@ data Region = Region
     , regionEndpoint :: Text
     }
   deriving (Show)
+
+region :: Text -> Text -> Region
+region name rep = Region
+    { regionName = name
+    , regionEndpoint = rep
+    }
 
 {- DescribeAvailabilityZones -}
 data AvailabilityZone = AvailabilityZone
@@ -159,6 +251,17 @@ data AvailabilityZone = AvailabilityZone
 
 type AvailabilityZoneMessage = Text
 
+availabilityZone
+    :: Text -> Text -> Text -> [AvailabilityZoneMessage]
+    -> AvailabilityZone
+availabilityZone name st reg msgs =
+    AvailabilityZone
+        { zoneName = name
+        , zoneState = st
+        , zoneRegionName = reg
+        , messageSet = msgs
+        }
+
 {- DescribeInstances -}
 data Reservation = Reservation
     { reservationId :: Text
@@ -168,6 +271,17 @@ data Reservation = Reservation
     , requesterId :: Maybe Text
     }
   deriving (Show)
+
+reservation
+    :: Text -> Text -> [Group] -> [Instance] -> Maybe Text
+    -> Reservation
+reservation i o g iset rid = Reservation
+    { reservationId = i
+    , ownerId = o
+    , groupSet = g
+    , instanceSet = iset
+    , requesterId = rid
+    }
 
 data Instance = Instance
     { instanceId :: Text
@@ -185,7 +299,7 @@ data Instance = Instance
     , instanceKernelId :: Maybe Text
     , instanceRamdiskId :: Maybe Text
     , instancePlatform :: Maybe Text
-    , monitoring :: InstanceMonitoringState
+    , instanceMonitoring :: InstanceMonitoringState
     , subnetId :: Maybe Text
     , vpcId :: Maybe Text
     , privateIpAddress :: Maybe Text
@@ -197,7 +311,7 @@ data Instance = Instance
     , instanceRootDeviceType :: RootDeviceType
     , instanceRootDeviceName :: Maybe Text
     , instanceBlockDeviceMappings :: [InstanceBlockDeviceMapping]
-    , instanceLifecycle :: InstanceLifecycle
+    , instanceInstanceLifecycle :: InstanceLifecycle
     , spotInstanceRequestId :: Maybe Text
     , instanceVirtualizationType :: VirtualizationType
     , clientToken :: Text
@@ -208,6 +322,61 @@ data Instance = Instance
     , ebsOptimized :: Bool -- default: false
     }
   deriving (Show)
+
+ec2Instance
+    :: Text -> Text -> InstanceState -> Text -> Text -> Text
+    -> Text -> Text -> [ProductCode] -> Text -> UTCTime
+    -> Placement -> Maybe Text -> Maybe Text -> Maybe Text
+    -> InstanceMonitoringState -> Maybe Text -> Maybe Text
+    -> Maybe Text -> Maybe Text -> Maybe Bool -> [Group]
+    -> Maybe StateReason -> Architecture -> RootDeviceType
+    -> Maybe Text -> [InstanceBlockDeviceMapping]
+    -> InstanceLifecycle -> Maybe Text -> VirtualizationType
+    -> Text -> [ResourceTag] -> Hypervisor
+    -> [InstanceNetworkInterface] -> Maybe IamInstanceProfile
+    -> Bool -> Instance
+ec2Instance iid img istate pdns dns res kname aidx pcode
+    itype ltime place kid rid pf mon snid vpcid paddr addr
+    sdc grp sreason arch rdtype rdname bdmap life spotid
+    vtype ctoken tset hv nicset iam eopt =
+    Instance
+        { instanceId = iid
+        , instanceImageId = img
+        , instanceState = istate
+        , privateDnsName = pdns
+        , dnsName = dns
+        , reason = res
+        , keyName = kname
+        , amiLaunchIndex = aidx
+        , instanceProductCodes = pcode
+        , instanceType = itype
+        , launchTime = ltime
+        , instancePlacement = place
+        , instanceKernelId = kid
+        , instanceRamdiskId = rid
+        , instancePlatform = pf
+        , instanceMonitoring = mon
+        , subnetId = snid
+        , vpcId = vpcid
+        , privateIpAddress = paddr
+        , ipAddress = addr
+        , sourceDestCheck = sdc
+        , vpcGroupSet = grp
+        , instanceStateReason = sreason
+        , instanceArchitecture = arch
+        , instanceRootDeviceType = rdtype
+        , instanceRootDeviceName = rdname
+        , instanceBlockDeviceMappings = bdmap
+        , instanceInstanceLifecycle = life
+        , spotInstanceRequestId = spotid
+        , instanceVirtualizationType = vtype
+        , clientToken = ctoken
+        , instanceTagSet = tset
+        , instanceHypervisor = hv
+        , instanceNetworkInterfaceSet = nicset
+        , instanceIamInstanceProfile = iam
+        , ebsOptimized = eopt
+        }
 
 data InstanceStatus = InstanceStatus
     { isInstanceId :: Text
@@ -319,6 +488,12 @@ data Group = Group
     }
   deriving (Show)
 
+group :: Text -> Text -> Group
+group i n = Group
+    { groupId = i
+    , groupName = n
+    }
+
 data InstanceState
     = Pending
     | Running
@@ -350,19 +525,48 @@ data Placement = Placement
     }
   deriving (Show)
 
+placement :: Text -> Text -> Text -> Placement
+placement zone gname ten = Placement
+    { placementAvailabilityZone = zone
+    , placementGroupName = gname
+    , tenancy = ten
+    }
+
 data InstanceMonitoringState
     = MonitoringDisabled
     | MonitoringEnabled
     | MonitoringPending
   deriving (Show)
 
+instanceMonitoringState :: Text -> InstanceMonitoringState
+instanceMonitoringState t
+    | t == "disabled" = MonitoringDisabled
+    | t == "enabled"  = MonitoringEnabled
+    | t == "pending"  = MonitoringPending
+    | otherwise       = err "monitoring state" t
+
 data Architecture = I386 | X86_64 deriving (Show)
+
+architecture :: Text -> Architecture
+architecture t
+    | t == "i386"   = I386
+    | t == "x86_64" = X86_64
+    | otherwise     = err "architecture" t
 
 data InstanceBlockDeviceMapping = InstanceBlockDeviceMapping
     { instanceDeviceName :: Text
     , instanceEbs :: InstanceEbsBlockDevice
     }
   deriving (Show)
+
+instanceBlockDeviceMapping
+    :: Text -> InstanceEbsBlockDevice
+    -> InstanceBlockDeviceMapping
+instanceBlockDeviceMapping devname iebs =
+    InstanceBlockDeviceMapping
+        { instanceDeviceName = devname
+        , instanceEbs = iebs
+        }
 
 data InstanceEbsBlockDevice = InstanceEbsBlockDevice
     { instanceEbsVolumeId :: Text
@@ -372,6 +576,17 @@ data InstanceEbsBlockDevice = InstanceEbsBlockDevice
     }
   deriving (Show)
 
+instanceEbsBlockDevice
+    :: Text -> VolumeState -> UTCTime -> Bool
+    -> InstanceEbsBlockDevice
+instanceEbsBlockDevice vid vst atime dot =
+    InstanceEbsBlockDevice
+        { instanceEbsVolumeId = vid
+        , instanceEbsState = vst
+        , instanceEbsAttachTime = atime
+        , instanceEbsDeleteOnTermination = dot
+        }
+
 data VolumeState
     = VolumeAttaching
     | VolumeAttached
@@ -379,8 +594,22 @@ data VolumeState
     | VolumeDetached
   deriving (Show)
 
+volumeState :: Text -> VolumeState
+volumeState t
+    | t == "attached"  = VolumeAttached
+    | t == "attaching" = VolumeAttaching
+    | t == "detaching" = VolumeDetaching
+    | t == "detached"  = VolumeDetached
+    | otherwise        = err "volume state" t
+
 data InstanceLifecycle = LifecycleSpot | LifecycleNone
   deriving (Show)
+
+instanceLifecycle :: Maybe Text -> InstanceLifecycle
+instanceLifecycle Nothing = LifecycleNone
+instanceLifecycle (Just t)
+    | t == "spot"   = LifecycleSpot
+    | otherwise     = err "lifecycle" t
 
 data InstanceNetworkInterface = InstanceNetworkInterface
     { instanceNetworkInterfaceId :: Text
@@ -398,224 +627,6 @@ data InstanceNetworkInterface = InstanceNetworkInterface
     , iniPrivateIpAddressSet :: [InstancePrivateIpAddress]
     }
   deriving (Show)
-
-data NetworkInterfaceAttachment = NetworkInterfaceAttachment
-    { niatAttachmentId :: Text
-    , niatDeviceIndex :: Int
-    , niatStatus :: Text
-    , niatAttachTime :: UTCTime
-    , niatDeleteOnTermination :: Bool
-    }
-  deriving (Show)
-
-data NetworkInterfaceAssociation = NetworkInterfaceAssociation
-    { niasPublicIp :: Text
-    , niasIpOwnerId :: Text
-    }
-  deriving (Show)
-
-data InstancePrivateIpAddress = InstancePrivateIpAddress
-    { iPrivateIpAddress :: Text
-    , iPrimary :: Bool
-    , iAssociation :: Maybe NetworkInterfaceAssociation
-    }
-  deriving (Show)
-
-data IamInstanceProfile = IamInstanceProfile
-    { iipArn :: Text
-    , iipId :: Text
-    }
-  deriving (Show)
-
-data Address = Address
-    { addrPublicIp :: Text
-    , addrAllocationId :: Maybe Text
-    , addrDomain :: AddressDomain
-    , addrInstanceId :: Maybe Text
-    , addrAssociationId :: Maybe Text
-    , addrNetworkInterfaceId :: Maybe Text
-    , addrNetworkInterfaceOwnerId :: Maybe Text
-    , addrPrivateIpAddress :: Maybe Text
-    }
-  deriving (Show)
-
-data AddressDomain = AddressDomainStandard | AddressDomainVPC
-  deriving (Show)
-
-address :: Text -> Maybe Text -> AddressDomain -> Maybe Text
-    -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
-    -> Address
-address pip alid dom iid asid niid nioid pips = Address
-    { addrPublicIp = pip
-    , addrAllocationId = alid
-    , addrDomain = dom
-    , addrInstanceId = iid
-    , addrAssociationId = asid
-    , addrNetworkInterfaceId = niid
-    , addrNetworkInterfaceOwnerId = nioid
-    , addrPrivateIpAddress = pips
-    }
-
-blockDeviceMapping :: Text -> Maybe Text -> Maybe EbsBlockDevice
-    -> BlockDeviceMapping
-blockDeviceMapping dname v e =
-    BlockDeviceMapping
-        { deviceName = dname
-        , virtualName = v
-        , ebs = e
-        }
-
-image
-    :: Text -> Text -> ImageState -> Text -> Bool
-    -> [ProductCode] -> Text -> ImageType -> Maybe Text
-    -> Maybe Text -> Platform -> Maybe StateReason
-    -> Maybe Text -> Text -> Text -> RootDeviceType
-    -> Maybe Text -> [BlockDeviceMapping] -> VirtualizationType
-    -> [ResourceTag] -> Hypervisor -> Image
-image i l s oid p pc a t kid rid pf
-    sr oa n d rdt rdn bdms vt ts h =
-    Image
-        { imageId = i
-        , imageLocation = l
-        , imageState = s
-        , imageOwnerId = oid
-        , isPublic = p
-        , imageProductCodes = pc
-        , imageArchitecture = a
-        , imageType = t
-        , kernelId = kid
-        , ramdiskId = rid
-        , platform = pf
-        , imageStateReason = sr
-        , imageOwnerAlias = oa
-        , imageName = n
-        , description = d
-        , rootDeviceType = rdt
-        , rootDeviceName = rdn
-        , blockDeviceMappings = bdms
-        , virtualizationType = vt
-        , imageTagSet = ts
-        , hypervisor = h
-        }
-
-resourceTag :: Text -> Maybe Text -> ResourceTag
-resourceTag k v =
-    ResourceTag
-        { resourceKey = k
-        , resourceValue = v
-        }
-
-productCode :: Text -> ProductCodeType -> ProductCode
-productCode c t =
-    ProductCode
-        { productCodeCode = c
-        , productCodeType = t
-        }
-
-stateReason :: Text -> Text -> StateReason
-stateReason c m =
-    StateReason
-        { stateReasonCode = c
-        , stateReasonMessage = m
-        }
-
-region :: Text -> Text -> Region
-region name rep = Region
-    { regionName = name
-    , regionEndpoint = rep
-    }
-
-availabilityZone
-    :: Text -> Text -> Text -> [AvailabilityZoneMessage]
-    -> AvailabilityZone
-availabilityZone name st reg msgs =
-    AvailabilityZone
-        { zoneName = name
-        , zoneState = st
-        , zoneRegionName = reg
-        , messageSet = msgs
-        }
-
-reservation
-    :: Text -> Text -> [Group] -> [Instance] -> Maybe Text
-    -> Reservation
-reservation i o g iset rid = Reservation
-    { reservationId = i
-    , ownerId = o
-    , groupSet = g
-    , instanceSet = iset
-    , requesterId = rid
-    }
-
-group :: Text -> Text -> Group
-group i n = Group
-    { groupId = i
-    , groupName = n
-    }
-
-ec2Instance
-    :: Text -> Text -> InstanceState -> Text -> Text -> Text
-    -> Text -> Text -> [ProductCode] -> Text -> UTCTime
-    -> Placement -> Maybe Text -> Maybe Text -> Maybe Text
-    -> InstanceMonitoringState -> Maybe Text -> Maybe Text
-    -> Maybe Text -> Maybe Text -> Maybe Bool -> [Group]
-    -> Maybe StateReason -> Architecture -> RootDeviceType
-    -> Maybe Text -> [InstanceBlockDeviceMapping]
-    -> InstanceLifecycle -> Maybe Text -> VirtualizationType
-    -> Text -> [ResourceTag] -> Hypervisor
-    -> [InstanceNetworkInterface] -> Maybe IamInstanceProfile
-    -> Bool -> Instance
-ec2Instance iid img istate pdns dns res kname aidx pcode
-    itype ltime place kid rid pf mon snid vpcid paddr addr
-    sdc grp sreason arch rdtype rdname bdmap life spotid
-    vtype ctoken tset hv nicset iam eopt =
-    Instance
-        { instanceId = iid
-        , instanceImageId = img
-        , instanceState = istate
-        , privateDnsName = pdns
-        , dnsName = dns
-        , reason = res
-        , keyName = kname
-        , amiLaunchIndex = aidx
-        , instanceProductCodes = pcode
-        , instanceType = itype
-        , launchTime = ltime
-        , instancePlacement = place
-        , instanceKernelId = kid
-        , instanceRamdiskId = rid
-        , instancePlatform = pf
-        , monitoring = mon
-        , subnetId = snid
-        , vpcId = vpcid
-        , privateIpAddress = paddr
-        , ipAddress = addr
-        , sourceDestCheck = sdc
-        , vpcGroupSet = grp
-        , instanceStateReason = sreason
-        , instanceArchitecture = arch
-        , instanceRootDeviceType = rdtype
-        , instanceRootDeviceName = rdname
-        , instanceBlockDeviceMappings = bdmap
-        , instanceLifecycle = life
-        , spotInstanceRequestId = spotid
-        , instanceVirtualizationType = vtype
-        , clientToken = ctoken
-        , instanceTagSet = tset
-        , instanceHypervisor = hv
-        , instanceNetworkInterfaceSet = nicset
-        , instanceIamInstanceProfile = iam
-        , ebsOptimized = eopt
-        }
-
-placement
-    :: Text -> Text -> Text -> Placement
-placement zone gname ten =
-    Placement
-        { placementAvailabilityZone = zone
-        , placementGroupName = gname
-        , tenancy = ten
-        }
 
 instanceNetworkInterface
     :: Text -> Text -> Text -> Text -> Text -> Text -> Text
@@ -641,31 +652,14 @@ instanceNetworkInterface
         , iniPrivateIpAddressSet = pips
         }
 
-instanceBlockDeviceMapping
-    :: Text -> InstanceEbsBlockDevice
-    -> InstanceBlockDeviceMapping
-instanceBlockDeviceMapping devname iebs =
-    InstanceBlockDeviceMapping
-        { instanceDeviceName = devname
-        , instanceEbs = iebs
-        }
-
-instanceEbsBlockDevice
-    :: Text -> VolumeState -> UTCTime -> Bool
-    -> InstanceEbsBlockDevice
-instanceEbsBlockDevice vid vst atime dot =
-    InstanceEbsBlockDevice
-        { instanceEbsVolumeId = vid
-        , instanceEbsState = vst
-        , instanceEbsAttachTime = atime
-        , instanceEbsDeleteOnTermination = dot
-        }
-        
-iamInstanceProfile :: Text -> Text -> IamInstanceProfile
-iamInstanceProfile arn iid = IamInstanceProfile
-    { iipArn = arn
-    , iipId = iid
+data NetworkInterfaceAttachment = NetworkInterfaceAttachment
+    { niatAttachmentId :: Text
+    , niatDeviceIndex :: Int
+    , niatStatus :: Text
+    , niatAttachTime :: UTCTime
+    , niatDeleteOnTermination :: Bool
     }
+  deriving (Show)
 
 networkInterfaceAttachment
     :: Text -> Int -> Text -> UTCTime -> Bool
@@ -679,6 +673,27 @@ networkInterfaceAttachment aid idx st time dot =
         , niatDeleteOnTermination = dot
         }
 
+data NetworkInterfaceAssociation = NetworkInterfaceAssociation
+    { niasPublicIp :: Text
+    , niasIpOwnerId :: Text
+    }
+  deriving (Show)
+
+networkInterfaceAssociation
+    :: Text -> Text -> NetworkInterfaceAssociation
+networkInterfaceAssociation ip own =
+    NetworkInterfaceAssociation
+        { niasPublicIp = ip
+        , niasIpOwnerId = own
+        }
+
+data InstancePrivateIpAddress = InstancePrivateIpAddress
+    { iPrivateIpAddress :: Text
+    , iPrimary :: Bool
+    , iAssociation :: Maybe NetworkInterfaceAssociation
+    }
+  deriving (Show)
+
 instancePrivateIpAddress
     :: Text -> Bool -> Maybe NetworkInterfaceAssociation
     -> InstancePrivateIpAddress
@@ -689,116 +704,53 @@ instancePrivateIpAddress ip pr asso =
         , iAssociation = asso
         }
 
-networkInterfaceAssociation
-    :: Text -> Text -> NetworkInterfaceAssociation
-networkInterfaceAssociation ip own =
-    NetworkInterfaceAssociation
-        { niasPublicIp = ip
-        , niasIpOwnerId = own
-        }
+data IamInstanceProfile = IamInstanceProfile
+    { iipArn :: Text
+    , iipId :: Text
+    }
+  deriving (Show)
 
-err :: String -> Text -> a
-err v m = error $ "unknown " ++ v ++ ": " ++ T.unpack m
+iamInstanceProfile :: Text -> Text -> IamInstanceProfile
+iamInstanceProfile arn iid = IamInstanceProfile
+    { iipArn = arn
+    , iipId = iid
+    }
 
-t2imageState :: Text -> ImageState
-t2imageState a
-    | a == "available" = ImageAvailable
-    | a == "pending"   = ImagePending
-    | a == "failed"    = ImageFailed
-    | otherwise        = err "image state" a
+data Address = Address
+    { addrPublicIp :: Text
+    , addrAllocationId :: Maybe Text
+    , addrDomain :: AddressDomain
+    , addrInstanceId :: Maybe Text
+    , addrAssociationId :: Maybe Text
+    , addrNetworkInterfaceId :: Maybe Text
+    , addrNetworkInterfaceOwnerId :: Maybe Text
+    , addrPrivateIpAddress :: Maybe Text
+    }
+  deriving (Show)
 
-t2bool :: Text -> Bool
-t2bool a
-    | a == "true"  = True
-    | a == "false" = False
-    | otherwise    = err "value" a
+address :: Text -> Maybe Text -> AddressDomain -> Maybe Text
+    -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
+    -> Address
+address pip alid dom iid asid niid nioid pips = Address
+    { addrPublicIp = pip
+    , addrAllocationId = alid
+    , addrDomain = dom
+    , addrInstanceId = iid
+    , addrAssociationId = asid
+    , addrNetworkInterfaceId = niid
+    , addrNetworkInterfaceOwnerId = nioid
+    , addrPrivateIpAddress = pips
+    }
 
-t2dec :: Integral a => Text -> a
-t2dec t = either 
-    (const $ error "not decimal")
-    fst
-    (decimal t)
+data AddressDomain = AddressDomainStandard | AddressDomainVPC
+  deriving (Show)
 
-t2imageType :: Text -> ImageType
-t2imageType t
-    | t == "machine"  = Machine
-    | t == "kernel"   = Kernel
-    | t == "ramdisk" = RamDisk
-    | otherwise       = err "image type" t
-
-t2platform :: Maybe Text -> Platform
-t2platform Nothing   = Other
-t2platform (Just t)
-    | t == "windows" = Windows
-    | otherwise      = Other
-
-t2rootDeviceType :: Text -> RootDeviceType
-t2rootDeviceType t
-    | t == "ebs"            = EBS
-    | t == "instance-store" = InstanceStore
-    | otherwise             = err "root device type" t
-
-t2virtualizationType :: Text -> VirtualizationType
-t2virtualizationType t
-    | t == "paravirtual" = Paravirtual
-    | t == "hvm"         = HVM
-    | otherwise          = err "virtualization type" t
-
-t2hypervisor :: Text -> Hypervisor
-t2hypervisor t
-    | t == "xen" = Xen
-    | t == "ovm" = OVM
-    | otherwise  = err "hypervisor" t
-
-t2iops :: Maybe Text -> Maybe Int
-t2iops mt = mt >>= readMay . T.unpack
-
-t2productCodeType :: Text -> ProductCodeType
-t2productCodeType t
-    | t == "marketplace" = Marketplace
-    | t == "devpay"      = Devpay
-    | otherwise          = err "product code type" t
-
-t2time :: Text -> UTCTime
-t2time = readTime defaultTimeLocale fmt . T.unpack
-  where
-    fmt = "%FT%T.000Z"
-
-t2emptxt :: Maybe Text -> Text
-t2emptxt = maybe "" id
-
-t2volumeState :: Text -> VolumeState
-t2volumeState t
-    | t == "attached"  = VolumeAttached
-    | t == "attaching" = VolumeAttaching
-    | t == "detaching" = VolumeDetaching
-    | t == "detached"  = VolumeDetached
-    | otherwise        = err "volume state" t
-
-t2architecture :: Text -> Architecture
-t2architecture t
-    | t == "i386"   = I386
-    | t == "x86_64" = X86_64
-    | otherwise     = err "architecture" t
-
-t2deviceType :: Text -> RootDeviceType
-t2deviceType t
-    | t == "ebs"            = EBS
-    | t == "instance-store" = InstanceStore
-    | otherwise             = err "root device type" t
-
-t2monitoring :: Text -> InstanceMonitoringState
-t2monitoring t
-    | t == "disabled" = MonitoringDisabled
-    | t == "enabled"  = MonitoringEnabled
-    | t == "pending"  = MonitoringPending
-    | otherwise       = err "monitoring state" t
-
-t2lifecycle :: Maybe Text -> InstanceLifecycle
-t2lifecycle Nothing = LifecycleNone
-t2lifecycle (Just t)
-    | t == "spot"   = LifecycleSpot
-    | otherwise     = err "lifecycle" t
+addressDomain :: Maybe Text -> AddressDomain
+addressDomain Nothing = AddressDomainStandard
+addressDomain (Just t)
+    | t == "standard" = AddressDomainStandard
+    | t == "vpc"      = AddressDomainVPC
+    | otherwise       = err "address domain" t
 
 data AllocateAddressResponse = AllocateAddressResponse
     { alaPublicIp :: Text
@@ -839,57 +791,3 @@ tag tid ttype key value = Tag
     , tagKey = key
     , tagValue = value
     }
-
-data BlockDeviceMappingParam
-    = BlockDeviceMappingParamEBS
-        { bdmpEbsDeviceName :: Text
-        , bdmpEbsNoDevice :: Maybe Bool
-        , bdmpEbsSource :: EbsSource
-        , bdmpEbsDeleteOnTermination :: Maybe Bool
-        , bdmpEbsVolumeType :: Maybe VolumeType
-        }
-    | BlockDeviceMappingParamInstanceStore
-        { bdmpIsDeviceName :: Text
-        , bdmpIsNoDevice :: Maybe Bool
-        , bdmpIsVirtualName :: Maybe Text
-        }
-  deriving (Show)
-
-data EbsSource
-    = EbsSnapshotId Text
-    | EbsVolumeSize Int
-  deriving (Show)
-
-boolToText :: Bool -> Text
-boolToText True  = "true"
-boolToText False = "false"
-
-blockDeviceMappingParams
-    :: [BlockDeviceMappingParam] -> QueryParam
-blockDeviceMappingParams =
-    StructArrayParams "BlockDeviceMapping" . map kvs
-  where
-    kvs (BlockDeviceMappingParamEBS name dev src dot vtype) = 
-        [ ("Ebs.DeviceName", name)
-        , ebsSource src
-        ] ++ vtparam vtype ++ (uncurry f =<<
-            [ ("Ebs.NoDevice", boolToText <$> dev)
-            , ("Ebs.DeleteOnTermination", boolToText <$> dot)
-            ])
-    kvs (BlockDeviceMappingParamInstanceStore name dev vname) =
-        [("Ebs.DeviceName", name)] ++ (uncurry f =<<
-            [ ("Ebs.NoDevice", boolToText <$> dev)
-            , ("Ebs.VirtualName", vname)
-            ])
-
-    ebsSource (EbsSnapshotId sid) = ("Ebs.SnapshotId", sid)
-    ebsSource (EbsVolumeSize size) =
-        ("Ebs.VolumeSize", T.pack $ show size)
-
-    f n = maybe [] (\a -> [(n, a)])
-    vtparam Nothing = []
-    vtparam (Just Standard) = [("Ebs.VolumeType", "standard")]
-    vtparam (Just (IO1 iops)) =
-        [ ("Ebs.VolumeType", "io1")
-        , ("Ebs.Iops", T.pack $ show iops)
-        ]

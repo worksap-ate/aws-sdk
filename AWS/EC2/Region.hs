@@ -18,8 +18,8 @@ import AWS.EC2.Parser
 
 describeRegions
     :: (MonadResource m, MonadBaseControl IO m)
-    => [Text]
-    -> [Filter]
+    => [Text] -- ^ RegionNames
+    -> [Filter] -- ^ Filters
     -> EC2 m (Source m Region)
 describeRegions regions filters =
     ec2QuerySource "DescribeRegions" params regionInfoConduit

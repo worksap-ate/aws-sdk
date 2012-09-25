@@ -1,2 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-module AWS where
+module AWS
+    ( -- * Credentials
+      Credential
+    , loadCredential
+    ) where
+
+import AWS.Credential

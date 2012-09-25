@@ -3,11 +3,14 @@
  , FlexibleInstances
  , MultiParamTypeClasses
  , UndecidableInstances
+ , DeriveDataTypeable
  #-}
 
 module AWS.EC2.Class
     ( EC2
     , runEC2
+    , ResponseParserException(..)
+    , EC2Context(..)
     ) where
 
 import Control.Monad.State (StateT(..), MonadState)
@@ -24,8 +27,27 @@ import Control.Monad.Trans.Control
     , defaultLiftBaseWith
     , defaultRestoreM
     )
+import Control.Exception (Exception)
+import Data.Typeable (Typeable)
 
-import AWS.EC2.Types
+import qualified Network.HTTP.Conduit as HTTP
+import Data.Text (Text)
+
+import AWS.Types
+import AWS.Credential
+
+data EC2Context = EC2Context
+    { manager :: HTTP.Manager
+    , credential :: Credential
+    , endpoint :: EC2Endpoint
+    , lastRequestId :: Maybe Text
+    }
+
+data ResponseParserException
+    = NextToken Text
+  deriving (Show, Typeable)
+
+instance Exception ResponseParserException
 
 newtype EC2 m a = EC2T
     { runEC2T :: StateT EC2Context m a

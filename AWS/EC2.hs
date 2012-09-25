@@ -2,16 +2,21 @@
 {-# LANGUAGE RankNTypes #-}
 
 module AWS.EC2
-    ( module AWS.EC2.Types
-    , module AWS.EC2.Class
+    ( -- * EC2 Environment
+      module AWS.EC2.Class
     , EC2Endpoint(..)
     , newEC2Context
     , setEndpoint
+      -- * Instances
+    , module AWS.EC2.Instance
+      -- * Images
     , module AWS.EC2.Image
+      -- * Placements
     , module AWS.EC2.Region
     , module AWS.EC2.AvailabilityZone
-    , module AWS.EC2.Instance
+      -- * Addresses
     , module AWS.EC2.Address
+      -- * Tags
     , module AWS.EC2.Tag
     ) where
 
@@ -21,7 +26,6 @@ import qualified Control.Monad.State as ST
 import qualified Network.HTTP.Conduit as HTTP
 
 import AWS.Types
-import AWS.EC2.Types
 import AWS.EC2.Class
 
 import AWS.EC2.Image
@@ -30,6 +34,7 @@ import AWS.EC2.AvailabilityZone
 import AWS.EC2.Instance
 import AWS.EC2.Address
 import AWS.EC2.Tag
+import AWS.Credential
 
 newEC2Context :: Credential -> IO EC2Context
 newEC2Context cred = do
