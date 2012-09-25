@@ -29,6 +29,7 @@ library
                    , AWS.EC2.Region
                    , AWS.EC2.Tag
                    , AWS.EC2.Class
+                   , AWS.EC2.Utils
                    , AWS.EC2.Parser
                    , AWS.EC2.Parser.Internal
   ghc-options: -Wall

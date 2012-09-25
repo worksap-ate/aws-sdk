@@ -54,8 +54,10 @@ main = do
 --            response <- describeImages [] [] [] []
 --            response <- describeInstances [] []
 --            response <- describeInstanceStatus [] True [] Nothing
-            response <- describeTags []
-            lift $ response $$ CL.consume
+--            response <- describeTags []
+--            lift $ response $$ CL.consume
+            let p = defaultRunInstancesParam "ami-31814f58" 1 1
+            runInstances p
     print doc
-    putStr "Length: "
-    print $ length doc
+--    putStr "Length: "
+--    print $ length doc

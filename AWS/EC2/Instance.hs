@@ -2,14 +2,18 @@
 
 module AWS.EC2.Instance
     ( describeInstances
+    , runInstances
+    , RunInstancesParam(..)
+    , defaultRunInstancesParam
+    , terminateInstances
     , startInstances
     , stopInstances
     , rebootInstances
-    , terminateInstances
     , describeInstanceStatus
     ) where
 
 import Data.Text (Text)
+import Data.ByteString (ByteString)
 
 import Data.XML.Types (Event)
 import Data.Conduit
@@ -17,6 +21,8 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Types
+import AWS.EC2.Params
+import AWS.EC2.Utils
 import AWS.EC2.Class
 import AWS.EC2.Query
 import AWS.EC2.Parser
@@ -31,16 +37,17 @@ describeInstances
     -> [Filter] -- ^ Filters
     -> EC2 m (Source m Reservation)
 describeInstances instances filters = do
-    ec2QuerySource "DescribeInstances" params reservationSet
+    ec2QuerySource "DescribeInstances" params $
+        itemConduit "reservationSet" reservationSink
   where
     params =
         [ ArrayParams "InstanceId" instances
         , FilterParams filters
         ]
 
-reservationSet :: MonadThrow m
-    => GLConduit Event m Reservation
-reservationSet = itemConduit "reservationSet" $
+reservationSink :: MonadThrow m
+    => GLSink Event m Reservation
+reservationSink =
     reservation
     <$> getT "reservationId"
     <*> getT "ownerId"
@@ -63,7 +70,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getT "privateDnsName"
     <*> getT "dnsName"
     <*> getT "reason"
-    <*> getT "keyName"
+    <*> getMT "keyName"
     <*> getT "amiLaunchIndex"
     <*> productCodeSink
     <*> getT "instanceType"
@@ -267,3 +274,112 @@ terminateInstances instanceIds =
         instanceStateChangeSet
   where
     params = [ArrayParams "InstanceId" instanceIds]
+
+------------------------------------------------------------
+-- RunInstances
+------------------------------------------------------------
+-- | 'RunInstancesParam' is genereted with 'defaultRunInstancesParam'
+runInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => RunInstancesParam
+    -> EC2 m Reservation
+runInstances param =
+    ec2Query "RunInstances" params reservationSink
+  where
+    mk name = maybe [] (\a -> [ValueParam name a])
+    params =
+        [ ValueParam "ImageId" $ riImageId param
+        , ValueParam "MinCount" $ toText $ riMinCount param
+        , ValueParam "MaxCount" $ toText $ riMaxCount param
+        , ArrayParams "SecurityGroupId" $ riSecurityGroupIds param
+        , ArrayParams "SecurityGroup" $ riSecurityGroups param
+        , blockDeviceMappingParams $ riBlockDeviceMappings param
+        ] ++ (uncurry mk =<<
+            [ ("KeyName", riKeyName param) , ("UserData", bsToText <$> riUserData param)
+            , ("InstanceType", riInstanceType param)
+            , ("Placement.AvailabilityZone",
+               riAvailabilityZone param)
+            , ("Placement.GroupName", riPlacementGroup param)
+            , ("Placement.Tenancy", riTenancy param)
+            , ("KernelId", riKernelId param)
+            , ("RamdiskId", riRamdiskId param)
+            , ("Monitoring.Enabled",
+               boolToText <$> riMonitoringEnabled param)
+            , ("SubnetId", riSubnetId param)
+            , ("DisableApiTermination",
+               boolToText <$> riDisableApiTermination param)
+            , ("InstanceInitiatedShutdownBehavior",
+               sbToText <$> riShutdownBehavior param)
+            , ("ClientToken", riClientToken param)
+            , ("IamInstanceProfile.Arn",
+               iipArn <$> riIamInstanceProfile param)
+            , ("IamInstanceProfile.Name",
+               iipId <$> riIamInstanceProfile param)
+            , ("EbsOptimized", boolToText <$> riEbsOptimized param)
+            ])
+
+data RunInstancesParam = RunInstancesParam
+    { riImageId :: Text
+    , riMinCount :: Int
+    , riMaxCount :: Int
+    , riKeyName :: Maybe Text
+    , riSecurityGroupIds :: [Text]
+      -- ^ SecurityGroupIds (Required for VPC; optional for EC2)
+    , riSecurityGroups :: [Text]
+      -- ^ SecurityGroups (Only for EC2; either id or name is accepted)
+    , riUserData :: Maybe ByteString
+      -- ^ UserData (Base64-encoded MIME user data)
+    , riInstanceType :: Maybe Text
+    , riAvailabilityZone :: Maybe Text
+    , riPlacementGroup :: Maybe Text
+    , riTenancy :: Maybe Text
+    , riKernelId :: Maybe Text
+    , riRamdiskId :: Maybe Text
+    , riBlockDeviceMappings :: [BlockDeviceMappingParam]
+    , riMonitoringEnabled :: Maybe Bool
+    , riSubnetId :: Maybe Text
+    , riDisableApiTermination :: Maybe Bool
+    , riShutdownBehavior :: Maybe ShutdownBehavior
+    , riPrivateIpAddresses :: [Text] -- ^ XXX: not implemented
+    , riClientToken :: Maybe Text
+    , riNetworkInterface :: [NetworkInterfaceParam] -- ^ XXX: not implemented
+    , riIamInstanceProfile :: Maybe IamInstanceProfile
+    , riEbsOptimized :: Maybe Bool
+    }
+  deriving (Show)
+
+-- | RunInstances parameter utility
+defaultRunInstancesParam
+    :: Text -- ^ ImageId
+    -> Int -- ^ MinCount
+    -> Int -- ^ MaxCount
+    -> RunInstancesParam
+defaultRunInstancesParam iid minCount maxCount = RunInstancesParam
+    { riImageId = iid
+    , riMinCount = minCount
+    , riMaxCount = maxCount
+    , riKeyName = Nothing
+    , riSecurityGroupIds = []
+    , riSecurityGroups = []
+    , riUserData = Nothing
+    , riInstanceType = Nothing
+    , riAvailabilityZone = Nothing
+    , riPlacementGroup = Nothing
+    , riTenancy = Nothing
+    , riKernelId = Nothing
+    , riRamdiskId = Nothing
+    , riBlockDeviceMappings = []
+    , riMonitoringEnabled = Nothing
+    , riSubnetId = Nothing
+    , riDisableApiTermination = Nothing
+    , riShutdownBehavior = Nothing
+    , riPrivateIpAddresses = []
+    , riClientToken = Nothing
+    , riNetworkInterface = []
+    , riIamInstanceProfile = Nothing
+    , riEbsOptimized = Nothing
+    }
+
+sbToText :: ShutdownBehavior -> Text
+sbToText SBStop      = "stop"
+sbToText SBTerminate = "terminate"

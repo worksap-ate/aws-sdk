@@ -85,14 +85,14 @@ mkUrl ep cred time action params = mconcat
 toArrayParams :: QueryParam -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 
     [ (textToBS name <> "." <> bsShow i, textToBS param)
-    | (i, param) <- zip [1..] params
+    | (i, param) <- zip ([1..]::[Int]) params
     ]
 toArrayParams (FilterParams kvs) =
-    Map.fromList . concat . map f1 $ zip [1..] kvs
+    Map.fromList . concat . map f1 $ zip ([1..]::[Int]) kvs
   where
     f1 (n, (key, vals)) = (filt n <> ".Name", textToBS key) :
         [ (filt n <> ".Value." <> bsShow i, textToBS param)
-        | (i, param) <- zip [1..] vals
+        | (i, param) <- zip ([1..]::[Int]) vals
         ]
     filt n = "Filter." <> bsShow n
 toArrayParams (ValueParam k v) =
@@ -103,7 +103,7 @@ toArrayParams (StructArrayParams name vss) = Map.fromList l
     struct n (k, v) = (n <> "." <> textToBS k, textToBS v)
     l = mconcat
         [ map (struct (bsName <> "." <> bsShow i)) kvs
-        | (i, kvs) <- zip [1..] vss
+        | (i, kvs) <- zip ([1..]::[Int]) vss
         ]
 
 textToBS :: Text -> ByteString

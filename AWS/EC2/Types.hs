@@ -290,7 +290,7 @@ data Instance = Instance
     , privateDnsName :: Text
     , dnsName :: Text
     , reason :: Text
-    , keyName :: Text
+    , keyName :: Maybe Text
     , amiLaunchIndex :: Text
     , instanceProductCodes :: [ProductCode]
     , instanceType :: Text
@@ -325,7 +325,7 @@ data Instance = Instance
 
 ec2Instance
     :: Text -> Text -> InstanceState -> Text -> Text -> Text
-    -> Text -> Text -> [ProductCode] -> Text -> UTCTime
+    -> Maybe Text -> Text -> [ProductCode] -> Text -> UTCTime
     -> Placement -> Maybe Text -> Maybe Text -> Maybe Text
     -> InstanceMonitoringState -> Maybe Text -> Maybe Text
     -> Maybe Text -> Maybe Text -> Maybe Bool -> [Group]

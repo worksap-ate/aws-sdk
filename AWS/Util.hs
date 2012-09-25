@@ -17,7 +17,7 @@ toS = BS.concat . BSL.toChunks
 toL :: ByteString -> BSL.ByteString
 toL = BSL.fromChunks . (:[])
 
-bsShow :: Int -> ByteString
+bsShow :: Show a => a -> ByteString
 bsShow = BSC.pack . show
 
 err :: String -> Text -> a
@@ -46,3 +46,9 @@ orEmpty = maybe "" id
 boolToText :: Bool -> Text
 boolToText True  = "true"
 boolToText False = "false"
+
+toText :: Show a => a -> Text
+toText = T.pack . show
+
+bsToText :: ByteString -> Text
+bsToText = T.pack . BSC.unpack
