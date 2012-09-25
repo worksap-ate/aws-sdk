@@ -791,3 +791,18 @@ tag tid ttype key value = Tag
     , tagKey = key
     , tagValue = value
     }
+
+data InstanceStateChange = InstanceStateChange
+    { iscInstanceId :: Text
+    , iscCurrentState :: InstanceState
+    , iscPreviousState :: InstanceState
+    }
+  deriving (Show)
+
+instanceStateChange :: Text -> InstanceState -> InstanceState
+    -> InstanceStateChange
+instanceStateChange iid curr prev = InstanceStateChange
+    { iscInstanceId = iid
+    , iscCurrentState = curr
+    , iscPreviousState = prev
+    }

@@ -2,6 +2,8 @@
 
 module AWS.EC2.Instance
     ( describeInstances
+    , startInstances
+    , stopInstances
     , describeInstanceStatus
     ) where
 
@@ -55,7 +57,7 @@ instanceSetSink = itemsSet "instancesSet" $
     ec2Instance
     <$> getT "instanceId"
     <*> getT "imageId"
-    <*> instanceStateSink
+    <*> instanceStateSink "instanceState"
     <*> getT "privateDnsName"
     <*> getT "dnsName"
     <*> getT "reason"
@@ -110,8 +112,8 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getF "ebsOptimized" textToBool
 
 instanceStateSink :: MonadThrow m
-    => GLSink Event m InstanceState
-instanceStateSink = element "instanceState" $
+    => Text -> GLSink Event m InstanceState
+instanceStateSink label = element label $
     codeToState
     <$> getF "code" textToInt
     <* getT "name"
@@ -187,7 +189,7 @@ instanceStatusSet = do
             <*> getM "notBefore" (textToTime <$>)
             <*> getM "notAfter" (textToTime <$>)
             )
-        <*> instanceStateSink
+        <*> instanceStateSink "instanceState"
         <*> instanceStatusTypeSink "systemStatus"
         <*> instanceStatusTypeSink "instanceStatus"
 
@@ -202,3 +204,39 @@ instanceStatusTypeSink name = element name $
         <*> getT "status"
         <*> getM "impairedSince" (textToTime <$>)
         )
+
+------------------------------------------------------------
+-- StartInstances
+------------------------------------------------------------
+startInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> EC2 m (Source m InstanceStateChange)
+startInstances instanceIds =
+    ec2QuerySource "StartInstances" params instanceStateChangeSet
+  where
+    params = [ArrayParams "InstanceId" instanceIds]
+
+instanceStateChangeSet
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Conduit Event m InstanceStateChange
+instanceStateChangeSet = itemConduit "instancesSet" $ do
+    instanceStateChange
+    <$> getT "instanceId"
+    <*> instanceStateSink "currentState"
+    <*> instanceStateSink "previousState"
+
+------------------------------------------------------------
+-- StopInstances
+------------------------------------------------------------
+stopInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> Bool -- ^ Force
+    -> EC2 m (Source m InstanceStateChange)
+stopInstances instanceIds force =
+    ec2QuerySource "StopInstances" params instanceStateChangeSet
+  where
+    params =
+        [ ArrayParams "InstanceId" instanceIds
+        , ValueParam "Force" $ boolToText force]
