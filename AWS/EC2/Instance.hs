@@ -9,6 +9,7 @@ module AWS.EC2.Instance
     , startInstances
     , stopInstances
     , rebootInstances
+    , getConsoleOutput
     , describeInstanceStatus
     ) where
 
@@ -319,9 +320,9 @@ runInstances param =
             ])
 
 data RunInstancesParam = RunInstancesParam
-    { riImageId :: Text
-    , riMinCount :: Int
-    , riMaxCount :: Int
+    { riImageId :: Text -- ^ Required
+    , riMinCount :: Int -- ^ Required
+    , riMaxCount :: Int -- ^ Required
     , riKeyName :: Maybe Text
     , riSecurityGroupIds :: [Text]
       -- ^ SecurityGroupIds (Required for VPC; optional for EC2)
@@ -383,3 +384,17 @@ defaultRunInstancesParam iid minCount maxCount = RunInstancesParam
 sbToText :: ShutdownBehavior -> Text
 sbToText SBStop      = "stop"
 sbToText SBTerminate = "terminate"
+
+------------------------------------------------------------
+-- GetConsoleOutput
+------------------------------------------------------------
+getConsoleOutput
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InstanceId
+    -> EC2 m ConsoleOutput
+getConsoleOutput iid =
+    ec2Query "GetConsoleOutput" [ValueParam "InstanceId" iid] $
+        consoleOutput
+        <$> getT "instanceId"
+        <*> getF "timestamp" textToTime
+        <*> getT "output"

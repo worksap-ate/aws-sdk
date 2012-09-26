@@ -806,3 +806,17 @@ instanceStateChange iid curr prev = InstanceStateChange
     , iscCurrentState = curr
     , iscPreviousState = prev
     }
+
+data ConsoleOutput = ConsoleOutput
+    { coInstanceId :: Text
+    , coTimestamp :: UTCTime
+    , coOutput :: Text
+    }
+  deriving (Show)
+
+consoleOutput :: Text -> UTCTime -> Text -> ConsoleOutput
+consoleOutput iid time out = ConsoleOutput
+    { coInstanceId = iid
+    , coTimestamp = time
+    , coOutput = out
+    }

@@ -52,3 +52,6 @@ toText = T.pack . show
 
 bsToText :: ByteString -> Text
 bsToText = T.pack . BSC.unpack
+
+textToBS :: Text -> ByteString
+textToBS = BSC.pack . T.unpack

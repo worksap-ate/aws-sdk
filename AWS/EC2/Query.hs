@@ -106,9 +106,6 @@ toArrayParams (StructArrayParams name vss) = Map.fromList l
         | (i, kvs) <- zip ([1..]::[Int]) vss
         ]
 
-textToBS :: Text -> ByteString
-textToBS = BSC.pack . T.unpack
-
 queryStr :: Map ByteString ByteString -> ByteString
 queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
   where
