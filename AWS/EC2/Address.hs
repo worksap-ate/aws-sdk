@@ -4,6 +4,8 @@ module AWS.EC2.Address
     ( describeAddresses
     , allocateAddress
     , releaseAddress
+    , associateAddress
+    , AssociateAddressParam(..)
     ) where
 
 import Data.Text (Text)
@@ -17,6 +19,7 @@ import AWS.EC2.Types
 import AWS.EC2.Class
 import AWS.EC2.Query
 import AWS.EC2.Parser
+import AWS.Util
 
 -----------------------------------------------------
 -- DescribeAddresses
@@ -78,3 +81,47 @@ releaseAddress addr allocid = do
         [ ("PublicIp", addr)
         , ("AllocationId", allocid)
         ]
+
+-----------------------------------------------------
+-- AssociateAddress
+-----------------------------------------------------
+associateAddress
+    :: (MonadResource m, MonadBaseControl IO m)
+    => AssociateAddressParam
+    -> EC2 m (Bool, Maybe Text)
+associateAddress param = ec2Query "AssociateAddress" params $
+    (,) <$> getF "return" textToBool
+        <*> getMT "associationId"
+  where
+    params = associateAddressParam param
+
+data AssociateAddressParam
+    = AAEC2Instance
+        { aaec2PublicIp :: Text
+        , aaec2InstanceId :: Text
+        }
+    | AAVPCInstance
+        { aavpcAllocationId :: Text
+        , aavpcInstanceId :: Maybe Text
+        , aavpcNetworkInterfaceId :: Maybe Text
+        , aavpcPrivateIpAddress :: Maybe Text
+        , aavpcAllowReassociation :: Maybe Bool
+        }
+  deriving (Show)
+
+associateAddressParam
+    :: AssociateAddressParam -> [QueryParam]
+associateAddressParam (AAEC2Instance ip iid) =
+    [ ValueParam "PublicIp" ip
+    , ValueParam "InstanceId" iid
+    ]
+associateAddressParam (AAVPCInstance aid iid nid pip ar) =
+    [ ValueParam "AllocationId" aid ]
+    ++ (uncurry f =<<
+        [ ("InstanceId", iid)
+        , ("NetworkInterfaceId", nid)
+        , ("PrivateIpAddress", pip)
+        , ("AllowReassociation", boolToText <$> ar)
+        ])
+  where
+    f name = maybe [] (\a -> [ValueParam name a])

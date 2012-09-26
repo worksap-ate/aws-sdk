@@ -30,6 +30,8 @@ addressTest :: (MonadResource m, MonadBaseControl IO m)
     => EC2 m [Address]
 addressTest = do
     addr <- allocateAddress False
+    liftIO $ print addr
+
     ret <- releaseAddress (Just $ alaPublicIp addr) Nothing
     liftIO $ print ret
 
@@ -46,7 +48,7 @@ main = do
     doc <- runResourceT $ do
         ctx <- liftIO $ newEC2Context cred
         runEC2 ctx $ do
---            addressTest
+            addressTest
 --            setEndpoint ApNortheast1
 --            response <- describeAvailabilityZones [] []
 --            response <- describeRegions [] []
@@ -56,6 +58,6 @@ main = do
 --            response <- describeInstanceStatus [] True [] Nothing
             response <- describeTags []
             lift $ response $$ CL.consume
-    print doc
+--    print doc
     putStr "Length: "
     print $ length doc
