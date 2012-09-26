@@ -10,6 +10,7 @@ module AWS.EC2.Instance
     , stopInstances
     , rebootInstances
     , getConsoleOutput
+    , getPasswordData
     , describeInstanceStatus
     ) where
 
@@ -398,3 +399,17 @@ getConsoleOutput iid =
         <$> getT "instanceId"
         <*> getF "timestamp" textToTime
         <*> getT "output"
+
+------------------------------------------------------------
+-- GetPasswordData
+------------------------------------------------------------
+getPasswordData
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InstanceId
+    -> EC2 m PasswordData
+getPasswordData iid =
+    ec2Query "GetPasswordData" [ValueParam "InstanceId" iid] $
+        passwordData
+        <$> getT "instanceId"
+        <*> getF "timestamp" textToTime
+        <*> getT "passwordData"

@@ -9,12 +9,10 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Data.Text (Text)
 import Control.Monad.Trans.Control
-import qualified Data.ByteString.Base64 as Base64
 
 import AWS
 import AWS.EC2
 import AWS.EC2.Types
-import AWS.Util
 
 imageIds :: [Text]
 imageIds =
@@ -57,9 +55,7 @@ main = do
 --            response <- describeInstances [] []
 --            response <- describeInstanceStatus [] True [] Nothing
             response <- describeTags []
---            lift $ response $$ CL.consume
---            runInstances $ defaultRunInstancesParam "ami-31814f58" 1 1
---            getConsoleOutput "i-01c8226d"
+            lift $ response $$ CL.consume
     print doc
---    putStr "Length: "
---    print $ length doc
+    putStr "Length: "
+    print $ length doc

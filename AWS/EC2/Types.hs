@@ -809,7 +809,7 @@ instanceStateChange iid curr prev = InstanceStateChange
 
 data ConsoleOutput = ConsoleOutput
     { coInstanceId :: Text
-    , coTimestamp :: UTCTime
+    , coTimestamp :: UTCTime -- ^ The time the data was last updated.
     , coOutput :: Text
     }
   deriving (Show)
@@ -819,4 +819,18 @@ consoleOutput iid time out = ConsoleOutput
     { coInstanceId = iid
     , coTimestamp = time
     , coOutput = out
+    }
+
+data PasswordData = PasswordData
+    { pdInstanceId :: Text
+    , pdTimestamp :: UTCTime -- ^ The time the data was last updated.
+    , pdPasswordData :: Text
+    }
+  deriving (Show)
+
+passwordData :: Text -> UTCTime -> Text -> PasswordData
+passwordData iid time out = PasswordData
+    { pdInstanceId = iid
+    , pdTimestamp = time
+    , pdPasswordData = out
     }
