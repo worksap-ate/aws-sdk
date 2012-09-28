@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.1.0.1
+version:             0.1.1.0
 synopsis:            AWS SDK for Haskell
 description:         An AWS(Amazon Web Services) liblary for Haskell.
 license:             BSD3
@@ -24,6 +24,8 @@ library
                    , AWS.EC2.AvailabilityZone
                    , AWS.EC2.Image
                    , AWS.EC2.Instance
+                   , AWS.EC2.Volume
+                   , AWS.EC2.Snapshot
                    , AWS.EC2.Parser
                    , AWS.EC2.Query
                    , AWS.EC2.Region
@@ -35,7 +37,7 @@ library
   ghc-options:       -Wall
                      -fno-warn-unused-do-bind
   extensions: OverloadedStrings
-  build-depends:     base ==4.5.*
+  build-depends:     base >= 4 && < 5
                    , containers <= 0.4.2.1
                    , SHA
                    , base64-bytestring >= 1.0.0.0
