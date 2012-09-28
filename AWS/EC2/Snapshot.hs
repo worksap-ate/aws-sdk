@@ -3,6 +3,7 @@
 module AWS.EC2.Snapshot
     ( describeSnapshots
     , createSnapshot
+    , deleteSnapshot
     ) where
 
 import Data.Text (Text)
@@ -60,3 +61,12 @@ createSnapshot volid desc =
   where
     params = [ValueParam "VolumeId" volid]
         ++ maybe [] (\a -> [ValueParam "Description" a]) desc
+
+deleteSnapshot
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> EC2 m Bool
+deleteSnapshot ssid =
+    ec2Query "DeleteSnapshot" params $ getF "return" textToBool
+  where
+    params = [ValueParam "SnapshotId" ssid]
