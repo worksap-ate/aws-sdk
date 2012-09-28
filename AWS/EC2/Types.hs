@@ -834,3 +834,44 @@ passwordData iid time out = PasswordData
     , pdTimestamp = time
     , pdPasswordData = out
     }
+
+data Snapshot = Snapshot
+    { snapshotId :: Text
+    , ssVolumeId :: Text
+    , ssStatus :: SnapshotStatus
+    , ssStartTime :: UTCTime
+    , ssProgress :: Text
+    , ssOwnerId :: Text
+    , ssVolumeSize :: Int
+    , ssDescription :: Text
+    , ssOwnerAlias :: Maybe Text
+    , ssTagSet :: [ResourceTag]
+    }
+  deriving (Show)
+
+snapshot :: Text -> Text -> SnapshotStatus -> UTCTime
+    -> Text -> Text -> Int -> Text -> Maybe Text
+    -> [ResourceTag] -> Snapshot
+snapshot ssid vid stat stime progress oid vsize desc oali tags =
+    Snapshot
+    { snapshotId = ssid
+    , ssVolumeId = vid
+    , ssStatus = stat
+    , ssStartTime = stime
+    , ssProgress = progress
+    , ssOwnerId = oid
+    , ssVolumeSize = vsize
+    , ssDescription = desc
+    , ssOwnerAlias = oali
+    , ssTagSet = tags
+    }
+
+data SnapshotStatus = SSPending | SSCompleted | SSError
+  deriving (Show)
+
+snapshotStatus :: Text -> SnapshotStatus
+snapshotStatus t
+    | t == "pending"   = SSPending
+    | t == "completed" = SSCompleted
+    | t == "error"     = SSError
+    | otherwise        = err "snapshot status" t

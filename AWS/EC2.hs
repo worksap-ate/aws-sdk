@@ -11,6 +11,8 @@ module AWS.EC2
     , module AWS.EC2.Instance
       -- * Images
     , module AWS.EC2.Image
+      -- * Snapshots
+    , module AWS.EC2.Snapshot
       -- * Placements
     , module AWS.EC2.Region
     , module AWS.EC2.AvailabilityZone
@@ -34,6 +36,7 @@ import AWS.EC2.AvailabilityZone
 import AWS.EC2.Instance
 import AWS.EC2.Address
 import AWS.EC2.Tag
+import AWS.EC2.Snapshot
 import AWS.Credential
 
 newEC2Context :: Credential -> IO EC2Context
