@@ -2,6 +2,7 @@
 
 module AWS.EC2.Snapshot
     ( describeSnapshots
+    , createSnapshot
     ) where
 
 import Data.Text (Text)
@@ -25,7 +26,8 @@ describeSnapshots
     -> [Filter] -- ^ Filters
     -> EC2 m (Source m Snapshot)
 describeSnapshots ssids owners restby filters =
-    ec2QuerySource "DescribeSnapshots" params snapshotSet
+    ec2QuerySource "DescribeSnapshots" params $
+        itemConduit "snapshotSet" snapshotSink
   where
     params =
         [ ArrayParams "SnapshotId" ssids
@@ -33,10 +35,10 @@ describeSnapshots ssids owners restby filters =
         , ArrayParams "RestorableBy" restby
         , FilterParams filters
         ]
-    snapshotSet :: MonadThrow m
-        => GLConduit Event m Snapshot
-    snapshotSet = itemConduit "snapshotSet" $
-        snapshot
+
+snapshotSink :: MonadThrow m
+    => GLSink Event m Snapshot
+snapshotSink = snapshot
         <$> getT "snapshotId"
         <*> getT "volumeId"
         <*> getF "status" snapshotStatus
@@ -47,3 +49,14 @@ describeSnapshots ssids owners restby filters =
         <*> getT "description"
         <*> getMT "ownerAlias"
         <*> resourceTagSink
+
+createSnapshot
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> Maybe Text -- ^ Description
+    -> EC2 m Snapshot
+createSnapshot volid desc =
+    ec2Query "CreateSnapshot" params snapshotSink
+  where
+    params = [ValueParam "VolumeId" volid]
+        ++ maybe [] (\a -> [ValueParam "Description" a]) desc
