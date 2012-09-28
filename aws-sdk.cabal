@@ -1,13 +1,13 @@
 name:                aws-sdk
 version:             0.1.0.0
 synopsis:            AWS SDK for Haskell
--- description:         
+description:         An AWS(Amazon Web Services) liblary for Haskell.
 license:             BSD3
 license-file:        LICENSE
-author:              AWS SDK for Haskell Developpers
-maintainer:          yunomu@gmail.com
+author:              Yusuke Nomura <yunomu@gmail.com>
+maintainer:          Yusuke Nomura <yunomu@gmail.com>
 homepage:            https://worksap-ate.github.com/
--- copyright:           
+copyright:           AWS SDK for Haskell Developpers
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.8
