@@ -6,9 +6,9 @@ license:             BSD3
 license-file:        LICENSE
 author:              Yusuke Nomura <yunomu@gmail.com>
 maintainer:          Yusuke Nomura <yunomu@gmail.com>
-homepage:            https://worksap-ate.github.com/
-copyright:           AWS SDK for Haskell Developpers
-category:            Web
+homepage:            https://worksap-ate.github.com/aws-sdk
+copyright:           AWS SDK for Haskell Developers
+category:            Cloud, AWS
 build-type:          Simple
 cabal-version:       >=1.8
 

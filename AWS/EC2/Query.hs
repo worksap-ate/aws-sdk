@@ -32,7 +32,6 @@ import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.State as ST
 import Control.Exception.Lifted as E
 import Data.Text (Text)
-import qualified Data.Text as T
 
 import AWS.EC2.Types
 import AWS.Types
