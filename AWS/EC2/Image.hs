@@ -67,10 +67,7 @@ imageItem = image
             <$> getMT "snapshotId"
             <*> getF "volumeSize" textToInt
             <*> getF "deleteOnTermination" textToBool
-            <*> (volumeType
-                 <$> getT "volumeType"
-                 <*> getM "iops" (textToInt <$>)
-                )
+            <*> volumeTypeSink
             )
         )
     <*> getF "virtualizationType" virtualizationType

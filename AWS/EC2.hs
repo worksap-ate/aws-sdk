@@ -11,6 +11,8 @@ module AWS.EC2
     , module AWS.EC2.Instance
       -- * Images
     , module AWS.EC2.Image
+      -- * Volumes
+    , module AWS.EC2.Volume
       -- * Snapshots
     , module AWS.EC2.Snapshot
       -- * Placements
@@ -37,6 +39,7 @@ import AWS.EC2.Instance
 import AWS.EC2.Address
 import AWS.EC2.Tag
 import AWS.EC2.Snapshot
+import AWS.EC2.Volume
 import AWS.Credential
 
 newEC2Context :: Credential -> IO EC2Context

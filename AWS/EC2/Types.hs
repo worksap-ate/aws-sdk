@@ -570,14 +570,14 @@ instanceBlockDeviceMapping devname iebs =
 
 data InstanceEbsBlockDevice = InstanceEbsBlockDevice
     { instanceEbsVolumeId :: Text
-    , instanceEbsState :: VolumeState
+    , instanceEbsState :: AttachmentStatus
     , instanceEbsAttachTime :: UTCTime
     , instanceEbsDeleteOnTermination :: Bool
     }
   deriving (Show)
 
 instanceEbsBlockDevice
-    :: Text -> VolumeState -> UTCTime -> Bool
+    :: Text -> AttachmentStatus -> UTCTime -> Bool
     -> InstanceEbsBlockDevice
 instanceEbsBlockDevice vid vst atime dot =
     InstanceEbsBlockDevice
@@ -586,21 +586,6 @@ instanceEbsBlockDevice vid vst atime dot =
         , instanceEbsAttachTime = atime
         , instanceEbsDeleteOnTermination = dot
         }
-
-data VolumeState
-    = VolumeAttaching
-    | VolumeAttached
-    | VolumeDetaching
-    | VolumeDetached
-  deriving (Show)
-
-volumeState :: Text -> VolumeState
-volumeState t
-    | t == "attached"  = VolumeAttached
-    | t == "attaching" = VolumeAttaching
-    | t == "detaching" = VolumeDetaching
-    | t == "detached"  = VolumeDetached
-    | otherwise        = err "volume state" t
 
 data InstanceLifecycle = LifecycleSpot | LifecycleNone
   deriving (Show)
@@ -875,3 +860,85 @@ snapshotStatus t
     | t == "completed" = SSCompleted
     | t == "error"     = SSError
     | otherwise        = err "snapshot status" t
+
+data Volume = Volume
+    { volumeId :: Text
+    , volSize :: Int
+    , volSnapshotId :: Maybe Text
+    , volAvailabilityZone :: Text
+    , volStatus :: VolumeStatus
+    , volCreateTime :: UTCTime
+    , volAttachmentSet :: [Attachment]
+    , volTagSet :: [ResourceTag]
+    , volVolumeType :: VolumeType
+    }
+  deriving (Show)
+
+volume :: Text -> Int -> Maybe Text -> Text -> VolumeStatus -> UTCTime
+    -> [Attachment] -> [ResourceTag] -> VolumeType -> Volume
+volume vid size sid az stat ctime aset tset vtype = Volume
+    { volumeId = vid
+    , volSize = size
+    , volSnapshotId = sid
+    , volAvailabilityZone = az
+    , volStatus = stat
+    , volCreateTime = ctime
+    , volAttachmentSet = aset
+    , volTagSet = tset
+    , volVolumeType = vtype
+    }
+
+data VolumeStatus
+    = VolCreating
+    | VolAvailable
+    | VolInUse
+    | VolDeleting
+    | VolDeleted
+    | VolError
+  deriving (Show)
+
+volumeStatus :: Text -> VolumeStatus
+volumeStatus t
+    | t == "creating"  = VolCreating
+    | t == "available" = VolAvailable
+    | t == "in-use"    = VolInUse
+    | t == "deleting"  = VolDeleting
+    | t == "deleted"   = VolDeleted
+    | t == "error"     = VolError
+    | otherwise        = err "volume state" t
+
+data Attachment = Attachment
+    { attVolumeId :: Text
+    , attInstanceId :: Text
+    , attDevice :: Text
+    , attStatus :: AttachmentStatus
+    , attAttachTime :: UTCTime
+    , attDeleteOnTermination :: Bool
+    }
+  deriving (Show)
+
+attachment :: Text -> Text -> Text -> AttachmentStatus
+    -> UTCTime -> Bool -> Attachment
+attachment vid iid dev stat atime dot = Attachment
+    { attVolumeId = vid
+    , attInstanceId = iid
+    , attDevice = dev
+    , attStatus = stat
+    , attAttachTime = atime
+    , attDeleteOnTermination = dot
+    }
+
+data AttachmentStatus
+    = AttAttaching
+    | AttAttached
+    | AttDetaching
+    | AttDetached
+  deriving (Show)
+
+attachmentStatus :: Text -> AttachmentStatus
+attachmentStatus t
+    | t == "attaching" = AttAttaching
+    | t == "attached"  = AttAttached
+    | t == "detaching" = AttDetaching
+    | t == "detached"  = AttDetached
+    | otherwise        = err "attachment status" t

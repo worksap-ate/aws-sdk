@@ -103,7 +103,7 @@ instanceSetSink = itemsSet "instancesSet" $
         <*> element "ebs" (
             instanceEbsBlockDevice
             <$> getT "volumeId"
-            <*> getF "status" volumeState
+            <*> getF "status" attachmentStatus
             <*> getF "attachTime" textToTime
             <*> getF "deleteOnTermination" textToBool
             )

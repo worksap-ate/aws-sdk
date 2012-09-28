@@ -3,6 +3,7 @@ module AWS.EC2.Parser
     , resourceTagSink
     , productCodeSink
     , stateReasonSink
+    , volumeTypeSink
     ) where
 
 import Control.Applicative
@@ -11,6 +12,7 @@ import Data.XML.Types (Event)
 
 import AWS.EC2.Types
 import AWS.EC2.Parser.Internal
+import AWS.Util
 
 resourceTagSink :: MonadThrow m
     => GLSink Event m [ResourceTag]
@@ -32,3 +34,9 @@ stateReasonSink = elementM "stateReason" $
     stateReason
     <$> getT "code"
     <*> getT "message"
+
+volumeTypeSink :: MonadThrow m
+    => GLSink Event m VolumeType
+volumeTypeSink = volumeType
+    <$> getT "volumeType"
+    <*> getM "iops" (textToInt <$>)
