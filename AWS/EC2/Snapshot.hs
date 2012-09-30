@@ -39,7 +39,7 @@ describeSnapshots ssids owners restby filters =
 
 snapshotSink :: MonadThrow m
     => GLSink Event m Snapshot
-snapshotSink = snapshot
+snapshotSink = Snapshot
         <$> getT "snapshotId"
         <*> getT "volumeId"
         <*> getF "status" snapshotStatus

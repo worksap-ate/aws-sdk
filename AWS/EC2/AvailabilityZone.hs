@@ -31,7 +31,7 @@ describeAvailabilityZones zones filters =
     availabilityZoneInfo :: MonadThrow m
         => GLConduit Event m AvailabilityZone
     availabilityZoneInfo = itemConduit "availabilityZoneInfo" $
-        availabilityZone
+        AvailabilityZone
         <$> getT "zoneName"
         <*> getT "zoneState"
         <*> getT "regionName"

@@ -33,39 +33,6 @@ data Image = Image
     }
   deriving (Show)
 
-image
-    :: Text -> Text -> ImageState -> Text -> Bool
-    -> [ProductCode] -> Text -> ImageType -> Maybe Text
-    -> Maybe Text -> Platform -> Maybe StateReason
-    -> Maybe Text -> Text -> Text -> RootDeviceType
-    -> Maybe Text -> [BlockDeviceMapping] -> VirtualizationType
-    -> [ResourceTag] -> Hypervisor -> Image
-image i l s oid p pc a t kid rid pf
-    sr oa n d rdt rdn bdms vt ts h =
-    Image
-        { imageId = i
-        , imageLocation = l
-        , imageImageState = s
-        , imageOwnerId = oid
-        , isPublic = p
-        , imageProductCodes = pc
-        , imageArchitecture = a
-        , imageImageType = t
-        , kernelId = kid
-        , ramdiskId = rid
-        , imagePlatform = pf
-        , imageStateReason = sr
-        , imageOwnerAlias = oa
-        , imageName = n
-        , imageDescription = d
-        , imageRootDeviceType = rdt
-        , imageRootDeviceName = rdn
-        , blockDeviceMappings = bdms
-        , imageVirtualizationType = vt
-        , imageTagSet = ts
-        , imageHypervisor = h
-        }
-
 data ImageState
     = ImageAvailable
     | ImagePending
@@ -84,12 +51,6 @@ data ProductCode = ProductCode
     , pcType :: ProductCodeType
     }
   deriving (Show)
-
-productCode :: Text -> ProductCodeType -> ProductCode
-productCode c t = ProductCode
-    { pcCode = c
-    , pcType = t
-    }
 
 data ProductCodeType = Devpay
                      | Marketplace
@@ -129,13 +90,6 @@ data StateReason = StateReason
     }
   deriving (Show)
 
-stateReason :: Text -> Text -> StateReason
-stateReason c m =
-    StateReason
-        { stateReasonCode = c
-        , stateReasonMessage = m
-        }
-
 data RootDeviceType = EBS
                     | InstanceStore
   deriving (Show)
@@ -153,15 +107,6 @@ data BlockDeviceMapping = BlockDeviceMapping
     }
   deriving (Show)
 
-blockDeviceMapping :: Text -> Maybe Text -> Maybe EbsBlockDevice
-    -> BlockDeviceMapping
-blockDeviceMapping dname v e =
-    BlockDeviceMapping
-        { deviceName = dname
-        , virtualName = v
-        , ebs = e
-        }
-
 data EbsBlockDevice = EbsBlockDevice
     { ebsSnapshotId :: Maybe Text
     , ebsVolumeSize :: Int
@@ -169,17 +114,6 @@ data EbsBlockDevice = EbsBlockDevice
     , ebsVolumeType :: VolumeType
     }
   deriving (Show)
-
-ebsBlockDevice
-    :: Maybe Text -> Int -> Bool -> VolumeType
-    -> EbsBlockDevice
-ebsBlockDevice sid vs dot vt =
-    EbsBlockDevice
-        { ebsSnapshotId = sid
-        , ebsVolumeSize = vs
-        , ebsDeleteOnTermination = dot
-        , ebsVolumeType = vt
-        }
 
 data VolumeType = Standard
                 | IO1 Int
@@ -210,13 +144,6 @@ data ResourceTag = ResourceTag
     }
   deriving (Show)
 
-resourceTag :: Text -> Maybe Text -> ResourceTag
-resourceTag k v =
-    ResourceTag
-        { resourceKey = k
-        , resourceValue = v
-        }
-
 data Hypervisor = OVM
                 | Xen
   deriving (Show)
@@ -234,13 +161,6 @@ data Region = Region
     }
   deriving (Show)
 
-region :: Text -> Text -> Region
-region name rep = Region
-    { regionName = name
-    , regionEndpoint = rep
-    }
-
-{- DescribeAvailabilityZones -}
 data AvailabilityZone = AvailabilityZone
     { zoneName :: Text
     , zoneState :: Text
@@ -251,18 +171,6 @@ data AvailabilityZone = AvailabilityZone
 
 type AvailabilityZoneMessage = Text
 
-availabilityZone
-    :: Text -> Text -> Text -> [AvailabilityZoneMessage]
-    -> AvailabilityZone
-availabilityZone name st reg msgs =
-    AvailabilityZone
-        { zoneName = name
-        , zoneState = st
-        , zoneRegionName = reg
-        , messageSet = msgs
-        }
-
-{- DescribeInstances -}
 data Reservation = Reservation
     { reservationId :: Text
     , ownerId :: Text
@@ -271,17 +179,6 @@ data Reservation = Reservation
     , requesterId :: Maybe Text
     }
   deriving (Show)
-
-reservation
-    :: Text -> Text -> [Group] -> [Instance] -> Maybe Text
-    -> Reservation
-reservation i o g iset rid = Reservation
-    { reservationId = i
-    , ownerId = o
-    , groupSet = g
-    , instanceSet = iset
-    , requesterId = rid
-    }
 
 data Instance = Instance
     { instanceId :: Text
@@ -323,61 +220,6 @@ data Instance = Instance
     }
   deriving (Show)
 
-ec2Instance
-    :: Text -> Text -> InstanceState -> Text -> Text -> Text
-    -> Maybe Text -> Text -> [ProductCode] -> Text -> UTCTime
-    -> Placement -> Maybe Text -> Maybe Text -> Maybe Text
-    -> InstanceMonitoringState -> Maybe Text -> Maybe Text
-    -> Maybe Text -> Maybe Text -> Maybe Bool -> [Group]
-    -> Maybe StateReason -> Architecture -> RootDeviceType
-    -> Maybe Text -> [InstanceBlockDeviceMapping]
-    -> InstanceLifecycle -> Maybe Text -> VirtualizationType
-    -> Text -> [ResourceTag] -> Hypervisor
-    -> [InstanceNetworkInterface] -> Maybe IamInstanceProfile
-    -> Bool -> Instance
-ec2Instance iid img istate pdns dns res kname aidx pcode
-    itype ltime place kid rid pf mon snid vpcid paddr addr
-    sdc grp sreason arch rdtype rdname bdmap life spotid
-    vtype ctoken tset hv nicset iam eopt =
-    Instance
-        { instanceId = iid
-        , instanceImageId = img
-        , instanceState = istate
-        , privateDnsName = pdns
-        , dnsName = dns
-        , reason = res
-        , keyName = kname
-        , amiLaunchIndex = aidx
-        , instanceProductCodes = pcode
-        , instanceType = itype
-        , launchTime = ltime
-        , instancePlacement = place
-        , instanceKernelId = kid
-        , instanceRamdiskId = rid
-        , instancePlatform = pf
-        , instanceMonitoring = mon
-        , subnetId = snid
-        , vpcId = vpcid
-        , privateIpAddress = paddr
-        , ipAddress = addr
-        , sourceDestCheck = sdc
-        , vpcGroupSet = grp
-        , instanceStateReason = sreason
-        , instanceArchitecture = arch
-        , instanceRootDeviceType = rdtype
-        , instanceRootDeviceName = rdname
-        , instanceBlockDeviceMappings = bdmap
-        , instanceInstanceLifecycle = life
-        , spotInstanceRequestId = spotid
-        , instanceVirtualizationType = vtype
-        , clientToken = ctoken
-        , instanceTagSet = tset
-        , instanceHypervisor = hv
-        , instanceNetworkInterfaceSet = nicset
-        , instanceIamInstanceProfile = iam
-        , ebsOptimized = eopt
-        }
-
 data InstanceStatus = InstanceStatus
     { isInstanceId :: Text
     , isAvailabilityZone :: Text
@@ -388,18 +230,6 @@ data InstanceStatus = InstanceStatus
     }
   deriving (Show)
 
-instanceStatus :: Text -> Text -> [InstanceStatusEvent]
-    -> InstanceState -> InstanceStatusType
-    -> InstanceStatusType -> InstanceStatus
-instanceStatus iid az es ist sst iss = InstanceStatus
-    { isInstanceId = iid
-    , isAvailabilityZone = az
-    , isEventsSet = es
-    , isInstanceState = ist
-    , isSystemStatus = sst
-    , isInstanceStatus = iss
-    }
-
 data InstanceStatusEvent = InstanceStatusEvent
     { iseCode :: InstanceStatusEventCode
     , iseDescription :: Text
@@ -407,16 +237,6 @@ data InstanceStatusEvent = InstanceStatusEvent
     , iseNotAfter :: Maybe UTCTime
     }
   deriving (Show)
-
-instanceStatusEvent :: InstanceStatusEventCode
-    -> Text -> Maybe UTCTime -> Maybe UTCTime
-    -> InstanceStatusEvent
-instanceStatusEvent code desc before after = InstanceStatusEvent
-    { iseCode = code
-    , iseDescription = desc
-    , iseNotBefore = before
-    , iseNotAfter = after
-    }
 
 data InstanceStatusEventCode
     = InstanceReboot
@@ -438,13 +258,6 @@ data InstanceStatusType = InstanceStatusType
     , isdDetails :: [InstanceStatusDetail]
     }
   deriving (Show)
-
-instanceStatusType :: InstanceStatusTypeStatus
-    -> [InstanceStatusDetail] -> InstanceStatusType
-instanceStatusType status details = InstanceStatusType
-    { isdStatus = status
-    , isdDetails = details
-    }
 
 data InstanceStatusTypeStatus
     = InstanceStatusOK
@@ -468,16 +281,6 @@ data InstanceStatusDetail = InstanceStatusDetail
     }
   deriving (Show)
 
-instanceStatusDetail :: InstanceStatusDetailName
-    -> InstanceStatusDetailStatus -> Maybe UTCTime
-    -> InstanceStatusDetail
-instanceStatusDetail name status since =
-    InstanceStatusDetail
-        { isddName = name
-        , isddStatus = status
-        , isddImpairedSince = since
-        }
-
 type InstanceStatusDetailName = Text
 
 type InstanceStatusDetailStatus = Text
@@ -487,12 +290,6 @@ data Group = Group
     , groupName :: Text
     }
   deriving (Show)
-
-group :: Text -> Text -> Group
-group i n = Group
-    { groupId = i
-    , groupName = n
-    }
 
 data InstanceState
     = Pending
@@ -525,13 +322,6 @@ data Placement = Placement
     }
   deriving (Show)
 
-placement :: Text -> Text -> Text -> Placement
-placement zone gname ten = Placement
-    { placementAvailabilityZone = zone
-    , placementGroupName = gname
-    , tenancy = ten
-    }
-
 data InstanceMonitoringState
     = MonitoringDisabled
     | MonitoringEnabled
@@ -559,15 +349,6 @@ data InstanceBlockDeviceMapping = InstanceBlockDeviceMapping
     }
   deriving (Show)
 
-instanceBlockDeviceMapping
-    :: Text -> InstanceEbsBlockDevice
-    -> InstanceBlockDeviceMapping
-instanceBlockDeviceMapping devname iebs =
-    InstanceBlockDeviceMapping
-        { instanceDeviceName = devname
-        , instanceEbs = iebs
-        }
-
 data InstanceEbsBlockDevice = InstanceEbsBlockDevice
     { instanceEbsVolumeId :: Text
     , instanceEbsState :: AttachmentStatus
@@ -575,17 +356,6 @@ data InstanceEbsBlockDevice = InstanceEbsBlockDevice
     , instanceEbsDeleteOnTermination :: Bool
     }
   deriving (Show)
-
-instanceEbsBlockDevice
-    :: Text -> AttachmentStatus -> UTCTime -> Bool
-    -> InstanceEbsBlockDevice
-instanceEbsBlockDevice vid vst atime dot =
-    InstanceEbsBlockDevice
-        { instanceEbsVolumeId = vid
-        , instanceEbsState = vst
-        , instanceEbsAttachTime = atime
-        , instanceEbsDeleteOnTermination = dot
-        }
 
 data InstanceLifecycle = LifecycleSpot | LifecycleNone
   deriving (Show)
@@ -613,30 +383,6 @@ data InstanceNetworkInterface = InstanceNetworkInterface
     }
   deriving (Show)
 
-instanceNetworkInterface
-    :: Text -> Text -> Text -> Text -> Text -> Text -> Text
-    -> Maybe Text -> Bool -> [Group] -> NetworkInterfaceAttachment
-    -> Maybe NetworkInterfaceAssociation
-    -> [InstancePrivateIpAddress]
-    -> InstanceNetworkInterface
-instanceNetworkInterface
-    iid sid vpcid desc own st paddr pdns sdc grp att asso pips =
-    InstanceNetworkInterface
-        { instanceNetworkInterfaceId = iid
-        , iniSubnetId = sid
-        , iniVpcId = vpcid
-        , iniDescription = desc
-        , iniOwnerId = own
-        , iniStatus = st
-        , iniPrivateIpAddress = paddr
-        , iniPrivateDnsName = pdns
-        , iniSourceDestCheck = sdc
-        , iniGroupSet = grp
-        , iniAttachment = att
-        , iniAssociation = asso
-        , iniPrivateIpAddressSet = pips
-        }
-
 data NetworkInterfaceAttachment = NetworkInterfaceAttachment
     { niatAttachmentId :: Text
     , niatDeviceIndex :: Int
@@ -646,31 +392,11 @@ data NetworkInterfaceAttachment = NetworkInterfaceAttachment
     }
   deriving (Show)
 
-networkInterfaceAttachment
-    :: Text -> Int -> Text -> UTCTime -> Bool
-    -> NetworkInterfaceAttachment
-networkInterfaceAttachment aid idx st time dot =
-    NetworkInterfaceAttachment
-        { niatAttachmentId = aid
-        , niatDeviceIndex = idx
-        , niatStatus = st
-        , niatAttachTime = time
-        , niatDeleteOnTermination = dot
-        }
-
 data NetworkInterfaceAssociation = NetworkInterfaceAssociation
     { niasPublicIp :: Text
     , niasIpOwnerId :: Text
     }
   deriving (Show)
-
-networkInterfaceAssociation
-    :: Text -> Text -> NetworkInterfaceAssociation
-networkInterfaceAssociation ip own =
-    NetworkInterfaceAssociation
-        { niasPublicIp = ip
-        , niasIpOwnerId = own
-        }
 
 data InstancePrivateIpAddress = InstancePrivateIpAddress
     { iPrivateIpAddress :: Text
@@ -679,27 +405,11 @@ data InstancePrivateIpAddress = InstancePrivateIpAddress
     }
   deriving (Show)
 
-instancePrivateIpAddress
-    :: Text -> Bool -> Maybe NetworkInterfaceAssociation
-    -> InstancePrivateIpAddress
-instancePrivateIpAddress ip pr asso =
-    InstancePrivateIpAddress
-        { iPrivateIpAddress = ip
-        , iPrimary = pr
-        , iAssociation = asso
-        }
-
 data IamInstanceProfile = IamInstanceProfile
     { iipArn :: Text
     , iipId :: Text
     }
   deriving (Show)
-
-iamInstanceProfile :: Text -> Text -> IamInstanceProfile
-iamInstanceProfile arn iid = IamInstanceProfile
-    { iipArn = arn
-    , iipId = iid
-    }
 
 data Address = Address
     { addrPublicIp :: Text
@@ -712,20 +422,6 @@ data Address = Address
     , addrPrivateIpAddress :: Maybe Text
     }
   deriving (Show)
-
-address :: Text -> Maybe Text -> AddressDomain -> Maybe Text
-    -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
-    -> Address
-address pip alid dom iid asid niid nioid pips = Address
-    { addrPublicIp = pip
-    , addrAllocationId = alid
-    , addrDomain = dom
-    , addrInstanceId = iid
-    , addrAssociationId = asid
-    , addrNetworkInterfaceId = niid
-    , addrNetworkInterfaceOwnerId = nioid
-    , addrPrivateIpAddress = pips
-    }
 
 data AddressDomain = AddressDomainStandard | AddressDomainVPC
   deriving (Show)
@@ -744,15 +440,6 @@ data AllocateAddressResponse = AllocateAddressResponse
     }
   deriving (Show)
 
-allocateAddressResponse :: Text -> AddressDomain -> Maybe Text
-    -> AllocateAddressResponse
-allocateAddressResponse ip domain allid =
-    AllocateAddressResponse
-        { alaPublicIp = ip
-        , alaDomain = domain
-        , alaAllocationId = allid
-        }
-
 data EC2Return = EC2Success | EC2Error Text
   deriving (Show)
 
@@ -769,28 +456,12 @@ data Tag = Tag
     }
   deriving (Show)
 
-tag :: Text -> Text -> Text -> Maybe Text -> Tag
-tag tid ttype key value = Tag
-    { tagResourceId = tid
-    , tagResourceType = ttype
-    , tagKey = key
-    , tagValue = value
-    }
-
 data InstanceStateChange = InstanceStateChange
     { iscInstanceId :: Text
     , iscCurrentState :: InstanceState
     , iscPreviousState :: InstanceState
     }
   deriving (Show)
-
-instanceStateChange :: Text -> InstanceState -> InstanceState
-    -> InstanceStateChange
-instanceStateChange iid curr prev = InstanceStateChange
-    { iscInstanceId = iid
-    , iscCurrentState = curr
-    , iscPreviousState = prev
-    }
 
 data ConsoleOutput = ConsoleOutput
     { coInstanceId :: Text
@@ -799,26 +470,12 @@ data ConsoleOutput = ConsoleOutput
     }
   deriving (Show)
 
-consoleOutput :: Text -> UTCTime -> Text -> ConsoleOutput
-consoleOutput iid time out = ConsoleOutput
-    { coInstanceId = iid
-    , coTimestamp = time
-    , coOutput = out
-    }
-
 data PasswordData = PasswordData
     { pdInstanceId :: Text
     , pdTimestamp :: UTCTime -- ^ The time the data was last updated.
     , pdPasswordData :: Text
     }
   deriving (Show)
-
-passwordData :: Text -> UTCTime -> Text -> PasswordData
-passwordData iid time out = PasswordData
-    { pdInstanceId = iid
-    , pdTimestamp = time
-    , pdPasswordData = out
-    }
 
 data Snapshot = Snapshot
     { snapshotId :: Text
@@ -833,23 +490,6 @@ data Snapshot = Snapshot
     , ssTagSet :: [ResourceTag]
     }
   deriving (Show)
-
-snapshot :: Text -> Text -> SnapshotStatus -> UTCTime
-    -> Text -> Text -> Int -> Text -> Maybe Text
-    -> [ResourceTag] -> Snapshot
-snapshot ssid vid stat stime progress oid vsize desc oali tags =
-    Snapshot
-    { snapshotId = ssid
-    , ssVolumeId = vid
-    , ssStatus = stat
-    , ssStartTime = stime
-    , ssProgress = progress
-    , ssOwnerId = oid
-    , ssVolumeSize = vsize
-    , ssDescription = desc
-    , ssOwnerAlias = oali
-    , ssTagSet = tags
-    }
 
 data SnapshotStatus = SSPending | SSCompleted | SSError
   deriving (Show)
@@ -873,20 +513,6 @@ data Volume = Volume
     , volVolumeType :: VolumeType
     }
   deriving (Show)
-
-volume :: Text -> Int -> Maybe Text -> Text -> VolumeStatus -> UTCTime
-    -> [Attachment] -> [ResourceTag] -> VolumeType -> Volume
-volume vid size sid az stat ctime aset tset vtype = Volume
-    { volumeId = vid
-    , volSize = size
-    , volSnapshotId = sid
-    , volAvailabilityZone = az
-    , volStatus = stat
-    , volCreateTime = ctime
-    , volAttachmentSet = aset
-    , volTagSet = tset
-    , volVolumeType = vtype
-    }
 
 data VolumeStatus
     = VolCreating
@@ -916,17 +542,6 @@ data Attachment = Attachment
     , attDeleteOnTermination :: Bool
     }
   deriving (Show)
-
-attachment :: Text -> Text -> Text -> AttachmentStatus
-    -> UTCTime -> Bool -> Attachment
-attachment vid iid dev stat atime dot = Attachment
-    { attVolumeId = vid
-    , attInstanceId = iid
-    , attDevice = dev
-    , attStatus = stat
-    , attAttachTime = atime
-    , attDeleteOnTermination = dot
-    }
 
 data AttachmentStatus
     = AttAttaching

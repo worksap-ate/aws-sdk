@@ -17,21 +17,21 @@ import AWS.Util
 resourceTagSink :: MonadThrow m
     => GLSink Event m [ResourceTag]
 resourceTagSink = itemsSet "tagSet" $
-    resourceTag
+    ResourceTag
     <$> getT "key"
     <*> getMT "value"
 
 productCodeSink :: MonadThrow m
     => GLSink Event m [ProductCode]
 productCodeSink = itemsSet "productCodes" $
-    productCode
+    ProductCode
     <$> getT "productCode"
     <*> getF "type" productCodeType
 
 stateReasonSink :: MonadThrow m
     => GLSink Event m (Maybe StateReason)
 stateReasonSink = elementM "stateReason" $
-    stateReason
+    StateReason
     <$> getT "code"
     <*> getT "message"
 

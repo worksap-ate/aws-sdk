@@ -50,7 +50,7 @@ describeInstances instances filters = do
 reservationSink :: MonadThrow m
     => GLSink Event m Reservation
 reservationSink =
-    reservation
+    Reservation
     <$> getT "reservationId"
     <*> getT "ownerId"
     <*> groupSetSink
@@ -58,14 +58,14 @@ reservationSink =
     <*> getMT "requesterId"
 
 groupSetSink :: MonadThrow m => GLSink Event m [Group]
-groupSetSink = itemsSet "groupSet" $ group
+groupSetSink = itemsSet "groupSet" $ Group
     <$> getT "groupId"
     <*> getT "groupName"
 
 instanceSetSink :: MonadThrow m
     => GLSink Event m [Instance]
 instanceSetSink = itemsSet "instancesSet" $
-    ec2Instance
+    Instance
     <$> getT "instanceId"
     <*> getT "imageId"
     <*> instanceStateSink "instanceState"
@@ -78,7 +78,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getT "instanceType"
     <*> getF "launchTime" textToTime
     <*> element "placement" (
-        placement
+        Placement
         <$> getT "availabilityZone"
         <*> getT "groupName"
         <*> getT "tenancy"
@@ -98,10 +98,10 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
     <*> itemsSet "blockDeviceMapping" (
-        instanceBlockDeviceMapping
+        InstanceBlockDeviceMapping
         <$> getT "deviceName"
         <*> element "ebs" (
-            instanceEbsBlockDevice
+            InstanceEbsBlockDevice
             <$> getT "volumeId"
             <*> getF "status" attachmentStatus
             <*> getF "attachTime" textToTime
@@ -116,7 +116,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getF "hypervisor" hypervisor
     <*> networkInterfaceSink
     <*> elementM "iamInstanceProfile" (
-        iamInstanceProfile
+        IamInstanceProfile
         <$> getT "arn"
         <*> getT "id"
         )
@@ -132,7 +132,7 @@ instanceStateSink label = element label $
 networkInterfaceSink :: MonadThrow m
     => GLSink Event m [InstanceNetworkInterface]
 networkInterfaceSink = itemsSet "networkInterfaceSet" $
-    instanceNetworkInterface
+    InstanceNetworkInterface
     <$> getT "networkInterfaceId"
     <*> getT "subnetId"
     <*> getT "vpcId"
@@ -144,7 +144,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <*> getF "sourceDestCheck" textToBool
     <*> groupSetSink
     <*> element "attachment" (
-        networkInterfaceAttachment
+        NetworkInterfaceAttachment
         <$> getT "attachmentId"
         <*> getF "deviceIndex" textToInt
         <*> getT "status"
@@ -153,7 +153,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
         )
     <*> niAssociationSink
     <*> itemsSet "privateIpAddressesSet" (
-        instancePrivateIpAddress
+        InstancePrivateIpAddress
         <$> getT "privateIpAddress"
         <*> getF "primary" textToBool
         <*> niAssociationSink
@@ -162,7 +162,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
 niAssociationSink :: MonadThrow m
     => GLSink Event m (Maybe NetworkInterfaceAssociation)
 niAssociationSink = elementM "association" $
-    networkInterfaceAssociation
+    NetworkInterfaceAssociation
     <$> getT "publicIp"
     <*> getT "ipOwnerId"
 
@@ -190,11 +190,11 @@ instanceStatusSet :: MonadThrow m
     => GLConduit Event m InstanceStatus
 instanceStatusSet = do
     itemConduit "instanceStatusSet" $
-        instanceStatus
+        InstanceStatus
         <$> getT "instanceId"
         <*> getT "availabilityZone"
         <*> itemsSet "eventsSet" (
-            instanceStatusEvent
+            InstanceStatusEvent
             <$> getF "code" instanceStatusEventCode
             <*> getT "description"
             <*> getM "notBefore" (textToTime <$>)
@@ -207,10 +207,10 @@ instanceStatusSet = do
 instanceStatusTypeSink :: MonadThrow m
     => Text -> GLSink Event m InstanceStatusType
 instanceStatusTypeSink name = element name $
-    instanceStatusType
+    InstanceStatusType
     <$> getF "status" instanceStatusTypeStatus
     <*> itemsSet "details" (
-        instanceStatusDetail
+        InstanceStatusDetail
         <$> getT "name"
         <*> getT "status"
         <*> getM "impairedSince" (textToTime <$>)
@@ -232,7 +232,7 @@ instanceStateChangeSet
     :: (MonadResource m, MonadBaseControl IO m)
     => Conduit Event m InstanceStateChange
 instanceStateChangeSet = itemConduit "instancesSet" $ do
-    instanceStateChange
+    InstanceStateChange
     <$> getT "instanceId"
     <*> instanceStateSink "currentState"
     <*> instanceStateSink "previousState"
@@ -395,7 +395,7 @@ getConsoleOutput
     -> EC2 m ConsoleOutput
 getConsoleOutput iid =
     ec2Query "GetConsoleOutput" [ValueParam "InstanceId" iid] $
-        consoleOutput
+        ConsoleOutput
         <$> getT "instanceId"
         <*> getF "timestamp" textToTime
         <*> getT "output"
@@ -409,7 +409,7 @@ getPasswordData
     -> EC2 m PasswordData
 getPasswordData iid =
     ec2Query "GetPasswordData" [ValueParam "InstanceId" iid] $
-        passwordData
+        PasswordData
         <$> getT "instanceId"
         <*> getF "timestamp" textToTime
         <*> getT "passwordData"

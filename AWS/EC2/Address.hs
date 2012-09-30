@@ -39,7 +39,7 @@ describeAddresses pubIps alloIds filters =
         ]
 
     addressSet :: MonadThrow m => GLConduit Event m Address
-    addressSet = itemConduit "addressesSet" $ address
+    addressSet = itemConduit "addressesSet" $ Address
         <$> getT "publicIp"
         <*> getMT "allocationId"
         <*> getM "domain" addressDomain
@@ -58,7 +58,7 @@ allocateAddress
     -> EC2 m AllocateAddressResponse
 allocateAddress isVpc = do
     ec2Query "AllocateAddress" params $
-        allocateAddressResponse
+        AllocateAddressResponse
         <$> getT "publicIp"
         <*> getM "domain" addressDomain
         <*> getMT "allocationId"

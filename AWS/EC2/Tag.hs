@@ -19,7 +19,7 @@ describeTags
     -> EC2 m (Source m Tag)
 describeTags filters =
     ec2QuerySource "DescribeTags" params $ itemConduit "tagSet" $
-        tag
+        Tag
         <$> getT "resourceId"
         <*> getT "resourceType"
         <*> getT "key"

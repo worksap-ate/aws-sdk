@@ -40,7 +40,7 @@ describeImages imageIds owners execby filters =
 
 imageItem :: MonadThrow m
     => GLSink Event m Image
-imageItem = image
+imageItem = Image
     <$> getT "imageId"
     <*> getT "imageLocation"
     <*> getF "imageState" imageState
@@ -59,11 +59,11 @@ imageItem = image
     <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
     <*> itemsSet "blockDeviceMapping" (
-        blockDeviceMapping
+        BlockDeviceMapping
         <$> getT "deviceName"
         <*> getMT "virtualName"
         <*> elementM "ebs" (
-            ebsBlockDevice
+            EbsBlockDevice
             <$> getMT "snapshotId"
             <*> getF "volumeSize" textToInt
             <*> getF "deleteOnTermination" textToBool

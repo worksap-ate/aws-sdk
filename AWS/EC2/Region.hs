@@ -31,6 +31,6 @@ describeRegions regions filters =
     regionInfoConduit :: MonadThrow m
         => GLConduit Event m Region
     regionInfoConduit = itemConduit "regionInfo" $
-        region
+        Region
         <$> getT "regionName"
         <*> getT "regionEndpoint"

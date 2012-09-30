@@ -32,7 +32,7 @@ describeVolumes vids filters =
     volumeSet :: MonadThrow m
         => GLConduit Event m Volume
     volumeSet = itemConduit "volumeSet" $
-        volume
+        Volume
         <$> getT "volumeId"
         <*> getF "size" textToInt
         <*> getMT "snapshotId"
@@ -40,7 +40,7 @@ describeVolumes vids filters =
         <*> getF "status" volumeStatus
         <*> getF "createTime" textToTime
         <*> itemsSet "attachmentSet" (
-            attachment
+            Attachment
             <$> getT "volumeId"
             <*> getT "instanceId"
             <*> getT "device"
