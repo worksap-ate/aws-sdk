@@ -187,7 +187,7 @@ data Instance = Instance
     , privateDnsName :: Text
     , dnsName :: Text
     , reason :: Text
-    , keyName :: Maybe Text
+    , instanceKeyName :: Maybe Text
     , amiLaunchIndex :: Text
     , instanceProductCodes :: [ProductCode]
     , instanceType :: Text
@@ -557,3 +557,9 @@ attachmentStatus t
     | t == "detaching" = AttDetaching
     | t == "detached"  = AttDetached
     | otherwise        = err "attachment status" t
+
+data KeyPair = KeyPair
+    { keyName :: Text
+    , keyFingerprint :: Text
+    }
+  deriving (Show)

@@ -15,11 +15,13 @@ module AWS.EC2
     , module AWS.EC2.Volume
       -- * Snapshots
     , module AWS.EC2.Snapshot
+      -- * Addresses
+    , module AWS.EC2.Address
+      -- * KeyPairs
+    , module AWS.EC2.KeyPair
       -- * Placements
     , module AWS.EC2.Region
     , module AWS.EC2.AvailabilityZone
-      -- * Addresses
-    , module AWS.EC2.Address
       -- * Tags
     , module AWS.EC2.Tag
     ) where
@@ -40,6 +42,7 @@ import AWS.EC2.Address
 import AWS.EC2.Tag
 import AWS.EC2.Snapshot
 import AWS.EC2.Volume
+import AWS.EC2.KeyPair
 import AWS.Credential
 
 newEC2Context :: Credential -> IO EC2Context
