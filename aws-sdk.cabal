@@ -27,6 +27,7 @@ library
                    , AWS.EC2.Volume
                    , AWS.EC2.KeyPair
                    , AWS.EC2.Snapshot
+                   , AWS.EC2.SecurityGroup
                    , AWS.EC2.Parser
                    , AWS.EC2.Query
                    , AWS.EC2.Region

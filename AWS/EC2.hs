@@ -19,6 +19,8 @@ module AWS.EC2
     , module AWS.EC2.Address
       -- * KeyPairs
     , module AWS.EC2.KeyPair
+      -- * SecurityGroups
+    , module AWS.EC2.SecurityGroup
       -- * Placements
     , module AWS.EC2.Region
     , module AWS.EC2.AvailabilityZone
@@ -43,6 +45,7 @@ import AWS.EC2.Tag
 import AWS.EC2.Snapshot
 import AWS.EC2.Volume
 import AWS.EC2.KeyPair
+import AWS.EC2.SecurityGroup
 import AWS.Credential
 
 newEC2Context :: Credential -> IO EC2Context

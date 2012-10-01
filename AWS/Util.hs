@@ -33,7 +33,7 @@ textToInt :: Integral a => Text -> a
 textToInt t = either 
     (const $ error "not decimal")
     fst
-    (TR.decimal t)
+    (TR.signed TR.decimal t)
 
 textToTime :: Text -> UTCTime
 textToTime

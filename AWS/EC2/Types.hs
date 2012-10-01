@@ -589,3 +589,36 @@ data KeyPair = KeyPair
     , keyFingerprint :: Text
     }
   deriving (Show)
+
+data SecurityGroup = SecurityGroup
+    { sgOwnerId :: Text
+    , sgGroupId :: Text
+    , sgGroupName :: Text
+    , sgGroupDescription :: Text
+    , sgVpcId :: Maybe Text
+    , sgIpPermissions :: [IpPermission]
+    , sgIpPermissionsEgress :: [IpPermission]
+    , sgTagSet :: [ResourceTag]
+    }
+  deriving (Show)
+
+data IpPermission = IpPermission
+    { ippIpProtocol :: Text
+    , ippFromPort :: Maybe Int
+    , ippToPort :: Maybe Int
+    , ippGroups :: [UserIdGroupPair]
+    , ippIpRanges :: [IpRange]
+    }
+  deriving (Show)
+
+data UserIdGroupPair = UserIdGroupPair
+    { uigpUserId :: Text
+    , uigpGroupId :: Text
+    , uigpGroupName :: Maybe Text
+    }
+  deriving (Show)
+
+data IpRange = IpRange
+    { iprCidrIp :: Text
+    }
+  deriving (Show)
