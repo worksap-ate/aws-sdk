@@ -2,6 +2,8 @@
 module AWS.EC2.Volume
     ( describeVolumes
     , createVolume
+    , CreateVolumeParam(..)
+    , deleteVolume
     ) where
 
 import Data.Text (Text)
@@ -41,7 +43,7 @@ volumeSink = Volume
     <*> getF "status" volumeStatus
     <*> getF "createTime" textToTime
     <*> itemsSet "attachmentSet" (
-        attachment
+        Attachment
         <$> getT "volumeId"
         <*> getT "instanceId"
         <*> getT "device"
@@ -61,18 +63,43 @@ volumeTypeParam (IO1 iops) =
 
 createVolume
     :: (MonadResource m, MonadBaseControl IO m)
-    => Maybe Int -- ^ Size
-    -> Maybe Text -- ^ SnapshotId
-    -> Maybe Text -- ^ AvailabilityZone
-    -> Maybe VolumeType
+    => CreateVolumeParam
     -> EC2 m Volume
-createVolume size sid zone vtype =
-    ec2Query "CreateVolume" params volumeSink
+createVolume param =
+    ec2Query "CreateVolume" param' volumeSink
   where
-    f name = maybe [] (\a -> [ValueParam name a])
-    params = maybe [] volumeTypeParam vtype
-        ++ (uncurry f =<<
-            [ ("Size", toText <$> size)
-            , ("SnapshotId", sid)
-            , ("AvailabilityZone", zone)
-            ])
+    param' = createVolumeParam param
+
+data CreateVolumeParam
+    = CreateNewVolume
+        { cnvSize :: Int
+        , cnvAvailabilityZone :: Text
+        , cnvVolumeType :: Maybe VolumeType
+        }
+    | CreateFromSnapshot
+        { cfsSnapshotId :: Text
+        , cfsAvailabilityZone :: Text
+        , cfsSize :: Maybe Int
+        , cfsVolumeType :: Maybe VolumeType
+        }
+  deriving (Show)
+
+createVolumeParam :: CreateVolumeParam -> [QueryParam]
+createVolumeParam (CreateNewVolume size zone vtype) =
+    [ ValueParam "Size" $ toText size
+    , ValueParam "AvailabilityZone" zone
+    ] ++ maybe [] volumeTypeParam vtype
+createVolumeParam (CreateFromSnapshot sid zone size vtype) =
+    [ ValueParam "SnapshotId" sid
+    , ValueParam "AvailabilityZone" zone
+    ]
+    ++ maybe [] (\a -> [ValueParam "Size" $ toText a]) size
+    ++ maybe [] volumeTypeParam vtype
+
+deleteVolume
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VolumeId
+    -> EC2 m Bool
+deleteVolume volid =
+    ec2Query "DeleteVolume" [ValueParam "VolumeId" volid]
+        $ getF "return" textToBool
