@@ -12,6 +12,8 @@ module AWS.EC2.Instance
     , getConsoleOutput
     , getPasswordData
     , describeInstanceStatus
+    , describeInstanceAttribute
+    , InstanceAttributeRequest(..)
     ) where
 
 import Data.Text (Text)
@@ -21,6 +23,8 @@ import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
+import Data.Maybe (fromJust)
+import qualified Data.Map as Map
 
 import AWS.EC2.Types
 import AWS.EC2.Params
@@ -97,17 +101,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getF "architecture" architecture
     <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
-    <*> itemsSet "blockDeviceMapping" (
-        InstanceBlockDeviceMapping
-        <$> getT "deviceName"
-        <*> element "ebs" (
-            InstanceEbsBlockDevice
-            <$> getT "volumeId"
-            <*> getF "status" attachmentStatus
-            <*> getF "attachTime" textToTime
-            <*> getF "deleteOnTermination" textToBool
-            )
-        )
+    <*> instanceBlockDeviceMappingsSink
     <*> getM "instanceLifecycle" instanceLifecycle
     <*> getMT "spotInstanceRequestId"
     <*> getF "virtualizationType" virtualizationType
@@ -121,6 +115,20 @@ instanceSetSink = itemsSet "instancesSet" $
         <*> getT "id"
         )
     <*> getF "ebsOptimized" textToBool
+
+instanceBlockDeviceMappingsSink :: MonadThrow m
+    => GLSink Event m [InstanceBlockDeviceMapping]
+instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
+    InstanceBlockDeviceMapping
+    <$> getT "deviceName"
+    <*> element "ebs" (
+        InstanceEbsBlockDevice
+        <$> getT "volumeId"
+        <*> getF "status" attachmentStatus
+        <*> getF "attachTime" textToTime
+        <*> getF "deleteOnTermination" textToBool
+        )
+    )
 
 instanceStateSink :: MonadThrow m
     => Text -> GLSink Event m InstanceState
@@ -413,3 +421,66 @@ getPasswordData iid =
         <$> getT "instanceId"
         <*> getF "timestamp" textToTime
         <*> getT "passwordData"
+
+describeInstanceAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InstanceId
+    -> InstanceAttributeRequest -- ^ Attribute
+    -> EC2 m InstanceAttribute
+describeInstanceAttribute iid attr =
+    ec2Query "DescribeInstanceAttribute" params
+        $ getT "instanceId" *> f attr
+  where
+    str = iarToParam attr
+    params =
+        [ ValueParam "InstanceId" iid
+        , ValueParam "Attribute" str
+        ]
+    f IARBlockDeviceMapping = instanceBlockDeviceMappingsSink
+        >>= return . IABlockDeviceMapping
+    f IARProductCodes =
+        productCodeSink >>= return . IAProductCodes
+    f IARGroupSet =
+        (itemsSet str $ getT "groupId") >>= return . IAGroupSet
+    f req = valueSink str (fromJust $ Map.lookup req h)
+    h = Map.fromList [ (IARInstanceType, IAInstanceType . fromJust)
+        , (IARKernelId, IAKernelId)
+        , (IARRamdiskId, IARamdiskId)
+        , (IARUserData, IAUserData)
+        , (IARDisableApiTermination, IADisableApiTermination . textToBool . fromJust)
+        , (IARShutdownBehavior, IAShutdownBehavior . shutdownBehavior . fromJust)
+        , (IARRootDeviceName, IARootDeviceName)
+        , (IARSourceDestCheck, IASourceDestCheck . (textToBool <$>))
+        , (IAREbsOptimized, IAEbsOptimized . textToBool . fromJust)
+        ]
+    valueSink name val =
+        (element name $ getMT "value") >>= return . val
+
+data InstanceAttributeRequest
+    = IARInstanceType
+    | IARKernelId
+    | IARRamdiskId
+    | IARUserData
+    | IARDisableApiTermination
+    | IARShutdownBehavior
+    | IARRootDeviceName
+    | IARBlockDeviceMapping
+    | IARSourceDestCheck
+    | IARGroupSet
+    | IARProductCodes
+    | IAREbsOptimized
+  deriving (Show, Eq, Ord)
+
+iarToParam :: InstanceAttributeRequest -> Text
+iarToParam IARInstanceType          = "instanceType"
+iarToParam IARKernelId              = "kernel"
+iarToParam IARRamdiskId             = "ramdisk"
+iarToParam IARUserData              = "userData"
+iarToParam IARDisableApiTermination = "disableApiTermination"
+iarToParam IARShutdownBehavior      = "instanceInitiatedShutdownBehavior"
+iarToParam IARRootDeviceName        = "rootDeviceName"
+iarToParam IARBlockDeviceMapping    = "blockDeviceMapping"
+iarToParam IARSourceDestCheck       = "sourceDestCheck"
+iarToParam IARGroupSet              = "groupSet"
+iarToParam IARProductCodes          = "productCodes"
+iarToParam IAREbsOptimized          = "ebsOptimized"

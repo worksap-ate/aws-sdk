@@ -411,6 +411,32 @@ data IamInstanceProfile = IamInstanceProfile
     }
   deriving (Show)
 
+data ShutdownBehavior
+    = SBStop
+    | SBTerminate
+  deriving (Show)
+
+shutdownBehavior :: Text -> ShutdownBehavior
+shutdownBehavior t
+    | t == "stop"      = SBStop
+    | t == "terminate" = SBTerminate
+    | otherwise = err "shutdown behavior" t
+
+data InstanceAttribute
+    = IAInstanceType Text
+    | IAKernelId (Maybe Text)
+    | IARamdiskId (Maybe Text)
+    | IAUserData (Maybe Text)
+    | IADisableApiTermination Bool
+    | IAShutdownBehavior ShutdownBehavior
+    | IARootDeviceName (Maybe Text)
+    | IABlockDeviceMapping [InstanceBlockDeviceMapping]
+    | IASourceDestCheck (Maybe Bool)
+    | IAGroupSet [Text]
+    | IAProductCodes [ProductCode]
+    | IAEbsOptimized Bool
+  deriving (Show)
+
 data Address = Address
     { addrPublicIp :: Text
     , addrAllocationId :: Maybe Text

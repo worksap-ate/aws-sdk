@@ -24,8 +24,6 @@ data EbsSource
     | EbsVolumeSize Int
   deriving (Show)
 
-data ShutdownBehavior = SBStop | SBTerminate deriving (Show)
-
 data NetworkInterfaceParam = NetworkInterfaceParam
     { nipInterfaceId :: Maybe Text
     , nipDeviceIndex :: Maybe Text
