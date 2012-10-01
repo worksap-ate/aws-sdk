@@ -539,7 +539,7 @@ data Attachment = Attachment
     , attDevice :: Text
     , attStatus :: AttachmentStatus
     , attAttachTime :: UTCTime
-    , attDeleteOnTermination :: Bool
+    , attDeleteOnTermination :: Maybe Bool
     }
   deriving (Show)
 

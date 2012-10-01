@@ -4,8 +4,9 @@ module AWS.EC2.Volume
     , createVolume
     , CreateVolumeParam(..)
     , deleteVolume
-    ) where
-
+    , attachVolume
+    , detachVolume
+    ) where 
 import Data.Text (Text)
 
 import Data.XML.Types (Event)
@@ -42,17 +43,18 @@ volumeSink = Volume
     <*> getT "availabilityZone"
     <*> getF "status" volumeStatus
     <*> getF "createTime" textToTime
-    <*> itemsSet "attachmentSet" (
-        Attachment
-        <$> getT "volumeId"
-        <*> getT "instanceId"
-        <*> getT "device"
-        <*> getF "status" attachmentStatus
-        <*> getF "attachTime" textToTime
-        <*> getF "deleteOnTermination" textToBool
-        )
+    <*> itemsSet "attachmentSet" attachmentSink
     <*> resourceTagSink
     <*> volumeTypeSink
+
+attachmentSink :: MonadThrow m => GLSink Event m Attachment
+attachmentSink = Attachment
+    <$> getT "volumeId"
+    <*> getT "instanceId"
+    <*> getT "device"
+    <*> getF "status" attachmentStatus
+    <*> getF "attachTime" textToTime
+    <*> getM "deleteOnTermination" (textToBool <$>)
 
 volumeTypeParam :: VolumeType -> [QueryParam]
 volumeTypeParam Standard = [ValueParam "VolumeType" "standard"]
@@ -103,3 +105,36 @@ deleteVolume
 deleteVolume volid =
     ec2Query "DeleteVolume" [ValueParam "VolumeId" volid]
         $ getF "return" textToBool
+
+attachVolume
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VolumeId
+    -> Text -- ^ InstanceId
+    -> Text -- ^ Device
+    -> EC2 m Attachment
+attachVolume volid iid dev =
+    ec2Query "AttachVolume" params attachmentSink
+  where
+    params =
+        [ ValueParam "VolumeId" volid
+        , ValueParam "InstanceId" iid
+        , ValueParam "Device" dev
+        ]
+
+detachVolume
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VolumeId
+    -> Maybe Text -- ^ InstanceId
+    -> Maybe Text -- ^ Device
+    -> Maybe Bool -- ^ Force
+    -> EC2 m Attachment
+detachVolume volid iid dev force =
+    ec2Query "DetachVolume" params attachmentSink
+  where
+    mk name = maybe [] (\a -> [ValueParam name a])
+    params = [ValueParam "VolumeId" volid]
+        ++ (uncurry mk =<<
+            [ ("InstanceId", iid)
+            , ("Device", dev)
+            , ("Force", toText <$> force)
+            ])
