@@ -9,7 +9,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Read as TR
 import Data.Time (UTCTime)
 import qualified Data.Time as Time
-import System.Locale (defaultTimeLocale)
+import qualified Data.Time.Parse as TP
 
 toS :: BSL.ByteString -> ByteString
 toS = BS.concat . BSL.toChunks
@@ -36,9 +36,13 @@ textToInt t = either
     (TR.decimal t)
 
 textToTime :: Text -> UTCTime
-textToTime = Time.readTime defaultTimeLocale fmt . T.unpack
+textToTime
+    = Time.localTimeToUTC Time.utc
+    . maybe (error "time format error.") fst
+    . TP.strptime fmt
+    . T.unpack
   where
-    fmt = "%FT%T.000Z"
+    fmt = "%FT%T"
 
 orEmpty :: Maybe Text -> Text
 orEmpty = maybe "" id

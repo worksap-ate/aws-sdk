@@ -59,6 +59,7 @@ library
                    , mtl
                    , lifted-base
                    , transformers-base
+                   , strptime
 
 test-suite test
     type:              exitcode-stdio-1.0
