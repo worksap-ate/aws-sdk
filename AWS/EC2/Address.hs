@@ -6,6 +6,8 @@ module AWS.EC2.Address
     , releaseAddress
     , associateAddress
     , AssociateAddressParam(..)
+    , disassociateAddress
+    , DisassociateAddressParam(..)
     ) where
 
 import Data.Text (Text)
@@ -125,3 +127,19 @@ associateAddressParam (AAVPCInstance aid iid nid pip ar) =
         ])
   where
     f name = maybe [] (\a -> [ValueParam name a])
+
+disassociateAddress
+    :: (MonadResource m, MonadBaseControl IO m)
+    => DisassociateAddressParam
+    -> EC2 m Bool
+disassociateAddress param =
+    ec2Query "DisassociateAddress" (p param)
+        $ getF "return" textToBool
+  where
+    p (DAEC2 pip) = [ValueParam "PublicIp" pip]
+    p (DAVPC aid) = [ValueParam "AssociationId" aid]
+
+data DisassociateAddressParam
+    = DAEC2 Text -- ^ PublicIp for EC2
+    | DAVPC Text -- ^ AssociationId for VPC
+  deriving (Show)
