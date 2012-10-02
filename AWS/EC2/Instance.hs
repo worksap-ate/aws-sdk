@@ -17,6 +17,7 @@ module AWS.EC2.Instance
     , resetInstanceAttribute
     , ResetInstanceAttributeParam(..)
     , modifyInstanceAttribute
+    , ModifyInstanceAttributeParam(..)
     ) where
 
 import Data.Text (Text)
