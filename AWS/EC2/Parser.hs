@@ -4,6 +4,7 @@ module AWS.EC2.Parser
     , productCodeSink
     , stateReasonSink
     , volumeTypeSink
+    , returnBool
     ) where
 
 import Control.Applicative
@@ -40,3 +41,6 @@ volumeTypeSink :: MonadThrow m
 volumeTypeSink = volumeType
     <$> getT "volumeType"
     <*> getM "iops" (textToInt <$>)
+
+returnBool :: MonadThrow m => GLSink Event m Bool
+returnBool = getF "return" textToBool

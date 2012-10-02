@@ -14,6 +14,9 @@ module AWS.EC2.Instance
     , describeInstanceStatus
     , describeInstanceAttribute
     , InstanceAttributeRequest(..)
+    , resetInstanceAttribute
+    , ResetInstanceAttributeParam(..)
+    , modifyInstanceAttribute
     ) where
 
 import Data.Text (Text)
@@ -268,7 +271,7 @@ rebootInstances
     => [Text] -- ^ InstanceIds
     -> EC2 m Bool
 rebootInstances instanceIds =
-    ec2Query "RebootInstances" params $ getF "return" textToBool
+    ec2Query "RebootInstances" params returnBool
   where
     params = [ArrayParams "InstanceId" instanceIds]
 
@@ -431,7 +434,7 @@ describeInstanceAttribute iid attr =
     ec2Query "DescribeInstanceAttribute" params
         $ getT "instanceId" *> f attr
   where
-    str = iarToParam attr
+    str = iar attr
     params =
         [ ValueParam "InstanceId" iid
         , ValueParam "Attribute" str
@@ -443,14 +446,18 @@ describeInstanceAttribute iid attr =
     f IARGroupSet =
         (itemsSet str $ getT "groupId") >>= return . IAGroupSet
     f req = valueSink str (fromJust $ Map.lookup req h)
-    h = Map.fromList [ (IARInstanceType, IAInstanceType . fromJust)
+    h = Map.fromList
+        [ (IARInstanceType, IAInstanceType . fromJust)
         , (IARKernelId, IAKernelId)
         , (IARRamdiskId, IARamdiskId)
         , (IARUserData, IAUserData)
-        , (IARDisableApiTermination, IADisableApiTermination . textToBool . fromJust)
-        , (IARShutdownBehavior, IAShutdownBehavior . shutdownBehavior . fromJust)
+        , (IARDisableApiTermination,
+           IADisableApiTermination . textToBool . fromJust)
+        , (IARShutdownBehavior,
+           IAShutdownBehavior . shutdownBehavior . fromJust)
         , (IARRootDeviceName, IARootDeviceName)
-        , (IARSourceDestCheck, IASourceDestCheck . (textToBool <$>))
+        , (IARSourceDestCheck,
+           IASourceDestCheck . (textToBool <$>))
         , (IAREbsOptimized, IAEbsOptimized . textToBool . fromJust)
         ]
     valueSink name val =
@@ -471,16 +478,89 @@ data InstanceAttributeRequest
     | IAREbsOptimized
   deriving (Show, Eq, Ord)
 
-iarToParam :: InstanceAttributeRequest -> Text
-iarToParam IARInstanceType          = "instanceType"
-iarToParam IARKernelId              = "kernel"
-iarToParam IARRamdiskId             = "ramdisk"
-iarToParam IARUserData              = "userData"
-iarToParam IARDisableApiTermination = "disableApiTermination"
-iarToParam IARShutdownBehavior      = "instanceInitiatedShutdownBehavior"
-iarToParam IARRootDeviceName        = "rootDeviceName"
-iarToParam IARBlockDeviceMapping    = "blockDeviceMapping"
-iarToParam IARSourceDestCheck       = "sourceDestCheck"
-iarToParam IARGroupSet              = "groupSet"
-iarToParam IARProductCodes          = "productCodes"
-iarToParam IAREbsOptimized          = "ebsOptimized"
+iar :: InstanceAttributeRequest -> Text
+iar IARInstanceType          = "instanceType"
+iar IARKernelId              = "kernel"
+iar IARRamdiskId             = "ramdisk"
+iar IARUserData              = "userData"
+iar IARDisableApiTermination = "disableApiTermination"
+iar IARShutdownBehavior      = "instanceInitiatedShutdownBehavior"
+iar IARRootDeviceName        = "rootDeviceName"
+iar IARBlockDeviceMapping    = "blockDeviceMapping"
+iar IARSourceDestCheck       = "sourceDestCheck"
+iar IARGroupSet              = "groupSet"
+iar IARProductCodes          = "productCodes"
+iar IAREbsOptimized          = "ebsOptimized"
+
+data ResetInstanceAttributeParam
+    = RIAPKernel
+    | RIAPRamdisk
+    | RIAPSourceDestCheck
+
+riap :: ResetInstanceAttributeParam -> Text
+riap RIAPKernel          = "kernel"
+riap RIAPRamdisk         = "ramdisk"
+riap RIAPSourceDestCheck = "sourceDestCheck"
+
+resetInstanceAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InstanceId
+    -> ResetInstanceAttributeParam
+    -> EC2 m Bool
+resetInstanceAttribute iid attr =
+    ec2Query "ResetInstanceAttribute" params returnBool
+  where
+    params =
+        [ ValueParam "InstanceId" iid
+        , ValueParam "Attribute" $ riap attr
+        ]
+
+-- | not tested
+modifyInstanceAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InstanceId
+    -> [ModifyInstanceAttributeParam]
+    -> EC2 m Bool
+modifyInstanceAttribute iid attrs =
+    ec2Query "ModifyInstanceAttribute" params returnBool
+  where
+    params = ValueParam "InstanceId" iid:concatMap miap attrs
+
+data ModifyInstanceAttributeParam
+    = MIAPInstanceType Text
+    | MIAPKernelId Text
+    | MIAPRamdiskId Text
+    | MIAPUserData Text
+    | MIAPDisableApiTermination Bool
+    | MIAPShutdownBehavior ShutdownBehavior
+    | MIAPRootDeviceName Text
+    | MIAPBlockDeviceMapping [BlockDeviceMappingParam]
+    | MIAPSourceDestCheck Bool
+    | MIAPGroupSet [Text]
+    | MIAPEbsOptimized Bool
+  deriving (Show)
+
+miap :: ModifyInstanceAttributeParam -> [QueryParam]
+miap (MIAPInstanceType a) =
+    [ValueParam "InstanceType.Value" a]
+miap (MIAPKernelId a) =
+    [ValueParam "Kernel.Value"  a]
+miap (MIAPRamdiskId a) =
+    [ValueParam "Ramdisk.Value" a]
+miap (MIAPUserData a) =
+    [ValueParam "UserData.Value" a]
+miap (MIAPDisableApiTermination a) =
+    [ValueParam "DisableApiTermination.Value" $ toText a]
+miap (MIAPShutdownBehavior a) =
+    [ValueParam "InstanceInitiatedShutdownBehavior.Value"
+     $ sbToText a]
+miap (MIAPRootDeviceName a) =
+    [ValueParam "RootDeviceName" a]
+miap (MIAPBlockDeviceMapping a) =
+    [blockDeviceMappingParams a]
+miap (MIAPSourceDestCheck a) =
+    [ValueParam "SourceDestCheck.Value" $ toText a]
+miap (MIAPGroupSet a) =
+    [ArrayParams "GroupId" a]
+miap (MIAPEbsOptimized a) =
+    [ValueParam "EbsOptimized" $ toText a]
