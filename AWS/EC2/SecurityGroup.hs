@@ -142,7 +142,7 @@ securityGroupQuery act param ipps =
     ec2Query act params $ getF "return" textToBool
   where
     params = [p param]
-        ++ mconcat (map (uncurry ipPermissionParam) (zip intstr ipps))
+        ++ concatMap (uncurry ipPermissionParam) (zip intstr ipps)
 
 intstr :: [Int]
 intstr = [1..]
@@ -155,7 +155,7 @@ ipPermissionParam num ipp =
         , (".ToPort", toText <$> ippToPort ipp)
         ])
     ++ map (uncurry ipr) (zip intstr $ ippIpRanges ipp)
-    ++ mconcat (map (uncurry grp) (zip intstr $ ippGroups ipp))
+    ++ concatMap (uncurry grp) (zip intstr $ ippGroups ipp)
   where
     pre = "IpPermissions." <> toText num
     mk h name = maybe [] (\a -> [ValueParam (h <> name) a])
@@ -166,4 +166,6 @@ ipPermissionParam num ipp =
             [ (".UserId", uigpUserId g)
             , (".GroupName", uigpGroupName g)
             ])
-    ipr n r = ValueParam (pre <> ".IPRanges." <> toText n <> ".CidrIp") $ iprCidrIp r
+    ipr n r = ValueParam
+        (pre <> ".IPRanges." <> toText n <> ".CidrIp")
+        $ iprCidrIp r
