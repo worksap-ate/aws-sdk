@@ -612,7 +612,7 @@ data IpPermission = IpPermission
   deriving (Show)
 
 data UserIdGroupPair = UserIdGroupPair
-    { uigpUserId :: Text
+    { uigpUserId :: Maybe Text
     , uigpGroupId :: Text
     , uigpGroupName :: Maybe Text
     }

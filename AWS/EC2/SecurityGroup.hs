@@ -4,15 +4,21 @@ module AWS.EC2.SecurityGroup
     ( describeSecurityGroups
     , createSecurityGroup
     , deleteSecurityGroup
-    , DeleteSecurityGroupParam(..)
+    , SecurityGroupParam(..)
+    , authorizeSecurityGroupIngress
+    , authorizeSecurityGroupEgress
+    , revokeSecurityGroupIngress
+    , revokeSecurityGroupEgress
     ) where
 
 import Data.Text (Text)
+import Data.ByteString (ByteString)
 
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
+import Data.Monoid
 
 import AWS.EC2.Types
 import AWS.EC2.Class
@@ -52,7 +58,7 @@ ipPermissionsSink name = itemsSet name $ IpPermission
     <*> getM "toPort" (textToInt <$>)
     <*> itemsSet "groups" (
         UserIdGroupPair
-        <$> getT "userId"
+        <$> getMT "userId"
         <*> getT "groupId"
         <*> getMT "groupName"
         )
@@ -75,14 +81,89 @@ createSecurityGroup name desc vpc =
 
 deleteSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)
-    => DeleteSecurityGroupParam
+    => SecurityGroupParam
     -> EC2 m Bool
 deleteSecurityGroup param =
     ec2Query "DeleteSecurityGroup" [p param]
         $ getF "return" textToBool
-  where
-    p (GroupId t)   = ValueParam "GroupId" t
-    p (GroupName t) = ValueParam "GroupName" t
 
-data DeleteSecurityGroupParam = GroupId Text | GroupName Text
+p :: SecurityGroupParam -> QueryParam
+p (GroupId t)   = ValueParam "GroupId" t
+p (GroupName t) = ValueParam "GroupName" t
+
+data SecurityGroupParam = GroupId Text | GroupName Text
   deriving (Show)
+
+-- | not tested
+authorizeSecurityGroupIngress
+    :: (MonadResource m, MonadBaseControl IO m)
+    => SecurityGroupParam
+    -> [IpPermission]
+    -> EC2 m Bool
+authorizeSecurityGroupIngress =
+    securityGroupQuery "AuthorizeSecurityGroupIngress"
+
+-- | not tested
+authorizeSecurityGroupEgress
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ GroupId
+    -> [IpPermission]
+    -> EC2 m Bool
+authorizeSecurityGroupEgress gid =
+    securityGroupQuery "AuthorizeSecurityGroupEgress"
+        $ GroupId gid
+
+-- | not tested
+revokeSecurityGroupIngress
+    :: (MonadResource m, MonadBaseControl IO m)
+    => SecurityGroupParam
+    -> [IpPermission]
+    -> EC2 m Bool
+revokeSecurityGroupIngress =
+    securityGroupQuery "RevokeSecurityGroupIngress"
+
+-- | not tested
+revokeSecurityGroupEgress
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ GroupId
+    -> [IpPermission]
+    -> EC2 m Bool
+revokeSecurityGroupEgress gid =
+    securityGroupQuery "RevokeSecurityGroupEgress"
+        $ GroupId gid
+
+securityGroupQuery
+    :: (MonadResource m, MonadBaseControl IO m)
+    => ByteString -- ^ Action
+    -> SecurityGroupParam
+    -> [IpPermission]
+    -> EC2 m Bool
+securityGroupQuery act param ipps =
+    ec2Query act params $ getF "return" textToBool
+  where
+    params = [p param]
+        ++ mconcat (map (uncurry ipPermissionParam) (zip intstr ipps))
+
+intstr :: [Int]
+intstr = [1..]
+
+ipPermissionParam :: Int -> IpPermission -> [QueryParam]
+ipPermissionParam num ipp =
+    [ValueParam (pre <> ".IpProtocol") $ ippIpProtocol ipp]
+    ++ (uncurry (mk pre) =<<
+        [ (".FromPort", toText <$> ippFromPort ipp)
+        , (".ToPort", toText <$> ippToPort ipp)
+        ])
+    ++ map (uncurry ipr) (zip intstr $ ippIpRanges ipp)
+    ++ mconcat (map (uncurry grp) (zip intstr $ ippGroups ipp))
+  where
+    pre = "IpPermissions." <> toText num
+    mk h name = maybe [] (\a -> [ValueParam (h <> name) a])
+    grph n = pre <> ".Groups." <> toText n
+    grp n g = 
+        [ ValueParam (grph n <> ".GroupId") $ uigpGroupId g
+        ] ++ (uncurry (mk (grph n)) =<<
+            [ (".UserId", uigpUserId g)
+            , (".GroupName", uigpGroupName g)
+            ])
+    ipr n r = ValueParam (pre <> ".IPRanges." <> toText n <> ".CidrIp") $ iprCidrIp r
