@@ -6,7 +6,7 @@
 -- > accessKey: your-access-key
 -- > secretAccessKey: your-secret-access-key
 --
--- The followin is quick example(DescribeInstances).
+-- The following is quick example(DescribeInstances).
 --
 -- > module Example where
 -- > 

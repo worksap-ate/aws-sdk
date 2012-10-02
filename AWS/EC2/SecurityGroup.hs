@@ -2,6 +2,9 @@
 
 module AWS.EC2.SecurityGroup
     ( describeSecurityGroups
+    , createSecurityGroup
+    , deleteSecurityGroup
+    , DeleteSecurityGroupParam(..)
     ) where
 
 import Data.Text (Text)
@@ -45,8 +48,7 @@ describeSecurityGroups names ids filters =
 ipPermissionsSink :: MonadThrow m
     => Text -> GLSink Event m [IpPermission]
 ipPermissionsSink name = itemsSet name $ IpPermission
-    <$> getT "ipProtocol"
-    <*> getM "fromPort" (textToInt <$>)
+    <$> getT "ipProtocol" <*> getM "fromPort" (textToInt <$>)
     <*> getM "toPort" (textToInt <$>)
     <*> itemsSet "groups" (
         UserIdGroupPair
@@ -55,3 +57,32 @@ ipPermissionsSink name = itemsSet name $ IpPermission
         <*> getMT "groupName"
         )
     <*> itemsSet "ipRanges" (IpRange <$> getT "cidrIp")
+
+createSecurityGroup
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ GroupName
+    -> Text -- ^ GroupDescription
+    -> Maybe Text -- ^ VpcId
+    -> EC2 m (Maybe Text) -- ^ GroupId
+createSecurityGroup name desc vpc =
+    ec2Query "CreateSecurityGroup" params
+        $ getT "return" *> getMT "groupId"
+  where
+    params =
+        [ ValueParam "GroupName" name
+        , ValueParam "GroupDescription" desc
+        ] ++ maybe [] (\a -> [ValueParam "VpcId" a]) vpc
+
+deleteSecurityGroup
+    :: (MonadResource m, MonadBaseControl IO m)
+    => DeleteSecurityGroupParam
+    -> EC2 m Bool
+deleteSecurityGroup param =
+    ec2Query "DeleteSecurityGroup" [p param]
+        $ getF "return" textToBool
+  where
+    p (GroupId t)   = ValueParam "GroupId" t
+    p (GroupName t) = ValueParam "GroupName" t
+
+data DeleteSecurityGroupParam = GroupId Text | GroupName Text
+  deriving (Show)
