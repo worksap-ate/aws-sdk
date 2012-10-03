@@ -27,7 +27,7 @@ import Data.Map (Map)
 import qualified Network.HTTP.Types as H
 import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64 as BASE
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
@@ -129,6 +129,13 @@ sinkRequestId = do
     await -- EventBeginElement DescribeImagesResponse
     tagContentF "requestId"
 
+checkStatus' ::
+    H.Status -> H.ResponseHeaders -> Maybe SomeException
+checkStatus' = \s@(H.Status sci _) hs ->
+    if 200 <= sci && sci < 300 || sci == 400
+        then Nothing
+        else Just $ toException $ HTTP.StatusCodeException s hs
+
 ec2Request
     :: (MonadResource m, MonadBaseControl IO m)
     => Credential
@@ -142,7 +149,8 @@ ec2Request cred ctx action params = do
     time <- liftIO getCurrentTime
     let url = mkUrl ep cred time action params
     request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
-    response <- HTTP.http request mgr
+    let req = request { HTTP.checkStatus = checkStatus' }
+    response <- HTTP.http req mgr
     return $ HTTP.responseBody response
 
 ec2Query
