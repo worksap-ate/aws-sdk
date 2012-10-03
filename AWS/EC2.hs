@@ -5,7 +5,6 @@ module AWS.EC2
     ( -- * EC2 Environment
       module AWS.EC2.Class
     , EC2Endpoint(..)
-    , newEC2Context
     , setEndpoint
       -- * Instances
     , module AWS.EC2.Instance
@@ -30,8 +29,7 @@ module AWS.EC2
 
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
-import qualified Control.Monad.State as ST
-import qualified Network.HTTP.Conduit as HTTP
+import qualified Control.Monad.State as State
 
 import AWS.Types
 import AWS.EC2.Class
@@ -46,21 +44,10 @@ import AWS.EC2.Snapshot
 import AWS.EC2.Volume
 import AWS.EC2.KeyPair
 import AWS.EC2.SecurityGroup
-import AWS.Credential
-
-newEC2Context :: Credential -> IO EC2Context
-newEC2Context cred = do
-    mgr <- HTTP.newManager HTTP.def
-    return EC2Context
-        { manager = mgr
-        , credential = cred
-        , endpoint = UsEast1
-        , lastRequestId = Nothing
-        }
 
 setEndpoint
     :: (MonadResource m, MonadBaseControl IO m)
     => EC2Endpoint -> EC2 m ()
 setEndpoint ep = do
-    ctx <- ST.get
-    ST.put ctx { endpoint = ep }
+    ctx <- State.get
+    State.put ctx { endpoint = ep }

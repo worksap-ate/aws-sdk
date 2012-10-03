@@ -29,7 +29,8 @@ import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
-import qualified Control.Monad.State as ST
+import qualified Control.Monad.State as State
+import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E
 import Data.Text (Text)
 
@@ -130,13 +131,13 @@ sinkRequestId = do
 
 ec2Request
     :: (MonadResource m, MonadBaseControl IO m)
-    => EC2Context
+    => Credential
+    -> EC2Context
     -> ByteString
     -> [QueryParam]
     -> m (ResumableSource m ByteString)
-ec2Request ctx action params = do
+ec2Request cred ctx action params = do
     let mgr = manager ctx
-    let cred = credential ctx
     let ep = endpoint ctx
     time <- liftIO getCurrentTime
     let url = mkUrl ep cred time action params
@@ -171,13 +172,14 @@ ec2QuerySource'
     -> Conduit Event m o
     -> EC2 m (Source m o)
 ec2QuerySource' action params token cond = do
-    ctx <- ST.get
+    cred <- Reader.ask
+    ctx <- State.get
     (src1, rid) <- lift $ do
-        response <- ec2Request ctx action params'
+        response <- ec2Request cred ctx action params'
         (res, _) <- unwrapResumable response
 --        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
         res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
-    ST.put ctx{lastRequestId = Just rid}
+    State.put ctx{lastRequestId = Just rid}
     lift $ do
         (src2, _) <- unwrapResumable src1
         return $ src2 $= (cond >> nextToken)

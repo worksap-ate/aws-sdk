@@ -22,8 +22,7 @@
 -- > main = do
 -- >     cred <- loadCredential
 -- >     doc <- runResourceT $ do
--- >         ctx <- liftIO $ newEC2Context cred
--- >         runEC2 ctx $ do
+-- >         runEC2 cred $ do
 -- >             response <- describeInstances [] []
 -- >             lift $ response $$ CL.consume
 -- >     print doc
