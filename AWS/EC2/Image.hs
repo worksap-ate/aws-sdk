@@ -13,7 +13,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Types
-import AWS.EC2.Utils
 import AWS.EC2.Params
 import AWS.EC2.Class
 import AWS.EC2.Query

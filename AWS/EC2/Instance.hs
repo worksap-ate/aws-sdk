@@ -32,7 +32,6 @@ import qualified Data.Map as Map
 
 import AWS.EC2.Types
 import AWS.EC2.Params
-import AWS.EC2.Utils
 import AWS.EC2.Class
 import AWS.EC2.Query
 import AWS.EC2.Parser
