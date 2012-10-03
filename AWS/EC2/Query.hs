@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module AWS.EC2.Query
     ( ec2Query
@@ -6,6 +7,7 @@ module AWS.EC2.Query
     , ec2QuerySource'
     , ec2Request
     , QueryParam(..)
+    , EC2ClientException(..)
     ) where
 
 import           Data.ByteString (ByteString)
@@ -14,7 +16,7 @@ import           Data.ByteString.Lazy.Char8 ()
 import qualified Data.ByteString.Char8 as BSC
 
 import Data.Monoid
-import Data.XML.Types (Event(..))
+import Data.XML.Types (Event(..), Name(..))
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -33,6 +35,8 @@ import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E
 import Data.Text (Text)
+import Data.Typeable (Typeable)
+import Control.Applicative
 
 import AWS.EC2.Types
 import AWS.Types
@@ -44,7 +48,17 @@ import AWS.Credential
 {- Debug
 import Debug.Trace
 import qualified Data.Conduit.Binary as CB
+import System.IO (stdout)
 --}
+
+data EC2ClientException
+    = ClientError
+        { errorCode :: Text
+        , errorMessage :: Text
+        , errorRequestId :: Text
+        }
+  deriving (Show, Typeable)
+instance Exception EC2ClientException
 
 data QueryParam
     = ArrayParams Text [Text]
@@ -86,6 +100,7 @@ toArrayParams :: QueryParam -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 
     [ (textToBS name <> "." <> bsShow i, textToBS param)
     | (i, param) <- zip ([1..]::[Int]) params
+
     ]
 toArrayParams (FilterParams kvs) =
     Map.fromList . concat . map f1 $ zip ([1..]::[Int]) kvs
@@ -136,6 +151,26 @@ checkStatus' = \s@(H.Status sci _) hs ->
         then Nothing
         else Just $ toException $ HTTP.StatusCodeException s hs
 
+sinkError :: MonadThrow m => GLSink Event m a
+sinkError = do
+    await
+    etag "Response" $ do
+        (c,m) <- etag "Errors" $ etag "Error" $
+            (,) <$> tagt "Code" <*> tagt "Message"
+        r <- tagt "RequestID"
+        lift $ monadThrow $ ClientError c m r
+  where
+    etag name inner = XmlP.force "error parse error"
+        $ XmlP.tagNoAttr (errName name) inner
+    tagt name = etag name XmlP.content
+    errName n = Name n Nothing Nothing
+
+clientError
+    :: (MonadResource m, MonadBaseControl IO m)
+    => ResumableSource m ByteString -> m a
+clientError rsrc =
+    rsrc $$+- XmlP.parseBytes XmlP.def =$ sinkError
+
 ec2Request
     :: (MonadResource m, MonadBaseControl IO m)
     => Credential
@@ -151,7 +186,11 @@ ec2Request cred ctx action params = do
     request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
     let req = request { HTTP.checkStatus = checkStatus' }
     response <- HTTP.http req mgr
-    return $ HTTP.responseBody response
+    let body = HTTP.responseBody response
+    if (H.statusCode $ HTTP.responseStatus response) == 400
+        then clientError body
+        else return ()
+    return body
 
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)
