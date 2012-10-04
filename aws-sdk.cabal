@@ -17,7 +17,7 @@ library
                    , AWS.Types
                    , AWS.EC2
                    , AWS.EC2.Types
-                   , AWS.EC2.Utils
+                   , AWS.EC2.Util
   other-modules:     AWS.Util
                    , AWS.Credential
                    , AWS.EC2.Address

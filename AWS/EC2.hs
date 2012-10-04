@@ -3,9 +3,10 @@
 
 module AWS.EC2
     ( -- * EC2 Environment
-      module AWS.EC2.Class
-    , EC2Endpoint(..)
-    , setEndpoint
+      EC2
+    , runEC2
+    , EC2Exception(..)
+    , setRegion
       -- * Instances
     , module AWS.EC2.Instance
       -- * Images
@@ -30,9 +31,12 @@ module AWS.EC2
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Control.Monad.State as State
+import Data.Text (Text)
 
-import AWS.Types
+import AWS.Util
 import AWS.EC2.Class
+import AWS.EC2.Types
+import qualified AWS.EC2.Util as Util
 
 import AWS.EC2.Image
 import AWS.EC2.Region
@@ -45,9 +49,17 @@ import AWS.EC2.Volume
 import AWS.EC2.KeyPair
 import AWS.EC2.SecurityGroup
 
-setEndpoint
+-- | set endpoint to EC2 context.
+setRegion
     :: (MonadResource m, MonadBaseControl IO m)
-    => EC2Endpoint -> EC2 m ()
-setEndpoint ep = do
+    => Text -- ^ RegionName
+    -> EC2 m ()
+setRegion name = do
+    region <- Util.head $ describeRegions [name] []
     ctx <- State.get
-    State.put ctx { endpoint = ep }
+    maybe
+        (fail "region not found")
+        (\r -> State.put ctx { endpoint = f r })
+        region
+  where
+    f = textToBS . regionEndpoint

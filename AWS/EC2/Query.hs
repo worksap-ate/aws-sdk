@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 
 module AWS.EC2.Query
     ( ec2Query
@@ -7,7 +6,6 @@ module AWS.EC2.Query
     , ec2QuerySource'
     , ec2Request
     , QueryParam(..)
-    , EC2ClientException(..)
     ) where
 
 import           Data.ByteString (ByteString)
@@ -35,11 +33,9 @@ import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E
 import Data.Text (Text)
-import Data.Typeable (Typeable)
 import Control.Applicative
 
 import AWS.EC2.Types
-import AWS.Types
 import AWS.Util
 import AWS.EC2.Parser
 import AWS.EC2.Class
@@ -50,15 +46,6 @@ import Debug.Trace
 import qualified Data.Conduit.Binary as CB
 import System.IO (stdout)
 --}
-
-data EC2ClientException
-    = ClientError
-        { errorCode :: Text
-        , errorMessage :: Text
-        , errorRequestId :: Text
-        }
-  deriving (Show, Typeable)
-instance Exception EC2ClientException
 
 data QueryParam
     = ArrayParams Text [Text]
@@ -77,8 +64,7 @@ queryHeader action time cred =
     , ("AWSAccessKeyId", accessKey cred)
     ]
 
-mkUrl :: Endpoint end
-      => end
+mkUrl :: ByteString
       -> Credential
       -> UTCTime
       -> ByteString
@@ -86,7 +72,7 @@ mkUrl :: Endpoint end
       -> ByteString
 mkUrl ep cred time action params = mconcat
     [ "https://"
-    , endpointStr ep
+    , ep
     , "/?"
     , qparam
     , "&Signature="
@@ -129,11 +115,11 @@ queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
 awsTimeFormat :: UTCTime -> ByteString
 awsTimeFormat = BSC.pack . formatTime defaultTimeLocale (iso8601DateFormat $ Just "%XZ")
 
-signature :: Endpoint end 
-          => end -> SecretAccessKey -> ByteString -> ByteString
+signature
+    :: ByteString -> SecretAccessKey -> ByteString -> ByteString
 signature ep secret query = urlstr
   where
-    stringToSign = "GET\n" <> endpointStr ep <> "\n/\n" <> query
+    stringToSign = "GET\n" <> ep <> "\n/\n" <> query
     signedStr = toS . SHA.bytestringDigest $ SHA.hmacSha256 (toL secret) (toL stringToSign)
     urlstr = H.urlEncode True . BASE.encode $ signedStr
 

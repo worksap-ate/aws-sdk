@@ -9,7 +9,7 @@
 module AWS.EC2.Class
     ( EC2
     , runEC2
-    , ResponseParserException(..)
+    , EC2Exception(..)
     , EC2Context(..)
     ) where
 
@@ -34,28 +34,34 @@ import Data.Typeable (Typeable)
 
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Text (Text)
+import Data.ByteString (ByteString)
+import Data.ByteString.Char8 ()
 
-import AWS.Types
 import AWS.Credential
 
 data EC2Context = EC2Context
     { manager :: HTTP.Manager
-    , endpoint :: EC2Endpoint
+    , endpoint :: ByteString
     , lastRequestId :: Maybe Text
     }
 
 initialEC2Context :: HTTP.Manager -> EC2Context
 initialEC2Context mgr = EC2Context
     { manager = mgr
-    , endpoint = UsEast1
+    , endpoint = "ec2.amazonaws.com"
     , lastRequestId = Nothing
     }
 
-data ResponseParserException
-    = NextToken Text
+data EC2Exception
+    = ClientError
+        { errorCode :: Text
+        , errorMessage :: Text
+        , errorRequestId :: Text
+        } -- ^ This error is caused by client requests.
+    | NextToken Text -- ^ This response has next token.
   deriving (Show, Typeable)
 
-instance Exception ResponseParserException
+instance Exception EC2Exception
 
 newtype EC2 m a = EC2T
     { runEC2T :: StateT EC2Context (ReaderT Credential m) a

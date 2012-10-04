@@ -17,14 +17,14 @@
 -- > 
 -- > import AWS
 -- > import AWS.EC2
+-- > import qualified AWS.EC2.Util as Util
 -- > 
 -- > main :: IO ()
 -- > main = do
 -- >     cred <- loadCredential
--- >     doc <- runResourceT $ do
--- >         runEC2 cred $ do
--- >             response <- describeInstances [] []
--- >             lift $ response $$ CL.consume
+-- >     doc <- runResourceT $
+-- >         runEC2 cred $
+-- >             Util.asList $ describeInstances [] []
 -- >     print doc
 -- >     putStr "Length: "
 -- >     print $ length doc
