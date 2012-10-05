@@ -298,6 +298,7 @@ data InstanceState
     | Terminated
     | Stopping
     | Stopped
+    | UnknownState Int
   deriving (Show)
 
 instanceStateCodes :: [(Int, InstanceState)]
@@ -312,7 +313,7 @@ instanceStateCodes =
 
 codeToState :: Int -> InstanceState
 codeToState code = case lookup code instanceStateCodes of
-    Nothing -> error "invalid state code"
+    Nothing -> UnknownState code
     Just st -> st
 
 data Placement = Placement
