@@ -33,6 +33,10 @@ module AWS
     ( -- * Credentials
       Credential
     , loadCredential
+      -- * Environment
+    , AWS
+    , AWSException(..)
     ) where
 
 import AWS.Credential
+import AWS.Class

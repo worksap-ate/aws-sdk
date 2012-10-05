@@ -5,29 +5,41 @@ module AWS.Lib.Parser
 
 import Data.XML.Types (Event(..), Name(..))
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
 
+text :: MonadThrow m => GLSink Event m Text
+text = XML.content
+
 itemConduit :: MonadThrow m
     => Text
     -> GLSink Event m o
     -> GLConduit Event m o
-itemConduit tag inner = do
-    maybe (()) id <$> elementM tag (items inner)
-  where
-    items :: MonadThrow m
-        => Pipe Event Event o u m o
-        -> Pipe Event Event o u m ()
-    items p = awaitWhile isTag >>= maybe (return ()) (\e -> do
+itemConduit tag inner =
+    maybe (()) id <$> elementM tag (listConduit "item" inner)
+
+listConduit :: MonadThrow m
+    => Text
+    -> GLSink Event m o
+    -> GLConduit Event m o
+listConduit name p =
+    awaitWhile isTag >>= maybe (return ()) (\e -> do
         leftover e
-        if isBeginTagName "item" e
+        if isBeginTagName name e
             then do
-                element "item" $ p >>= yield
-                items p
+                element name $ p >>= yield
+                listConduit name p
             else return ()
         )
+
+listConsumer :: MonadThrow m
+    => Text
+    -> GLSink Event m o
+    -> GLSink Event m [o]
+listConsumer name p = listConduit name p >+> CL.consume
 
 itemsSet :: MonadThrow m
     => Text
@@ -40,10 +52,16 @@ isTag (EventBeginElement _ _) =True
 isTag (EventEndElement _) =True
 isTag _ = False
 
+sinkDropWhile :: Monad m => (i -> Bool) -> GLSink i m ()
+sinkDropWhile f = await >>= maybe (return ()) g
+  where
+      g i | f i       = sinkDropWhile f
+              | otherwise = leftover i >> return ()
+
 isBeginTagName :: Text -> Event -> Bool
 isBeginTagName name (EventBeginElement n _)
-    | n == ec2Name name = True
-    | otherwise         = False
+    | nameLocalName n == name = True
+    | otherwise               = False
 isBeginTagName _ _ = False
 
 awaitWhile :: Monad m
@@ -60,7 +78,7 @@ getF :: MonadThrow m
     => Text
     -> (Text -> b)
     -> Pipe Event Event o u m b
-getF name f = tagContentF name >>= return . f
+getF name f = tagContent name >>= return . f
 
 getT :: MonadThrow m
     => Text
@@ -71,7 +89,7 @@ getM :: MonadThrow m
     => Text
     -> (Maybe Text -> b)
     -> Pipe Event Event o u m b
-getM name f = tagContent name >>= return . f
+getM name f = tagContentM name >>= return . f
 
 getMT :: MonadThrow m
     => Text
@@ -82,7 +100,11 @@ elementM :: MonadThrow m
     => Text
     -> Pipe Event Event o u m a
     -> Pipe Event Event o u m (Maybe a)
-elementM name inner = XML.tagNoAttr (ec2Name name) inner
+elementM name inner = do
+    sinkDropWhile $ not . isTag
+    XML.tagPredicate g (return ()) $ const inner
+  where
+    g n = (nameLocalName n == name)
 
 element :: MonadThrow m
     => Text
@@ -90,20 +112,13 @@ element :: MonadThrow m
     -> Pipe Event Event o u m a
 element name inner = XML.force "parse error" $ elementM name inner
 
-tagContent :: MonadThrow m
+tagContentM :: MonadThrow m
     => Text
     -> GLSink Event m (Maybe Text)
-tagContent name = XML.tagNoAttr (ec2Name name) XML.content
+tagContentM name = elementM name text
 
-tagContentF :: MonadThrow m
+tagContent :: MonadThrow m
     => Text
     -> GLSink Event m Text
-tagContentF = XML.force "parse error" . tagContent
-
-ec2Name :: Text -> Name
-ec2Name name = Name
-    { nameLocalName = name
-    , nameNamespace =
-        Just $ "http://ec2.amazonaws.com/doc/2012-08-15/"
-    , namePrefix = Nothing
-    }
+tagContent name =
+    XML.force ("parse error:" ++ T.unpack name) $ tagContentM name

@@ -11,7 +11,7 @@ module AWS.EC2.Query
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Lazy.Char8 ()
 
-import Data.XML.Types (Event(..), Name(..))
+import Data.XML.Types (Event(..))
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -41,21 +41,16 @@ sinkRequestId :: MonadThrow m
 sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
-    tagContentF "requestId"
+    getT "requestId"
 
 sinkError :: MonadThrow m => Int -> GLSink Event m a
 sinkError _ = do
     await
-    etag "Response" $ do
-        (c,m) <- etag "Errors" $ etag "Error" $
-            (,) <$> tagt "Code" <*> tagt "Message"
-        r <- tagt "RequestID"
+    element "Response" $ do
+        (c,m) <- element "Errors" $ element "Error" $
+            (,) <$> getT "Code" <*> getT "Message"
+        r <- getT "RequestID"
         lift $ monadThrow $ ClientError c m r
-  where
-    etag name inner = XmlP.force "error parse error"
-        $ XmlP.tagNoAttr (errName name) inner
-    tagt name = etag name XmlP.content
-    errName n = Name n Nothing Nothing
 
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)

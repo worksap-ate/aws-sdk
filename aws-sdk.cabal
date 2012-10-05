@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.2.0.0
+version:             0.3.0.0
 synopsis:            AWS SDK for Haskell
 description:         An AWS(Amazon Web Services) liblary for Haskell.
 license:             BSD3
@@ -18,6 +18,8 @@ library
                    , AWS.EC2
                    , AWS.EC2.Types
                    , AWS.EC2.Util
+                   , AWS.RDS
+                   , AWS.RDS.Types
   other-modules:     AWS.Util
                    , AWS.Credential
                    , AWS.Class
