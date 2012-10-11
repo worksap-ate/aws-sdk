@@ -1,5 +1,5 @@
 module AWS.EC2.Parser
-    ( module AWS.EC2.Parser.Internal
+    ( module AWS.Lib.Parser
     , resourceTagSink
     , productCodeSink
     , stateReasonSink
@@ -12,7 +12,7 @@ import Data.Conduit
 import Data.XML.Types (Event)
 
 import AWS.EC2.Types
-import AWS.EC2.Parser.Internal
+import AWS.Lib.Parser
 import AWS.Util
 
 resourceTagSink :: MonadThrow m

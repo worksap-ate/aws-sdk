@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
-module AWS.EC2.Parser.Internal where
+module AWS.Lib.Parser
+    where
 
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BSC
