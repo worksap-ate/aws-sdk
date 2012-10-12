@@ -6,8 +6,6 @@ import Data.Time (UTCTime)
 
 import AWS.Util
 
-type Filter = (Text, [Text])
-
 data Image = Image
     { imageId :: Text
     , imageLocation :: Text

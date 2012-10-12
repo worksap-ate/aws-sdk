@@ -37,6 +37,7 @@ library
                    , AWS.EC2.Parser
                    , AWS.EC2.Params
                    , AWS.Lib.Parser
+                   , AWS.Lib.Query
   ghc-options:       -Wall
                      -fno-warn-unused-do-bind
   extensions: OverloadedStrings

@@ -3,21 +3,12 @@
 module AWS.Lib.Parser
     where
 
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as BSC
-import           Data.ByteString.Lazy.Char8 ()
-
 import Data.XML.Types (Event(..), Name(..))
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
-import Data.Monoid ((<>))
-
-apiVersion :: ByteString
-apiVersion = "2012-08-15"
 
 itemConduit :: MonadThrow m
     => Text
@@ -113,6 +104,6 @@ ec2Name :: Text -> Name
 ec2Name name = Name
     { nameLocalName = name
     , nameNamespace =
-        Just $ "http://ec2.amazonaws.com/doc/" <> T.pack (BSC.unpack apiVersion) <> "/"
+        Just $ "http://ec2.amazonaws.com/doc/2012-08-15/"
     , namePrefix = Nothing
     }
