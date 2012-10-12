@@ -6,11 +6,10 @@
  , DeriveDataTypeable
  #-}
 
-module AWS.EC2.Class
-    ( EC2
-    , runEC2
-    , EC2Exception(..)
-    , EC2Context(..)
+module AWS.Class
+    ( AWS
+    , runAWS
+    , AWSException(..)
     ) where
 
 import Control.Monad.State (StateT(..), MonadState)
@@ -39,20 +38,7 @@ import Data.ByteString.Char8 ()
 
 import AWS.Credential
 
-data EC2Context = EC2Context
-    { manager :: HTTP.Manager
-    , endpoint :: ByteString
-    , lastRequestId :: Maybe Text
-    }
-
-initialEC2Context :: HTTP.Manager -> EC2Context
-initialEC2Context mgr = EC2Context
-    { manager = mgr
-    , endpoint = "ec2.amazonaws.com"
-    , lastRequestId = Nothing
-    }
-
-data EC2Exception
+data AWSException
     = ClientError
         { errorCode :: Text
         , errorMessage :: Text
@@ -61,39 +47,48 @@ data EC2Exception
     | NextToken Text -- ^ This response has next token.
   deriving (Show, Typeable)
 
-instance Exception EC2Exception
+instance Exception AWSException
 
-newtype EC2 m a = EC2T
-    { runEC2T :: StateT EC2Context (ReaderT Credential m) a
+newtype AWS context m a = AWST
+    { runAWST :: StateT context (ReaderT Credential m) a
     } deriving
     ( Monad
     , Applicative
     , Functor
     , MonadIO
-    , MonadState EC2Context
+    , MonadState context
     , MonadReader Credential
     , MonadBase base
     )
 
-instance MonadTrans EC2 where
-    lift = EC2T . lift . lift
+instance MonadTrans (AWS c)
+  where
+    lift = AWST . lift . lift
 
-instance MonadTransControl EC2 where
-    newtype StT EC2 a = StEC2 { unStEC2 :: (a, EC2Context) }
-    liftWith f = EC2T . StateT $ \s -> ReaderT $ \r ->
+instance MonadTransControl (AWS c)
+  where
+    newtype StT (AWS c) a = StAWS { unStAWS :: (a, c) }
+    liftWith f = AWST . StateT $ \s -> ReaderT $ \r ->
         liftM (\x -> (x, s))
-            (f $ \a -> liftM StEC2
-                (R.runReaderT (S.runStateT (runEC2T a) s) r))
-    restoreT = EC2T . StateT . const . ReaderT . const . liftM unStEC2
+            (f $ \a -> liftM StAWS
+                (R.runReaderT (S.runStateT (runAWST a) s) r))
+    restoreT
+        = AWST . StateT . const . ReaderT . const . liftM unStAWS
 
-instance MonadBaseControl base m => MonadBaseControl base (EC2 m) where
-    newtype StM (EC2 m) a = StMEC2 { unStMEC2 :: ComposeSt EC2 m a }
-    liftBaseWith = defaultLiftBaseWith StMEC2
-    restoreM = defaultRestoreM unStMEC2
+instance MonadBaseControl base m => MonadBaseControl base (AWS c m)
+  where
+    newtype StM (AWS c m) a
+        = StMAWS { unStMAWS :: ComposeSt (AWS c) m a }
+    liftBaseWith = defaultLiftBaseWith StMAWS
+    restoreM = defaultRestoreM unStMAWS
 
-runEC2 :: MonadIO m => Credential -> EC2 m a -> m a
-runEC2 cred app = do
+runAWS :: MonadIO m
+    => (HTTP.Manager -> c)
+    -> Credential
+    -> AWS c m a
+    -> m a
+runAWS ctx cred app = do
     mgr <- liftIO $ HTTP.newManager HTTP.def
     R.runReaderT
-        (S.evalStateT (runEC2T app) $ initialEC2Context mgr)
+        (S.evalStateT (runAWST app) $ ctx mgr)
         cred

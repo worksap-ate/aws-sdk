@@ -11,7 +11,7 @@ import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
 import Prelude hiding (head)
 
-import AWS.EC2.Class
+import AWS.EC2.Internal
 
 asList
     :: Monad m

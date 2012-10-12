@@ -20,8 +20,8 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Data.Monoid
 
+import AWS.EC2.Internal
 import AWS.EC2.Types
-import AWS.EC2.Class
 import AWS.EC2.Query
 import AWS.EC2.Parser
 import AWS.Util

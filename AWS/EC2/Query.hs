@@ -35,10 +35,10 @@ import Control.Exception.Lifted as E
 import Data.Text (Text)
 import Control.Applicative
 
-import AWS.EC2.Types
+import AWS.EC2.Internal
 import AWS.Util
+import AWS.EC2.Types
 import AWS.EC2.Parser
-import AWS.EC2.Class
 import AWS.Credential
 
 {- Debug
