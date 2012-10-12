@@ -10,6 +10,7 @@ module AWS.Class
     ( AWS
     , runAWS
     , AWSException(..)
+    , AWSContext(..)
     ) where
 
 import Control.Monad.State (StateT(..), MonadState)
@@ -48,6 +49,12 @@ data AWSException
   deriving (Show, Typeable)
 
 instance Exception AWSException
+
+data AWSContext = AWSContext
+    { manager :: HTTP.Manager
+    , endpoint :: ByteString
+    , lastRequestId :: Maybe Text
+    }
 
 newtype AWS context m a = AWST
     { runAWST :: StateT context (ReaderT Credential m) a

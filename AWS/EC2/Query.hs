@@ -160,7 +160,7 @@ clientError rsrc =
 ec2Request
     :: (MonadResource m, MonadBaseControl IO m)
     => Credential
-    -> EC2Context
+    -> AWSContext
     -> ByteString
     -> [QueryParam]
     -> m (ResumableSource m ByteString)
