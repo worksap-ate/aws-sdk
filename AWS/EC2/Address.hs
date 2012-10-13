@@ -78,8 +78,7 @@ releaseAddress
 releaseAddress addr allocid = do
     ec2Query "ReleaseAddress" params $ getF "return" ec2Return
   where
-    param name = maybe [] (\a -> [ValueParam name a])
-    params = uncurry param =<<
+    params = maybeParams
         [ ("PublicIp", addr)
         , ("AllocationId", allocid)
         ]
@@ -119,14 +118,12 @@ associateAddressParam (AAEC2Instance ip iid) =
     ]
 associateAddressParam (AAVPCInstance aid iid nid pip ar) =
     [ ValueParam "AllocationId" aid ]
-    ++ (uncurry f =<<
+    ++ maybeParams
         [ ("InstanceId", iid)
         , ("NetworkInterfaceId", nid)
         , ("PrivateIpAddress", pip)
         , ("AllowReassociation", boolToText <$> ar)
-        ])
-  where
-    f name = maybe [] (\a -> [ValueParam name a])
+        ]
 
 disassociateAddress
     :: (MonadResource m, MonadBaseControl IO m)

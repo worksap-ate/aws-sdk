@@ -131,10 +131,9 @@ detachVolume
 detachVolume volid iid dev force =
     ec2Query "DetachVolume" params attachmentSink
   where
-    mk name = maybe [] (\a -> [ValueParam name a])
     params = [ValueParam "VolumeId" volid]
-        ++ (uncurry mk =<<
+        ++ maybeParams
             [ ("InstanceId", iid)
             , ("Device", dev)
             , ("Force", toText <$> force)
-            ])
+            ]

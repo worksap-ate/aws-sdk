@@ -4,8 +4,7 @@ module AWS.EC2.Query
     ( ec2Query
     , ec2QuerySource
     , ec2QuerySource'
-    , QueryParam(..)
-    , Filter
+    , module AWS.Lib.Query
     ) where
 
 import           Data.ByteString (ByteString)

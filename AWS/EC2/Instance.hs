@@ -299,7 +299,6 @@ runInstances
 runInstances param =
     ec2Query "RunInstances" params reservationSink
   where
-    mk name = maybe [] (\a -> [ValueParam name a])
     params =
         [ ValueParam "ImageId" $ riImageId param
         , ValueParam "MinCount" $ toText $ riMinCount param
@@ -307,8 +306,9 @@ runInstances param =
         , ArrayParams "SecurityGroupId" $ riSecurityGroupIds param
         , ArrayParams "SecurityGroup" $ riSecurityGroups param
         , blockDeviceMappingParams $ riBlockDeviceMappings param
-        ] ++ (uncurry mk =<<
-            [ ("KeyName", riKeyName param) , ("UserData", bsToText <$> riUserData param)
+        ] ++ maybeParams
+            [ ("KeyName", riKeyName param)
+            , ("UserData", bsToText <$> riUserData param)
             , ("InstanceType", riInstanceType param)
             , ("Placement.AvailabilityZone",
                riAvailabilityZone param)
@@ -329,7 +329,7 @@ runInstances param =
             , ("IamInstanceProfile.Name",
                iipId <$> riIamInstanceProfile param)
             , ("EbsOptimized", boolToText <$> riEbsOptimized param)
-            ])
+            ]
 
 data RunInstancesParam = RunInstancesParam
     { riImageId :: Text -- ^ Required

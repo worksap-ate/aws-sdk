@@ -27,8 +27,7 @@ describeDBInstances
 describeDBInstances dbid maxRecords marker =
     rdsQuery "DescribeDBInstances" params sinkDBInstances
   where
-    mk name = maybe [] (\a -> [ValueParam name a])
-    params = uncurry mk =<<
+    params = maybeParams
         [ ("DBInstanceIdentifier", dbid)
         , ("MaxRecords", toText <$> maxRecords)
         , ("Marker", marker)

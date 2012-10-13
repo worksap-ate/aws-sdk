@@ -4,6 +4,7 @@ module AWS.Lib.Query
     ( requestQuery
     , QueryParam(..)
     , Filter
+    , maybeParams
     ) where
 
 import           Data.ByteString (ByteString)
@@ -30,14 +31,7 @@ import Data.Text (Text)
 
 import AWS.Class
 import AWS.Util
-import AWS.EC2.Parser ()
 import AWS.Credential
-
-{- Debug
-import Debug.Trace
-import qualified Data.Conduit.Binary as CB
-import System.IO (stdout)
---}
 
 type Filter = (Text, [Text])
 
@@ -163,3 +157,8 @@ requestQuery cred ctx action params ver errSink = do
         else do
             clientError st body errSink
             fail "not reached"
+
+maybeParams :: [(Text, Maybe Text)] -> [QueryParam]
+maybeParams params = params >>= uncurry mk
+  where
+    mk name = maybe [] (\a -> [ValueParam name a])
