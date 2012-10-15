@@ -34,7 +34,7 @@ import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Params
 import AWS.EC2.Query
-import AWS.EC2.Parser
+import AWS.Lib.Parser
 import AWS.Util
 
 ------------------------------------------------------------

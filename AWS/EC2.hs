@@ -33,6 +33,7 @@ import qualified Control.Monad.State as State
 import Data.Text (Text)
 
 import AWS.Util
+import AWS.Class
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import qualified AWS.EC2.Util as Util

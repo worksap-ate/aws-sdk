@@ -10,16 +10,12 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
+import Data.Monoid
+
+type RequestId = Text
 
 text :: MonadThrow m => GLSink Event m Text
 text = XML.content
-
-itemConduit :: MonadThrow m
-    => Text
-    -> GLSink Event m o
-    -> GLConduit Event m o
-itemConduit tag inner =
-    maybe (()) id <$> elementM tag (listConduit "item" inner)
 
 listConduit :: MonadThrow m
     => Text
@@ -40,12 +36,6 @@ listConsumer :: MonadThrow m
     -> GLSink Event m o
     -> GLSink Event m [o]
 listConsumer name p = listConduit name p >+> CL.consume
-
-itemsSet :: MonadThrow m
-    => Text
-    -> GLSink Event m o
-    -> GLSink Event m [o]
-itemsSet tag inner = itemConduit tag inner >+> CL.consume
 
 isTag :: Event -> Bool
 isTag (EventBeginElement _ _) =True
@@ -122,3 +112,31 @@ tagContent :: MonadThrow m
     -> GLSink Event m Text
 tagContent name =
     XML.force ("parse error:" ++ T.unpack name) $ tagContentM name
+
+sinkResponse
+    :: MonadThrow m
+    => Text -- ^ Action
+    -> GLSink Event m a
+    -> GLSink Event m (a, RequestId)
+sinkResponse action sink = do
+    sinkEventBeginDocument
+    element (action <> "Response") $ (,)
+        <$> element (action <> "Result") sink -- XXX: parse Marker
+        <*> sinkResponseMetadata
+
+sinkResponseMetadata
+    :: MonadThrow m
+    => GLSink Event m Text
+sinkResponseMetadata =
+    element "ResponseMetadata" $
+        getT "RequestId"
+
+sinkEventBeginDocument
+    :: MonadThrow m
+    => GLSink Event m ()
+sinkEventBeginDocument = do
+    me <- await
+    case me of
+        Nothing -> return ()
+        Just EventBeginDocument -> return ()
+        Just _ -> fail $ "unexpected: " <> show me

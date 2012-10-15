@@ -22,14 +22,14 @@ import Control.Exception.Lifted as E
 import Data.Text (Text)
 import Control.Applicative
 
+import AWS.Class
 import AWS.EC2.Internal
-import AWS.EC2.Parser
+import AWS.Lib.Parser
 import AWS.Lib.Query
 
 {- Debug
 import Debug.Trace
 import qualified Data.Conduit.Binary as CB
-import System.IO (stdout)
 --}
 
 ec2Version :: ByteString
