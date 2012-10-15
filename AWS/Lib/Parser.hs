@@ -11,6 +11,9 @@ import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
 import Data.Monoid
+import Control.Monad.Trans.Class (lift)
+
+import AWS.Class
 
 type RequestId = Text
 
@@ -140,3 +143,13 @@ sinkEventBeginDocument = do
         Nothing -> return ()
         Just EventBeginDocument -> return ()
         Just _ -> fail $ "unexpected: " <> show me
+
+sinkError :: MonadThrow m => Int -> GLSink Event m a
+sinkError status = element "ErrorResponse" $ do
+    (_t,c,m) <- element "Error" $
+        (,,)
+        <$> getT "Type"
+        <*> getT "Code"
+        <*> getT "Message"
+    rid <- getT "RequestId"
+    lift $ monadThrow $ ClientError status c m rid

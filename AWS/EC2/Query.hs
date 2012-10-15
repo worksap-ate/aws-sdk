@@ -24,7 +24,7 @@ import Control.Applicative
 
 import AWS.Class
 import AWS.EC2.Internal
-import AWS.Lib.Parser
+import AWS.Lib.Parser hiding (sinkError)
 import AWS.Lib.Query
 
 {- Debug
@@ -43,13 +43,13 @@ sinkRequestId = do
     getT "requestId"
 
 sinkError :: MonadThrow m => Int -> GLSink Event m a
-sinkError _ = do
+sinkError s = do
     await
     element "Response" $ do
         (c,m) <- element "Errors" $ element "Error" $
             (,) <$> getT "Code" <*> getT "Message"
         r <- getT "RequestID"
-        lift $ monadThrow $ ClientError c m r
+        lift $ monadThrow $ ClientError s c m r
 
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)

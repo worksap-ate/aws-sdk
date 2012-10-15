@@ -5,6 +5,7 @@ module AWS.Lib.Query
     , QueryParam(..)
     , Filter
     , maybeParams
+    , commonQuery
     ) where
 
 import           Data.ByteString (ByteString)
@@ -26,12 +27,17 @@ import qualified Network.HTTP.Types as H
 import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Trans.Class (lift)
 import Control.Exception.Lifted as E
 import Data.Text (Text)
+import qualified Control.Monad.State as State
+import qualified Control.Monad.Reader as Reader
+--import qualified Data.Conduit.Binary as CB
 
 import AWS.Class
 import AWS.Util
 import AWS.Credential
+import AWS.Lib.Parser
 
 type Filter = (Text, [Text])
 
@@ -151,6 +157,7 @@ requestQuery cred ctx action params ver errSink = do
     let req = request { HTTP.checkStatus = checkStatus' }
     response <- HTTP.http req mgr
     let body = HTTP.responseBody response
+--    body $$+- CB.sinkFile "debug.txt" >> fail "debug"
     let st = H.statusCode $ HTTP.responseStatus response
     if st < 400
         then return body
@@ -162,3 +169,20 @@ maybeParams :: [(Text, Maybe Text)] -> [QueryParam]
 maybeParams params = params >>= uncurry mk
   where
     mk name = maybe [] (\a -> [ValueParam name a])
+
+commonQuery
+    :: (MonadBaseControl IO m, MonadResource m)
+    => ByteString -- ^ apiVersion
+    -> ByteString -- ^ Action
+    -> [QueryParam]
+    -> GLSink Event m a
+    -> AWS AWSContext m a
+commonQuery apiVersion action params sink = do
+    ctx <- State.get
+    cred <- Reader.ask
+    rs <- lift $ requestQuery cred ctx action params apiVersion sinkError
+--    lift $ rs $$+- CB.sinkFile "debug.txt" >> fail "debug"
+    (res, rid) <- lift $ rs $$+-
+        XmlP.parseBytes XmlP.def =$ sinkResponse (bsToText action) sink
+    State.put ctx { lastRequestId = Just rid }
+    return res

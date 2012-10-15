@@ -41,7 +41,8 @@ import AWS.Credential
 
 data AWSException
     = ClientError
-        { errorCode :: Text
+        { errorStatus :: Int
+        , errorCode :: Text
         , errorMessage :: Text
         , errorRequestId :: Text
         } -- ^ This error is caused by client requests.

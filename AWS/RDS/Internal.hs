@@ -7,15 +7,10 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Trans.Class (lift)
-import qualified Control.Monad.State as State
-import qualified Control.Monad.Reader as Reader
 import Data.Monoid ((<>))
-import qualified Text.XML.Stream.Parse as XML
 import Data.XML.Types (Event(..))
 
 import AWS.Class
-import AWS.Util
 import AWS.Lib.Query
 import AWS.Lib.Parser
 
@@ -30,15 +25,7 @@ rdsQuery
     -> [QueryParam]
     -> GLSink Event m a
     -> RDS m a
-rdsQuery action params sink = do
-    ctx <- State.get
-    cred <- Reader.ask
-    rs <- lift $ requestQuery cred ctx action params apiVersion undefined
---    lift $ rs $$+- CB.sinkFile "debug.txt" >> fail "debug"
-    (res, rid) <- lift $ rs $$+-
-        XML.parseBytes XML.def =$ sinkResponse (bsToText action) sink
-    State.put ctx { lastRequestId = Just rid }
-    return res
+rdsQuery = commonQuery apiVersion
 
 elements :: MonadThrow m
     => Text
