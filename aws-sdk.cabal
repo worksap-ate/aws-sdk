@@ -22,8 +22,7 @@ library
                    , AWS.RDS.Types
                    , AWS.ELB
                    , AWS.ELB.Types
-  other-modules:     AWS.Util
-                   , AWS.Credential
+  other-modules:     AWS.Util , AWS.Credential
                    , AWS.Class
                    , AWS.EC2.Internal
                    , AWS.EC2.Address
@@ -36,6 +35,7 @@ library
                    , AWS.EC2.SecurityGroup
                    , AWS.EC2.Query
                    , AWS.EC2.Region
+                   , AWS.EC2.VPC
                    , AWS.EC2.Tag
                    , AWS.EC2.Params
                    , AWS.Lib.Parser
