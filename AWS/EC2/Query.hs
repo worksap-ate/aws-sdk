@@ -1,9 +1,12 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.EC2.Query
     ( ec2Query
     , ec2QuerySource
     , ec2QuerySource'
+#ifdef DEBUG
+    , ec2QueryDebug
+#endif
     , module AWS.Lib.Query
     ) where
 
@@ -27,10 +30,10 @@ import AWS.EC2.Internal
 import AWS.Lib.Parser hiding (sinkError)
 import AWS.Lib.Query
 
-{- Debug
+#ifdef DEBUG
 import Debug.Trace
 import qualified Data.Conduit.Binary as CB
---}
+#endif
 
 ec2Version :: ByteString
 ec2Version = "2012-10-01"
@@ -101,3 +104,18 @@ ec2QuerySource' action params token cond = do
         case mt of
             Nothing -> return ()
             Just t  -> E.throw $ NextToken t
+
+#ifdef DEBUG
+ec2QueryDebug
+    :: (MonadResource m, MonadBaseControl IO m)
+    => ByteString
+    -> [QueryParam]
+    -> EC2 m (Source m o)
+ec2QueryDebug action params = do
+    cred <- Reader.ask
+    ctx <- State.get
+    lift $ do
+        response <- requestQuery cred ctx action params ec2Version sinkError
+        (res, _) <- unwrapResumable response
+        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
+#endif

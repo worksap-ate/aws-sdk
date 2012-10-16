@@ -27,8 +27,8 @@ describeImages
     -> [Filter] -- ^ Filers
     -> EC2 m (Source m Image)
 describeImages imageIds owners execby filters =
-    ec2QuerySource "DescribeImages" params $
-        itemConduit "imagesSet" imageItem
+    ec2QuerySource "DescribeImages" params $ itemConduit "imagesSet" imageItem
+--    ec2QueryDebug "DescribeImages" params
   where
     params =
         [ ArrayParams "ImageId" imageIds
@@ -52,9 +52,11 @@ imageItem = Image
     <*> getMT "ramdiskId"
     <*> getM "platform" platform
     <*> stateReasonSink
+    <*> getM "viridianEnabled" (textToBool <$>)
     <*> getMT "imageOwnerAlias"
     <*> getM "name" orEmpty
     <*> getM "description" orEmpty
+    <*> itemsSet "billingProducts" (getT "billingProduct")
     <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
     <*> itemsSet "blockDeviceMapping" (

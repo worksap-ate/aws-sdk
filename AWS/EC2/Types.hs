@@ -19,9 +19,11 @@ data Image = Image
     , ramdiskId :: Maybe Text
     , imagePlatform :: Platform
     , imageStateReason :: Maybe StateReason
+    , imageViridianEnabled :: Maybe Bool
     , imageOwnerAlias :: Maybe Text
     , imageName :: Text
     , imageDescription :: Text
+    , imageBillingProducts :: [Text]
     , imageRootDeviceType :: RootDeviceType
     , imageRootDeviceName :: Maybe Text
     , blockDeviceMappings :: [BlockDeviceMapping]
@@ -88,8 +90,9 @@ data StateReason = StateReason
     }
   deriving (Show)
 
-data RootDeviceType = EBS
-                    | InstanceStore
+data RootDeviceType
+    = EBS
+    | InstanceStore
   deriving (Show)
 
 rootDeviceType :: Text -> RootDeviceType
