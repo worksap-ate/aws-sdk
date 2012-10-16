@@ -33,7 +33,7 @@ import qualified Data.Conduit.Binary as CB
 --}
 
 ec2Version :: ByteString
-ec2Version = "2012-08-15"
+ec2Version = "2012-10-01"
 
 sinkRequestId :: MonadThrow m
     => GLSink Event m Text

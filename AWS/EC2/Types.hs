@@ -652,3 +652,87 @@ data NetworkInterfaceParam = NetworkInterfaceParam
     , nipDeleteOnTermination :: Maybe Bool
     }
   deriving (Show)
+
+data VpnConnection = VpnConnection
+    { vpnConnectionId :: Text
+    , vcState :: VpnConnectionState
+    , vcCustomerGatewayConfiguration :: Text
+    , vcType :: Text
+    , vcCustomerGatewayId :: Text
+    , vcVpnGatewayId :: Text
+    , vcTagSet :: [ResourceTag]
+    , vcVgwTelemetry :: [VpnTunnelTelemetry]
+    , vcOptions :: Maybe VpnConnectionOptionsRequest
+    , vcRoutes :: Maybe VpnStaticRoute
+    }
+  deriving (Show)
+
+data VpnConnectionState
+    = VCSPending
+    | VCSAvailable
+    | VCSDeleting
+    | VCSDeleted
+  deriving (Show)
+
+vpnConnectionState :: Text -> VpnConnectionState
+vpnConnectionState t
+    | t == "pending"   = VCSPending
+    | t == "available" = VCSAvailable
+    | t == "deleting"  = VCSDeleting
+    | t == "deleted"   = VCSDeleted
+    | otherwise        = err "vpn connection state" t
+
+data VpnTunnelTelemetry = VpnTunnelTelemetry
+    { vttOutsideIpAddress :: Text
+    , vttStatus :: VpnTunnelTelemetryStatus
+    , vttLastStatusChange :: UTCTime
+    , vttStatusMessage :: Text
+    , vttAcceptRouteCount :: Int
+    }
+  deriving (Show)
+
+data VpnTunnelTelemetryStatus
+    = VTTSUp
+    | VTTSDown
+  deriving (Show)
+
+vpnTunnelTelemetryStatus :: Text -> VpnTunnelTelemetryStatus
+vpnTunnelTelemetryStatus t
+    | t == "UP"   = VTTSUp
+    | t == "DOWN" = VTTSDown
+    | otherwise   = err "vpn tunnel telemetry status" t
+
+data VpnConnectionOptionsRequest = VpnConnectionOptionsRequest
+    { staticRoutesOnly :: Bool
+    }
+  deriving (Show)
+
+data VpnStaticRoute = VpnStaticRoute
+    { vsrDestinationCidrBlock :: Text
+    , vsrSource :: VpnStaticRouteSource
+    , vsrState :: VpnStaticRouteState
+    }
+  deriving (Show)
+
+data VpnStaticRouteSource = VSRStatic
+  deriving (Show)
+
+vpnStaticRouteSource :: Text -> VpnStaticRouteSource
+vpnStaticRouteSource t
+    | t == "Static" = VSRStatic
+    | otherwise     = err "vpn static route source" t
+
+data VpnStaticRouteState
+    = VSRSPending
+    | VSRSAvailable
+    | VSRSDeleting
+    | VSRSDeleted
+  deriving (Show)
+
+vpnStaticRouteState :: Text -> VpnStaticRouteState
+vpnStaticRouteState t
+    | t == "pending"   = VSRSPending
+    | t == "available" = VSRSAvailable
+    | t == "deleting"  = VSRSDeleting
+    | t == "deleted"   = VSRSDeleted
+    | otherwise        = err "vpn static route state" t

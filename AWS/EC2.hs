@@ -25,6 +25,8 @@ module AWS.EC2
     , module AWS.EC2.AvailabilityZone
       -- * Tags
     , module AWS.EC2.Tag
+      -- * VPC
+    , module AWS.EC2.VPC
     ) where
 
 import Data.Conduit
@@ -48,6 +50,7 @@ import AWS.EC2.Snapshot
 import AWS.EC2.Volume
 import AWS.EC2.KeyPair
 import AWS.EC2.SecurityGroup
+import AWS.EC2.VPC
 
 -- | set endpoint to EC2 context.
 setRegion
