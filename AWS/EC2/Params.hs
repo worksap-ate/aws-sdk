@@ -13,16 +13,16 @@ blockDeviceMappingParams =
     StructArrayParams "BlockDeviceMapping" . map kvs
   where
     kvs (BlockDeviceMappingParamEBS name dev src dot vtype) = 
-        [ ("Ebs.DeviceName", name)
+        [ ("DeviceName", name)
         , ebsSource src
         ] ++ vtparam vtype ++ (uncurry f =<<
-            [ ("Ebs.NoDevice", boolToText <$> dev)
+            [ ("NoDevice", boolToText <$> dev)
             , ("Ebs.DeleteOnTermination", boolToText <$> dot)
             ])
     kvs (BlockDeviceMappingParamInstanceStore name dev vname) =
-        [("Ebs.DeviceName", name)] ++ (uncurry f =<<
-            [ ("Ebs.NoDevice", boolToText <$> dev)
-            , ("Ebs.VirtualName", vname)
+        [("DeviceName", name)] ++ (uncurry f =<<
+            [ ("NoDevice", boolToText <$> dev)
+            , ("VirtualName", vname)
             ])
 
     ebsSource (EbsSnapshotId sid) = ("Ebs.SnapshotId", sid)
