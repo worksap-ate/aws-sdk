@@ -64,8 +64,8 @@ library
                    , text
                    , monad-control
                    , safe
-                   , simple-config >= 1.1.0
-                   , parsec3
+                   , simple-config >= 1.1.1.0
+                   , parsec
                    , mtl
                    , lifted-base
                    , transformers-base
