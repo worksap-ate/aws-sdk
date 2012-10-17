@@ -39,8 +39,6 @@ import AWS.Util
 import AWS.Credential
 import AWS.Lib.Parser
 
-import Debug.Trace
-
 type Filter = (Text, [Text])
 
 data QueryParam
@@ -76,7 +74,7 @@ mkUrl ep cred time action params ver = mconcat
     [ "https://"
     , ep
     , "/?"
-    , traceShow qparam qparam
+    , qparam
     , "&Signature="
     , signature ep (secretAccessKey cred) qparam
     ]
