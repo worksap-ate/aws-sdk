@@ -3,6 +3,9 @@
 module AWS.EC2.Image
     ( describeImages
     , createImage
+    , registerImage
+    , RegisterImageRequest(..)
+    , deregisterImage
     ) where
 
 import Data.Text (Text)
@@ -93,3 +96,42 @@ createImage iid name desc noReboot bdms =
         , ValueParam "NoReboot" (boolToText noReboot)
         ] ++ param "Description" desc
           ++ [blockDeviceMappingParams bdms]
+
+data RegisterImageRequest = RegisterImageRequest
+    { rirName :: Text
+    , rirImageLocation :: Maybe Text
+    , rirDescription :: Maybe Text
+    , rirArchitecture :: Maybe Text
+    , rirKernelId :: Maybe Text
+    , rirRamdiskId :: Maybe Text
+    , rirRootDeviceName :: Maybe Text
+    , rirBlockDeviceMappings :: [BlockDeviceMappingParam]
+    }
+  deriving (Show)
+
+registerImage
+    :: (MonadResource m, MonadBaseControl IO m)
+    => RegisterImageRequest
+    -> EC2 m Text
+registerImage req =
+    ec2Query "RegisterImage" params $ getT "imageId"
+  where
+    params = [ValueParam "Name" $ rirName req]
+        ++ [blockDeviceMappingParams $ rirBlockDeviceMappings req]
+        ++ maybeParams
+            [ ("ImageLocation", rirImageLocation req)
+            , ("Description", rirDescription req)
+            , ("Architecture", rirArchitecture req)
+            , ("KernelId", rirKernelId req)
+            , ("RamdiskId", rirRamdiskId req)
+            , ("RootDeviceName", rirRootDeviceName req)
+            ] 
+
+deregisterImage
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ ImageId
+    -> EC2 m Bool
+deregisterImage iid =
+    ec2Query "DeregisterImage" params returnBool
+  where
+    params = [ValueParam "ImageId" iid]
