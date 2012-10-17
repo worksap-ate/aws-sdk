@@ -39,6 +39,8 @@ import AWS.Util
 import AWS.Credential
 import AWS.Lib.Parser
 
+import Debug.Trace
+
 type Filter = (Text, [Text])
 
 data QueryParam
@@ -59,7 +61,7 @@ queryHeader action time cred ver =
     , ("Version", ver)
     , ("SignatureVersion", "2")
     , ("SignatureMethod", "HmacSHA256")
-    , ("Timestamp", H.urlEncode True $ awsTimeFormat time)
+    , ("Timestamp", awsTimeFormat time)
     , ("AWSAccessKeyId", accessKey cred)
     ]
 
@@ -74,7 +76,7 @@ mkUrl ep cred time action params ver = mconcat
     [ "https://"
     , ep
     , "/?"
-    , qparam
+    , traceShow qparam qparam
     , "&Signature="
     , signature ep (secretAccessKey cred) qparam
     ]
@@ -110,7 +112,10 @@ toArrayParams (StructArrayParams name vss) = Map.fromList l
 queryStr :: Map ByteString ByteString -> ByteString
 queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
   where
-    concatWithEqual key val acc = key <> "=" <> val : acc
+    concatWithEqual key val acc
+        = key
+        <> "="
+        <> (H.urlEncode True val) : acc
 
 awsTimeFormat :: UTCTime -> ByteString
 awsTimeFormat = BSC.pack . formatTime defaultTimeLocale (iso8601DateFormat $ Just "%XZ")
