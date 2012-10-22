@@ -2,6 +2,7 @@ module AWS.EC2.Types where
 
 import Data.Default (Default(..))
 import Data.Text (Text)
+import Data.ByteString (ByteString)
 import Data.Time (UTCTime)
 
 import AWS.Util
@@ -739,3 +740,116 @@ vpnStaticRouteState t
     | t == "deleting"  = VSRSDeleting
     | t == "deleted"   = VSRSDeleted
     | otherwise        = err "vpn static route state" t
+
+data RunInstancesRequest = RunInstancesRequest
+    { riImageId :: Text -- ^ Required
+    , riMinCount :: Int -- ^ Required
+    , riMaxCount :: Int -- ^ Required
+    , riKeyName :: Maybe Text
+    , riSecurityGroupIds :: [Text]
+      -- ^ SecurityGroupIds (Required for VPC; optional for EC2)
+    , riSecurityGroups :: [Text]
+      -- ^ SecurityGroups (Only for EC2; either id or name is accepted)
+    , riUserData :: Maybe ByteString
+      -- ^ UserData (Base64-encoded MIME user data)
+    , riInstanceType :: Maybe Text
+    , riAvailabilityZone :: Maybe Text
+    , riPlacementGroup :: Maybe Text
+    , riTenancy :: Maybe Text
+    , riKernelId :: Maybe Text
+    , riRamdiskId :: Maybe Text
+    , riBlockDeviceMappings :: [BlockDeviceMappingParam]
+    , riMonitoringEnabled :: Maybe Bool
+    , riSubnetId :: Maybe Text
+    , riDisableApiTermination :: Maybe Bool
+    , riShutdownBehavior :: Maybe ShutdownBehavior
+    , riPrivateIpAddresses :: [Text] -- ^ XXX: not implemented
+    , riClientToken :: Maybe Text
+    , riNetworkInterface :: [NetworkInterfaceParam] -- ^ XXX: not implemented
+    , riIamInstanceProfile :: Maybe IamInstanceProfile
+    , riEbsOptimized :: Maybe Bool
+    }
+  deriving (Show)
+
+data InstanceAttributeRequest
+    = IARInstanceType
+    | IARKernelId
+    | IARRamdiskId
+    | IARUserData
+    | IARDisableApiTermination
+    | IARShutdownBehavior
+    | IARRootDeviceName
+    | IARBlockDeviceMapping
+    | IARSourceDestCheck
+    | IARGroupSet
+    | IARProductCodes
+    | IAREbsOptimized
+  deriving (Show, Eq, Ord)
+
+data ResetInstanceAttributeRequest
+    = RIAPKernel
+    | RIAPRamdisk
+    | RIAPSourceDestCheck
+  deriving (Show)
+
+data ModifyInstanceAttributeRequest
+    = MIAPInstanceType Text
+    | MIAPKernelId Text
+    | MIAPRamdiskId Text
+    | MIAPUserData Text
+    | MIAPDisableApiTermination Bool
+    | MIAPShutdownBehavior ShutdownBehavior
+    | MIAPRootDeviceName Text
+    | MIAPBlockDeviceMapping [BlockDeviceMappingParam]
+    | MIAPSourceDestCheck Bool
+    | MIAPGroupSet [Text]
+    | MIAPEbsOptimized Bool
+  deriving (Show)
+
+data RegisterImageRequest = RegisterImageRequest
+    { rirName :: Text
+    , rirImageLocation :: Maybe Text
+    , rirDescription :: Maybe Text
+    , rirArchitecture :: Maybe Text
+    , rirKernelId :: Maybe Text
+    , rirRamdiskId :: Maybe Text
+    , rirRootDeviceName :: Maybe Text
+    , rirBlockDeviceMappings :: [BlockDeviceMappingParam]
+    }
+  deriving (Show)
+
+data CreateVolumeRequest
+    = CreateNewVolume
+        { cnvSize :: Int
+        , cnvAvailabilityZone :: Text
+        , cnvVolumeType :: Maybe VolumeType
+        }
+    | CreateFromSnapshot
+        { cfsSnapshotId :: Text
+        , cfsAvailabilityZone :: Text
+        , cfsSize :: Maybe Int
+        , cfsVolumeType :: Maybe VolumeType
+        }
+  deriving (Show)
+
+data AssociateAddressRequest
+    = AAEC2Instance
+        { aaec2PublicIp :: Text
+        , aaec2InstanceId :: Text
+        }
+    | AAVPCInstance
+        { aavpcAllocationId :: Text
+        , aavpcInstanceId :: Maybe Text
+        , aavpcNetworkInterfaceId :: Maybe Text
+        , aavpcPrivateIpAddress :: Maybe Text
+        , aavpcAllowReassociation :: Maybe Bool
+        }
+  deriving (Show)
+
+data DisassociateAddressRequest
+    = DAEC2 Text -- ^ PublicIp for EC2
+    | DAVPC Text -- ^ AssociationId for VPC
+  deriving (Show)
+
+data SecurityGroupRequest = GroupId Text | GroupName Text
+  deriving (Show)

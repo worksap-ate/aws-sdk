@@ -5,9 +5,9 @@ module AWS.EC2.Address
     , allocateAddress
     , releaseAddress
     , associateAddress
-    , AssociateAddressParam(..)
+    , AssociateAddressRequest(..)
     , disassociateAddress
-    , DisassociateAddressParam(..)
+    , DisassociateAddressRequest(..)
     ) where
 
 import Data.Text (Text)
@@ -88,7 +88,7 @@ releaseAddress addr allocid = do
 -----------------------------------------------------
 associateAddress
     :: (MonadResource m, MonadBaseControl IO m)
-    => AssociateAddressParam
+    => AssociateAddressRequest
     -> EC2 m (Bool, Maybe Text)
 associateAddress param = ec2Query "AssociateAddress" params $
     (,) <$> getF "return" textToBool
@@ -96,22 +96,8 @@ associateAddress param = ec2Query "AssociateAddress" params $
   where
     params = associateAddressParam param
 
-data AssociateAddressParam
-    = AAEC2Instance
-        { aaec2PublicIp :: Text
-        , aaec2InstanceId :: Text
-        }
-    | AAVPCInstance
-        { aavpcAllocationId :: Text
-        , aavpcInstanceId :: Maybe Text
-        , aavpcNetworkInterfaceId :: Maybe Text
-        , aavpcPrivateIpAddress :: Maybe Text
-        , aavpcAllowReassociation :: Maybe Bool
-        }
-  deriving (Show)
-
 associateAddressParam
-    :: AssociateAddressParam -> [QueryParam]
+    :: AssociateAddressRequest -> [QueryParam]
 associateAddressParam (AAEC2Instance ip iid) =
     [ ValueParam "PublicIp" ip
     , ValueParam "InstanceId" iid
@@ -127,7 +113,7 @@ associateAddressParam (AAVPCInstance aid iid nid pip ar) =
 
 disassociateAddress
     :: (MonadResource m, MonadBaseControl IO m)
-    => DisassociateAddressParam
+    => DisassociateAddressRequest
     -> EC2 m Bool
 disassociateAddress param =
     ec2Query "DisassociateAddress" (p param)
@@ -135,8 +121,3 @@ disassociateAddress param =
   where
     p (DAEC2 pip) = [ValueParam "PublicIp" pip]
     p (DAVPC aid) = [ValueParam "AssociationId" aid]
-
-data DisassociateAddressParam
-    = DAEC2 Text -- ^ PublicIp for EC2
-    | DAVPC Text -- ^ AssociationId for VPC
-  deriving (Show)

@@ -2,7 +2,6 @@
 module AWS.EC2.Volume
     ( describeVolumes
     , createVolume
-    , CreateVolumeParam(..)
     , deleteVolume
     , attachVolume
     , detachVolume
@@ -65,28 +64,14 @@ volumeTypeParam (IO1 iops) =
 
 createVolume
     :: (MonadResource m, MonadBaseControl IO m)
-    => CreateVolumeParam
+    => CreateVolumeRequest
     -> EC2 m Volume
 createVolume param =
     ec2Query "CreateVolume" param' volumeSink
   where
     param' = createVolumeParam param
 
-data CreateVolumeParam
-    = CreateNewVolume
-        { cnvSize :: Int
-        , cnvAvailabilityZone :: Text
-        , cnvVolumeType :: Maybe VolumeType
-        }
-    | CreateFromSnapshot
-        { cfsSnapshotId :: Text
-        , cfsAvailabilityZone :: Text
-        , cfsSize :: Maybe Int
-        , cfsVolumeType :: Maybe VolumeType
-        }
-  deriving (Show)
-
-createVolumeParam :: CreateVolumeParam -> [QueryParam]
+createVolumeParam :: CreateVolumeRequest -> [QueryParam]
 createVolumeParam (CreateNewVolume size zone vtype) =
     [ ValueParam "Size" $ toText size
     , ValueParam "AvailabilityZone" zone

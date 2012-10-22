@@ -3,8 +3,7 @@
 module AWS.EC2.Instance
     ( describeInstances
     , runInstances
-    , RunInstancesParam(..)
-    , defaultRunInstancesParam
+    , defaultRunInstancesRequest
     , terminateInstances
     , startInstances
     , stopInstances
@@ -13,16 +12,11 @@ module AWS.EC2.Instance
     , getPasswordData
     , describeInstanceStatus
     , describeInstanceAttribute
-    , InstanceAttributeRequest(..)
     , resetInstanceAttribute
-    , ResetInstanceAttributeParam(..)
     , modifyInstanceAttribute
-    , ModifyInstanceAttributeParam(..)
     ) where
 
 import Data.Text (Text)
-import Data.ByteString (ByteString)
-
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -294,7 +288,7 @@ terminateInstances instanceIds =
 -- | 'RunInstancesParam' is genereted with 'defaultRunInstancesParam'
 runInstances
     :: (MonadResource m, MonadBaseControl IO m)
-    => RunInstancesParam
+    => RunInstancesRequest
     -> EC2 m Reservation
 runInstances param =
     ec2Query "RunInstances" params reservationSink
@@ -331,43 +325,14 @@ runInstances param =
             , ("EbsOptimized", boolToText <$> riEbsOptimized param)
             ]
 
-data RunInstancesParam = RunInstancesParam
-    { riImageId :: Text -- ^ Required
-    , riMinCount :: Int -- ^ Required
-    , riMaxCount :: Int -- ^ Required
-    , riKeyName :: Maybe Text
-    , riSecurityGroupIds :: [Text]
-      -- ^ SecurityGroupIds (Required for VPC; optional for EC2)
-    , riSecurityGroups :: [Text]
-      -- ^ SecurityGroups (Only for EC2; either id or name is accepted)
-    , riUserData :: Maybe ByteString
-      -- ^ UserData (Base64-encoded MIME user data)
-    , riInstanceType :: Maybe Text
-    , riAvailabilityZone :: Maybe Text
-    , riPlacementGroup :: Maybe Text
-    , riTenancy :: Maybe Text
-    , riKernelId :: Maybe Text
-    , riRamdiskId :: Maybe Text
-    , riBlockDeviceMappings :: [BlockDeviceMappingParam]
-    , riMonitoringEnabled :: Maybe Bool
-    , riSubnetId :: Maybe Text
-    , riDisableApiTermination :: Maybe Bool
-    , riShutdownBehavior :: Maybe ShutdownBehavior
-    , riPrivateIpAddresses :: [Text] -- ^ XXX: not implemented
-    , riClientToken :: Maybe Text
-    , riNetworkInterface :: [NetworkInterfaceParam] -- ^ XXX: not implemented
-    , riIamInstanceProfile :: Maybe IamInstanceProfile
-    , riEbsOptimized :: Maybe Bool
-    }
-  deriving (Show)
-
 -- | RunInstances parameter utility
-defaultRunInstancesParam
+defaultRunInstancesRequest
     :: Text -- ^ ImageId
     -> Int -- ^ MinCount
     -> Int -- ^ MaxCount
-    -> RunInstancesParam
-defaultRunInstancesParam iid minCount maxCount = RunInstancesParam
+    -> RunInstancesRequest
+defaultRunInstancesRequest iid minCount maxCount
+    = RunInstancesRequest
     { riImageId = iid
     , riMinCount = minCount
     , riMaxCount = maxCount
@@ -463,21 +428,6 @@ describeInstanceAttribute iid attr =
     valueSink name val =
         (element name $ getMT "value") >>= return . val
 
-data InstanceAttributeRequest
-    = IARInstanceType
-    | IARKernelId
-    | IARRamdiskId
-    | IARUserData
-    | IARDisableApiTermination
-    | IARShutdownBehavior
-    | IARRootDeviceName
-    | IARBlockDeviceMapping
-    | IARSourceDestCheck
-    | IARGroupSet
-    | IARProductCodes
-    | IAREbsOptimized
-  deriving (Show, Eq, Ord)
-
 iar :: InstanceAttributeRequest -> Text
 iar IARInstanceType          = "instanceType"
 iar IARKernelId              = "kernel"
@@ -492,12 +442,7 @@ iar IARGroupSet              = "groupSet"
 iar IARProductCodes          = "productCodes"
 iar IAREbsOptimized          = "ebsOptimized"
 
-data ResetInstanceAttributeParam
-    = RIAPKernel
-    | RIAPRamdisk
-    | RIAPSourceDestCheck
-
-riap :: ResetInstanceAttributeParam -> Text
+riap :: ResetInstanceAttributeRequest -> Text
 riap RIAPKernel          = "kernel"
 riap RIAPRamdisk         = "ramdisk"
 riap RIAPSourceDestCheck = "sourceDestCheck"
@@ -505,7 +450,7 @@ riap RIAPSourceDestCheck = "sourceDestCheck"
 resetInstanceAttribute
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ InstanceId
-    -> ResetInstanceAttributeParam
+    -> ResetInstanceAttributeRequest
     -> EC2 m Bool
 resetInstanceAttribute iid attr =
     ec2Query "ResetInstanceAttribute" params returnBool
@@ -519,28 +464,14 @@ resetInstanceAttribute iid attr =
 modifyInstanceAttribute
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ InstanceId
-    -> [ModifyInstanceAttributeParam]
+    -> [ModifyInstanceAttributeRequest]
     -> EC2 m Bool
 modifyInstanceAttribute iid attrs =
     ec2Query "ModifyInstanceAttribute" params returnBool
   where
     params = ValueParam "InstanceId" iid:concatMap miap attrs
 
-data ModifyInstanceAttributeParam
-    = MIAPInstanceType Text
-    | MIAPKernelId Text
-    | MIAPRamdiskId Text
-    | MIAPUserData Text
-    | MIAPDisableApiTermination Bool
-    | MIAPShutdownBehavior ShutdownBehavior
-    | MIAPRootDeviceName Text
-    | MIAPBlockDeviceMapping [BlockDeviceMappingParam]
-    | MIAPSourceDestCheck Bool
-    | MIAPGroupSet [Text]
-    | MIAPEbsOptimized Bool
-  deriving (Show)
-
-miap :: ModifyInstanceAttributeParam -> [QueryParam]
+miap :: ModifyInstanceAttributeRequest -> [QueryParam]
 miap (MIAPInstanceType a) =
     [ValueParam "InstanceType.Value" a]
 miap (MIAPKernelId a) =

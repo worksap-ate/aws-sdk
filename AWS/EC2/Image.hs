@@ -4,7 +4,6 @@ module AWS.EC2.Image
     ( describeImages
     , createImage
     , registerImage
-    , RegisterImageRequest(..)
     , deregisterImage
     ) where
 
@@ -96,18 +95,6 @@ createImage iid name desc noReboot bdms =
         , ValueParam "NoReboot" (boolToText noReboot)
         ] ++ param "Description" desc
           ++ [blockDeviceMappingParams bdms]
-
-data RegisterImageRequest = RegisterImageRequest
-    { rirName :: Text
-    , rirImageLocation :: Maybe Text
-    , rirDescription :: Maybe Text
-    , rirArchitecture :: Maybe Text
-    , rirKernelId :: Maybe Text
-    , rirRamdiskId :: Maybe Text
-    , rirRootDeviceName :: Maybe Text
-    , rirBlockDeviceMappings :: [BlockDeviceMappingParam]
-    }
-  deriving (Show)
 
 registerImage
     :: (MonadResource m, MonadBaseControl IO m)

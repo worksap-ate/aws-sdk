@@ -4,7 +4,6 @@ module AWS.EC2.SecurityGroup
     ( describeSecurityGroups
     , createSecurityGroup
     , deleteSecurityGroup
-    , SecurityGroupParam(..)
     , authorizeSecurityGroupIngress
     , authorizeSecurityGroupEgress
     , revokeSecurityGroupIngress
@@ -81,23 +80,20 @@ createSecurityGroup name desc vpc =
 
 deleteSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)
-    => SecurityGroupParam
+    => SecurityGroupRequest
     -> EC2 m Bool
 deleteSecurityGroup param =
     ec2Query "DeleteSecurityGroup" [p param]
         $ getF "return" textToBool
 
-p :: SecurityGroupParam -> QueryParam
+p :: SecurityGroupRequest -> QueryParam
 p (GroupId t)   = ValueParam "GroupId" t
 p (GroupName t) = ValueParam "GroupName" t
-
-data SecurityGroupParam = GroupId Text | GroupName Text
-  deriving (Show)
 
 -- | not tested
 authorizeSecurityGroupIngress
     :: (MonadResource m, MonadBaseControl IO m)
-    => SecurityGroupParam
+    => SecurityGroupRequest
     -> [IpPermission]
     -> EC2 m Bool
 authorizeSecurityGroupIngress =
@@ -116,7 +112,7 @@ authorizeSecurityGroupEgress gid =
 -- | not tested
 revokeSecurityGroupIngress
     :: (MonadResource m, MonadBaseControl IO m)
-    => SecurityGroupParam
+    => SecurityGroupRequest
     -> [IpPermission]
     -> EC2 m Bool
 revokeSecurityGroupIngress =
@@ -135,7 +131,7 @@ revokeSecurityGroupEgress gid =
 securityGroupQuery
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString -- ^ Action
-    -> SecurityGroupParam
+    -> SecurityGroupRequest
     -> [IpPermission]
     -> EC2 m Bool
 securityGroupQuery act param ipps =
