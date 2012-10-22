@@ -33,19 +33,19 @@ data DBInstance = DBInstance
     , dbiDBInstanceClass :: Text
     , dbiMasterUsername :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data DBParameterGroupStatus = DBParameterGroupStatus
     { dbpgsParameterApplyStatus :: Text
     , dbpgsDBParameterGroupName :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data DBSecurityGroupMembership = DBSecurityGroupMembership
     { dbsgmStatus :: Text
     , dbsgmDBSecurityGroupName :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data DBSubnetGroup = DBSubnetGroup
     { dbsngVpcId :: Text
@@ -54,32 +54,32 @@ data DBSubnetGroup = DBSubnetGroup
     , dbsngDBSubnetGroupName :: Text
     , dbsngSubnets :: [Subnet]
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Subnet = Subnet
     { subnetStatus :: Text
     , subnetIdentifier :: Text
     , subnetAvailabilityZone :: AvailabilityZone
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data AvailabilityZone = AvailabilityZone
     { azName :: Text
     , azProvisionedIopsCapable :: Bool
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Endpoint = Endpoint
     { epPort :: Int
     , epAddress :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data OptionGroupMembership = OptionGroupMembership
     { ogmOptionGroupName :: Text
     , ogmStatus :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data PendingModifiedValue
     = PMVAllocatedStorage Int
@@ -90,4 +90,4 @@ data PendingModifiedValue
     | PMVMasterUserPassword Text
     | PMVMultiAZ Bool
     | PMVPort Int
-  deriving (Show)
+  deriving (Show, Eq)

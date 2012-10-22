@@ -22,13 +22,13 @@ data LoadBalancerDescription = LoadBalancerDescription
     , lbBackendServerDescriptions :: [BackendServerDescription]
     , lbSubnets :: [Text]
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data BackendServerDescription = BackendServerDescription
     { bsInstancePort :: Int
     , bsPolicyNames :: [Text]
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data HealthCheck = HealthCheck
     { hcInterval :: Int
@@ -37,18 +37,18 @@ data HealthCheck = HealthCheck
     , hcTimeout :: Int
     , hcUnhealthyThreshold :: Int
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Instance = Instance
     { iInstanceId :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data ListenerDescription = ListenerDescription
     { ldPolicyNames :: [Text]
     , ldListener :: Listener
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Listener = Listener
     { lProtocol :: Text
@@ -57,29 +57,29 @@ data Listener = Listener
     , lSSLCertificateId :: Maybe Text
     , lInstancePort :: Int
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Policies = Policies
     { pAppCookieStickinessPolicies :: [AppCookieStickinessPolicy]
     , pOtherPolicies :: [Text]
     , pLBCookieStickinessPolicies :: [LBCookieStickinessPolicy]
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data AppCookieStickinessPolicy = AppCookieStickinessPolicy
     { acspCookieName :: Text
     , acspPolicyName :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data LBCookieStickinessPolicy = LBCookieStickinessPolicy
     { lbcspCookieExpirationPeriod :: Integer
     , lbcspPolicyName :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
 
 data SourceSecurityGroup = SourceSecurityGroup
     { ssgOwnerAlias :: Text
     , ssgGroupName :: Text
     }
-  deriving (Show)
+  deriving (Show, Eq)
