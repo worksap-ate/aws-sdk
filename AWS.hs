@@ -33,6 +33,7 @@ module AWS
     ( -- * Credentials
       Credential
     , loadCredential
+    , newCredential
       -- * Environment
     , AWS
     , AWSException(..)
