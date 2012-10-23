@@ -1,11 +1,91 @@
-module AWS.EC2.Types where
+module AWS.EC2.Types
+    ( Address(..)
+    , AddressDomain(..)
+    , AllocateAddressResponse(..)
+    , Architecture(..)
+    , AssociateAddressRequest(..)
+    , Attachment(..)
+    , AttachmentStatus(..)
+    , AvailabilityZone(..)
+    , AvailabilityZoneMessage
+    , BlockDeviceMapping(..)
+    , BlockDeviceMappingParam(..)
+    , ConsoleOutput(..)
+    , CreateVolumeRequest(..)
+    , DisassociateAddressRequest(..)
+    , EbsBlockDevice(..)
+    , EbsSource(..)
+    , EC2Return(..)
+    , Group(..)
+    , Hypervisor(..)
+    , IamInstanceProfile(..)
+    , Image(..)
+    , ImageState(..)
+    , ImageType(..)
+    , Instance(..)
+    , InstanceAttribute(..)
+    , InstanceAttributeRequest(..)
+    , InstanceBlockDeviceMapping(..)
+    , InstanceEbsBlockDevice(..)
+    , InstanceLifecycle(..)
+    , InstanceMonitoringState(..)
+    , InstanceNetworkInterface(..)
+    , InstancePrivateIpAddress(..)
+    , InstanceState(..)
+    , InstanceStateChange(..)
+    , InstanceStatus(..)
+    , InstanceStatusEvent(..)
+    , InstanceStatusEventCode(..)
+    , InstanceStatusType(..)
+    , InstanceStatusTypeStatus(..)
+    , InstanceStatusDetail(..)
+    , InstanceStatusDetailName
+    , InstanceStatusDetailStatus
+    , IpPermission(..)
+    , IpRange(..)
+    , KeyPair(..)
+    , ModifyInstanceAttributeRequest(..)
+    , NetworkInterfaceAssociation(..)
+    , NetworkInterfaceAttachment(..)
+    , NetworkInterfaceParam(..)
+    , PasswordData(..)
+    , Placement(..)
+    , Platform(..)
+    , ProductCode(..)
+    , ProductCodeType(..)
+    , Region(..)
+    , RegisterImageRequest(..)
+    , Reservation(..)
+    , ResetInstanceAttributeRequest(..)
+    , ResourceTag(..)
+    , RootDeviceType(..)
+    , RunInstancesRequest(..)
+    , SecurityGroup(..)
+    , SecurityGroupRequest(..)
+    , ShutdownBehavior(..)
+    , Snapshot(..)
+    , SnapshotStatus(..)
+    , StateReason(..)
+    , Tag(..)
+    , UserIdGroupPair(..)
+    , VirtualizationType(..)
+    , Volume(..)
+    , VolumeType(..)
+    , VolumeStatus(..)
+    , VpnConnection(..)
+    , VpnConnectionOptionsRequest(..)
+    , VpnConnectionState(..)
+    , VpnStaticRoute(..)
+    , VpnStaticRouteSource(..)
+    , VpnStaticRouteState(..)
+    , VpnTunnelTelemetry(..)
+    , VpnTunnelTelemetryStatus(..)
+    ) where
 
 import Data.Default (Default(..))
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 import Data.Time (UTCTime)
-
-import AWS.Util
 
 data Image = Image
     { imageId :: Text
@@ -40,13 +120,6 @@ data ImageState
     | ImageFailed
   deriving (Show, Eq)
 
-imageState :: Text -> ImageState
-imageState a
-    | a == "available" = ImageAvailable
-    | a == "pending"   = ImagePending
-    | a == "failed"    = ImageFailed
-    | otherwise        = err "image state" a
-
 data ProductCode = ProductCode
     { pcCode :: Text
     , pcType :: ProductCodeType
@@ -57,33 +130,14 @@ data ProductCodeType = Devpay
                      | Marketplace
   deriving (Show, Eq)
 
-productCodeType :: Text -> ProductCodeType
-productCodeType t
-    | t == "marketplace" = Marketplace
-    | t == "devpay"      = Devpay
-    | otherwise          = err "product code type" t
-
 data ImageType = Machine
                | Kernel
                | RamDisk
   deriving (Show, Eq)
 
-imageType :: Text -> ImageType
-imageType t
-    | t == "machine"  = Machine
-    | t == "kernel"   = Kernel
-    | t == "ramdisk" = RamDisk
-    | otherwise       = err "image type" t
-
 data Platform = Windows
               | Other
   deriving (Show, Eq)
-
-platform :: Maybe Text -> Platform
-platform Nothing   = Other
-platform (Just t)
-    | t == "windows" = Windows
-    | otherwise      = Other
 
 data StateReason = StateReason
     { stateReasonCode :: Text
@@ -95,12 +149,6 @@ data RootDeviceType
     = EBS
     | InstanceStore
   deriving (Show, Eq)
-
-rootDeviceType :: Text -> RootDeviceType
-rootDeviceType t
-    | t == "ebs"            = EBS
-    | t == "instance-store" = InstanceStore
-    | otherwise             = err "root device type" t
 
 data BlockDeviceMapping = BlockDeviceMapping
     { deviceName :: Text
@@ -121,11 +169,6 @@ data VolumeType = Standard
                 | IO1 Int
   deriving (Show, Eq)
 
-volumeType :: Text -> Maybe Int -> VolumeType
-volumeType t Nothing  | t == "standard" = Standard
-volumeType t (Just i) | t == "io1"      = IO1 i
-volumeType t _ = err "volume type" t
-
 instance Default VolumeType
   where
     def = Standard
@@ -133,12 +176,6 @@ instance Default VolumeType
 data VirtualizationType = Paravirtual
                         | HVM
   deriving (Show, Eq)
-
-virtualizationType :: Text -> VirtualizationType
-virtualizationType t
-    | t == "paravirtual" = Paravirtual
-    | t == "hvm"         = HVM
-    | otherwise          = err "virtualization type" t
 
 data ResourceTag = ResourceTag
     { resourceKey :: Text
@@ -150,13 +187,6 @@ data Hypervisor = OVM
                 | Xen
   deriving (Show, Eq)
 
-hypervisor :: Text -> Hypervisor
-hypervisor t
-    | t == "xen" = Xen
-    | t == "ovm" = OVM
-    | otherwise  = err "hypervisor" t
-
-{- DescribeRegions -}
 data Region = Region
     { regionName :: Text
     , regionEndpoint :: Text
@@ -247,14 +277,6 @@ data InstanceStatusEventCode
     | InstanceRetirement
   deriving (Show, Eq)
 
-instanceStatusEventCode :: Text -> InstanceStatusEventCode
-instanceStatusEventCode t
-    | t == "instance-reboot"     = InstanceReboot
-    | t == "instance-stop"       = InstanceStop
-    | t == "system-reboot"       = SystemReboot
-    | t == "instance-retirement" = InstanceRetirement
-    | otherwise                  = err "InstanceStatusEventCode" t
-
 data InstanceStatusType = InstanceStatusType
     { isdStatus :: InstanceStatusTypeStatus
     , isdDetails :: [InstanceStatusDetail]
@@ -267,14 +289,6 @@ data InstanceStatusTypeStatus
     | InstanceStatusInsufficientData
     | InstanceStatusNotApplicable
   deriving (Show, Eq)
-
-instanceStatusTypeStatus :: Text -> InstanceStatusTypeStatus
-instanceStatusTypeStatus t
-    | t == "ok"                = InstanceStatusOK
-    | t == "impaired"          = InstanceStatusImpaired
-    | t == "insufficient-data" = InstanceStatusInsufficientData
-    | t == "not-applicable"    = InstanceStatusNotApplicable
-    | otherwise = err "instance status detail status" t
 
 data InstanceStatusDetail = InstanceStatusDetail
     { isddName :: InstanceStatusDetailName
@@ -303,21 +317,6 @@ data InstanceState
     | UnknownState Int
   deriving (Show, Eq)
 
-instanceStateCodes :: [(Int, InstanceState)]
-instanceStateCodes =
-    [ (0, Pending)
-    , (16, Running)
-    , (32, ShuttingDown)
-    , (48, Terminated)
-    , (64, Stopping)
-    , (80, Stopped)
-    ]
-
-codeToState :: Int -> InstanceState
-codeToState code = case lookup code instanceStateCodes of
-    Nothing -> UnknownState code
-    Just st -> st
-
 data Placement = Placement
     { placementAvailabilityZone :: Text
     , placementGroupName :: Text
@@ -331,20 +330,7 @@ data InstanceMonitoringState
     | MonitoringPending
   deriving (Show, Eq)
 
-instanceMonitoringState :: Text -> InstanceMonitoringState
-instanceMonitoringState t
-    | t == "disabled" = MonitoringDisabled
-    | t == "enabled"  = MonitoringEnabled
-    | t == "pending"  = MonitoringPending
-    | otherwise       = err "monitoring state" t
-
 data Architecture = I386 | X86_64 deriving (Show, Eq)
-
-architecture :: Text -> Architecture
-architecture t
-    | t == "i386"   = I386
-    | t == "x86_64" = X86_64
-    | otherwise     = err "architecture" t
 
 data InstanceBlockDeviceMapping = InstanceBlockDeviceMapping
     { instanceDeviceName :: Text
@@ -362,12 +348,6 @@ data InstanceEbsBlockDevice = InstanceEbsBlockDevice
 
 data InstanceLifecycle = LifecycleSpot | LifecycleNone
   deriving (Show, Eq)
-
-instanceLifecycle :: Maybe Text -> InstanceLifecycle
-instanceLifecycle Nothing = LifecycleNone
-instanceLifecycle (Just t)
-    | t == "spot"   = LifecycleSpot
-    | otherwise     = err "lifecycle" t
 
 data InstanceNetworkInterface = InstanceNetworkInterface
     { instanceNetworkInterfaceId :: Text
@@ -419,12 +399,6 @@ data ShutdownBehavior
     | SBTerminate
   deriving (Show, Eq)
 
-shutdownBehavior :: Text -> ShutdownBehavior
-shutdownBehavior t
-    | t == "stop"      = SBStop
-    | t == "terminate" = SBTerminate
-    | otherwise = err "shutdown behavior" t
-
 data InstanceAttribute
     = IAInstanceType Text
     | IAKernelId (Maybe Text)
@@ -455,13 +429,6 @@ data Address = Address
 data AddressDomain = AddressDomainStandard | AddressDomainVPC
   deriving (Show, Eq)
 
-addressDomain :: Maybe Text -> AddressDomain
-addressDomain Nothing = AddressDomainStandard
-addressDomain (Just t)
-    | t == "standard" = AddressDomainStandard
-    | t == "vpc"      = AddressDomainVPC
-    | otherwise       = err "address domain" t
-
 data AllocateAddressResponse = AllocateAddressResponse
     { alaPublicIp :: Text
     , alaDomain :: AddressDomain
@@ -471,11 +438,6 @@ data AllocateAddressResponse = AllocateAddressResponse
 
 data EC2Return = EC2Success | EC2Error Text
   deriving (Show, Eq)
-
-ec2Return :: Text -> EC2Return
-ec2Return t
-    | t == "true" = EC2Success
-    | otherwise   = EC2Error t
 
 data Tag = Tag
     { tagResourceId :: Text
@@ -523,13 +485,6 @@ data Snapshot = Snapshot
 data SnapshotStatus = SSPending | SSCompleted | SSError
   deriving (Show, Eq)
 
-snapshotStatus :: Text -> SnapshotStatus
-snapshotStatus t
-    | t == "pending"   = SSPending
-    | t == "completed" = SSCompleted
-    | t == "error"     = SSError
-    | otherwise        = err "snapshot status" t
-
 data Volume = Volume
     { volumeId :: Text
     , volSize :: Int
@@ -552,16 +507,6 @@ data VolumeStatus
     | VolError
   deriving (Show, Eq)
 
-volumeStatus :: Text -> VolumeStatus
-volumeStatus t
-    | t == "creating"  = VolCreating
-    | t == "available" = VolAvailable
-    | t == "in-use"    = VolInUse
-    | t == "deleting"  = VolDeleting
-    | t == "deleted"   = VolDeleted
-    | t == "error"     = VolError
-    | otherwise        = err "volume state" t
-
 data Attachment = Attachment
     { attVolumeId :: Text
     , attInstanceId :: Text
@@ -578,14 +523,6 @@ data AttachmentStatus
     | AttDetaching
     | AttDetached
   deriving (Show, Eq)
-
-attachmentStatus :: Text -> AttachmentStatus
-attachmentStatus t
-    | t == "attaching" = AttAttaching
-    | t == "attached"  = AttAttached
-    | t == "detaching" = AttDetaching
-    | t == "detached"  = AttDetached
-    | otherwise        = err "attachment status" t
 
 data KeyPair = KeyPair
     { keyName :: Text
@@ -678,14 +615,6 @@ data VpnConnectionState
     | VCSDeleted
   deriving (Show, Eq)
 
-vpnConnectionState :: Text -> VpnConnectionState
-vpnConnectionState t
-    | t == "pending"   = VCSPending
-    | t == "available" = VCSAvailable
-    | t == "deleting"  = VCSDeleting
-    | t == "deleted"   = VCSDeleted
-    | otherwise        = err "vpn connection state" t
-
 data VpnTunnelTelemetry = VpnTunnelTelemetry
     { vttOutsideIpAddress :: Text
     , vttStatus :: VpnTunnelTelemetryStatus
@@ -699,12 +628,6 @@ data VpnTunnelTelemetryStatus
     = VTTSUp
     | VTTSDown
   deriving (Show, Eq)
-
-vpnTunnelTelemetryStatus :: Text -> VpnTunnelTelemetryStatus
-vpnTunnelTelemetryStatus t
-    | t == "UP"   = VTTSUp
-    | t == "DOWN" = VTTSDown
-    | otherwise   = err "vpn tunnel telemetry status" t
 
 data VpnConnectionOptionsRequest = VpnConnectionOptionsRequest
     { staticRoutesOnly :: Bool
@@ -721,25 +644,12 @@ data VpnStaticRoute = VpnStaticRoute
 data VpnStaticRouteSource = VSRStatic
   deriving (Show, Eq)
 
-vpnStaticRouteSource :: Text -> VpnStaticRouteSource
-vpnStaticRouteSource t
-    | t == "Static" = VSRStatic
-    | otherwise     = err "vpn static route source" t
-
 data VpnStaticRouteState
     = VSRSPending
     | VSRSAvailable
     | VSRSDeleting
     | VSRSDeleted
   deriving (Show, Eq)
-
-vpnStaticRouteState :: Text -> VpnStaticRouteState
-vpnStaticRouteState t
-    | t == "pending"   = VSRSPending
-    | t == "available" = VSRSAvailable
-    | t == "deleting"  = VSRSDeleting
-    | t == "deleted"   = VSRSDeleted
-    | otherwise        = err "vpn static route state" t
 
 data RunInstancesRequest = RunInstancesRequest
     { riImageId :: Text -- ^ Required
