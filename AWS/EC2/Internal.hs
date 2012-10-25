@@ -241,3 +241,9 @@ instanceLifecycle Nothing = LifecycleNone
 instanceLifecycle (Just t)
     | t == "spot"   = LifecycleSpot
     | otherwise     = err "lifecycle" t
+
+subnetState :: Text -> SubnetState
+subnetState t
+    | t == "pending"   = SubnetPending
+    | t == "available" = SubnetAvailable
+    | otherwise        = err "subnet state" t
