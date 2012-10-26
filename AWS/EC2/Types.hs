@@ -73,7 +73,13 @@ module AWS.EC2.Types
     , VirtualizationType(..)
     , Volume(..)
     , VolumeType(..)
+    , VolumeState(..)
     , VolumeStatus(..)
+    , VolumeStatusAction(..)
+    , VolumeStatusEvent(..)
+    , VolumeStatusDetail(..)
+    , VolumeStatusInfo(..)
+    , VolumeStatusInfoStatus(..)
     , VpnConnection(..)
     , VpnConnectionOptionsRequest(..)
     , VpnConnectionState(..)
@@ -492,7 +498,7 @@ data Volume = Volume
     , volSize :: Int
     , volSnapshotId :: Maybe Text
     , volAvailabilityZone :: Text
-    , volStatus :: VolumeStatus
+    , volStatus :: VolumeState
     , volCreateTime :: UTCTime
     , volAttachmentSet :: [Attachment]
     , volTagSet :: [ResourceTag]
@@ -500,7 +506,7 @@ data Volume = Volume
     }
   deriving (Show, Eq)
 
-data VolumeStatus
+data VolumeState
     = VolCreating
     | VolAvailable
     | VolInUse
@@ -778,4 +784,48 @@ data Subnet = Subnet
   deriving (Show, Eq)
 
 data SubnetState = SubnetPending | SubnetAvailable
+  deriving (Show, Eq)
+
+data VolumeStatus = VolumeStatus
+    { vstVolumeId :: Text
+    , vstAvailabilityZone :: Text
+    , vstVolumeStatus :: VolumeStatusInfo
+    , vstEventSet :: [VolumeStatusEvent]
+    , vstActionSet :: [VolumeStatusAction]
+    }
+  deriving (Show, Eq)
+
+data VolumeStatusInfo = VolumeStatusInfo
+    { vsiStatus :: VolumeStatusInfoStatus
+    , vsiDetails :: [VolumeStatusDetail]
+    }
+  deriving (Show, Eq)
+
+data VolumeStatusInfoStatus
+    = VSIOK
+    | VSIImpaired
+    | VSIInsufficientData
+  deriving (Show, Eq)
+
+data VolumeStatusDetail = VolumeStatusDetail
+    { vsdName :: Text
+    , vsdStatus :: Text
+    }
+  deriving (Show, Eq)
+
+data VolumeStatusEvent = VolumeStatusEvent
+    { vseEventType :: Text
+    , vseEventId :: Text
+    , vseDescription :: Text
+    , vseNotBefore :: Maybe UTCTime
+    , vseNotAfter :: Maybe UTCTime
+    }
+  deriving (Show, Eq)
+
+data VolumeStatusAction = VolumeStatusAction
+    { vsaCode :: Text
+    , vsaEventType :: Text
+    , vsaEventId :: Text
+    , vsaDescription :: Text
+    }
   deriving (Show, Eq)

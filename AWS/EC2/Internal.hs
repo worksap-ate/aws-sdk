@@ -185,7 +185,7 @@ snapshotStatus t
     | t == "error"     = SSError
     | otherwise        = err "snapshot status" t
 
-volumeStatus :: Text -> VolumeStatus
+volumeStatus :: Text -> VolumeState
 volumeStatus t
     | t == "creating"  = VolCreating
     | t == "available" = VolAvailable
@@ -247,3 +247,10 @@ subnetState t
     | t == "pending"   = SubnetPending
     | t == "available" = SubnetAvailable
     | otherwise        = err "subnet state" t
+
+volumeStatusInfoStatus :: Text -> VolumeStatusInfoStatus
+volumeStatusInfoStatus t
+    | t == "ok"                = VSIOK
+    | t == "impaired"          = VSIImpaired
+    | t == "insufficient-data" = VSIInsufficientData
+    | otherwise                = err "VolumeStatusInfo Status" t

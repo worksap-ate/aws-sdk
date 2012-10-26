@@ -5,6 +5,7 @@ module AWS.EC2.Volume
     , deleteVolume
     , attachVolume
     , detachVolume
+    , describeVolumeStatus
     ) where 
 import Data.Text (Text)
 
@@ -122,3 +123,44 @@ detachVolume volid iid dev force =
             , ("Device", dev)
             , ("Force", toText <$> force)
             ]
+
+describeVolumeStatus
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ VolumeId
+    -> [Filter] -- ^ Filters
+    -> Maybe Text -- ^ next token
+    -> EC2 m (Source m VolumeStatus)
+describeVolumeStatus vids filters token =
+    ec2QuerySource' "DescribeVolumeStatus" params token $
+       itemConduit "volumeStatusSet" $ volumeStatusSink
+  where
+    params =
+        [ ArrayParams "VolumeId" vids
+        , FilterParams filters
+        ]
+
+volumeStatusSink :: MonadThrow m
+    => GLSink Event m VolumeStatus
+volumeStatusSink = VolumeStatus
+    <$> getT "volumeId"
+    <*> getT "availabilityZone"
+    <*> element "volumeStatus" (VolumeStatusInfo
+        <$> getF "status" volumeStatusInfoStatus
+        <*> itemsSet "details" (VolumeStatusDetail
+            <$> getT "name"
+            <*> getT "status"
+            )
+        )
+    <*> itemsSet "eventsSet" (VolumeStatusEvent
+        <$> getT "eventType"
+        <*> getT "eventId"
+        <*> getT "description"
+        <*> getM "notBefore" (textToTime <$>)
+        <*> getM "notAfter" (textToTime <$>)
+        )
+    <*> itemsSet "actionsSet" (VolumeStatusAction
+        <$> getT "code"
+        <*> getT "eventType"
+        <*> getT "eventId"
+        <*> getT "description"
+        )
