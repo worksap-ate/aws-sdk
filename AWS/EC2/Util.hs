@@ -38,10 +38,10 @@ head src = do
 
 each
     :: Monad m
-    => EC2 m (Source m a)
-    -> (a -> m b)
+    => (a -> m b)
+    -> EC2 m (Source m a)
     -> EC2 m ()
-each src f = do
+each f src = do
     s <- src
     (rsrc, _) <- lift $ s $$+ CL.take 0
     lift $ each' rsrc f
