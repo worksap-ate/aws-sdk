@@ -6,6 +6,7 @@ module AWS.EC2.Volume
     , attachVolume
     , detachVolume
     , describeVolumeStatus
+    , modifyVolumeAttribute
     ) where 
 import Data.Text (Text)
 
@@ -164,3 +165,16 @@ volumeStatusSink = VolumeStatus
         <*> getT "eventId"
         <*> getT "description"
         )
+
+modifyVolumeAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VolumeId
+    -> Bool -- ^ AutoEnableIO
+    -> EC2 m Bool
+modifyVolumeAttribute vid enable =
+    ec2Query "ModifyVolumeAttribute" params returnBool
+  where
+    params =
+        [ ValueParam "VolumeId" vid
+        , ValueParam "AutoEnableIO.Value" $ boolToText enable
+        ]
