@@ -66,6 +66,8 @@ module AWS.EC2.Types
     , Snapshot(..)
     , SnapshotStatus(..)
     , StateReason(..)
+    , Subnet(..)
+    , SubnetState(..)
     , Tag(..)
     , UserIdGroupPair(..)
     , VirtualizationType(..)
@@ -762,4 +764,18 @@ data DisassociateAddressRequest
   deriving (Show, Eq)
 
 data SecurityGroupRequest = GroupId Text | GroupName Text
+  deriving (Show, Eq)
+
+data Subnet = Subnet
+    { snSubnetId :: Text
+    , snState :: SubnetState
+    , snVpicId :: Text
+    , snCidrBlock :: Text
+    , snAvailableIpAddressCount :: Int
+    , snCAvailabilityZone :: Text
+    , snTagSet :: [ResourceTag]
+    }
+  deriving (Show, Eq)
+
+data SubnetState = SubnetPending | SubnetAvailable
   deriving (Show, Eq)

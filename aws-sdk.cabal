@@ -34,6 +34,7 @@ library
                    , AWS.EC2.KeyPair
                    , AWS.EC2.Snapshot
                    , AWS.EC2.SecurityGroup
+                   , AWS.EC2.Subnets
                    , AWS.EC2.Query
                    , AWS.EC2.Region
                    , AWS.EC2.VPC
@@ -85,4 +86,3 @@ test-suite test
 source-repository head
     type:            git
     location:        git://github.com/worksap-ate/aws-sdk.git
-
