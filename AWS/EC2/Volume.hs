@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 module AWS.EC2.Volume
     ( describeVolumes
     , createVolume
@@ -6,8 +6,9 @@ module AWS.EC2.Volume
     , attachVolume
     , detachVolume
     , describeVolumeStatus
-    , modifyVolumeAttribute
     , enableVolumeIO
+    , describeVolumeAttribute
+    , modifyVolumeAttribute
     ) where 
 import Data.Text (Text)
 
@@ -188,3 +189,30 @@ enableVolumeIO vid =
     ec2Query "EnableVolumeIO" params returnBool
   where
     params = [ValueParam "VolumeId" vid]
+
+-- | return (volumeId, Attribute)
+describeVolumeAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VolumeId
+    -> VolumeAttributeRequest
+    -> EC2 m (Text, VolumeAttribute)
+describeVolumeAttribute vid attr =
+    ec2Query "DescribeVolumeAttribute" params $ (,)
+        <$> getT "volumeId"
+        <*> volumeAttributeSink attr
+  where
+    params =
+        [ ValueParam "VolumeId" vid
+        , ValueParam "Attribute" $ s attr
+        ]
+    s VARAutoEnableIO = "autoEnableIO"
+    s VARProductCodes = "productCodes"
+
+volumeAttributeSink
+    :: MonadThrow m
+    => VolumeAttributeRequest
+    -> GLSink Event m VolumeAttribute
+volumeAttributeSink VARAutoEnableIO =
+    VAAutoEnableIO <$> getF "autoEnableIO" textToBool
+volumeAttributeSink VARProductCodes =
+    VAProductCodes <$> productCodeSink

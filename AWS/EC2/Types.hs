@@ -72,6 +72,8 @@ module AWS.EC2.Types
     , UserIdGroupPair(..)
     , VirtualizationType(..)
     , Volume(..)
+    , VolumeAttribute(..)
+    , VolumeAttributeRequest(..)
     , VolumeType(..)
     , VolumeState(..)
     , VolumeStatus(..)
@@ -828,4 +830,14 @@ data VolumeStatusAction = VolumeStatusAction
     , vsaEventId :: Text
     , vsaDescription :: Text
     }
+  deriving (Show, Eq)
+
+data VolumeAttribute
+    = VAAutoEnableIO Bool
+    | VAProductCodes [ProductCode]
+  deriving (Show, Eq)
+
+data VolumeAttributeRequest
+    = VARAutoEnableIO
+    | VARProductCodes
   deriving (Show, Eq)
