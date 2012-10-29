@@ -27,7 +27,7 @@ describeVolumes
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ VolumeIds
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m Volume)
+    -> EC2 m (ResumableSource m Volume)
 describeVolumes vids filters =
     ec2QuerySource "DescribeVolumes" params $
         itemConduit "volumeSet" volumeSink
@@ -132,7 +132,7 @@ describeVolumeStatus
     => [Text] -- ^ VolumeId
     -> [Filter] -- ^ Filters
     -> Maybe Text -- ^ next token
-    -> EC2 m (Source m VolumeStatus)
+    -> EC2 m (ResumableSource m VolumeStatus)
 describeVolumeStatus vids filters token =
     ec2QuerySource' "DescribeVolumeStatus" params token $
        itemConduit "volumeStatusSet" $ volumeStatusSink

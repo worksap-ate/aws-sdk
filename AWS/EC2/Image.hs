@@ -27,7 +27,7 @@ describeImages
     -> [Text] -- ^ Owners (User Ids)
     -> [Text] -- ^ ExecutedBy (User Ids)
     -> [Filter] -- ^ Filers
-    -> EC2 m (Source m Image)
+    -> EC2 m (ResumableSource m Image)
 describeImages imageIds owners execby filters =
     ec2QuerySource "DescribeImages" params $ itemConduit "imagesSet" imageItem
 --    ec2QueryDebug "DescribeImages" params

@@ -25,7 +25,7 @@ describeSnapshots
     -> [Text] -- ^ Owners (UserId)
     -> [Text] -- ^ RestorableBy (UserId)
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m Snapshot)
+    -> EC2 m (ResumableSource m Snapshot)
 describeSnapshots ssids owners restby filters =
     ec2QuerySource "DescribeSnapshots" params $
         itemConduit "snapshotSet" snapshotSink

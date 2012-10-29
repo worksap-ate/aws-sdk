@@ -38,7 +38,7 @@ describeInstances
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ InstanceIds
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m Reservation)
+    -> EC2 m (ResumableSource m Reservation)
 describeInstances instances filters = do
     ec2QuerySource "DescribeInstances" params $
         itemConduit "reservationSet" reservationSink
@@ -181,7 +181,7 @@ describeInstanceStatus
     -> Bool  -- ^ is all instance? 'False': running instance only.
     -> [Filter] -- ^ Filters
     -> Maybe Text -- ^ next token
-    -> EC2 m (Source m InstanceStatus)
+    -> EC2 m (ResumableSource m InstanceStatus)
 describeInstanceStatus instanceIds isAll filters token =
     ec2QuerySource' "DescribeInstanceStatus" params token instanceStatusSet
   where
@@ -227,7 +227,7 @@ instanceStatusTypeSink name = element name $
 startInstances
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ InstanceIds
-    -> EC2 m (Source m InstanceStateChange)
+    -> EC2 m (ResumableSource m InstanceStateChange)
 startInstances instanceIds =
     ec2QuerySource "StartInstances" params instanceStateChangeSet
   where
@@ -249,7 +249,7 @@ stopInstances
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ InstanceIds
     -> Bool -- ^ Force
-    -> EC2 m (Source m InstanceStateChange)
+    -> EC2 m (ResumableSource m InstanceStateChange)
 stopInstances instanceIds force =
     ec2QuerySource "StopInstances" params instanceStateChangeSet
   where
@@ -275,7 +275,7 @@ rebootInstances instanceIds =
 terminateInstances
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ InstanceIds
-    -> EC2 m (Source m InstanceStateChange)
+    -> EC2 m (ResumableSource m InstanceStateChange)
 terminateInstances instanceIds =
     ec2QuerySource "TerminateInstances" params
         instanceStateChangeSet

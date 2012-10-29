@@ -2,7 +2,6 @@ module Example where
 
 import Data.Conduit
 import qualified Data.Conduit.List as CL
-import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 
 import AWS
@@ -13,8 +12,9 @@ main = do
     cred <- loadCredential
     doc <- runResourceT $ do
         runEC2 cred $ do
+            setRegion "ap-northeast-1"
             response <- describeInstances [] []
-            lift $ response $$ CL.consume
+            lift $ response $$+- CL.consume
     print doc
     putStr "Length: "
     print $ length doc
