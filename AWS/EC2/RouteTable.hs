@@ -2,6 +2,7 @@
 
 module AWS.EC2.RouteTable
     ( describeRouteTables
+    , createRouteTable
     ) where
 
 import Data.Text (Text)
@@ -61,3 +62,14 @@ routeTableAssociationSink = itemsSet "associationSet" $ RouteTableAssociation
     <*> getT "routeTableId"
     <*> getMT "subnetId"
     <*> getM "main" (textToBool <$>)
+
+------------------------------------------------------------
+-- createRouteTable
+------------------------------------------------------------
+createRouteTable
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text
+    -> EC2 m RouteTable
+createRouteTable vid =
+    ec2Query "CreateRouteTable" [ValueParam "VpcId" vid] $
+        element "routeTable" routeTableSink
