@@ -20,7 +20,7 @@ describeAvailabilityZones
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ ZoneNames
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m AvailabilityZone)
+    -> EC2 m (ResumableSource m AvailabilityZone)
 describeAvailabilityZones zones filters =
     ec2QuerySource "DescribeAvailabilityZones" params availabilityZoneInfo
   where

@@ -19,11 +19,13 @@ import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Text.XML.Stream.Parse as XmlP
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.IO.Class (MonadIO)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E
 import Data.Text (Text)
 import Control.Applicative
+import Data.Conduit.Internal as CI
 
 import AWS.Class
 import AWS.EC2.Internal
@@ -62,16 +64,24 @@ ec2Query
     -> EC2 m o
 ec2Query action params sink = do
     src <- ec2QuerySource action params $ sink >>= yield
-    lift (src $$ CL.head) >>= maybe (fail "parse error") return
+    lift (src $$+- CL.head) >>= maybe (fail "parse error") return
 
 ec2QuerySource
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParam]
     -> Conduit Event m o
-    -> EC2 m (Source m o)
+    -> EC2 m (ResumableSource m o)
 ec2QuerySource action params cond = do
     ec2QuerySource' action params Nothing cond
+
+($=+) :: MonadIO m
+    => ResumableSource m a
+    -> Conduit a m b
+    -> m (ResumableSource m b)
+a $=+ b = do
+    (sa, fa) <- unwrapResumable a
+    return $ CI.ResumableSource (sa $= b) fa
 
 ec2QuerySource'
     :: (MonadResource m, MonadBaseControl IO m)
@@ -79,31 +89,22 @@ ec2QuerySource'
     -> [QueryParam]
     -> Maybe Text
     -> Conduit Event m o
-    -> EC2 m (Source m o)
+    -> EC2 m (ResumableSource m o)
 ec2QuerySource' action params token cond = do
     cred <- Reader.ask
     ctx <- State.get
     (src1, rid) <- lift $ do
         response <- requestQuery cred ctx action params' ec2Version sinkError
-        (res, _) <- unwrapResumable response
---        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
-        res $= XmlP.parseBytes XmlP.def $$+ sinkRequestId
+        res <- response $=+ XmlP.parseBytes XmlP.def
+        res $$++ sinkRequestId
     State.put ctx{lastRequestId = Just rid}
-    lift $ do
-        (src2, _) <- unwrapResumable src1
-        return $ src2 $= (cond >> nextToken)
+    lift $ src1 $=+ (cond >> nextToken)
   where
     params' = maybe params
         (\t -> ValueParam "NextToken" t:params) token
 
-    nextToken
-        :: (MonadResource m, MonadBaseControl IO m)
-        => Conduit Event m o
-    nextToken = do
-        mt <- getMT "nextToken"
-        case mt of
-            Nothing -> return ()
-            Just t  -> E.throw $ NextToken t
+nextToken :: MonadThrow m => Conduit Event m o
+nextToken = getMT "nextToken" >>= maybe (return ()) (E.throw . NextToken)
 
 #ifdef DEBUG
 ec2QueryDebug

@@ -30,7 +30,7 @@ describeSecurityGroups
     => [Text] -- ^ GroupNames
     -> [Text] -- ^ GroupIds
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m SecurityGroup)
+    -> EC2 m (ResumableSource m SecurityGroup)
 describeSecurityGroups names ids filters =
     ec2QuerySource "DescribeSecurityGroups" params
     $ itemConduit "securityGroupInfo" $

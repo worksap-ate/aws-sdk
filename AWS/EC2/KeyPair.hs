@@ -24,7 +24,7 @@ describeKeyPairs
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ PublicIps
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m KeyPair)
+    -> EC2 m (ResumableSource m KeyPair)
 describeKeyPairs names filters =
     ec2QuerySource "DescribeKeyPairs" params
         $ itemConduit "keySet" keyPairSink

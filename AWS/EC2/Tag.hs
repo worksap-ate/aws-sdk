@@ -21,7 +21,7 @@ import AWS.Util
 describeTags
     :: (MonadResource m, MonadBaseControl IO m)
     => [Filter] -- ^ Filters
-    -> EC2 m (Source m Tag)
+    -> EC2 m (ResumableSource m Tag)
 describeTags filters =
     ec2QuerySource "DescribeTags" params $ itemConduit "tagSet" $
         Tag

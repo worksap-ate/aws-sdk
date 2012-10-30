@@ -23,7 +23,7 @@ describeVpnConnections
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ VpnConnectionIds
     -> [Filter]
-    -> EC2 m (Source m VpnConnection)
+    -> EC2 m (ResumableSource m VpnConnection)
 describeVpnConnections ids filters =
     ec2QuerySource "DescribeVpnConnections" params vpnConnectionConduit
   where

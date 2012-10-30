@@ -31,7 +31,7 @@ describeAddresses
     => [Text] -- ^ PublicIps
     -> [Text] -- ^ AllocationIds
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m Address)
+    -> EC2 m (ResumableSource m Address)
 describeAddresses pubIps alloIds filters =
     ec2QuerySource "DescribeAddresses" params addressSet where
     params =

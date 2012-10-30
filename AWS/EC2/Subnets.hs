@@ -23,7 +23,7 @@ describeSubnets
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ SubnetIds
     -> [Filter] -- ^ Filters
-    -> EC2 m (Source m Subnet)
+    -> EC2 m (ResumableSource m Subnet)
 describeSubnets subnets filters = do
     ec2QuerySource "DescribeSubnets" params $
         itemConduit "subnetSet" subnetSink
