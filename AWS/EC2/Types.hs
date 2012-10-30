@@ -11,8 +11,8 @@ module AWS.EC2.Types
     , BlockDeviceMapping(..)
     , BlockDeviceMappingParam(..)
     , ConsoleOutput(..)
-    , CreateVolumeRequest(..)
     , CreateSubnetRequest(..)
+    , CreateVolumeRequest(..)
     , DisassociateAddressRequest(..)
     , EbsBlockDevice(..)
     , EbsSource(..)
@@ -20,6 +20,7 @@ module AWS.EC2.Types
     , Group(..)
     , Hypervisor(..)
     , IamInstanceProfile(..)
+    , IcmpTypeCode(..)
     , Image(..)
     , ImageState(..)
     , ImageType(..)
@@ -46,12 +47,18 @@ module AWS.EC2.Types
     , IpRange(..)
     , KeyPair(..)
     , ModifyInstanceAttributeRequest(..)
+    , NetworkAcl(..)
+    , NetworkAclAssociation(..)
+    , NetworkAclEntry(..)
+    , NetworkAclEntryRequest(..)
+    , NetworkAclRuleAction(..)
     , NetworkInterfaceAssociation(..)
     , NetworkInterfaceAttachment(..)
     , NetworkInterfaceParam(..)
     , PasswordData(..)
     , Placement(..)
     , Platform(..)
+    , PortRange(..)
     , ProductCode(..)
     , ProductCodeType(..)
     , Region(..)
@@ -848,4 +855,61 @@ data VolumeAttribute
 data VolumeAttributeRequest
     = VARAutoEnableIO
     | VARProductCodes
+  deriving (Show, Eq)
+
+data NetworkAcl = NetworkAcl
+    { networkAclId :: Text
+    , networkAclVpcId :: Text
+    , networkAclDefault :: Bool
+    , networkAclEntrySet :: [NetworkAclEntry]
+    , networkAclAssociationSet :: [NetworkAclAssociation]
+    , networkAclTagSet :: [ResourceTag]
+    }
+  deriving (Show, Eq)
+
+data NetworkAclEntry = NetworkAclEntry
+    { networkAclEntryRuleNumber :: Int
+    , networkAclEntryProtocol :: Int
+    , networkAclEntryRuleAction :: NetworkAclRuleAction
+    , networkAclEntryEgress :: Bool
+    , networkAclEntryCidrBlock :: Text
+    , networkAclEntryIcmpTypeCode :: Maybe IcmpTypeCode
+    , networkAclEntryPortRange :: Maybe PortRange
+    }
+  deriving (Show, Eq)
+
+data NetworkAclRuleAction
+    = NetworkAclRuleActionAllow
+    | NetworkAclRuleActionDeny
+  deriving (Show, Eq)
+
+data IcmpTypeCode = IcmpTypeCode
+    { icmpTypeCodeCode :: Int
+    , icmpTypeCodeType :: Int
+    }
+  deriving (Show, Eq)
+
+data PortRange = PortRange
+    { portRangeFrom :: Int
+    , portRangeTo :: Int
+    }
+  deriving (Show, Eq)
+
+data NetworkAclAssociation = NetworkAclAssociation
+    { networkAclAssociationId :: Text
+    , networkAclAssociationNetworkAclId :: Text
+    , networkAclAssociationSubnetId :: Text
+    }
+  deriving (Show, Eq)
+
+data NetworkAclEntryRequest = NetworkAclEntryRequest
+    { networkAclEntryRequestNetworkAclId :: Text
+    , networkAclEntryRequestRuleNumber :: Int
+    , networkAclEntryRequestProtocol :: Int -- ^ Protocol Number <http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml>
+    , networkAclEntryRequestRuleAction :: NetworkAclRuleAction
+    , networkAclEntryRequestEgress :: Bool
+    , networkAclEntryRequestCidrBlock :: Text
+    , networkAclEntryRequestIcmp :: Maybe IcmpTypeCode
+    , networkAclEntryRequestPortRange :: Maybe PortRange
+    }
   deriving (Show, Eq)

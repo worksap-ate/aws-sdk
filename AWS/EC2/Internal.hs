@@ -254,3 +254,9 @@ volumeStatusInfoStatus t
     | t == "impaired"          = VSIImpaired
     | t == "insufficient-data" = VSIInsufficientData
     | otherwise                = err "VolumeStatusInfo Status" t
+
+networkAclRuleAction :: Text -> NetworkAclRuleAction
+networkAclRuleAction t
+    | t == "allow" = NetworkAclRuleActionAllow
+    | t == "deny"  = NetworkAclRuleActionDeny
+    | otherwise    = err "network acl rule action" t

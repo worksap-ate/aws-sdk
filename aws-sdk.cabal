@@ -38,6 +38,7 @@ library
                    , AWS.EC2.Query
                    , AWS.EC2.Region
                    , AWS.EC2.VPC
+                   , AWS.EC2.Acl
                    , AWS.EC2.Tag
                    , AWS.EC2.Params
                    , AWS.Lib.Parser
