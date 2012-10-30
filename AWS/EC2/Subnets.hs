@@ -2,6 +2,7 @@
 
 module AWS.EC2.Subnets
     ( describeSubnets
+    , createSubnet
     ) where
 
 import Data.Text (Text)
@@ -43,3 +44,22 @@ subnetSink = Subnet
     <*> getF "availableIpAddressCount" textToInt
     <*> getT "availabilityZone"
     <*> resourceTagSink
+
+------------------------------------------------------------
+-- CreateSubnet
+------------------------------------------------------------
+createSubnet
+    :: (MonadResource m, MonadBaseControl IO m)
+    => CreateSubnetRequest
+    -> EC2 m Subnet
+createSubnet param =
+    ec2Query "CreateSubnet" param' $
+          element "subnet" subnetSink
+  where
+    param' = createSubnetParam param
+
+createSubnetParam :: CreateSubnetRequest -> [QueryParam]
+createSubnetParam (CreateSubnetRequest vid cidr zone) =
+    [ ValueParam "VpcId" vid
+    , ValueParam "CidrBlock" cidr
+    ] ++ maybe [] (\a -> [ValueParam "AvailabilityZone" a]) zone

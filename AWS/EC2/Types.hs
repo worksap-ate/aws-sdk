@@ -12,6 +12,7 @@ module AWS.EC2.Types
     , BlockDeviceMappingParam(..)
     , ConsoleOutput(..)
     , CreateVolumeRequest(..)
+    , CreateSubnetRequest(..)
     , DisassociateAddressRequest(..)
     , EbsBlockDevice(..)
     , EbsSource(..)
@@ -786,6 +787,13 @@ data Subnet = Subnet
   deriving (Show, Eq)
 
 data SubnetState = SubnetPending | SubnetAvailable
+  deriving (Show, Eq)
+
+data CreateSubnetRequest = CreateSubnetRequest
+    { csrVpcId :: Text
+    , csrCidrBlock :: Text
+    , csrAvailabilityZone :: Maybe Text
+    }
   deriving (Show, Eq)
 
 data VolumeStatus = VolumeStatus
