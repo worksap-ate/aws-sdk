@@ -67,6 +67,11 @@ module AWS.EC2.Types
     , ResetInstanceAttributeRequest(..)
     , ResourceTag(..)
     , RootDeviceType(..)
+    , Route(..)
+    , RouteTable(..)
+    , RouteTableAssociation(..)
+    , RouteState(..)
+    , RouteOrigin(..)
     , RunInstancesRequest(..)
     , SecurityGroup(..)
     , SecurityGroupRequest(..)
@@ -913,3 +918,43 @@ data NetworkAclEntryRequest = NetworkAclEntryRequest
     , networkAclEntryRequestPortRange :: Maybe PortRange
     }
   deriving (Show, Eq)
+
+data RouteTable = RouteTable
+    { rtRouteTableId :: Text
+    , rtVpcId :: Text
+    , rtRouteSet :: [Route]
+    , rtAssociationSet :: [RouteTableAssociation]
+    , rtPropagatingVgw :: Maybe PropagatingVgw
+    , rtTagSet :: [ResourceTag]
+    }
+  deriving (Show, Eq)
+
+data Route = Route
+    { rDestinationCidrBlock :: Text
+    , rGatewayId :: Maybe Text
+    , rInstanceId :: Maybe Text
+    , rInstanceOwnerId :: Maybe Text
+    , rNetworkInterfaceId :: Maybe Text
+    , rState :: RouteState
+    , rOrigin :: Maybe RouteOrigin
+    }
+  deriving (Show, Eq)
+
+data RouteState = RouteStateActive | RouteStateBlackhole
+  deriving (Show, Eq)
+
+data RouteOrigin
+    = RouteOriginCreateRouteTable
+    | RouteOriginCreateRoute
+    | RouteOriginTableEnableVgwRoutePropagation
+  deriving (Show, Eq)
+
+data RouteTableAssociation = RouteTableAssociation
+    { rtaRouteTableAssociationId :: Text
+    , rtaRouteTableId :: Text
+    , rtaSubnetId :: Maybe Text
+    , rtaMain :: Maybe Bool
+    }
+  deriving (Show, Eq)
+
+type PropagatingVgw = Text
