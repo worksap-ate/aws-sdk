@@ -27,6 +27,7 @@ module AWS.EC2
     , module AWS.EC2.Tag
       -- * VPC
     , module AWS.EC2.VPC
+    , module AWS.EC2.Subnets
     ) where
 
 import Data.Conduit
@@ -51,6 +52,7 @@ import AWS.EC2.Volume
 import AWS.EC2.KeyPair
 import AWS.EC2.SecurityGroup
 import AWS.EC2.VPC
+import AWS.EC2.Subnets
 
 -- | set endpoint to EC2 context.
 setRegion

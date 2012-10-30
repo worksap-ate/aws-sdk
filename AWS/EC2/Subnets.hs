@@ -3,6 +3,7 @@
 module AWS.EC2.Subnets
     ( describeSubnets
     , createSubnet
+    , deleteSubnet
     ) where
 
 import Data.Text (Text)
@@ -63,3 +64,14 @@ createSubnetParam (CreateSubnetRequest vid cidr zone) =
     [ ValueParam "VpcId" vid
     , ValueParam "CidrBlock" cidr
     ] ++ maybe [] (\a -> [ValueParam "AvailabilityZone" a]) zone
+
+------------------------------------------------------------
+-- DeleteSubnet
+------------------------------------------------------------
+deleteSubnet
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SubnetId
+    -> EC2 m Bool
+deleteSubnet sid =
+    ec2Query "DeleteSubnet" [ValueParam "SubnetId" sid]
+        $ getF "return" textToBool
