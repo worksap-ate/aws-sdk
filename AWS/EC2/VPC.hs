@@ -4,6 +4,7 @@ module AWS.EC2.VPC
     ( createVpc
     , createVpnGateway
     , deleteVpc
+    , deleteVpnGateway
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
@@ -170,3 +171,14 @@ createVpnGateway _ availabilityZone = do
     params =
         [ ValueParam "Type" "ipsec.1"
         ] ++ maybeParams [ ("AvailabilityZone", availabilityZone) ]
+
+------------------------------------------------------------
+-- deleteVpnGateway
+------------------------------------------------------------
+deleteVpnGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VpnGatewayId
+    -> EC2 m Bool
+deleteVpnGateway vgId = do
+    ec2Query "DeleteVpnGateway" [ ValueParam "VpnGatewayId" vgId ] $
+        getF "return" textToBool
