@@ -279,3 +279,19 @@ vpcState' t
     | t == "pending"   = VpcStatePending
     | t == "available" = VpcStateAvailable
     | otherwise        = err "Vpc State" t
+
+vpnGatewayState' :: Text -> VpnGatewayState
+vpnGatewayState' t
+    | t == "pending"   = VpnGatewayStatePending
+    | t == "available" = VpnGatewayStateAvailable
+    | t == "deleting"  = VpnGatewayStateDeleting
+    | t == "deleted"   = VpnGatewayStateDeleted
+    | otherwise        = err "VpnGateway State" t
+
+attachmentState' :: Text -> AttachmentState
+attachmentState' t
+    | t == "attaching" = AttachmentStateAttaching
+    | t == "attached"  = AttachmentStateAttached
+    | t == "detaching" = AttachmentStateDetaching
+    | t == "detached"  = AttachmentStateDetached
+    | otherwise        = err "Attachment State" t

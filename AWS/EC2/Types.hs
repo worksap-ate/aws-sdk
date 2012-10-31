@@ -4,6 +4,8 @@ module AWS.EC2.Types
     , AllocateAddressResponse(..)
     , Architecture(..)
     , AssociateAddressRequest(..)
+    , Attachment(..)
+    , AttachmentState(..)
     , AttachmentSetItemResponse(..)
     , AttachmentSetItemResponseStatus(..)
     , AvailabilityZone(..)
@@ -100,6 +102,8 @@ module AWS.EC2.Types
     , VpnConnection(..)
     , VpnConnectionOptionsRequest(..)
     , VpnConnectionState(..)
+    , VpnGateway(..)
+    , VpnGatewayState(..)
     , VpnStaticRoute(..)
     , VpnStaticRouteSource(..)
     , VpnStaticRouteState(..)
@@ -972,4 +976,34 @@ data Vpc = Vpc
   deriving (Show, Eq)
 
 data VpcState = VpcStatePending | VpcStateAvailable
+  deriving (Show, Eq)
+
+data VpnGateway = VpnGateway
+    { vpnGatewayId :: Text
+    , vpnGatewayState :: VpnGatewayState
+    , vpnGatewayType :: Text
+    , vpnGatewayAvailabilityZone :: Maybe Text
+    , vpnGatewayAttachments :: [Attachment]
+    , vpnGatewayTagSet :: [ResourceTag]
+    }
+  deriving (Show, Eq)
+
+data VpnGatewayState
+    = VpnGatewayStatePending
+    | VpnGatewayStateAvailable
+    | VpnGatewayStateDeleting
+    | VpnGatewayStateDeleted
+  deriving (Show, Eq)
+
+data Attachment = Attachment
+    { attachmentVpcId :: Text
+    , attachmentState :: AttachmentState
+    }
+  deriving (Show, Eq)
+
+data AttachmentState
+    = AttachmentStateAttaching
+    | AttachmentStateAttached
+    | AttachmentStateDetaching
+    | AttachmentStateDetached
   deriving (Show, Eq)

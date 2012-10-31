@@ -4,6 +4,7 @@ module AWS.EC2.VPC
     ( createVpc
     , deleteVpc
     , describeVpnConnections
+    , describeVpnGateways
     , describeVpcs
     ) where
 
@@ -119,3 +120,36 @@ deleteVpc
 deleteVpc vid =
     ec2Query "DeleteVpc" [ ValueParam "VpcId" vid ] $
         getF "return" textToBool
+
+------------------------------------------------------------
+-- describeVpnGateways
+------------------------------------------------------------
+describeVpnGateways
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ VpnGatewayId
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m VpnGateway)
+describeVpnGateways ids filters = do
+    ec2QuerySource "DescribeVpnGateways" params $
+        itemConduit "vpnGatewaySet" vpnGatewaySink
+  where
+    params =
+        [ ArrayParams "VpnGatewayId" ids
+        , FilterParams filters
+        ]
+
+vpnGatewaySink :: MonadThrow m
+    => GLSink Event m VpnGateway
+vpnGatewaySink = VpnGateway
+    <$> getT "vpnGatewayId"
+    <*> getF "state" vpnGatewayState'
+    <*> getT "type"
+    <*> getMT "availabilityZone"
+    <*> itemsSet "attachments" attachmentSink
+    <*> resourceTagSink
+
+attachmentSink :: MonadThrow m
+    => GLSink Event m Attachment
+attachmentSink = Attachment
+    <$> getT "vpcId"
+    <*> getF "state" attachmentState'
