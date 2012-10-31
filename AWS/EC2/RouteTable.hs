@@ -4,7 +4,8 @@ module AWS.EC2.RouteTable
     ( associateRouteTable
     , createRouteTable
     , deleteRouteTable
-    ,  describeRouteTables
+    , describeRouteTables
+    , disassociateRouteTable
     ) where
 
 import Data.Text (Text)
@@ -102,3 +103,14 @@ associateRouteTable rtid sid =
     params = [ ValueParam "RouteTableId" rtid
              , ValueParam "SubnetId" sid
              ]
+
+------------------------------------------------------------
+-- disassociateRouteTable
+------------------------------------------------------------
+disassociateRouteTable
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ AssociationId
+    -> EC2 m Bool -- ^ return
+disassociateRouteTable aid =
+   ec2Query "DisassociateRouteTable" [ValueParam "AssociationId" aid]
+        $ getF "return" textToBool
