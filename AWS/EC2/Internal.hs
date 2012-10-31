@@ -273,3 +273,9 @@ routeOrigin t
     | t == "CreateRoute"               = RouteOriginCreateRoute
     | t == "EnableVgwRoutePropagation" = RouteOriginTableEnableVgwRoutePropagation
     | otherwise                        = err "Route Origin" t
+
+vpcState' :: Text -> VpcState
+vpcState' t
+    | t == "pending"   = VpcStatePending
+    | t == "available" = VpcStateAvailable
+    | otherwise        = err "Vpc State" t
