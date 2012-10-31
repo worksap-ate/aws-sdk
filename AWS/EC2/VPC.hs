@@ -2,6 +2,7 @@
 
 module AWS.EC2.VPC
     ( createVpc
+    , deleteVpc
     , describeVpnConnections
     , describeVpcs
     ) where
@@ -107,3 +108,14 @@ createVpc cidrBlock instanceTenancy =
     params =
         [ ValueParam "CidrBlock" cidrBlock
         ] ++ maybeParams [ ("instanceTenancy", instanceTenancy) ]
+
+------------------------------------------------------------
+-- deleteVpc
+------------------------------------------------------------
+deleteVpc
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VpcId
+    -> EC2 m Bool
+deleteVpc vpcId =
+    ec2Query "DeleteVpc" [ ValueParam "VpcId" vpcId ] $
+        getF "return" textToBool
