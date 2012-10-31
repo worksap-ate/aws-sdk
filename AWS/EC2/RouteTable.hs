@@ -3,6 +3,7 @@
 module AWS.EC2.RouteTable
     ( describeRouteTables
     , createRouteTable
+    , deleteRouteTable
     ) where
 
 import Data.Text (Text)
@@ -73,3 +74,14 @@ createRouteTable
 createRouteTable vid =
     ec2Query "CreateRouteTable" [ValueParam "VpcId" vid] $
         element "routeTable" routeTableSink
+
+------------------------------------------------------------
+-- deleteRouteTable
+------------------------------------------------------------
+deleteRouteTable
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ RouteTableId
+    -> EC2 m Bool
+deleteRouteTable rtid =
+    ec2Query "DeleteRouteTable" [ValueParam "RouteTableId" rtid]
+        $ getF "return" textToBool
