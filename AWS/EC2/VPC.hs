@@ -2,6 +2,7 @@
 
 module AWS.EC2.VPC
     ( describeVpnConnections
+    , describeVpcs
     ) where
 
 import Data.Text (Text)
@@ -62,3 +63,30 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
         <*> getF "source" vpnStaticRouteSource
         <*> getF "state" vpnStaticRouteState
         )
+
+------------------------------------------------------------
+-- describeVpcs
+------------------------------------------------------------
+describeVpcs
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ VpcIds
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m Vpc)
+describeVpcs vpcIds filters = do
+    ec2QuerySource "DescribeVpcs" params $
+        itemConduit "vpcSet" vpcSink
+  where
+    params =
+        [ ArrayParams "VpcId" vpcIds
+        , FilterParams filters
+        ]
+
+vpcSink :: MonadThrow m
+    => GLSink Event m Vpc
+vpcSink = Vpc
+    <$> getT "vpcId"
+    <*> getF "state" vpcState'
+    <*> getT "cidrBlock"
+    <*> getT "dhcpOptionsId"
+    <*> resourceTagSink
+    <*> getT "instanceTenancy"

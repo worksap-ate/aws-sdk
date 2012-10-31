@@ -95,6 +95,8 @@ module AWS.EC2.Types
     , VolumeStatusDetail(..)
     , VolumeStatusInfo(..)
     , VolumeStatusInfoStatus(..)
+    , Vpc(..)
+    , VpcState(..)
     , VpnConnection(..)
     , VpnConnectionOptionsRequest(..)
     , VpnConnectionState(..)
@@ -253,7 +255,7 @@ data Instance = Instance
     , instancePlatform :: Maybe Text
     , instanceMonitoring :: InstanceMonitoringState
     , subnetId :: Maybe Text
-    , vpcId :: Maybe Text
+    , instanceVpcId :: Maybe Text
     , privateIpAddress :: Maybe Text
     , ipAddress :: Maybe Text
     , sourceDestCheck :: Maybe Bool
@@ -958,3 +960,16 @@ data RouteTableAssociation = RouteTableAssociation
   deriving (Show, Eq)
 
 type PropagatingVgw = Text
+
+data Vpc = Vpc
+    { vpcId :: Text
+    , vpcState :: VpcState
+    , vpcCidrBlock :: Text
+    , vpcDhcpOptionsId :: Text
+    , vpcTagSet :: [ResourceTag]
+    , vpcInstanceTenancy :: Text
+    }
+  deriving (Show, Eq)
+
+data VpcState = VpcStatePending | VpcStateAvailable
+  deriving (Show, Eq)
