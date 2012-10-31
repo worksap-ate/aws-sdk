@@ -1,9 +1,10 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AWS.EC2.RouteTable
-    ( describeRouteTables
+    ( associateRouteTable
     , createRouteTable
     , deleteRouteTable
+    ,  describeRouteTables
     ) where
 
 import Data.Text (Text)
@@ -85,3 +86,19 @@ deleteRouteTable
 deleteRouteTable rtid =
     ec2Query "DeleteRouteTable" [ValueParam "RouteTableId" rtid]
         $ getF "return" textToBool
+
+------------------------------------------------------------
+-- associateRouteTable
+------------------------------------------------------------
+associateRouteTable
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ RouteTableId
+    -> Text -- ^ SubnetId
+    -> EC2 m Text -- ^ associationId
+associateRouteTable rtid sid =
+    ec2Query "AssociateRouteTable" params
+        $ getT "associationId"
+  where
+    params = [ ValueParam "RouteTableId" rtid
+             , ValueParam "SubnetId" sid
+             ]
