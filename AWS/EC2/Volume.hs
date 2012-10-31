@@ -9,7 +9,7 @@ module AWS.EC2.Volume
     , enableVolumeIO
     , describeVolumeAttribute
     , modifyVolumeAttribute
-    ) where 
+    ) where
 import Data.Text (Text)
 
 import Data.XML.Types (Event)
@@ -50,12 +50,12 @@ volumeSink = Volume
     <*> resourceTagSink
     <*> volumeTypeSink
 
-attachmentSink :: MonadThrow m => GLSink Event m Attachment
-attachmentSink = Attachment
+attachmentSink :: MonadThrow m => GLSink Event m AttachmentSetItemResponse
+attachmentSink = AttachmentSetItemResponse
     <$> getT "volumeId"
     <*> getT "instanceId"
     <*> getT "device"
-    <*> getF "status" attachmentStatus
+    <*> getF "status" attachmentSetItemResponseStatus
     <*> getF "attachTime" textToTime
     <*> getM "deleteOnTermination" (textToBool <$>)
 
@@ -100,7 +100,7 @@ attachVolume
     => Text -- ^ VolumeId
     -> Text -- ^ InstanceId
     -> Text -- ^ Device
-    -> EC2 m Attachment
+    -> EC2 m AttachmentSetItemResponse
 attachVolume volid iid dev =
     ec2Query "AttachVolume" params attachmentSink
   where
@@ -116,7 +116,7 @@ detachVolume
     -> Maybe Text -- ^ InstanceId
     -> Maybe Text -- ^ Device
     -> Maybe Bool -- ^ Force
-    -> EC2 m Attachment
+    -> EC2 m AttachmentSetItemResponse
 detachVolume volid iid dev force =
     ec2Query "DetachVolume" params attachmentSink
   where
