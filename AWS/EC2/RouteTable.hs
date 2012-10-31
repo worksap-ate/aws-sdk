@@ -6,6 +6,7 @@ module AWS.EC2.RouteTable
     , deleteRouteTable
     , describeRouteTables
     , disassociateRouteTable
+    , replaceRouteTableAssociation
     ) where
 
 import Data.Text (Text)
@@ -114,3 +115,19 @@ disassociateRouteTable
 disassociateRouteTable aid =
    ec2Query "DisassociateRouteTable" [ValueParam "AssociationId" aid]
         $ getF "return" textToBool
+
+------------------------------------------------------------
+-- replaceRouteTableAssociation
+------------------------------------------------------------
+replaceRouteTableAssociation
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ AssociationId
+    -> Text -- ^ RouteTableId
+    -> EC2 m Text -- ^ newAssociationId
+replaceRouteTableAssociation aid rtid =
+    ec2Query "ReplaceRouteTableAssociation" params
+        $ getT "newAssociationId"
+  where
+    params = [ ValueParam "AssociationId" aid
+             , ValueParam "RouteTableId" rtid
+             ]
