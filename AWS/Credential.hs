@@ -4,6 +4,7 @@ module AWS.Credential
     , AccessKey
     , SecretAccessKey
     , loadCredential
+    , loadCredentialFromFile
     , newCredential
     ) where
 
@@ -23,12 +24,16 @@ type SecretAccessKey = ByteString
 
 -- | Load credential from \"./aws.config\".
 loadCredential :: IO Credential
-loadCredential = do
-    str <- BS.readFile "aws.config"
-    case parse configParser "" str of
-        Left err   -> fail $ show err
-        Right conf -> return conf
+loadCredential = loadCredentialFromFile "aws.config"
 
 -- | Create new credential.
 newCredential :: AccessKey -> SecretAccessKey -> Credential
 newCredential key secret = Credential key secret
+
+-- | Load credential from file.
+loadCredentialFromFile :: FilePath -> IO Credential
+loadCredentialFromFile path = do
+    str <- BS.readFile path
+    case parse configParser "" str of
+        Left err   -> fail $ show err
+        Right conf -> return conf
