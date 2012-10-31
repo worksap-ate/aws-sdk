@@ -4,8 +4,8 @@ module AWS.EC2.Types
     , AllocateAddressResponse(..)
     , Architecture(..)
     , AssociateAddressRequest(..)
-    , Attachment(..)
-    , AttachmentStatus(..)
+    , AttachmentSetItemResponse(..)
+    , AttachmentSetItemResponseStatus(..)
     , AvailabilityZone(..)
     , AvailabilityZoneMessage
     , BlockDeviceMapping(..)
@@ -365,7 +365,7 @@ data InstanceBlockDeviceMapping = InstanceBlockDeviceMapping
 
 data InstanceEbsBlockDevice = InstanceEbsBlockDevice
     { instanceEbsVolumeId :: Text
-    , instanceEbsState :: AttachmentStatus
+    , instanceEbsState :: AttachmentSetItemResponseStatus
     , instanceEbsAttachTime :: UTCTime
     , instanceEbsDeleteOnTermination :: Bool
     }
@@ -517,7 +517,7 @@ data Volume = Volume
     , volAvailabilityZone :: Text
     , volStatus :: VolumeState
     , volCreateTime :: UTCTime
-    , volAttachmentSet :: [Attachment]
+    , volAttachmentSet :: [AttachmentSetItemResponse]
     , volTagSet :: [ResourceTag]
     , volVolumeType :: VolumeType
     }
@@ -532,21 +532,21 @@ data VolumeState
     | VolError
   deriving (Show, Eq)
 
-data Attachment = Attachment
-    { attVolumeId :: Text
-    , attInstanceId :: Text
-    , attDevice :: Text
-    , attStatus :: AttachmentStatus
-    , attAttachTime :: UTCTime
-    , attDeleteOnTermination :: Maybe Bool
+data AttachmentSetItemResponse = AttachmentSetItemResponse
+    { asirVolumeId :: Text
+    , asirInstanceId :: Text
+    , asirDevice :: Text
+    , asirStatus :: AttachmentSetItemResponseStatus
+    , asirAttachTime :: UTCTime
+    , asirDeleteOnTermination :: Maybe Bool
     }
   deriving (Show, Eq)
 
-data AttachmentStatus
-    = AttAttaching
-    | AttAttached
-    | AttDetaching
-    | AttDetached
+data AttachmentSetItemResponseStatus
+    = AsirAttaching
+    | AsirAttached
+    | AsirDetaching
+    | AsirDetached
   deriving (Show, Eq)
 
 data KeyPair = KeyPair

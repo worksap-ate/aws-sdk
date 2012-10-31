@@ -195,12 +195,12 @@ volumeStatus t
     | t == "error"     = VolError
     | otherwise        = err "volume state" t
 
-attachmentStatus :: Text -> AttachmentStatus
-attachmentStatus t
-    | t == "attaching" = AttAttaching
-    | t == "attached"  = AttAttached
-    | t == "detaching" = AttDetaching
-    | t == "detached"  = AttDetached
+attachmentSetItemResponseStatus :: Text -> AttachmentSetItemResponseStatus
+attachmentSetItemResponseStatus t
+    | t == "attaching" = AsirAttaching
+    | t == "attached"  = AsirAttached
+    | t == "detaching" = AsirDetaching
+    | t == "detached"  = AsirDetached
     | otherwise        = err "attachment status" t
 
 shutdownBehavior :: Text -> ShutdownBehavior

@@ -121,7 +121,7 @@ instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
     <*> element "ebs" (
         InstanceEbsBlockDevice
         <$> getT "volumeId"
-        <*> getF "status" attachmentStatus
+        <*> getF "status" attachmentSetItemResponseStatus
         <*> getF "attachTime" textToTime
         <*> getF "deleteOnTermination" textToBool
         )
