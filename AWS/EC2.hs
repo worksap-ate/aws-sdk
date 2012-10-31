@@ -29,6 +29,7 @@ module AWS.EC2
     , module AWS.EC2.VPC
     , module AWS.EC2.Subnets
     , module AWS.EC2.Acl
+    , module AWS.EC2.RouteTable
     ) where
 
 import Data.Conduit
@@ -55,6 +56,7 @@ import AWS.EC2.SecurityGroup
 import AWS.EC2.VPC
 import AWS.EC2.Subnets
 import AWS.EC2.Acl
+import AWS.EC2.RouteTable
 
 -- | set endpoint to EC2 context.
 setRegion
