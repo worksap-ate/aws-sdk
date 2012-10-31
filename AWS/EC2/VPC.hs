@@ -1,7 +1,8 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AWS.EC2.VPC
-    ( describeVpnConnections
+    ( createVpc
+    , describeVpnConnections
     , describeVpcs
     ) where
 
@@ -90,3 +91,19 @@ vpcSink = Vpc
     <*> getT "dhcpOptionsId"
     <*> resourceTagSink
     <*> getT "instanceTenancy"
+
+------------------------------------------------------------
+-- createVpc
+------------------------------------------------------------
+createVpc
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ CidrBlock
+    -> Maybe Text -- ^ instanceTenancy
+    -> EC2 m Vpc
+createVpc cidrBlock instanceTenancy =
+    ec2Query "CreateVpc" params $
+        element "vpc" vpcSink
+  where
+    params =
+        [ ValueParam "CidrBlock" cidrBlock
+        ] ++ maybeParams [ ("instanceTenancy", instanceTenancy) ]
