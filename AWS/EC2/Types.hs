@@ -15,6 +15,7 @@ module AWS.EC2.Types
     , ConsoleOutput(..)
     , CreateSubnetRequest(..)
     , CreateVolumeRequest(..)
+    , CreateVpnGatewayType(..)
     , DisassociateAddressRequest(..)
     , EbsBlockDevice(..)
     , EbsSource(..)
@@ -1007,3 +1008,5 @@ data AttachmentState
     | AttachmentStateDetaching
     | AttachmentStateDetached
   deriving (Show, Eq)
+
+data CreateVpnGatewayType = CreateVpnGatewayTypeIpsec1

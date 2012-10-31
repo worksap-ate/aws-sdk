@@ -2,6 +2,7 @@
 
 module AWS.EC2.VPC
     ( createVpc
+    , createVpnGateway
     , deleteVpc
     , describeVpnConnections
     , describeVpnGateways
@@ -153,3 +154,19 @@ attachmentSink :: MonadThrow m
 attachmentSink = Attachment
     <$> getT "vpcId"
     <*> getF "state" attachmentState'
+
+------------------------------------------------------------
+-- createVpnGateway
+------------------------------------------------------------
+createVpnGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => CreateVpnGatewayType -- ^ Type. The valid value is CreateVpnGatewayTypeIpsec1
+    -> Maybe Text -- ^ AvailabilityZone
+    -> EC2 m VpnGateway
+createVpnGateway _ availabilityZone = do
+    ec2Query "CreateVpnGateway" params $
+        element "vpnGateway" vpnGatewaySink
+  where
+    params =
+        [ ValueParam "Type" "ipsec.1"
+        ] ++ maybeParams [ ("AvailabilityZone", availabilityZone) ]
