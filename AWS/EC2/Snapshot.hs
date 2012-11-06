@@ -18,6 +18,7 @@ import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.Lib.Parser
 import AWS.Util
+import AWS.EC2.Convert
 
 describeSnapshots
     :: (MonadResource m, MonadBaseControl IO m)

@@ -14,6 +14,7 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
+import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Params
@@ -112,7 +113,7 @@ registerImage req =
             , ("KernelId", rirKernelId req)
             , ("RamdiskId", rirRamdiskId req)
             , ("RootDeviceName", rirRootDeviceName req)
-            ] 
+            ]
 
 deregisterImage
     :: (MonadResource m, MonadBaseControl IO m)
