@@ -24,6 +24,7 @@ import Control.Applicative
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
 
+import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Params
