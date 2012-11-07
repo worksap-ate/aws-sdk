@@ -114,3 +114,5 @@ mkConvertFunc "vpnGatewayState'" ''VpnGatewayState ["pending", "available", "del
 mkConvertFunc "attachmentState'" ''AttachmentState ["attaching", "attached", "detaching", "detached"]
 
 mkConvertFunc "customerGatewayState'" ''CustomerGatewayState ["pending", "available", "deleting", "deleted"]
+
+mkConvertFunc "internetGatewayAttachmentState'" ''InternetGatewayAttachmentState ["attaching", "attached", "detaching", "detached", "available"]

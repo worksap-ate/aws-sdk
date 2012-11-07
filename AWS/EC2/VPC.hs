@@ -11,6 +11,7 @@ module AWS.EC2.VPC
     , describeVpnGateways
     , describeVpcs
     , describeCustomerGateway
+    , describeInternetGateways
     ) where
 
 import Data.Text (Text)
@@ -29,6 +30,35 @@ import AWS.Util
 
 import Debug.Trace
 
+------------------------------------------------------------
+-- describeInternetGateways
+------------------------------------------------------------
+describeInternetGateways
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InternetGatewayIds
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m InternetGateway)
+describeInternetGateways internetGatewayIds filters = do
+    ec2QuerySource "DescribeInternetGateways" params $
+        itemConduit "internetGatewaySet" internetGatewaySink
+  where
+    params =
+        [ ArrayParams "InternetGatewayId" internetGatewayIds
+        , FilterParams filters
+        ]
+
+internetGatewaySink :: MonadThrow m
+    => GLSink Event m InternetGateway
+internetGatewaySink = InternetGateway
+    <$> getT "internetGatewayId"
+    <*> itemsSet "attachmentSet" internetGatewayAttachmentSink
+    <*> resourceTagSink
+
+internetGatewayAttachmentSink :: MonadThrow m
+    => GLSink Event m InternetGatewayAttachment
+internetGatewayAttachmentSink = InternetGatewayAttachment
+    <$> getT "vpcId"
+    <*> getF "state" internetGatewayAttachmentState'
 describeVpnConnections
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ VpnConnectionIds
