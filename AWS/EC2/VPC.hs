@@ -6,6 +6,7 @@ module AWS.EC2.VPC
     , createCustomerGateway
     , deleteVpc
     , deleteVpnGateway
+    , deleteCustomerGateway
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
@@ -232,3 +233,15 @@ createCustomerGateway type' ipAddress bgpAsn = do
         , ValueParam "BgpAsn" (toText bgpAsn)
         ]
 
+------------------------------------------------------------
+-- deleteCustomerGateway
+------------------------------------------------------------
+deleteCustomerGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ CustomerGatewayId
+    -> EC2 m Bool
+deleteCustomerGateway id = do
+    ec2Query "DeleteCustomerGateway" params $
+        getF "return" textToBool
+  where
+    params = [ ValueParam "CustomerGatewayId" id ]
