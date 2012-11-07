@@ -3,6 +3,7 @@
 module AWS.EC2.VPC
     ( createVpc
     , createVpnGateway
+    , createCustomerGateway
     , deleteVpc
     , deleteVpnGateway
     , describeVpnConnections
@@ -211,3 +212,23 @@ customerGatewaySink = CustomerGateway
     <*> getT "ipAddress"
     <*> getF "bgpAsn" textToInt
     <*> resourceTagSink
+
+------------------------------------------------------------
+-- createCustomerGateway
+------------------------------------------------------------
+createCustomerGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ Type
+    -> Text -- ^ IpAddress
+    -> Int -- ^ BgpAsn
+    -> EC2 m CustomerGateway
+createCustomerGateway type' ipAddress bgpAsn = do
+    ec2Query "CreateCustomerGateway" params $
+        element "customerGateway" customerGatewaySink
+  where
+    params =
+        [ ValueParam "Type" type' 
+        , ValueParam "IpAddress" ipAddress
+        , ValueParam "BgpAsn" (toText bgpAsn)
+        ]
+
