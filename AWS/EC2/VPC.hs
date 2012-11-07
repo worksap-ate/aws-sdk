@@ -4,6 +4,7 @@ module AWS.EC2.VPC
     ( createVpc
     , createVpnGateway
     , createCustomerGateway
+    , createInternetGateway
     , deleteVpc
     , deleteVpnGateway
     , deleteCustomerGateway
@@ -29,6 +30,18 @@ import AWS.Lib.Parser
 import AWS.Util
 
 import Debug.Trace
+
+------------------------------------------------------------
+-- createInternetGateway
+------------------------------------------------------------
+createInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => EC2 m InternetGateway
+createInternetGateway =
+    ec2Query "CreateInternetGateway" params $
+        element "internetGateway" internetGatewaySink
+  where
+    params = []
 
 ------------------------------------------------------------
 -- describeInternetGateways
