@@ -3,11 +3,15 @@
 module AWS.EC2.VPC
     ( createVpc
     , createVpnGateway
+    , createInternetGateway
     , deleteVpc
     , deleteVpnGateway
+    , deleteInternetGateway
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
+    , describeInternetGateways
+    , attachInternetGateway
     ) where
 
 import Data.Text (Text)
@@ -26,6 +30,86 @@ import AWS.Util
 
 import Debug.Trace
 
+------------------------------------------------------------
+-- attachInternetGateway
+------------------------------------------------------------
+attachInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InternetGatewayId
+    -> Text -- ^ VpcId
+    -> EC2 m Bool
+attachInternetGateway internetGatewayId vpcId=
+    ec2Query "AttachInternetGateway" params $
+        getF "return" textToBool
+        where params = [ ValueParam "InternetGatewayId" internetGatewayId,
+                         ValueParam "VpcId" vpcId ]
+
+------------------------------------------------------------
+-- detachInternetGateway
+------------------------------------------------------------
+detachInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InternetGatewayId
+    -> Text -- ^ VpcId
+    -> EC2 m Bool
+detachInternetGateway internetGatewayId vpcId=
+    ec2Query "DetachInternetGateway" params $
+        getF "return" textToBool
+        where params = [ ValueParam "InternetGatewayId" internetGatewayId,
+                         ValueParam "VpcId" vpcId ]
+
+------------------------------------------------------------
+-- deleteInternetGateway
+------------------------------------------------------------
+deleteInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InternetGatewayId
+    -> EC2 m Bool
+deleteInternetGateway internetGatewayId =
+    ec2Query "DeleteInternetGateway" [ ValueParam "InternetGatewayId" internetGatewayId ] $
+        getF "return" textToBool
+
+------------------------------------------------------------
+-- createInternetGateway
+------------------------------------------------------------
+createInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => EC2 m InternetGateway
+createInternetGateway =
+    ec2Query "CreateInternetGateway" params $
+        element "internetGateway" internetGatewaySink
+  where
+    params = []
+
+------------------------------------------------------------
+-- describeInternetGateways
+------------------------------------------------------------
+describeInternetGateways
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InternetGatewayIds
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m InternetGateway)
+describeInternetGateways internetGatewayIds filters = do
+    ec2QuerySource "DescribeInternetGateways" params $
+        itemConduit "internetGatewaySet" internetGatewaySink
+  where
+    params =
+        [ ArrayParams "InternetGatewayId" internetGatewayIds
+        , FilterParams filters
+        ]
+
+internetGatewaySink :: MonadThrow m
+    => GLSink Event m InternetGateway
+internetGatewaySink = InternetGateway
+    <$> getT "internetGatewayId"
+    <*> itemsSet "attachmentSet" internetGatewayAttachmentSink
+    <*> resourceTagSink
+
+internetGatewayAttachmentSink :: MonadThrow m
+    => GLSink Event m InternetGatewayAttachment
+internetGatewayAttachmentSink = InternetGatewayAttachment
+    <$> getT "vpcId"
+    <*> getF "state" internetGatewayAttachmentState'
 describeVpnConnections
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ VpnConnectionIds
