@@ -16,6 +16,8 @@ module AWS.EC2.Types
     , CreateSubnetRequest(..)
     , CreateVolumeRequest(..)
     , CreateVpnGatewayType(..)
+    , CustomerGateway(..)
+    , CustomerGatewayState(..)
     , DisassociateAddressRequest(..)
     , EbsBlockDevice(..)
     , EbsSource(..)
@@ -1010,3 +1012,20 @@ data AttachmentState
   deriving (Show, Eq)
 
 data CreateVpnGatewayType = CreateVpnGatewayTypeIpsec1
+
+data CustomerGateway = CustomerGateway
+    { customerGatewayId :: Text
+    , customerGatewayState :: CustomerGatewayState
+    , customerGatewayType :: Text
+    , customerGatewayIpAddress :: Text
+    , customerGatewayBgpAsn :: Int
+    , customerGateway :: [ResourceTag]
+    }
+  deriving (Show, Eq)
+
+data CustomerGatewayState
+    = CustomerGatewayStatePending
+    | CustomerGatewayStateAvailable
+    | CustomerGatewayStateDeleting
+    | CustomerGatewayStateDeleted
+  deriving (Show, Eq)

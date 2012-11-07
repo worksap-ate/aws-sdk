@@ -8,6 +8,7 @@ module AWS.EC2.VPC
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
+    , describeCustomerGateway
     ) where
 
 import Data.Text (Text)
@@ -183,3 +184,30 @@ deleteVpnGateway
 deleteVpnGateway vgId = do
     ec2Query "DeleteVpnGateway" [ ValueParam "VpnGatewayId" vgId ] $
         getF "return" textToBool
+
+------------------------------------------------------------
+-- describeCustomerGateway
+------------------------------------------------------------
+describeCustomerGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ CustomerGatewayId
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m CustomerGateway)
+describeCustomerGateway ids filters = do
+    ec2QuerySource "DescribeCustomerGateways" params $
+        itemConduit "customerGatewaySet" customerGatewaySink
+  where
+    params =
+        [ ArrayParams "CustomerGatewayId" ids
+        , FilterParams filters
+        ]
+
+customerGatewaySink :: MonadThrow m
+    => GLSink Event m CustomerGateway
+customerGatewaySink = CustomerGateway
+    <$> getT "customerGatewayId"
+    <*> getF "state" customerGatewayState'
+    <*> getT "type"
+    <*> getT "ipAddress"
+    <*> getF "bgpAsn" textToInt
+    <*> resourceTagSink
