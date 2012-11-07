@@ -43,6 +43,21 @@ attachInternetGateway internetGatewayId vpcId=
         getF "return" textToBool
         where params = [ ValueParam "InternetGatewayId" internetGatewayId,
                          ValueParam "VpcId" vpcId ]
+
+------------------------------------------------------------
+-- detachInternetGateway
+------------------------------------------------------------
+detachInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InternetGatewayId
+    -> Text -- ^ VpcId
+    -> EC2 m Bool
+detachInternetGateway internetGatewayId vpcId=
+    ec2Query "DetachInternetGateway" params $
+        getF "return" textToBool
+        where params = [ ValueParam "InternetGatewayId" internetGatewayId,
+                         ValueParam "VpcId" vpcId ]
+
 ------------------------------------------------------------
 -- deleteInternetGateway
 ------------------------------------------------------------
