@@ -15,6 +15,7 @@ module AWS.EC2.VPC
     , describeCustomerGateway
     , describeInternetGateways
     , attachInternetGateway
+    , detachInternetGateway
     ) where
 
 import Data.Text (Text)
@@ -41,11 +42,30 @@ attachInternetGateway
     => Text -- ^ InternetGatewayId
     -> Text -- ^ VpcId
     -> EC2 m Bool
-attachInternetGateway internetGatewayId vpcId=
+attachInternetGateway internetGatewayId vid =
     ec2Query "AttachInternetGateway" params $
         getF "return" textToBool
-        where params = [ ValueParam "InternetGatewayId" internetGatewayId,
-                         ValueParam "VpcId" vpcId ]
+  where
+    params =
+        [ ValueParam "InternetGatewayId" internetGatewayId
+        , ValueParam "VpcId" vid ]
+
+------------------------------------------------------------
+-- detachInternetGateway
+------------------------------------------------------------
+detachInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InternetGatewayId
+    -> Text -- ^ VpcId
+    -> EC2 m Bool
+detachInternetGateway internetGatewayId vid =
+    ec2Query "DetachInternetGateway" params $
+        getF "return" textToBool
+  where
+    params =
+        [ ValueParam "InternetGatewayId" internetGatewayId
+        , ValueParam "VpcId" vid ]
+
 ------------------------------------------------------------
 -- deleteInternetGateway
 ------------------------------------------------------------
@@ -64,10 +84,8 @@ createInternetGateway
     :: (MonadResource m, MonadBaseControl IO m)
     => EC2 m InternetGateway
 createInternetGateway =
-    ec2Query "CreateInternetGateway" params $
+    ec2Query "CreateInternetGateway" [] $
         element "internetGateway" internetGatewaySink
-  where
-    params = []
 
 ------------------------------------------------------------
 -- describeInternetGateways
@@ -292,13 +310,13 @@ createCustomerGateway
     -> Text -- ^ IpAddress
     -> Int -- ^ BgpAsn
     -> EC2 m CustomerGateway
-createCustomerGateway type' ipAddress bgpAsn = do
+createCustomerGateway type' ipAddr bgpAsn = do
     ec2Query "CreateCustomerGateway" params $
         element "customerGateway" customerGatewaySink
   where
     params =
         [ ValueParam "Type" type' 
-        , ValueParam "IpAddress" ipAddress
+        , ValueParam "IpAddress" ipAddr
         , ValueParam "BgpAsn" (toText bgpAsn)
         ]
 
@@ -309,8 +327,8 @@ deleteCustomerGateway
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ CustomerGatewayId
     -> EC2 m Bool
-deleteCustomerGateway id = do
+deleteCustomerGateway cid = do
     ec2Query "DeleteCustomerGateway" params $
         getF "return" textToBool
   where
-    params = [ ValueParam "CustomerGatewayId" id ]
+    params = [ ValueParam "CustomerGatewayId" cid ]
