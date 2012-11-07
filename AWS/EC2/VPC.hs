@@ -11,6 +11,7 @@ module AWS.EC2.VPC
     , describeVpnGateways
     , describeVpcs
     , describeInternetGateways
+    , attachInternetGateway
     ) where
 
 import Data.Text (Text)
@@ -29,6 +30,19 @@ import AWS.Util
 
 import Debug.Trace
 
+------------------------------------------------------------
+-- attachInternetGateway
+------------------------------------------------------------
+attachInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InternetGatewayId
+    -> Text -- ^ VpcId
+    -> EC2 m Bool
+attachInternetGateway internetGatewayId vpcId=
+    ec2Query "AttachInternetGateway" params $
+        getF "return" textToBool
+        where params = [ ValueParam "InternetGatewayId" internetGatewayId,
+                         ValueParam "VpcId" vpcId ]
 ------------------------------------------------------------
 -- deleteInternetGateway
 ------------------------------------------------------------
