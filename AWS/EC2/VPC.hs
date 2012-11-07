@@ -8,6 +8,7 @@ module AWS.EC2.VPC
     , deleteVpc
     , deleteVpnGateway
     , deleteCustomerGateway
+    , deleteInternetGateway
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
@@ -30,6 +31,17 @@ import AWS.Lib.Parser
 import AWS.Util
 
 import Debug.Trace
+
+------------------------------------------------------------
+-- deleteInternetGateway
+------------------------------------------------------------
+deleteInternetGateway
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ InternetGatewayId
+    -> EC2 m Bool
+deleteInternetGateway internetGatewayId =
+    ec2Query "DeleteInternetGateway" [ ValueParam "InternetGatewayId" internetGatewayId ] $
+        getF "return" textToBool
 
 ------------------------------------------------------------
 -- createInternetGateway
