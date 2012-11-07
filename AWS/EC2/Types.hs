@@ -110,6 +110,9 @@ module AWS.EC2.Types
     , VpnStaticRouteState(..)
     , VpnTunnelTelemetry(..)
     , VpnTunnelTelemetryStatus(..)
+    , InternetGateway(..)
+    , InternetGatewayAttachment(..)
+    , InternetGatewayAttachmentState(..)
     ) where
 
 import Data.Default (Default(..))
@@ -1010,3 +1013,25 @@ data AttachmentState
   deriving (Show, Eq)
 
 data CreateVpnGatewayType = CreateVpnGatewayTypeIpsec1
+
+data InternetGateway = InternetGateway
+    { internetGatewayInternetGatewayId :: Text
+    , internetGatewayAttachmentSet :: [InternetGatewayAttachment]
+    , internetGatewayTagSet :: [ResourceTag]
+    }
+  deriving (Show, Eq)
+
+data InternetGatewayAttachment = InternetGatewayAttachment
+    { internetGatewayAttachmentVpcId :: Text
+    , internetGatewayAttachmentState :: InternetGatewayAttachmentState
+    }
+  deriving (Show, Eq)
+
+data InternetGatewayAttachmentState
+    = InternetGatewayAttachmentStateAttaching
+    | InternetGatewayAttachmentStateAttached
+    | InternetGatewayAttachmentStateDetaching
+    | InternetGatewayAttachmentStateDetached
+    | InternetGatewayAttachmentStateAvailable
+  deriving (Show, Eq)
+
