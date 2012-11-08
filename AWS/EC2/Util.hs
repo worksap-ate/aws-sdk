@@ -1,10 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module AWS.EC2.Util
-    ( asList
+    ( list
     , head
     , each
+    , eachp
     , wait
+    , count
     ) where
 
 import Data.Conduit
@@ -17,14 +19,15 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Applicative
+import Control.Parallel (par)
 
 import AWS.EC2.Internal
 
-asList
+list
     :: Monad m
     => EC2 m (ResumableSource m a)
     -> EC2 m [a]
-asList src = do
+list src = do
     s <- src
     lift $ s $$+- CL.consume
 
@@ -42,15 +45,33 @@ each
     -> EC2 m (ResumableSource m a)
     -> EC2 m ()
 each f res = res >>= lift . each' f
+  where
+    each' g rsrc = do
+        (s', ma) <- rsrc $$++ CL.head
+        maybe (return ()) (\a -> g a >> each' g s') ma
 
-each'
+-- | parallel each
+eachp
     :: Monad m
     => (a -> m b)
-    -> ResumableSource m a
-    -> m ()
-each' f rsrc = do
-    (s', ma) <- rsrc $$++ CL.head
-    maybe (return ()) (\a -> f a >> each' f s') ma
+    -> EC2 m (ResumableSource m a)
+    -> EC2 m ()
+eachp f res = res >>= lift . each' f
+  where
+    each' g rsrc = do
+        (s', ma) <- rsrc $$++ CL.head
+        maybe (return ()) (\a -> g a `par` each' g s') ma
+
+-- | Count resources.
+count
+    :: Monad m
+    => EC2 m (ResumableSource m a)
+    -> EC2 m Int
+count ers = do
+    s <- ers
+    lift $ s $$+- c 0
+  where
+    c n = await >>= maybe (return n) (const $ c $ n + 1)
 
 -- | Wait for condition.
 --

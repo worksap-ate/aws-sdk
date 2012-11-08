@@ -77,12 +77,13 @@ library
                    , transformers-base
                    , strptime
                    , template-haskell
+                   , parallel
 
 test-suite test
     type:              exitcode-stdio-1.0
     main-is:           main.hs
     hs-source-dirs:    tests
-    ghc-options:       -Wall
+    ghc-options:       -Wall -threaded
 
     build-depends: base
                  , hspec
