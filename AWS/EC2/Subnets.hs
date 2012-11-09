@@ -73,6 +73,4 @@ deleteSubnet
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ SubnetId
     -> EC2 m Bool
-deleteSubnet sid =
-    ec2Query "DeleteSubnet" [ValueParam "SubnetId" sid]
-        $ getF "return" textToBool
+deleteSubnet = ec2Delete "DeleteSubnet" "SubnetId"

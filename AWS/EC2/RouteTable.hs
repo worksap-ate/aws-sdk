@@ -86,9 +86,7 @@ deleteRouteTable
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ RouteTableId
     -> EC2 m Bool
-deleteRouteTable rtid =
-    ec2Query "DeleteRouteTable" [ValueParam "RouteTableId" rtid]
-        $ getF "return" textToBool
+deleteRouteTable = ec2Delete "DeleteRouteTable" "RouteTableId"
 
 ------------------------------------------------------------
 -- associateRouteTable

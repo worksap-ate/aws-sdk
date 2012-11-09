@@ -51,9 +51,7 @@ deleteKeyPair
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ KeyName
     -> EC2 m Bool
-deleteKeyPair name =
-    ec2Query "DeleteKeyPair" [ValueParam "KeyName" name]
-        $ getF "return" textToBool
+deleteKeyPair = ec2Delete "DeleteKeyPair" "KeyName"
 
 importKeyPair
     :: (MonadResource m, MonadBaseControl IO m)

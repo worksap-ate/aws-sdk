@@ -7,6 +7,7 @@ module AWS.EC2.Query
 #ifdef DEBUG
     , ec2QueryDebug
 #endif
+    , ec2Delete
     , module AWS.Lib.Query
     ) where
 
@@ -120,3 +121,12 @@ ec2QueryDebug action params = do
         (res, _) <- unwrapResumable response
         res $$ CB.sinkFile "debug.txt" >>= fail "debug"
 #endif
+
+ec2Delete
+    :: (MonadResource m, MonadBaseControl IO m)
+    => ByteString -- ^ Name of API
+    -> Text -- ^ Parameter Name of ID
+    -> Text -- ^ ID of Target
+    -> EC2 m Bool
+ec2Delete apiName idName targetId = do
+    ec2Query apiName [ ValueParam idName targetId ] returnBool
