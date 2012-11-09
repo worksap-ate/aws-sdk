@@ -77,10 +77,7 @@ deleteNetworkAcl
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ NetworkAclId
     -> EC2 m Bool
-deleteNetworkAcl aclid =
-    ec2Query "DeleteNetworkAcl" params returnBool
-  where
-    params = [ValueParam "NetworkAclId" aclid]
+deleteNetworkAcl = ec2Delete "DeleteNetworkAcl" "NetworkAclId"
 
 replaceNetworkAclAssociation
     :: (MonadResource m, MonadBaseControl IO m)

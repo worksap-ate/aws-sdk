@@ -73,9 +73,7 @@ deleteInternetGateway
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ InternetGatewayId
     -> EC2 m Bool
-deleteInternetGateway internetGatewayId =
-    ec2Query "DeleteInternetGateway" [ ValueParam "InternetGatewayId" internetGatewayId ] $
-        getF "return" textToBool
+deleteInternetGateway = ec2Delete "DeleteInternetGateway" "InternetGatewayId"
 
 ------------------------------------------------------------
 -- createInternetGateway
@@ -210,9 +208,7 @@ deleteVpc
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ VpcId
     -> EC2 m Bool
-deleteVpc vid =
-    ec2Query "DeleteVpc" [ ValueParam "VpcId" vid ] $
-        getF "return" textToBool
+deleteVpc = ec2Delete "DeleteVpc" "VpcId"
 
 ------------------------------------------------------------
 -- describeVpnGateways
@@ -270,9 +266,7 @@ deleteVpnGateway
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ VpnGatewayId
     -> EC2 m Bool
-deleteVpnGateway vgId = do
-    ec2Query "DeleteVpnGateway" [ ValueParam "VpnGatewayId" vgId ] $
-        getF "return" textToBool
+deleteVpnGateway = ec2Delete "DeleteVpnGateway" "VpnGatewayId"
 
 ------------------------------------------------------------
 -- describeCustomerGateway
@@ -327,8 +321,4 @@ deleteCustomerGateway
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ CustomerGatewayId
     -> EC2 m Bool
-deleteCustomerGateway cid = do
-    ec2Query "DeleteCustomerGateway" params $
-        getF "return" textToBool
-  where
-    params = [ ValueParam "CustomerGatewayId" cid ]
+deleteCustomerGateway = ec2Delete "DeleteCustomerGateway" "CustomerGatewayId"

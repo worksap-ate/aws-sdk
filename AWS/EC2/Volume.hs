@@ -92,9 +92,7 @@ deleteVolume
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ VolumeId
     -> EC2 m Bool
-deleteVolume volid =
-    ec2Query "DeleteVolume" [ValueParam "VolumeId" volid]
-        $ getF "return" textToBool
+deleteVolume = ec2Delete "DeleteVolume" "VolumeId"
 
 attachVolume
     :: (MonadResource m, MonadBaseControl IO m)
