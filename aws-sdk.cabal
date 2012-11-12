@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.5.0.0
+version:             0.6.0.0
 synopsis:            AWS SDK for Haskell
 description:         An AWS(Amazon Web Services) liblary for Haskell.
 license:             BSD3
@@ -59,7 +59,7 @@ library
                    , base64-bytestring >= 1.0.0.0
                    , bytestring
                    , http-types
-                   , conduit >= 0.5.0
+                   , conduit >= 0.5.2
                    , transformers
                    , time
                    , old-locale
