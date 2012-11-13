@@ -1,4 +1,4 @@
-module AWS.Util where
+module AWSTests.Util where
 
 import Test.HUnit
 import Test.Hspec

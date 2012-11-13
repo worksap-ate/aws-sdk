@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
-module AWS.EC2.VPCTests
+module AWSTests.EC2Tests.VPCTests
     ( runVpcTests
     )
     where
@@ -10,8 +10,8 @@ import Test.Hspec
 
 import AWS.EC2
 import AWS.EC2.Types
-import AWS.Util
-import AWS.EC2.Util
+import AWSTests.Util
+import AWSTests.EC2Tests.Util
 
 region :: Text
 region = "ap-southeast-1"

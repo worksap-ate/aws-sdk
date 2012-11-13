@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
-module AWS.EC2.InstanceTests
+module AWSTests.EC2Tests.InstanceTests
     ( runInstanceTests
     )
     where
@@ -9,8 +9,8 @@ import Data.Text (Text)
 import Test.Hspec
 
 import AWS.EC2
-import AWS.Util
-import AWS.EC2.Util
+import AWSTests.Util
+import AWSTests.EC2Tests.Util
 import Control.Exception
 
 region :: Text

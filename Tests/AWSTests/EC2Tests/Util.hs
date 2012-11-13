@@ -1,4 +1,4 @@
-module AWS.EC2.Util
+module AWSTests.EC2Tests.Util
     ( testEC2
     , testEC2'
     )

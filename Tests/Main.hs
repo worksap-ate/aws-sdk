@@ -4,7 +4,7 @@
 
 module Main where
 
-import AWS.EC2Tests
+import AWSTests.EC2Tests
 
 main :: IO ()
 main = do
