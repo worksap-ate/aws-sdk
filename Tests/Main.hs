@@ -11,3 +11,14 @@ main = do
     runInstanceTests
     runVpcTests
     runAddressTests
+    runSnapshotTests
+    runImageTests
+    runSubnetsTests
+    runVolumeTests
+    runSecurityGroupTests
+    runRouteTableTests
+    runRegionTests
+    runInstanceTests
+    runAvailabilityZoneTests
+    runTagTests
+    runKeyPairTests
