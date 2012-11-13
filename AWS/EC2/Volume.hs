@@ -10,6 +10,7 @@ module AWS.EC2.Volume
     , describeVolumeAttribute
     , modifyVolumeAttribute
     ) where
+
 import Data.Text (Text)
 
 import Data.XML.Types (Event)
@@ -211,7 +212,8 @@ volumeAttributeSink
     :: MonadThrow m
     => VolumeAttributeRequest
     -> GLSink Event m VolumeAttribute
-volumeAttributeSink VARAutoEnableIO =
-    VAAutoEnableIO <$> getF "autoEnableIO" textToBool
-volumeAttributeSink VARProductCodes =
-    VAProductCodes <$> productCodeSink
+volumeAttributeSink VARAutoEnableIO = VAAutoEnableIO
+    <$> element "autoEnableIO"
+        (getF "value" textToBool)
+volumeAttributeSink VARProductCodes = VAProductCodes
+    <$> productCodeSink
