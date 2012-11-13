@@ -81,13 +81,20 @@ library
 
 test-suite test
     type:              exitcode-stdio-1.0
-    main-is:           main.hs
-    hs-source-dirs:    tests
+    main-is:           Main.hs
+    hs-source-dirs:    Tests
     ghc-options:       -Wall -threaded
-
+    extensions: OverloadedStrings
     build-depends: base
+                 , aws-sdk
+                 , conduit
+                 , text
+                 , monad-control
+                 , transformers
                  , hspec
                  , QuickCheck
+                 , hspec
+                 , HUnit
 
 source-repository head
     type:            git
