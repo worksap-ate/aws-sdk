@@ -82,12 +82,12 @@ library
 test-suite test
     type:              exitcode-stdio-1.0
     main-is:           main.hs
-    hs-source-dirs:    tests
+    hs-source-dirs:    Tests
     ghc-options:       -Wall -threaded
-
     build-depends: base
                  , hspec
                  , QuickCheck
+                 , hspec
 
 source-repository head
     type:            git
