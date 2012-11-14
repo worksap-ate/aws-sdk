@@ -5,14 +5,17 @@ module AWS.EC2.Image
     , createImage
     , registerImage
     , deregisterImage
+    , describeImageAttribute
     ) where
 
 import Data.Text (Text)
+import qualified Data.Text as T
 
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
+import Control.Monad (join)
 
 import AWS.EC2.Convert
 import AWS.EC2.Internal
@@ -62,21 +65,24 @@ imageItem = Image
     <*> itemsSet "billingProducts" (getT "billingProduct")
     <*> getF "rootDeviceType" rootDeviceType
     <*> getMT "rootDeviceName"
-    <*> itemsSet "blockDeviceMapping" (
-        BlockDeviceMapping
-        <$> getT "deviceName"
-        <*> getMT "virtualName"
-        <*> elementM "ebs" (
-            EbsBlockDevice
-            <$> getMT "snapshotId"
-            <*> getF "volumeSize" textToInt
-            <*> getF "deleteOnTermination" textToBool
-            <*> volumeTypeSink
-            )
-        )
+    <*> blockDeviceMappingSink
     <*> getF "virtualizationType" virtualizationType
     <*> resourceTagSink
     <*> getF "hypervisor" hypervisor
+
+blockDeviceMappingSink :: MonadThrow m => GLSink Event m [BlockDeviceMapping]
+blockDeviceMappingSink = itemsSet "blockDeviceMapping" (
+    BlockDeviceMapping
+    <$> getT "deviceName"
+    <*> getMT "virtualName"
+    <*> elementM "ebs" (
+        EbsBlockDevice
+        <$> getMT "snapshotId"
+        <*> getF "volumeSize" textToInt
+        <*> getF "deleteOnTermination" textToBool
+        <*> volumeTypeSink
+        )
+    )
 
 createImage
     :: (MonadResource m, MonadBaseControl IO m)
@@ -123,3 +129,36 @@ deregisterImage iid =
     ec2Query "DeregisterImage" params returnBool
   where
     params = [ValueParam "ImageId" iid]
+
+describeImageAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ ImageId
+    -> AMIAttribute -- ^ Attribute
+    -> EC2 m AMIAttributeDescription
+describeImageAttribute iid attr =
+    ec2Query "DescribeImageAttribute" params $ AMIAttributeDescription
+        <$> getT "imageId"
+        <*> itemsSet "launchPermission"
+            (LaunchPermissionItem
+            <$> getT "group"
+            <*> getT "userId")
+        <*> itemsSet "productCodes"
+            (ProductCodeItem
+            <$> getT "productCode")
+        <*> getMMT "kernel"
+        <*> getMMT "ramdisk"
+        <*> getMMT "description"
+        <*> blockDeviceMappingSink
+  where
+    getMMT name = join <$> elementM name (getMT "value")
+    params = [ ValueParam "ImageId" iid
+             , ValueParam "Attribute" param
+             ]
+    param :: Text
+    param | attr == AMIDescription        = "description"
+          | attr == AMIKernel             = "kernel"
+          | attr == AMIRamdisk            = "ramdisk"
+          | attr == AMILaunchPermission   = "launchPermission"
+          | attr == AMIProductCodes       = "productCodes"
+          | attr == AMIBlockDeviceMapping = "blockDeviceMapping"
+          | otherwise                     = err "AMIAttribute" $ T.pack $ show attr

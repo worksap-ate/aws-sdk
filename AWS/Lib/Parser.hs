@@ -103,7 +103,7 @@ element :: MonadThrow m
     => Text
     -> Pipe Event Event o u m a
     -> Pipe Event Event o u m a
-element name inner = XML.force "parse error" $ elementM name inner
+element name inner = XML.force ("parse error:" ++ T.unpack name) $ elementM name inner
 
 tagContentM :: MonadThrow m
     => Text
