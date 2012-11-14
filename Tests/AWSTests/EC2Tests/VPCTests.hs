@@ -19,13 +19,42 @@ region = "ap-southeast-1"
 runVpcTests :: IO ()
 runVpcTests = do
     hspec describeVpcsTest
-    hspec createVpcTest
+    hspec describeVpnGatewaysTest
+    hspec describeInternetGatewaysTest
+    hspec describeVpnConnectionsTest
+    hspec describeCustomerGatewayTest
+    hspec describeInternetGatewaysTest
+    -- hspec createVpcTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
     describe "describeVpcs doesn't fail" $ do
         it "describeVpcs doesn't throw any exception" $ do
-            testEC2 region (describeVpcs [] []) `shouldntThrow` anyException
+            testEC2 region (describeVpcs [] []) `miss` anyHttpException
+
+describeVpnGatewaysTest :: Spec
+describeVpnGatewaysTest = do
+    describe "describeVpnGateways doesn't fail" $ do
+        it "describeVpnGateways doesn't throw any exception" $ do
+            testEC2 region (describeVpnGateways [] []) `miss` anyHttpException
+
+describeVpnConnectionsTest :: Spec
+describeVpnConnectionsTest = do
+    describe "describeVpnConnections doesn't fail" $ do
+        it "describeVpnConnections doesn't throw any exception" $ do
+            testEC2 region (describeVpnConnections [] []) `miss` anyHttpException
+
+describeCustomerGatewayTest :: Spec
+describeCustomerGatewayTest = do
+    describe "describeCustomerGateway doesn't fail" $ do
+        it "describeCustomerGateway doesn't throw any exception" $ do
+            testEC2 region (describeCustomerGateway [] []) `miss` anyHttpException
+
+describeInternetGatewaysTest :: Spec
+describeInternetGatewaysTest = do
+    describe "describeInternetGateways doesn't fail" $ do
+        it "describeInternetGateways doesn't throw any exception" $ do
+            testEC2 region (describeInternetGateways [] []) `miss` anyHttpException
 
 createVpcTest :: Spec
 createVpcTest = do
