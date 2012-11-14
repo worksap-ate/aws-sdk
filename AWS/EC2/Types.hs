@@ -2,6 +2,8 @@ module AWS.EC2.Types
     ( Address(..)
     , AddressDomain(..)
     , AllocateAddressResponse(..)
+    , AMIAttribute(..)
+    , AMIAttributeDescription(..)
     , Architecture(..)
     , AssociateAddressRequest(..)
     , Attachment(..)
@@ -52,6 +54,7 @@ module AWS.EC2.Types
     , IpRange(..)
     , KeyPair(..)
     , ModifyInstanceAttributeRequest(..)
+    , LaunchPermissionItem(..)
     , NetworkAcl(..)
     , NetworkAclAssociation(..)
     , NetworkAclEntry(..)
@@ -65,6 +68,7 @@ module AWS.EC2.Types
     , Platform(..)
     , PortRange(..)
     , ProductCode(..)
+    , ProductCodeItem(..)
     , ProductCodeType(..)
     , Region(..)
     , RegisterImageRequest(..)
@@ -149,6 +153,32 @@ data Image = Image
     }
   deriving (Show, Eq)
 
+data AMIAttribute
+    = AMIDescription
+    | AMIKernel
+    | AMIRamdisk
+    | AMILaunchPermission
+    | AMIProductCodes
+    | AMIBlockDeviceMapping
+  deriving (Show, Eq)
+
+data AMIAttributeDescription = AMIAttributeDescription
+      { amiAttributeDescriptionImageId :: Text
+      , amiAttributeDescriptionLaunchPermission :: [LaunchPermissionItem]
+      , amiAttributeDescriptionProductCodes :: [ProductCodeItem]
+      , amiAttributeDescriptionKernel :: Maybe Text
+      , amiAttributeDescriptionRamdisk :: Maybe Text
+      , amiAttributeDescriptionDescription :: Maybe Text
+      , amiAttributeDescriptionBlockDeviceMapping :: [BlockDeviceMapping]
+      }
+  deriving (Show, Eq)
+
+data LaunchPermissionItem = LaunchPermissionItem
+      { launchPermissionItemGroup :: Text
+      , launchPermissionUserId :: Text
+      }
+  deriving (Show, Eq)
+
 data ImageState
     = ImageAvailable
     | ImagePending
@@ -158,6 +188,11 @@ data ImageState
 data ProductCode = ProductCode
     { pcCode :: Text
     , pcType :: ProductCodeType
+    }
+  deriving (Show, Eq)
+
+data ProductCodeItem = ProductCodeItem
+    { productCodeItemProductCode :: Text
     }
   deriving (Show, Eq)
 
