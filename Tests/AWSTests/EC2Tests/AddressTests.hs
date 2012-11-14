@@ -21,12 +21,12 @@ runAddressTests = hspec $ do
     describe "Address APIs don't fail" $ do
         it "describeAddresses doesn't throw any exception" $ do
             testEC2 region (describeAddresses [] [] [])
-                `shouldntThrow` anyException
+                `miss` anyHttpException
         it "create and delete Addresses" $ do
             testEC2' region (do
                 addr <- allocateAddress False
                 releaseAddress (Just $ alaPublicIp addr) Nothing
                 addr2 <- allocateAddress True
                 releaseAddress Nothing (alaAllocationId addr2)
-                ) `shouldntThrow` anyException
+                ) `miss` anyHttpException
     -- attach/detach

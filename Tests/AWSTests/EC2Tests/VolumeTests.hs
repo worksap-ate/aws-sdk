@@ -26,13 +26,13 @@ describeVolumesTest :: Spec
 describeVolumesTest = do
     describe "describeVolumes doesn't fail" $ do
         it "describeVolumes doesn't throw any exception" $ do
-            testEC2 region (describeVolumes [] []) `shouldntThrow` anyException
+            testEC2 region (describeVolumes [] []) `miss` anyHttpException
 
 describeVolumeStatusTest :: Spec
 describeVolumeStatusTest = do
     describe "describeVolumeStatus doesn't fail" $ do
         it "describeVolumeStatus doesn't throw any exception" $ do
-            testEC2 region (describeVolumeStatus [] [] Nothing) `shouldntThrow` anyException
+            testEC2 region (describeVolumeStatus [] [] Nothing) `miss` anyHttpException
 
 describeVolumeAttributeTest :: Spec
 describeVolumeAttributeTest = do
@@ -40,4 +40,4 @@ describeVolumeAttributeTest = do
         it "describeVolumeAttribute doesn't throw any exception" $ do
             volumes <- testEC2 region (describeVolumes [] [])
             let vid = volumeId $ head volumes
-            testEC2' region (describeVolumeAttribute vid VARAutoEnableIO) `shouldntThrow` anyException
+            testEC2' region (describeVolumeAttribute vid VARAutoEnableIO) `miss` anyHttpException

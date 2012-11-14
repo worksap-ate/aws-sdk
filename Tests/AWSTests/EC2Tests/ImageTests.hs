@@ -23,4 +23,4 @@ describeImageTest :: Spec
 describeImageTest = do
     describe "describeImages doesn't fail" $ do
         it "describeImages doesn't throw any exception" $ do
-            testEC2 region (describeImages [] [] [] []) `shouldntThrow` anyException
+            testEC2 region (describeImages [] [] [] []) `miss` anyHttpException

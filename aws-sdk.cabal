@@ -91,6 +91,7 @@ test-suite test
                  , text
                  , monad-control
                  , transformers
+                 , http-conduit
                  , hspec
                  , QuickCheck
                  , hspec

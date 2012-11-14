@@ -23,4 +23,4 @@ describeSnapshotsTest :: Spec
 describeSnapshotsTest = do
     describe "describeSnapshots doesn't fail" $ do
         it "describeSnapshots doesn't throw any exception" $ do
-            testEC2 region (describeSnapshots [] [] [] []) `shouldntThrow` anyException
+            testEC2 region (describeSnapshots [] [] [] []) `miss` anyHttpException

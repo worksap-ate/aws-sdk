@@ -23,4 +23,4 @@ describeKeyPairsTest :: Spec
 describeKeyPairsTest = do
     describe "describeKeyPairs doesn't fail" $ do
         it "describeKeyPairs doesn't throw any exception" $ do
-            testEC2 region (describeKeyPairs [] []) `shouldntThrow` anyException
+            testEC2 region (describeKeyPairs [] []) `miss` anyHttpException
