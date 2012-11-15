@@ -57,8 +57,8 @@ routeSink = itemsSet "routeSet" $ Route
     <*> getMT "instanceId"
     <*> getMT "instanceOwnerId"
     <*> getMT "networkInterfaceId"
-    <*> getF "state" routeState
-    <*> getM "origin" (routeOrigin <$>)
+    <*> getF "state" routeState'
+    <*> getM "origin" (routeOrigin' <$>)
 
 routeTableAssociationSink :: MonadThrow m
     => GLSink Event m [RouteTableAssociation]

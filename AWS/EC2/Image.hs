@@ -110,15 +110,22 @@ registerImage
 registerImage req =
     ec2Query "RegisterImage" params $ getT "imageId"
   where
-    params = [ValueParam "Name" $ rirName req]
-        ++ [blockDeviceMappingParams $ rirBlockDeviceMappings req]
+    params = [ValueParam "Name" $ registerImageRequestName req]
+        ++ [blockDeviceMappingParams
+            $ registerImageRequestBlockDeviceMappings req]
         ++ maybeParams
-            [ ("ImageLocation", rirImageLocation req)
-            , ("Description", rirDescription req)
-            , ("Architecture", rirArchitecture req)
-            , ("KernelId", rirKernelId req)
-            , ("RamdiskId", rirRamdiskId req)
-            , ("RootDeviceName", rirRootDeviceName req)
+            [ ("ImageLocation"
+              , registerImageRequestImageLocation req
+              )
+            , ("Description", registerImageRequestDescription req)
+            , ("Architecture"
+              , registerImageRequestArchitecture req
+              )
+            , ("KernelId", registerImageRequestKernelId req)
+            , ("RamdiskId", registerImageRequestRamdiskId req)
+            , ("RootDeviceName"
+              , registerImageRequestRootDeviceName req
+              )
             ]
 
 deregisterImage

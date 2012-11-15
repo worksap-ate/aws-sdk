@@ -120,9 +120,9 @@ instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
     InstanceBlockDeviceMapping
     <$> getT "deviceName"
     <*> element "ebs" (
-        InstanceEbsBlockDevice
+        EbsInstanceBlockDevice
         <$> getT "volumeId"
-        <*> getF "status" attachmentSetItemResponseStatus
+        <*> getF "status" attachmentSetItemResponseStatus'
         <*> getF "attachTime" textToTime
         <*> getF "deleteOnTermination" textToBool
         )
@@ -201,7 +201,7 @@ instanceStatusSet = do
         <*> getT "availabilityZone"
         <*> itemsSet "eventsSet" (
             InstanceStatusEvent
-            <$> getF "code" instanceStatusEventCode
+            <$> getF "code" instanceStatusEventCode'
             <*> getT "description"
             <*> getM "notBefore" (textToTime <$>)
             <*> getM "notAfter" (textToTime <$>)
@@ -214,7 +214,7 @@ instanceStatusTypeSink :: MonadThrow m
     => Text -> GLSink Event m InstanceStatusType
 instanceStatusTypeSink name = element name $
     InstanceStatusType
-    <$> getF "status" instanceStatusTypeStatus
+    <$> getF "status" instanceStatusTypeStatus'
     <*> itemsSet "details" (
         InstanceStatusDetail
         <$> getT "name"
@@ -295,35 +295,62 @@ runInstances param =
     ec2Query "RunInstances" params reservationSink
   where
     params =
-        [ ValueParam "ImageId" $ riImageId param
-        , ValueParam "MinCount" $ toText $ riMinCount param
-        , ValueParam "MaxCount" $ toText $ riMaxCount param
-        , ArrayParams "SecurityGroupId" $ riSecurityGroupIds param
-        , ArrayParams "SecurityGroup" $ riSecurityGroups param
-        , blockDeviceMappingParams $ riBlockDeviceMappings param
+        [ ValueParam "ImageId" $ runInstancesRequestImageId param
+        , ValueParam "MinCount"
+            $ toText $ runInstancesRequestMinCount param
+        , ValueParam "MaxCount"
+            $ toText $ runInstancesRequestMaxCount param
+        , ArrayParams "SecurityGroupId"
+            $ runInstancesRequestSecurityGroupIds param
+        , ArrayParams "SecurityGroup"
+            $ runInstancesRequestSecurityGroups param
+        , blockDeviceMappingParams
+            $ runInstancesRequestBlockDeviceMappings param
         ] ++ maybeParams
-            [ ("KeyName", riKeyName param)
-            , ("UserData", bsToText <$> riUserData param)
-            , ("InstanceType", riInstanceType param)
-            , ("Placement.AvailabilityZone",
-               riAvailabilityZone param)
-            , ("Placement.GroupName", riPlacementGroup param)
-            , ("Placement.Tenancy", riTenancy param)
-            , ("KernelId", riKernelId param)
-            , ("RamdiskId", riRamdiskId param)
-            , ("Monitoring.Enabled",
-               boolToText <$> riMonitoringEnabled param)
-            , ("SubnetId", riSubnetId param)
-            , ("DisableApiTermination",
-               boolToText <$> riDisableApiTermination param)
-            , ("InstanceInitiatedShutdownBehavior",
-               sbToText <$> riShutdownBehavior param)
-            , ("ClientToken", riClientToken param)
-            , ("IamInstanceProfile.Arn",
-               iipArn <$> riIamInstanceProfile param)
-            , ("IamInstanceProfile.Name",
-               iipId <$> riIamInstanceProfile param)
-            , ("EbsOptimized", boolToText <$> riEbsOptimized param)
+            [ ("KeyName", runInstancesRequestKeyName param)
+            , ("UserData"
+              , bsToText <$> runInstancesRequestUserData param
+              )
+            , ("InstanceType"
+              , runInstancesRequestInstanceType param
+              )
+            , ("Placement.AvailabilityZone"
+              , runInstancesRequestAvailabilityZone param
+              )
+            , ("Placement.GroupName"
+              , runInstancesRequestPlacementGroup param
+              )
+            , ("Placement.Tenancy"
+              , runInstancesRequestTenancy param
+              )
+            , ("KernelId", runInstancesRequestKernelId param)
+            , ("RamdiskId", runInstancesRequestRamdiskId param)
+            , ("Monitoring.Enabled"
+              , boolToText
+                <$> runInstancesRequestMonitoringEnabled param
+              )
+            , ("SubnetId", runInstancesRequestSubnetId param)
+            , ("DisableApiTermination"
+              , boolToText
+                <$> runInstancesRequestDisableApiTermination param
+              )
+            , ("InstanceInitiatedShutdownBehavior"
+              , sbToText
+                <$> runInstancesRequestShutdownBehavior param
+              )
+            , ("ClientToken", runInstancesRequestClientToken param)
+            , ("IamInstanceProfile.Arn"
+              , iamInstanceProfileArn
+                <$> runInstancesRequestIamInstanceProfile param
+              )
+            , ("IamInstanceProfile.Name"
+              , iamInstanceProfileId
+                <$> runInstancesRequestIamInstanceProfile param
+              )
+            , ("EbsOptimized"
+              , boolToText
+                <$> runInstancesRequestEbsOptimized param
+              )
             ]
 
 -- | RunInstances parameter utility
@@ -334,34 +361,33 @@ defaultRunInstancesRequest
     -> RunInstancesRequest
 defaultRunInstancesRequest iid minCount maxCount
     = RunInstancesRequest
-    { riImageId = iid
-    , riMinCount = minCount
-    , riMaxCount = maxCount
-    , riKeyName = Nothing
-    , riSecurityGroupIds = []
-    , riSecurityGroups = []
-    , riUserData = Nothing
-    , riInstanceType = Nothing
-    , riAvailabilityZone = Nothing
-    , riPlacementGroup = Nothing
-    , riTenancy = Nothing
-    , riKernelId = Nothing
-    , riRamdiskId = Nothing
-    , riBlockDeviceMappings = []
-    , riMonitoringEnabled = Nothing
-    , riSubnetId = Nothing
-    , riDisableApiTermination = Nothing
-    , riShutdownBehavior = Nothing
-    , riPrivateIpAddresses = []
-    , riClientToken = Nothing
-    , riNetworkInterface = []
-    , riIamInstanceProfile = Nothing
-    , riEbsOptimized = Nothing
-    }
+        iid
+        minCount
+        maxCount
+        Nothing
+        []
+        []
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        []
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        []
+        Nothing
+        []
+        Nothing
+        Nothing
 
 sbToText :: ShutdownBehavior -> Text
-sbToText SBStop      = "stop"
-sbToText SBTerminate = "terminate"
+sbToText ShutdownBehaviorStop      = "stop"
+sbToText ShutdownBehaviorTerminate = "terminate"
 
 ------------------------------------------------------------
 -- GetConsoleOutput
@@ -405,48 +431,53 @@ describeInstanceAttribute iid attr =
         [ ValueParam "InstanceId" iid
         , ValueParam "Attribute" str
         ]
-    f IARBlockDeviceMapping = instanceBlockDeviceMappingsSink
-        >>= return . IABlockDeviceMapping
-    f IARProductCodes =
-        productCodeSink >>= return . IAProductCodes
-    f IARGroupSet =
-        (itemsSet str $ getT "groupId") >>= return . IAGroupSet
+    f InstanceAttributeRequestBlockDeviceMapping = instanceBlockDeviceMappingsSink
+        >>= return . InstanceAttributeBlockDeviceMapping
+    f InstanceAttributeRequestProductCodes =
+        productCodeSink >>= return . InstanceAttributeProductCodes
+    f InstanceAttributeRequestGroupSet =
+        (itemsSet str $ getT "groupId")
+        >>= return . InstanceAttributeGroupSet
     f req = valueSink str (fromJust $ Map.lookup req h)
     h = Map.fromList
-        [ (IARInstanceType, IAInstanceType . fromJust)
-        , (IARKernelId, IAKernelId)
-        , (IARRamdiskId, IARamdiskId)
-        , (IARUserData, IAUserData)
-        , (IARDisableApiTermination,
-           IADisableApiTermination . textToBool . fromJust)
-        , (IARShutdownBehavior,
-           IAShutdownBehavior . shutdownBehavior . fromJust)
-        , (IARRootDeviceName, IARootDeviceName)
-        , (IARSourceDestCheck,
-           IASourceDestCheck . (textToBool <$>))
-        , (IAREbsOptimized, IAEbsOptimized . textToBool . fromJust)
+        [ (InstanceAttributeRequestInstanceType,
+           InstanceAttributeInstanceType . fromJust)
+        , (InstanceAttributeRequestKernelId, InstanceAttributeKernelId)
+        , (InstanceAttributeRequestRamdiskId, InstanceAttributeRamdiskId)
+        , (InstanceAttributeRequestUserData, InstanceAttributeUserData)
+        , (InstanceAttributeRequestDisableApiTermination,
+           InstanceAttributeDisableApiTermination
+           . textToBool . fromJust)
+        , (InstanceAttributeRequestShutdownBehavior,
+           InstanceAttributeShutdownBehavior
+           . shutdownBehavior . fromJust)
+        , (InstanceAttributeRequestRootDeviceName, InstanceAttributeRootDeviceName)
+        , (InstanceAttributeRequestSourceDestCheck,
+           InstanceAttributeSourceDestCheck . (textToBool <$>))
+        , (InstanceAttributeRequestEbsOptimized,
+           InstanceAttributeEbsOptimized . textToBool . fromJust)
         ]
     valueSink name val =
         (element name $ getMT "value") >>= return . val
 
 iar :: InstanceAttributeRequest -> Text
-iar IARInstanceType          = "instanceType"
-iar IARKernelId              = "kernel"
-iar IARRamdiskId             = "ramdisk"
-iar IARUserData              = "userData"
-iar IARDisableApiTermination = "disableApiTermination"
-iar IARShutdownBehavior      = "instanceInitiatedShutdownBehavior"
-iar IARRootDeviceName        = "rootDeviceName"
-iar IARBlockDeviceMapping    = "blockDeviceMapping"
-iar IARSourceDestCheck       = "sourceDestCheck"
-iar IARGroupSet              = "groupSet"
-iar IARProductCodes          = "productCodes"
-iar IAREbsOptimized          = "ebsOptimized"
+iar InstanceAttributeRequestInstanceType          = "instanceType"
+iar InstanceAttributeRequestKernelId              = "kernel"
+iar InstanceAttributeRequestRamdiskId             = "ramdisk"
+iar InstanceAttributeRequestUserData              = "userData"
+iar InstanceAttributeRequestDisableApiTermination = "disableApiTermination"
+iar InstanceAttributeRequestShutdownBehavior      = "instanceInitiatedShutdownBehavior"
+iar InstanceAttributeRequestRootDeviceName        = "rootDeviceName"
+iar InstanceAttributeRequestBlockDeviceMapping    = "blockDeviceMapping"
+iar InstanceAttributeRequestSourceDestCheck       = "sourceDestCheck"
+iar InstanceAttributeRequestGroupSet              = "groupSet"
+iar InstanceAttributeRequestProductCodes          = "productCodes"
+iar InstanceAttributeRequestEbsOptimized          = "ebsOptimized"
 
 riap :: ResetInstanceAttributeRequest -> Text
-riap RIAPKernel          = "kernel"
-riap RIAPRamdisk         = "ramdisk"
-riap RIAPSourceDestCheck = "sourceDestCheck"
+riap ResetInstanceAttributeRequestKernel          = "kernel"
+riap ResetInstanceAttributeRequestRamdisk         = "ramdisk"
+riap ResetInstanceAttributeRequestSourceDestCheck = "sourceDestCheck"
 
 resetInstanceAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -473,26 +504,26 @@ modifyInstanceAttribute iid attrs =
     params = ValueParam "InstanceId" iid:concatMap miap attrs
 
 miap :: ModifyInstanceAttributeRequest -> [QueryParam]
-miap (MIAPInstanceType a) =
+miap (ModifyInstanceAttributeRequestInstanceType a) =
     [ValueParam "InstanceType.Value" a]
-miap (MIAPKernelId a) =
+miap (ModifyInstanceAttributeRequestKernelId a) =
     [ValueParam "Kernel.Value"  a]
-miap (MIAPRamdiskId a) =
+miap (ModifyInstanceAttributeRequestRamdiskId a) =
     [ValueParam "Ramdisk.Value" a]
-miap (MIAPUserData a) =
+miap (ModifyInstanceAttributeRequestUserData a) =
     [ValueParam "UserData.Value" a]
-miap (MIAPDisableApiTermination a) =
+miap (ModifyInstanceAttributeRequestDisableApiTermination a) =
     [ValueParam "DisableApiTermination.Value" $ toText a]
-miap (MIAPShutdownBehavior a) =
+miap (ModifyInstanceAttributeRequestShutdownBehavior a) =
     [ValueParam "InstanceInitiatedShutdownBehavior.Value"
      $ sbToText a]
-miap (MIAPRootDeviceName a) =
+miap (ModifyInstanceAttributeRequestRootDeviceName a) =
     [ValueParam "RootDeviceName" a]
-miap (MIAPBlockDeviceMapping a) =
+miap (ModifyInstanceAttributeRequestBlockDeviceMapping a) =
     [blockDeviceMappingParams a]
-miap (MIAPSourceDestCheck a) =
+miap (ModifyInstanceAttributeRequestSourceDestCheck a) =
     [ValueParam "SourceDestCheck.Value" $ toText a]
-miap (MIAPGroupSet a) =
+miap (ModifyInstanceAttributeRequestGroupSet a) =
     [ArrayParams "GroupId" a]
-miap (MIAPEbsOptimized a) =
+miap (ModifyInstanceAttributeRequestEbsOptimized a) =
     [ValueParam "EbsOptimized" $ toText a]

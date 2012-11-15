@@ -87,8 +87,8 @@ deleteSecurityGroup param =
         $ getF "return" textToBool
 
 p :: SecurityGroupRequest -> QueryParam
-p (GroupId t)   = ValueParam "GroupId" t
-p (GroupName t) = ValueParam "GroupName" t
+p (SecurityGroupRequestGroupId t)   = ValueParam "GroupId" t
+p (SecurityGroupRequestGroupName t) = ValueParam "GroupName" t
 
 -- | not tested
 authorizeSecurityGroupIngress
@@ -107,7 +107,7 @@ authorizeSecurityGroupEgress
     -> EC2 m Bool
 authorizeSecurityGroupEgress gid =
     securityGroupQuery "AuthorizeSecurityGroupEgress"
-        $ GroupId gid
+        $ SecurityGroupRequestGroupId gid
 
 -- | not tested
 revokeSecurityGroupIngress
@@ -126,7 +126,7 @@ revokeSecurityGroupEgress
     -> EC2 m Bool
 revokeSecurityGroupEgress gid =
     securityGroupQuery "RevokeSecurityGroupEgress"
-        $ GroupId gid
+        $ SecurityGroupRequestGroupId gid
 
 securityGroupQuery
     :: (MonadResource m, MonadBaseControl IO m)
@@ -145,23 +145,29 @@ intstr = [1..]
 
 ipPermissionParam :: Int -> IpPermission -> [QueryParam]
 ipPermissionParam num ipp =
-    [ValueParam (pre <> ".IpProtocol") $ ippIpProtocol ipp]
+    [ValueParam (pre <> ".IpProtocol") $
+        ipPermissionIpProtocol ipp]
     ++ (uncurry (mk pre) =<<
-        [ (".FromPort", toText <$> ippFromPort ipp)
-        , (".ToPort", toText <$> ippToPort ipp)
+        [ (".FromPort", toText <$> ipPermissionFromPort ipp)
+        , (".ToPort", toText <$> ipPermissionToPort ipp)
         ])
-    ++ map (uncurry ipr) (zip intstr $ ippIpRanges ipp)
-    ++ concatMap (uncurry grp) (zip intstr $ ippGroups ipp)
+    ++ map
+        (uncurry ipr)
+        (zip intstr $ ipPermissionIpRanges ipp)
+    ++ concatMap
+        (uncurry grp)
+        (zip intstr $ ipPermissionGroups ipp)
   where
     pre = "IpPermissions." <> toText num
     mk h name = maybe [] (\a -> [ValueParam (h <> name) a])
     grph n = pre <> ".Groups." <> toText n
     grp n g = 
-        [ ValueParam (grph n <> ".GroupId") $ uigpGroupId g
+        [ ValueParam (grph n <> ".GroupId") $
+            userIdGroupPairGroupId g
         ] ++ (uncurry (mk (grph n)) =<<
-            [ (".UserId", uigpUserId g)
-            , (".GroupName", uigpGroupName g)
+            [ (".UserId", userIdGroupPairUserId g)
+            , (".GroupName", userIdGroupPairGroupName g)
             ])
     ipr n r = ValueParam
         (pre <> ".IPRanges." <> toText n <> ".CidrIp")
-        $ iprCidrIp r
+        $ ipRangeCidrIp r

@@ -43,7 +43,7 @@ snapshotSink :: MonadThrow m
 snapshotSink = Snapshot
         <$> getT "snapshotId"
         <*> getT "volumeId"
-        <*> getF "status" snapshotStatus
+        <*> getF "status" snapshotStatus'
         <*> getF "startTime" textToTime
         <*> getT "progress"
         <*> getT "ownerId"

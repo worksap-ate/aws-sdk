@@ -46,7 +46,7 @@ volumeSink = Volume
     <*> getF "size" textToInt
     <*> getMT "snapshotId"
     <*> getT "availabilityZone"
-    <*> getF "status" volumeStatus
+    <*> getF "status" volumeStatus'
     <*> getF "createTime" textToTime
     <*> itemsSet "attachmentSet" attachmentSink
     <*> resourceTagSink
@@ -57,13 +57,14 @@ attachmentSink = AttachmentSetItemResponse
     <$> getT "volumeId"
     <*> getT "instanceId"
     <*> getT "device"
-    <*> getF "status" attachmentSetItemResponseStatus
+    <*> getF "status" attachmentSetItemResponseStatus'
     <*> getF "attachTime" textToTime
     <*> getM "deleteOnTermination" (textToBool <$>)
 
 volumeTypeParam :: VolumeType -> [QueryParam]
-volumeTypeParam Standard = [ValueParam "VolumeType" "standard"]
-volumeTypeParam (IO1 iops) =
+volumeTypeParam VolumeTypeStandard =
+    [ValueParam "VolumeType" "standard"]
+volumeTypeParam (VolumeTypeIO1 iops) =
     [ ValueParam "VolumeType" "io1"
     , ValueParam "Iops" $ toText iops
     ]
@@ -148,7 +149,7 @@ volumeStatusSink = VolumeStatus
     <$> getT "volumeId"
     <*> getT "availabilityZone"
     <*> element "volumeStatus" (VolumeStatusInfo
-        <$> getF "status" volumeStatusInfoStatus
+        <$> getF "status" volumeStatusInfoStatus'
         <*> itemsSet "details" (VolumeStatusDetail
             <$> getT "name"
             <*> getT "status"
@@ -205,15 +206,17 @@ describeVolumeAttribute vid attr =
         [ ValueParam "VolumeId" vid
         , ValueParam "Attribute" $ s attr
         ]
-    s VARAutoEnableIO = "autoEnableIO"
-    s VARProductCodes = "productCodes"
+    s VolumeAttributeRequestAutoEnableIO = "autoEnableIO"
+    s VolumeAttributeRequestProductCodes = "productCodes"
 
 volumeAttributeSink
     :: MonadThrow m
     => VolumeAttributeRequest
     -> GLSink Event m VolumeAttribute
-volumeAttributeSink VARAutoEnableIO = VAAutoEnableIO
+volumeAttributeSink VolumeAttributeRequestAutoEnableIO
+    = VolumeAttributeAutoEnableIO
     <$> element "autoEnableIO"
         (getF "value" textToBool)
-volumeAttributeSink VARProductCodes = VAProductCodes
+volumeAttributeSink VolumeAttributeRequestProductCodes
+    = VolumeAttributeProductCodes
     <$> productCodeSink

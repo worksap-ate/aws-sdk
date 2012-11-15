@@ -40,7 +40,7 @@ subnetSink :: MonadThrow m
     => GLSink Event m Subnet
 subnetSink = Subnet
     <$> getT "subnetId"
-    <*> getF "state" subnetState
+    <*> getF "state" subnetState'
     <*> getT "vpcId"
     <*> getT "cidrBlock"
     <*> getF "availableIpAddressCount" textToInt

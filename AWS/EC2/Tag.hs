@@ -61,7 +61,7 @@ deleteTags rids tags =
         ++ concatMap (uncurry tagParam) (zip ([1..]::[Int]) tags)
     tagParam n tag =
         [ ValueParam ("Tag." <> toText n <> ".Key")
-         $ resourceKey tag ]
+         $ resourceTagKey tag ]
         ++ maybe []
             (\a -> [ValueParam ("Tag." <> toText n <> ".Value") a])
-            (resourceValue tag)
+            (resourceTagValue tag)

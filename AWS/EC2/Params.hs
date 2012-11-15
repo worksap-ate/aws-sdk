@@ -12,7 +12,7 @@ blockDeviceMappingParams
 blockDeviceMappingParams =
     StructArrayParams "BlockDeviceMapping" . map kvs
   where
-    kvs (BlockDeviceMappingParamEBS name dev src dot vtype) = 
+    kvs (BlockDeviceMappingParamEbs name dev src dot vtype) = 
         [ ("DeviceName", name)
         , ebsSource src
         ] ++ vtparam vtype ++ (uncurry f =<<
@@ -25,14 +25,15 @@ blockDeviceMappingParams =
             , ("VirtualName", vname)
             ])
 
-    ebsSource (EbsSnapshotId sid) = ("Ebs.SnapshotId", sid)
-    ebsSource (EbsVolumeSize size) =
+    ebsSource (EbsSourceSnapshotId sid) = ("Ebs.SnapshotId", sid)
+    ebsSource (EbsSourceVolumeSize size) =
         ("Ebs.VolumeSize", T.pack $ show size)
 
     f n = maybe [] (\a -> [(n, a)])
     vtparam Nothing = []
-    vtparam (Just Standard) = [("Ebs.VolumeType", "standard")]
-    vtparam (Just (IO1 iops)) =
+    vtparam (Just VolumeTypeStandard) =
+        [("Ebs.VolumeType", "standard")]
+    vtparam (Just (VolumeTypeIO1 iops)) =
         [ ("Ebs.VolumeType", "io1")
         , ("Ebs.Iops", T.pack $ show iops)
         ]

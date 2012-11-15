@@ -133,7 +133,7 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
     <$> do
         a <- getT "vpnConnectionId"
         traceShow a $ return a
-    <*> getF "state" vpnConnectionState
+    <*> getF "state" vpnConnectionState'
     <*> getT "customerGatewayConfiguration"
     <*> getT "type"
     <*> getT "customerGatewayId"
@@ -142,7 +142,7 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
     <*> itemsSet "vgwTelemetry"
         (VpnTunnelTelemetry
         <$> getT "outsideIpAddress"
-        <*> getF "status" vpnTunnelTelemetryStatus
+        <*> getF "status" vpnTunnelTelemetryStatus'
         <*> getF "lastStatusChange" textToTime
         <*> getT "statusMessage"
         <*> getF "acceptedRouteCount" textToInt
@@ -154,8 +154,8 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
     <*> elementM "routes"
         (VpnStaticRoute
         <$> getT "destinationCidrBlock"
-        <*> getF "source" vpnStaticRouteSource
-        <*> getF "state" vpnStaticRouteState
+        <*> getF "source" vpnStaticRouteSource'
+        <*> getF "state" vpnStaticRouteState'
         )
 
 ------------------------------------------------------------

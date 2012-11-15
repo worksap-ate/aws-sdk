@@ -45,7 +45,7 @@ describeAddresses pubIps alloIds filters =
     addressSet = itemConduit "addressesSet" $ Address
         <$> getT "publicIp"
         <*> getMT "allocationId"
-        <*> getM "domain" addressDomain
+        <*> getM "domain" addressDomain'
         <*> getMT "instanceId"
         <*> getMT "associationId"
         <*> getMT "networkInterfaceId"
@@ -58,12 +58,12 @@ describeAddresses pubIps alloIds filters =
 allocateAddress
     :: (MonadResource m, MonadBaseControl IO m)
     => Bool -- ^ is VPC?
-    -> EC2 m AllocateAddressResponse
+    -> EC2 m AllocateAddress
 allocateAddress isVpc = do
     ec2Query "AllocateAddress" params $
-        AllocateAddressResponse
+        AllocateAddress
         <$> getT "publicIp"
-        <*> getM "domain" addressDomain
+        <*> getM "domain" addressDomain'
         <*> getMT "allocationId"
   where
     params = if isVpc then [ValueParam "Domain" "vpc"] else []
@@ -99,11 +99,12 @@ associateAddress param = ec2Query "AssociateAddress" params $
 
 associateAddressParam
     :: AssociateAddressRequest -> [QueryParam]
-associateAddressParam (AAEC2Instance ip iid) =
+associateAddressParam (AssociateAddressRequestEc2 ip iid) =
     [ ValueParam "PublicIp" ip
     , ValueParam "InstanceId" iid
     ]
-associateAddressParam (AAVPCInstance aid iid nid pip ar) =
+associateAddressParam
+    (AssociateAddressRequestVpc aid iid nid pip ar) =
     [ ValueParam "AllocationId" aid ]
     ++ maybeParams
         [ ("InstanceId", iid)
@@ -120,5 +121,7 @@ disassociateAddress param =
     ec2Query "DisassociateAddress" (p param)
         $ getF "return" textToBool
   where
-    p (DAEC2 pip) = [ValueParam "PublicIp" pip]
-    p (DAVPC aid) = [ValueParam "AssociationId" aid]
+    p (DisassociateAddressRequestEc2 pip)
+        = [ValueParam "PublicIp" pip]
+    p (DisassociateAddressRequestVpc aid)
+        = [ValueParam "AssociationId" aid]
