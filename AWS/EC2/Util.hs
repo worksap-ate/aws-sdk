@@ -7,6 +7,7 @@ module AWS.EC2.Util
     , eachp
     , wait
     , count
+    , findTag
     ) where
 
 import Data.Conduit
@@ -20,8 +21,10 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Applicative
 import Control.Parallel (par)
+import Data.List (find)
 
 import AWS.EC2.Internal
+import AWS.EC2.Types (ResourceTag(resourceTagKey))
 
 list
     :: Monad m
@@ -100,3 +103,11 @@ wait f g rid = do
             else do
                 liftIO $ CC.threadDelay 5
                 wait f g rid
+
+findTag
+    :: Text -- ^ resourceKey
+    -> [ResourceTag] -- ^ TagSet
+    -> Maybe ResourceTag
+findTag key tags = find f tags
+  where
+    f t = resourceTagKey t == key
