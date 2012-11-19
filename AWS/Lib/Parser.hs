@@ -153,3 +153,9 @@ sinkError status = element "ErrorResponse" $ do
         <*> getT "Message"
     rid <- getT "RequestId"
     lift $ monadThrow $ ClientError status c m rid
+
+members :: MonadThrow m
+    => Text
+    -> GLSink Event m a
+    -> GLSink Event m [a]
+members name f = element name $ listConsumer "member" f

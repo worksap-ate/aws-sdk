@@ -23,6 +23,8 @@ library
                    , AWS.RDS.Types
                    , AWS.ELB
                    , AWS.ELB.Types
+                   , AWS.CloudWatch
+                   , AWS.CloudWatch.Types
   other-modules:     AWS.Util , AWS.Credential
                    , AWS.Class
                    , AWS.EC2.Internal
@@ -50,6 +52,8 @@ library
                    , AWS.RDS.DBInstance
                    , AWS.ELB.Internal
                    , AWS.ELB.LoadBalancer
+                   , AWS.CloudWatch.Internal
+                   , AWS.CloudWatch.Metric
   ghc-options:       -Wall
                      -fno-warn-unused-do-bind
   extensions: OverloadedStrings

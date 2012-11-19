@@ -10,6 +10,7 @@ import qualified Data.Text.Read as TR
 import Data.Time (UTCTime)
 import qualified Data.Time as Time
 import qualified Data.Time.Parse as TP
+import System.Locale (defaultTimeLocale)
 
 toS :: BSL.ByteString -> ByteString
 toS = BS.concat . BSL.toChunks
@@ -35,12 +36,25 @@ textToInt t = either
     fst
     (TR.signed TR.decimal t)
 
+textToDouble :: Fractional a => Text -> a
+textToDouble t = either
+    (const $ error "not double value")
+    fst
+    (TR.signed TR.rational t)
+
 textToTime :: Text -> UTCTime
 textToTime
     = Time.localTimeToUTC Time.utc
     . maybe (error "time format error.") fst
     . TP.strptime fmt
     . T.unpack
+  where
+    fmt = "%FT%T"
+
+timeToText :: UTCTime -> Text
+timeToText
+    = T.pack
+    . Time.formatTime defaultTimeLocale fmt
   where
     fmt = "%FT%T"
 

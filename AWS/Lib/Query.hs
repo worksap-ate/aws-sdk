@@ -1,11 +1,15 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
+#define DEBUG
 module AWS.Lib.Query
     ( requestQuery
     , QueryParam(..)
     , Filter
     , maybeParams
     , commonQuery
+#ifdef DEBUG
+    , debugQuery
+#endif
     ) where
 
 import           Data.ByteString (ByteString)
@@ -32,12 +36,15 @@ import Control.Exception.Lifted as E
 import Data.Text (Text)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
---import qualified Data.Conduit.Binary as CB
 
 import AWS.Class
 import AWS.Util
 import AWS.Credential
 import AWS.Lib.Parser
+
+#ifdef DEBUG
+import qualified Data.Conduit.Binary as CB
+#endif
 
 type Filter = (Text, [Text])
 
@@ -86,7 +93,6 @@ toArrayParams :: QueryParam -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 
     [ (textToBS name <> "." <> bsShow i, textToBS param)
     | (i, param) <- zip ([1..]::[Int]) params
-
     ]
 toArrayParams (FilterParams kvs) =
     Map.fromList . concat . map f1 $ zip ([1..]::[Int]) kvs
@@ -100,7 +106,7 @@ toArrayParams (ValueParam k v) =
     Map.singleton (textToBS k) (textToBS v)
 toArrayParams (StructArrayParams name vss) = Map.fromList l
   where
-    bsName = textToBS name
+    bsName =  textToBS name
     struct n (k, v) = (n <> "." <> textToBS k, textToBS v)
     l = mconcat
         [ map (struct (bsName <> "." <> bsShow i)) kvs
@@ -160,7 +166,6 @@ requestQuery cred ctx action params ver errSink = do
     let req = request { HTTP.checkStatus = checkStatus' }
     response <- HTTP.http req mgr
     let body = HTTP.responseBody response
---    body $$+- CB.sinkFile "debug.txt" >> fail "debug"
     let st = H.statusCode $ HTTP.responseStatus response
     if st < 400
         then return body
@@ -184,8 +189,29 @@ commonQuery apiVersion action params sink = do
     ctx <- State.get
     cred <- Reader.ask
     rs <- lift $ requestQuery cred ctx action params apiVersion sinkError
---    lift $ rs $$+- CB.sinkFile "debug.txt" >> fail "debug"
     (res, rid) <- lift $ rs $$+-
         XmlP.parseBytes XmlP.def =$ sinkResponse (bsToText action) sink
     State.put ctx { lastRequestId = Just rid }
     return res
+
+#ifdef DEBUG
+debugQuery
+    :: (MonadBaseControl IO m, MonadResource m)
+    => ByteString -- ^ apiVersion
+    -> ByteString -- ^ Action
+    -> [QueryParam]
+    -> AWS AWSContext m a
+debugQuery ver action params = do
+    ctx <- State.get
+    cred <- Reader.ask
+    let mgr = manager ctx
+    let ep = endpoint ctx
+    time <- liftIO getCurrentTime
+    let url = mkUrl ep cred time action params ver
+    liftIO $ print url
+    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
+    let req = request { HTTP.checkStatus = checkStatus' }
+    response <- lift $ HTTP.http req mgr
+    lift $ HTTP.responseBody response $$+- CB.sinkFile "debug.txt"
+    fail "debug"
+#endif
