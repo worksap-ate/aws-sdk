@@ -35,7 +35,7 @@ describeTags filters =
 createTags
     :: (MonadResource m, MonadBaseControl IO m)
     => [Text] -- ^ ResourceId (instance-id, image-id,..)
-    -> [(Text, Text)]
+    -> [(Text, Text)] -- ^ (Key, Value)
     -> EC2 m Bool
 createTags rids kvs =
     ec2Query "CreateTags" params returnBool
