@@ -9,6 +9,7 @@ module AWS.EC2.Query
 #endif
     , ec2Delete
     , module AWS.Lib.Query
+    , apiVersion
     ) where
 
 import           Data.ByteString (ByteString)
@@ -38,8 +39,8 @@ import Debug.Trace
 import qualified Data.Conduit.Binary as CB
 #endif
 
-ec2Version :: ByteString
-ec2Version = "2012-10-01"
+apiVersion :: ByteString
+apiVersion = "2012-10-01"
 
 sinkRequestId :: MonadThrow m
     => GLSink Event m Text
@@ -95,7 +96,7 @@ ec2QuerySource' action params token cond = do
     cred <- Reader.ask
     ctx <- State.get
     (src1, rid) <- lift $ do
-        response <- requestQuery cred ctx action params' ec2Version sinkError
+        response <- requestQuery cred ctx action params' apiVersion sinkError
         res <- response $=+ XmlP.parseBytes XmlP.def
         res $$++ sinkRequestId
     State.put ctx{lastRequestId = Just rid}
@@ -117,7 +118,7 @@ ec2QueryDebug action params = do
     cred <- Reader.ask
     ctx <- State.get
     lift $ do
-        response <- requestQuery cred ctx action params ec2Version sinkError
+        response <- requestQuery cred ctx action params apiVersion sinkError
         (res, _) <- unwrapResumable response
         res $$ CB.sinkFile "debug.txt" >>= fail "debug"
 #endif

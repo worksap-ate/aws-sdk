@@ -760,8 +760,7 @@ data RunInstancesRequest = RunInstancesRequest
     , runInstancesRequestDisableApiTermination :: Maybe Bool
     , runInstancesRequestShutdownBehavior
         :: Maybe ShutdownBehavior
-    , runInstancesRequestPrivateIpAddresses :: [Text]
-      -- ^ XXX: not implemented
+    , runInstancesRequestPrivateIpAddress :: Maybe Text
     , runInstancesRequestClientToken :: Maybe Text
     , runInstancesRequestNetworkInterface
         :: [NetworkInterfaceParam] -- ^ XXX: not implemented

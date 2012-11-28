@@ -23,6 +23,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
+import Data.Monoid
 
 import AWS.EC2.Convert
 import AWS.EC2.Internal
@@ -338,6 +339,9 @@ runInstances param =
               , sbToText
                 <$> runInstancesRequestShutdownBehavior param
               )
+            , ("PrivateIpAddress"
+              , runInstancesRequestPrivateIpAddress param
+              )
             , ("ClientToken", runInstancesRequestClientToken param)
             , ("IamInstanceProfile.Arn"
               , iamInstanceProfileArn
@@ -379,7 +383,7 @@ defaultRunInstancesRequest iid minCount maxCount
         Nothing
         Nothing
         Nothing
-        []
+        Nothing
         Nothing
         []
         Nothing
