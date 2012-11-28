@@ -23,7 +23,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
-import Data.Monoid
 
 import AWS.EC2.Convert
 import AWS.EC2.Internal
