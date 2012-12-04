@@ -60,11 +60,6 @@ reservationSink =
     <*> instanceSetSink
     <*> getMT "requesterId"
 
-groupSetSink :: MonadThrow m => GLSink Event m [Group]
-groupSetSink = itemsSet "groupSet" $ Group
-    <$> getT "groupId"
-    <*> getT "groupName"
-
 instanceSetSink :: MonadThrow m
     => GLSink Event m [Instance]
 instanceSetSink = itemsSet "instancesSet" $
@@ -151,25 +146,25 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <*> getF "sourceDestCheck" textToBool
     <*> groupSetSink
     <*> element "attachment" (
-        NetworkInterfaceAttachment
+        InstanceNetworkInterfaceAttachment
         <$> getT "attachmentId"
         <*> getF "deviceIndex" textToInt
         <*> getT "status"
         <*> getF "attachTime" textToTime
         <*> getF "deleteOnTermination" textToBool
         )
-    <*> niAssociationSink
+    <*> instanceNetworkInterfaceAssociationSink
     <*> itemsSet "privateIpAddressesSet" (
         InstancePrivateIpAddress
         <$> getT "privateIpAddress"
         <*> getF "primary" textToBool
-        <*> niAssociationSink
+        <*> instanceNetworkInterfaceAssociationSink
         )
 
-niAssociationSink :: MonadThrow m
-    => GLSink Event m (Maybe NetworkInterfaceAssociation)
-niAssociationSink = elementM "association" $
-    NetworkInterfaceAssociation
+instanceNetworkInterfaceAssociationSink :: MonadThrow m
+    => GLSink Event m (Maybe InstanceNetworkInterfaceAssociation)
+instanceNetworkInterfaceAssociationSink = elementM "association" $
+    InstanceNetworkInterfaceAssociation
     <$> getT "publicIp"
     <*> getT "ipOwnerId"
 
@@ -418,9 +413,7 @@ networkInterfaceParams nips = f 1 nips
           $ toText c
         ]
     s n (SecondaryPrivateIpAddressParamSpecified addrs pr) =
-        [ StructArrayParams
-          (p n "PrivateIpAddresses")
-          $ map (:[]) $ zip (repeat "PrivateIpAddress") addrs
+        [ privateIpAddressesParam (p n "PrivateIpAddresses") addrs
         ] ++ maybe
             []
             (\i -> [

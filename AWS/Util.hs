@@ -73,3 +73,6 @@ bsToText = T.pack . BSC.unpack
 
 textToBS :: Text -> ByteString
 textToBS = BSC.pack . T.unpack
+
+unconcat :: [a] -> [[a]]
+unconcat = map (:[])

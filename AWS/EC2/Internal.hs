@@ -73,3 +73,8 @@ volumeTypeSink = volumeType
 
 returnBool :: MonadThrow m => GLSink Event m Bool
 returnBool = getF "return" textToBool
+
+groupSetSink :: MonadThrow m => GLSink Event m [Group]
+groupSetSink = itemsSet "groupSet" $ Group
+    <$> getT "groupId"
+    <*> getT "groupName"

@@ -198,3 +198,8 @@ mkConvertFunc
     "internetGatewayAttachmentState'"
     ''InternetGatewayAttachmentState
     ["attaching", "attached", "detaching", "detached", "available"]
+
+mkConvertFunc
+    "networkInterfaceStatus'"
+    ''NetworkInterfaceStatus
+    ["available", "in-use"]

@@ -39,6 +39,8 @@ module AWS.EC2.Types
     , InstanceLifecycle(..)
     , InstanceMonitoringState(..)
     , InstanceNetworkInterface(..)
+    , InstanceNetworkInterfaceAssociation(..)
+    , InstanceNetworkInterfaceAttachment(..)
     , InstancePrivateIpAddress(..)
     , InstanceState(..)
     , InstanceStateChange(..)
@@ -60,9 +62,12 @@ module AWS.EC2.Types
     , NetworkAclEntry(..)
     , NetworkAclEntryRequest(..)
     , NetworkAclRuleAction(..)
+    , NetworkInterface(..)
     , NetworkInterfaceAssociation(..)
     , NetworkInterfaceAttachment(..)
     , NetworkInterfaceParam(..)
+    , NetworkInterfacePrivateIpAddress(..)
+    , NetworkInterfaceStatus(..)
     , PasswordData(..)
     , Placement(..)
     , Platform(..)
@@ -435,33 +440,36 @@ data InstanceNetworkInterface = InstanceNetworkInterface
     , instanceNetworkInterfaceSourceDestCheck :: Bool
     , instanceNetworkInterfaceGroupSet :: [Group]
     , instanceNetworkInterfaceAttachment
-        :: NetworkInterfaceAttachment
+        :: InstanceNetworkInterfaceAttachment
     , instanceNetworkInterfaceAssociation
-        :: Maybe NetworkInterfaceAssociation
-    , instanceNetworkInterfacePrivateIpAddressSet
+        :: Maybe InstanceNetworkInterfaceAssociation
+    , instanceNetworkInterfacePrivateIpAddressesSet
         :: [InstancePrivateIpAddress]
     }
   deriving (Show, Eq)
 
-data NetworkInterfaceAttachment = NetworkInterfaceAttachment
-    { networkInterfaceAttachmentId :: Text
-    , networkInterfaceAttachmentDeviceIndex :: Int
-    , networkInterfaceAttachmentStatus :: Text
-    , networkInterfaceAttachmentAttachTime :: UTCTime
-    , networkInterfaceAttachmentDeleteOnTermination :: Bool
+data InstanceNetworkInterfaceAttachment = InstanceNetworkInterfaceAttachment
+    { instanceNetworkInterfaceAttachmentId :: Text
+    , instanceNetworkInterfaceAttachmentDeviceIndex :: Int
+    , instanceNetworkInterfaceAttachmentStatus :: Text
+    , instanceNetworkInterfaceAttachmentAttachTime :: UTCTime
+    , instanceNetworkInterfaceAttachmentDeleteOnTermination
+        :: Bool
     }
   deriving (Show, Eq)
 
-data NetworkInterfaceAssociation = NetworkInterfaceAssociation
-    { networkInterfaceAssociationPublicIp :: Text
-    , networkInterfaceAssociationIpOwnerId :: Text
+data InstanceNetworkInterfaceAssociation
+    = InstanceNetworkInterfaceAssociation
+    { instanceNetworkInterfaceAssociationPublicIp :: Text
+    , instanceNetworkInterfaceAssociationIpOwnerId :: Text
     }
   deriving (Show, Eq)
 
 data InstancePrivateIpAddress = InstancePrivateIpAddress
     { instancePrivateIpAddressAddress :: Text
     , instancePrivateIpAddressPrimary :: Bool
-    , instancePrivateIpAddressAssociation :: Maybe NetworkInterfaceAssociation
+    , instancePrivateIpAddressAssociation
+        :: Maybe InstanceNetworkInterfaceAssociation
     }
   deriving (Show, Eq)
 
@@ -1134,4 +1142,63 @@ data InternetGatewayAttachmentState
     | InternetGatewayAttachmentStateDetaching
     | InternetGatewayAttachmentStateDetached
     | InternetGatewayAttachmentStateAvailable
+  deriving (Show, Eq)
+
+data NetworkInterface = NetworkInterface
+    { networkInterfaceId :: Text
+    , networkInterfaceSubnetId :: Text
+    , networkInterfaceVpcId :: Text
+    , networkInterfaceAvailabilityZone :: Text
+    , networkInterfaceDescription :: Text
+    , networkInterfaceOwnerId :: Text
+    , networkInterfaceRequesterId :: Maybe Text
+    , networkInterfaceRequesterManaged :: Text
+    , networkInterfaceStatus :: NetworkInterfaceStatus
+    , networkInterfaceMacAddress :: Text
+    , networkInterfacePrivateIpAddress :: Text
+    , networkInterfacePrivateDnsName :: Maybe Text
+    , networkInterfaceSourceDestCheck :: Bool
+    , networkInterfaceGroupSet :: [Group]
+    , networkInterfaceAttachment
+        :: Maybe NetworkInterfaceAttachment
+    , networkInterfaceAssociation
+        :: Maybe NetworkInterfaceAssociation
+    , networkInterfaceTagSet :: [ResourceTag]
+    , networkInterfacePrivateIpAddressesSet
+        :: [NetworkInterfacePrivateIpAddress]
+    }
+  deriving (Show, Eq)
+
+data NetworkInterfaceStatus
+    = NetworkInterfaceStatusAvailable
+    | NetworkInterfaceStatusInUse
+  deriving (Show, Eq)
+
+data NetworkInterfaceAttachment = NetworkInterfaceAttachment
+    { networkInterfaceAttachmentId :: Text
+    , networkInterfaceAttachmentInstanceId :: Maybe Text
+    , networkInterfaceAttachmentInstanceOwnerId :: Text
+    , networkInterfaceAttachmentDeviceIndex :: Int
+    , networkInterfaceAttachmentStatus :: Text
+    , networkInterfaceAttachmentAttachTime :: UTCTime
+    , networkInterfaceAttachmentDeleteOnTermination :: Bool
+    }
+  deriving (Show, Eq)
+
+data NetworkInterfaceAssociation = NetworkInterfaceAssociation
+    { networkInterfaceAssociationAttachmentId :: Maybe Text
+    , networkInterfaceAssociationInstanceId :: Maybe Text
+    , networkInterfaceAssociationPublicIp :: Text
+    , networkInterfaceAssociationIpOwnerId :: Text
+    , networkInterfaceAssociationId :: Text
+    }
+  deriving (Show, Eq)
+
+data NetworkInterfacePrivateIpAddress
+    = NetworkInterfacePrivateIpAddress
+    { networkInterfacePrivateIpAddressPrivateIpAddress :: Text
+    , networkInterfacePrivateIpAddressPrimary :: Bool
+    , networkInterfacePrivateIpAddressAssociation
+        :: Maybe NetworkInterfaceAssociation
+    }
   deriving (Show, Eq)
