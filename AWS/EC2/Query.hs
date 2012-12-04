@@ -49,14 +49,14 @@ sinkRequestId = do
     await -- EventBeginElement DescribeImagesResponse
     getT "requestId"
 
-sinkError :: MonadThrow m => Int -> GLSink Event m a
-sinkError s = do
+sinkError :: MonadThrow m => ByteString -> Int -> GLSink Event m a
+sinkError a s = do
     await
     element "Response" $ do
         (c,m) <- element "Errors" $ element "Error" $
             (,) <$> getT "Code" <*> getT "Message"
         r <- getT "RequestID"
-        lift $ monadThrow $ ClientError s c m r
+        lift $ monadThrow $ ClientError a s c m r
 
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)

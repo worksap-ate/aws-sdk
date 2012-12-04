@@ -155,7 +155,7 @@ requestQuery
     -> ByteString
     -> [QueryParam]
     -> ByteString
-    -> (Int -> GLSink Event m a)
+    -> (ByteString -> Int -> GLSink Event m a)
     -> m (ResumableSource m ByteString)
 requestQuery cred ctx action params ver errSink = do
     let mgr = manager ctx
@@ -170,7 +170,7 @@ requestQuery cred ctx action params ver errSink = do
     if st < 400
         then return body
         else do
-            clientError st body errSink
+            clientError st body $ errSink action
             fail "not reached"
 
 maybeParams :: [(Text, Maybe Text)] -> [QueryParam]

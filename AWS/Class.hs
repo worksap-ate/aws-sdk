@@ -41,7 +41,8 @@ import AWS.Credential
 
 data AWSException
     = ClientError
-        { errorStatus :: Int
+        { errorAction :: ByteString
+        , errorStatus :: Int
         , errorCode :: Text
         , errorMessage :: Text
         , errorRequestId :: Text
