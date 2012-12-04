@@ -23,6 +23,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
+import Data.Monoid
 
 import AWS.EC2.Convert
 import AWS.EC2.Internal
@@ -306,7 +307,9 @@ runInstances param =
             $ runInstancesRequestSecurityGroups param
         , blockDeviceMappingParams
             $ runInstancesRequestBlockDeviceMappings param
-        ] ++ maybeParams
+        ] ++ networkInterfaceParams
+             (runInstancesRequestNetworkInterfaces param)
+          ++ maybeParams
             [ ("KeyName", runInstancesRequestKeyName param)
             , ("UserData"
               , bsToText <$> runInstancesRequestUserData param
@@ -387,6 +390,44 @@ defaultRunInstancesRequest iid minCount maxCount
         []
         Nothing
         Nothing
+
+networkInterfaceParams :: [NetworkInterfaceParam] -> [QueryParam]
+networkInterfaceParams nips = f 1 nips
+  where
+    f :: Int -> [NetworkInterfaceParam] -> [QueryParam]
+    f _ [] = []
+    f n (ni:nis) = g n ni ++ f (n + 1) nis
+    g n (NetworkInterfaceParamAttach nid idx dot) =
+        [ ValueParam (p n "NetworkInterfaceId") nid
+        , ValueParam (p n "DeviceIndex") $ toText idx
+        , ValueParam (p n "DeleteOnTermination") $ boolToText dot
+        ]
+    g n (NetworkInterfaceParamCreate idx sn desc pip sip sec dot) =
+        [ ValueParam (p n "DeviceIndex") $ toText idx
+        , ValueParam (p n "SubnetId") sn
+        , ValueParam (p n "Description") desc
+        , ArrayParams (p n "SecurityroupId") sec
+        , ValueParam (p n "DeleteOnTermination") $ boolToText dot
+        ] ++ maybeParams [(p n "PrivateIpAddress", pip)]
+          ++ s n sip
+    p n name = "NetworkInterface." <> toText n <> "." <> name
+    s _ SecondaryPrivateIpAddressParamNothing = []
+    s n (SecondaryPrivateIpAddressParamCount c) =
+        [ ValueParam
+          (p n "SecondaryPrivateIpAddressCount")
+          $ toText c
+        ]
+    s n (SecondaryPrivateIpAddressParamSpecified addrs pr) =
+        [ StructArrayParams
+          (p n "PrivateIpAddresses")
+          $ map (:[]) $ zip (repeat "PrivateIpAddress") addrs
+        ] ++ maybe
+            []
+            (\i -> [
+              ValueParam
+              (p n "PrivateIpAddresses." <> toText i <> ".Primary")
+              "true"])
+            pr
 
 sbToText :: ShutdownBehavior -> Text
 sbToText ShutdownBehaviorStop      = "stop"

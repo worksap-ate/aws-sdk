@@ -36,6 +36,7 @@ import AWS.Lib.Query
 
 #ifdef DEBUG
 import Debug.Trace
+import Control.Monad.IO.Class (liftIO)
 import qualified Data.Conduit.Binary as CB
 #endif
 
@@ -113,11 +114,12 @@ ec2QueryDebug
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParam]
-    -> EC2 m (Source m o)
+    -> EC2 m a
 ec2QueryDebug action params = do
     cred <- Reader.ask
     ctx <- State.get
     lift $ do
+        liftIO $ mapM_ print params
         response <- requestQuery cred ctx action params apiVersion sinkError
         (res, _) <- unwrapResumable response
         res $$ CB.sinkFile "debug.txt" >>= fail "debug"

@@ -82,6 +82,7 @@ module AWS.EC2.Types
     , RouteState(..)
     , RouteOrigin(..)
     , RunInstancesRequest(..)
+    , SecondaryPrivateIpAddressParam(..)
     , SecurityGroup(..)
     , SecurityGroupRequest(..)
     , ShutdownBehavior(..)
@@ -668,15 +669,33 @@ data EbsSource
     | EbsSourceVolumeSize Int
   deriving (Show, Eq)
 
-data NetworkInterfaceParam = NetworkInterfaceParam
-    { networkInterfaceParamInterfaceId :: Maybe Text
-    , networkInterfaceParamDeviceIndex :: Maybe Text
-    , networkInterfaceParamSubnetId :: Maybe Text
-    , networkInterfaceParamDescription :: Maybe Text
-    , networkInterfaceParamPrivateIpAddresses :: [Text]
-    , networkInterfaceParamSecurityGroupIds :: [Text]
-    , networkInterfaceParamDeleteOnTermination :: Maybe Bool
-    }
+data NetworkInterfaceParam
+    = NetworkInterfaceParamCreate
+        { networkInterfaceParamCreateDeviceIndex :: Int
+        , networkInterfaceParamCreateSubnetId :: Text
+        , networkInterfaceParamCreateDescription :: Text
+        , networkInterfaceParamCreatePrivateIpAddress
+            :: Maybe Text
+        , networkInterfaceParamCreatePrivateIpAddresses
+            :: SecondaryPrivateIpAddressParam
+        , networkInterfaceParamCreateSecurityGroupIds :: [Text]
+        , networkInterfaceParamCreateDeleteOnTermination :: Bool
+        }
+    | NetworkInterfaceParamAttach
+        { networkInterfaceParamAttachInterfaceId :: Text
+        , networkInterfaceParamAttachDeviceIndex :: Int
+        , networkInterfaceParamAttachDeleteOnTermination :: Bool
+        }
+  deriving (Show, Eq)
+
+data SecondaryPrivateIpAddressParam
+    = SecondaryPrivateIpAddressParamNothing
+    | SecondaryPrivateIpAddressParamCount Int
+    | SecondaryPrivateIpAddressParamSpecified
+      { secondaryPrivateIpAddressParamSpecifiedAddresses :: [Text]
+      , secondaryPrivateIpAddressParamSpecifiedPrimary
+        :: Maybe Int
+      }
   deriving (Show, Eq)
 
 data VpnConnection = VpnConnection
@@ -762,8 +781,8 @@ data RunInstancesRequest = RunInstancesRequest
         :: Maybe ShutdownBehavior
     , runInstancesRequestPrivateIpAddress :: Maybe Text
     , runInstancesRequestClientToken :: Maybe Text
-    , runInstancesRequestNetworkInterface
-        :: [NetworkInterfaceParam] -- ^ XXX: not implemented
+    , runInstancesRequestNetworkInterfaces
+        :: [NetworkInterfaceParam]
     , runInstancesRequestIamInstanceProfile
         :: Maybe IamInstanceProfile
     , runInstancesRequestEbsOptimized :: Maybe Bool
