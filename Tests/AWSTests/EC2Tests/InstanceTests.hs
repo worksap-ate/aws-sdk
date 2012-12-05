@@ -34,7 +34,7 @@ describeInstanceStatusTest = do
     describe "describeInstanceStatus doesn't fail" $ do
         it "describeInstanceStatus doesn't throw any exception" $ do
             reservations <- testEC2 region (describeInstances [] [])
-            let instances = nub $ concat $ map instanceSet reservations
+            let instances = nub $ concat $ map reservationInstanceSet reservations
             testEC2 region (describeInstanceStatus (map instanceId instances) True [] Nothing) `miss` anyHttpException
 
 describeInstanceAttributeTest :: Spec
@@ -42,5 +42,5 @@ describeInstanceAttributeTest = do
     describe "describeInstanceAttribute doesn't fail" $ do
         it "describeInstanceAttribute doesn't throw any exception" $ do
             reservations <- testEC2 region (describeInstances [] [])
-            let iid = instanceId $ head $ instanceSet $ head reservations
-            testEC2' region (describeInstanceAttribute iid IARInstanceType) `miss` anyHttpException
+            let iid = instanceId $ head $ reservationInstanceSet $ head reservations
+            testEC2' region (describeInstanceAttribute iid InstanceAttributeRequestInstanceType) `miss` anyHttpException

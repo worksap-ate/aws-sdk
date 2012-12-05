@@ -25,8 +25,8 @@ runAddressTests = hspec $ do
         it "create and delete Addresses" $ do
             testEC2' region (do
                 addr <- allocateAddress False
-                releaseAddress (Just $ alaPublicIp addr) Nothing
+                releaseAddress (Just $ allocateAddressPublicIp addr) Nothing
                 addr2 <- allocateAddress True
-                releaseAddress Nothing (alaAllocationId addr2)
+                releaseAddress Nothing (allocateAddressAllocationId addr2)
                 ) `miss` anyHttpException
     -- attach/detach

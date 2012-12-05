@@ -40,4 +40,4 @@ describeVolumeAttributeTest = do
         it "describeVolumeAttribute doesn't throw any exception" $ do
             volumes <- testEC2 region (describeVolumes [] [])
             let vid = volumeId $ head volumes
-            testEC2' region (describeVolumeAttribute vid VARAutoEnableIO) `miss` anyHttpException
+            testEC2' region (describeVolumeAttribute vid VolumeAttributeRequestAutoEnableIO) `miss` anyHttpException

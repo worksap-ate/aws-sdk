@@ -12,6 +12,7 @@ module AWSTests.EC2Tests
     , module AWSTests.EC2Tests.AvailabilityZoneTests
     , module AWSTests.EC2Tests.TagTests
     , module AWSTests.EC2Tests.KeyPairTests
+    , module AWSTests.EC2Tests.NetworkInterfaceTests
     )
     where
 
@@ -28,3 +29,4 @@ import AWSTests.EC2Tests.RegionTests
 import AWSTests.EC2Tests.AvailabilityZoneTests
 import AWSTests.EC2Tests.TagTests
 import AWSTests.EC2Tests.KeyPairTests
+import AWSTests.EC2Tests.NetworkInterfaceTests

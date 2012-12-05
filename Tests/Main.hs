@@ -22,3 +22,4 @@ main = do
     runAvailabilityZoneTests
     runTagTests
     runKeyPairTests
+    runNetworkInterfaceTests
