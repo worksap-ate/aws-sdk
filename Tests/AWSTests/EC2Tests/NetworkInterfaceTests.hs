@@ -13,10 +13,6 @@ import qualified AWS.EC2.Util as Util
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
-import Control.Concurrent (threadDelay)
-import Control.Monad.IO.Class (liftIO)
-import Control.Applicative
-
 region :: Text
 region = "ap-northeast-1"
 
@@ -37,22 +33,14 @@ runInstanceTest = do
         it "runInstances with NetworkInterfaces doesn't throw any exception" $ do
             testEC2' region test `miss` anyHttpException
   where
-    test = do
-        vpc <- createVpc cidr Nothing
-        liftIO $ threadDelay $ 2 * 1000 * 1000
-        subnet <- createSubnet $ CreateSubnetRequest (vpcId vpc) cidr Nothing
-        liftIO $ threadDelay $ 2 * 1000 * 1000
-        i <- head . reservationInstanceSet <$> runInstances (req $ subnetId subnet)
-        liftIO $ threadDelay $ 2 * 1000 * 1000
-        terminateInstances [instanceId i]
+    test = withSubnet "10.11.12.0/24" $ \subnet -> do
+        i <- withInstance (req $ subnetId subnet) $ \i ->
+            return $ instanceId i
         Util.wait
             (\r -> (instanceState . head . reservationInstanceSet) r == InstanceStateTerminated)
             (\iid -> Util.list (describeInstances [iid] []))
-            (instanceId i)
-        liftIO $ threadDelay $ 10 * 1000 * 1000
-        deleteSubnet $ subnetId subnet
-        deleteVpc $ vpcId vpc
-        return ()
+            i
+        sleep 10
     req sn = (defaultRunInstancesRequest "ami-087acb09" 1 1)
         { runInstancesRequestSubnetId = Nothing
         , runInstancesRequestPrivateIpAddress = Nothing
@@ -77,4 +65,3 @@ runInstanceTest = do
                 True
             ]
         }
-    cidr = "10.11.12.0/24"

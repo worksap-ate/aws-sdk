@@ -103,6 +103,7 @@ test-suite test
                  , QuickCheck
                  , hspec
                  , HUnit
+                 , lifted-base
 
 source-repository head
     type:            git
