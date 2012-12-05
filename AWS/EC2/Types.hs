@@ -25,6 +25,7 @@ module AWS.EC2.Types
     , EbsInstanceBlockDevice(..)
     , EbsSource(..)
     , EC2Return(..)
+    , Filter
     , Group(..)
     , Hypervisor(..)
     , IamInstanceProfile(..)
@@ -1168,6 +1169,8 @@ data NetworkInterface = NetworkInterface
         :: [NetworkInterfacePrivateIpAddress]
     }
   deriving (Show, Eq)
+
+type Filter = (Text, [Text])
 
 data NetworkInterfaceStatus
     = NetworkInterfaceStatusAvailable

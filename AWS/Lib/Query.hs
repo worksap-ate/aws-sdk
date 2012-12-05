@@ -40,12 +40,11 @@ import AWS.Class
 import AWS.Util
 import AWS.Credential
 import AWS.Lib.Parser
+import AWS.EC2.Types (Filter)
 
 #ifdef DEBUG
 import qualified Data.Conduit.Binary as CB
 #endif
-
-type Filter = (Text, [Text])
 
 data QueryParam
     = ArrayParams Text [Text]
