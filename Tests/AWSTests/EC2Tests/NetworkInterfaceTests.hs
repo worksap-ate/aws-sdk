@@ -40,7 +40,7 @@ runInstanceTest = do
             (\r -> (instanceState . head . reservationInstanceSet) r == InstanceStateTerminated)
             (\iid -> Util.list (describeInstances [iid] []))
             i
-        sleep 10
+--        sleep 10
     req sn = (defaultRunInstancesRequest "ami-087acb09" 1 1)
         { runInstancesRequestSubnetId = Nothing
         , runInstancesRequestPrivateIpAddress = Nothing

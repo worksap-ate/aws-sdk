@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
 
 module AWS.EC2.Util
     ( list
@@ -8,6 +8,8 @@ module AWS.EC2.Util
     , wait
     , count
     , findTag
+    , sleep
+    , retry
     ) where
 
 import Data.Conduit
@@ -22,6 +24,8 @@ import qualified Data.Text as T
 import Control.Applicative
 import Control.Parallel (par)
 import Data.List (find)
+import qualified Control.Exception.Lifted as E
+import Control.Monad.Trans.Control (MonadBaseControl)
 
 import AWS.EC2.Internal
 import AWS.EC2.Types (ResourceTag(resourceTagKey))
@@ -111,3 +115,20 @@ findTag
 findTag key tags = find f tags
   where
     f t = resourceTagKey t == key
+
+sleep :: MonadIO m => Int -> EC2 m ()
+sleep sec = liftIO $ CC.threadDelay $ sec * 1000 * 1000
+
+retry
+    :: forall m a. (MonadBaseControl IO m, MonadResource m)
+    => Int -- ^ sleep count
+    -> Int -- ^ number of retry
+    -> EC2 m a
+    -> EC2 m a
+retry _    0     f = f
+retry sec cnt f = f `E.catch` handler
+  where
+    handler :: E.SomeException -> EC2 m a
+    handler _ = do
+        sleep sec
+        retry sec (cnt - 1) f

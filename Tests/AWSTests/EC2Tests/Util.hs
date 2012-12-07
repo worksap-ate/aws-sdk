@@ -1,8 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
 module AWSTests.EC2Tests.Util
     ( testEC2
     , testEC2'
-    , sleep
     , withVpc
     , withSubnet
     , withInstance
@@ -12,8 +11,6 @@ module AWSTests.EC2Tests.Util
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
-import Control.Concurrent (threadDelay)
-import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Applicative
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -22,6 +19,7 @@ import Data.Text (Text)
 import AWS
 import AWS.EC2
 import AWS.EC2.Types
+import AWS.EC2.Util (retry, sleep)
 
 testEC2
     :: Text
@@ -46,9 +44,6 @@ testEC2' region request = do
             setRegion region
             request
 
-sleep :: MonadIO m => Int -> EC2 m ()
-sleep sec = liftIO $ threadDelay $ sec * 1000 * 1000
-
 withVpc
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ CIDR
@@ -65,7 +60,7 @@ withSubnet
     -> EC2 m a
 withSubnet cidr f = withVpc cidr $ \vpc -> E.bracket
     (createSubnet (CreateSubnetRequest (vpcId vpc) (vpcCidrBlock vpc) Nothing) <* sleep 2)
-    (\subnet -> deleteSubnet $ subnetId subnet)
+    (\subnet -> retry 5 10 $ deleteSubnet $ subnetId subnet)
     f
 
 withInstance
