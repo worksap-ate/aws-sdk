@@ -4,6 +4,8 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
+import Data.Maybe
+import Data.Monoid
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Read as TR
@@ -58,8 +60,8 @@ timeToText
   where
     fmt = "%FT%T"
 
-orEmpty :: Maybe Text -> Text
-orEmpty = maybe "" id
+orEmpty :: Monoid a => Maybe a -> a
+orEmpty = fromMaybe mempty
 
 boolToText :: Bool -> Text
 boolToText True  = "true"
