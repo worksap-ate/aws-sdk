@@ -6,6 +6,7 @@ module AWS.EC2.NetworkInterface
     , describeNetworkInterfaces
     ) where
 
+import Data.IP (IPv4)
 import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
@@ -23,27 +24,23 @@ import AWS.Util
 assignPrivateIpAddresses
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ NetworkInterfaceId
-    -> Either [Text] Int -- ^ PrivateIpAddresses or Count
+    -> Either [IPv4] Int -- ^ PrivateIpAddresses or Count
     -> Maybe Bool
     -> EC2 m Bool
 assignPrivateIpAddresses niid epip ar =
     ec2Query "AssignPrivateIpAddresses" params returnBool
   where
     params = [ValueParam "NetworkInterfaceId" niid]
-        ++ either
-            f
-            (\c ->
-                [ValueParam
-                    "SecondaryPrivateIpAddressCount"
-                    $ toText c])
-            epip
+        ++ either f g epip
         ++ maybeParams [("AllowReassignment", boolToText <$> ar)]
-    f as = [privateIpAddressesParam "PrivateIpAddress" as]
+    f addrs = [privateIpAddressesParam "PrivateIpAddress" addrs]
+    g cnt = [ValueParam "SecondaryPrivateIpAddressCount"
+        $ toText cnt]
 
 unassignPrivateIpAddresses
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ NetworkInterfaceId
-    -> [Text] -- ^ PrivateIpAddresses
+    -> [IPv4] -- ^ PrivateIpAddresses
     -> EC2 m Bool
 unassignPrivateIpAddresses niid addrs =
     ec2Query "UnassignPrivateIpAddresses" params returnBool
@@ -81,7 +78,7 @@ networkInterfaceSink = NetworkInterface
     <*> getT "requesterManaged"
     <*> getF "status" networkInterfaceStatus'
     <*> getT "macAddress"
-    <*> getT "privateIpAddress"
+    <*> getF "privateIpAddress" textRead
     <*> getMT "privateDnsName"
     <*> getF "sourceDestCheck" textToBool
     <*> groupSetSink
@@ -89,7 +86,7 @@ networkInterfaceSink = NetworkInterface
         <$> getT "attachmentId"
         <*> getMT "instanceId"
         <*> getT "instanceOwnerId"
-        <*> getF "deviceIndex" textToInt
+        <*> getF "deviceIndex" textRead
         <*> getT "status"
         <*> getF "attachTime" textToTime
         <*> getF "deleteOnTermination" textToBool
@@ -98,7 +95,7 @@ networkInterfaceSink = NetworkInterface
     <*> resourceTagSink
     <*> itemsSet "privateIpAddressesSet" (
         NetworkInterfacePrivateIpAddress
-        <$> getT "privateIpAddress"
+        <$> getF "privateIpAddress" textRead
         <*> getF "primary" textToBool
         <*> networkInterfaceAssociationSink
         )
@@ -110,6 +107,6 @@ networkInterfaceAssociationSink =
     elementM "association" $ NetworkInterfaceAssociation
         <$> getMT "attachmentId"
         <*> getMT "instanceId"
-        <*> getT "publicIp"
+        <*> getF "publicIp" textRead
         <*> getT "ipOwnerId"
         <*> getT "associationId"

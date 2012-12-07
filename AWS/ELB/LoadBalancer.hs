@@ -37,11 +37,11 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
     <*> getF "CreatedTime" textToTime
     <*> element "HealthCheck"
         (HealthCheck
-        <$> getF "Interval" textToInt
+        <$> getF "Interval" textRead
         <*> getT "Target"
-        <*> getF "HealthyThreshold" textToInt
-        <*> getF "Timeout" textToInt
-        <*> getF "UnhealthyThreshold" textToInt
+        <*> getF "HealthyThreshold" textRead
+        <*> getF "Timeout" textRead
+        <*> getF "UnhealthyThreshold" textRead
         )
     <*> getMT "VPCId"
     <*> members "ListenerDescriptions"
@@ -50,10 +50,10 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
         <*> element "Listener"
             (Listener
             <$> getT "Protocol"
-            <*> getF "LoadBalancerPort" textToInt
+            <*> getF "LoadBalancerPort" textRead
             <*> getT "InstanceProtocol"
             <*> getMT "SSLCertificateId"
-            <*> getF "InstancePort" textToInt
+            <*> getF "InstancePort" textRead
             )
         )
     <*> members "Instances"
@@ -68,7 +68,7 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
         <*> members "OtherPolicies" text
         <*> members "LBCookieStickinessPolicies"
             (LBCookieStickinessPolicy
-            <$> getF "CookieExpirationPeriod" textToInt
+            <$> getF "CookieExpirationPeriod" textRead
             <*> getT "PolicyName"
             )
         )
@@ -84,7 +84,7 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
     <*> getT "DNSName"
     <*> members "BackendServerDescriptions"
         (BackendServerDescription
-        <$> getF "InstancePort" textToInt
+        <$> getF "InstancePort" textRead
         <*> members "PolicyNames" text
         )
     <*> members "Subnets" text

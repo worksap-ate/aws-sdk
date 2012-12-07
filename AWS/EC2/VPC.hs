@@ -19,9 +19,9 @@ module AWS.EC2.VPC
     ) where
 
 import Data.Text (Text)
-
 import Data.XML.Types (Event)
 import Data.Conduit
+import Data.IP (IPv4, AddrRange)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
@@ -145,7 +145,7 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
         <*> getF "status" vpnTunnelTelemetryStatus'
         <*> getF "lastStatusChange" textToTime
         <*> getT "statusMessage"
-        <*> getF "acceptedRouteCount" textToInt
+        <*> getF "acceptedRouteCount" textRead
         )
     <*> elementM "options"
         (VpnConnectionOptionsRequest
@@ -190,7 +190,7 @@ vpcSink = Vpc
 ------------------------------------------------------------
 createVpc
     :: (MonadResource m, MonadBaseControl IO m)
-    => Text -- ^ CidrBlock
+    => AddrRange IPv4 -- ^ CidrBlock
     -> Maybe Text -- ^ instanceTenancy
     -> EC2 m Vpc
 createVpc cidrBlock instanceTenancy =
@@ -198,7 +198,7 @@ createVpc cidrBlock instanceTenancy =
         element "vpc" vpcSink
   where
     params =
-        [ ValueParam "CidrBlock" cidrBlock
+        [ ValueParam "CidrBlock" $ toText cidrBlock
         ] ++ maybeParams [ ("instanceTenancy", instanceTenancy) ]
 
 ------------------------------------------------------------
@@ -292,7 +292,7 @@ customerGatewaySink = CustomerGateway
     <*> getF "state" customerGatewayState'
     <*> getT "type"
     <*> getT "ipAddress"
-    <*> getF "bgpAsn" textToInt
+    <*> getF "bgpAsn" textRead
     <*> resourceTagSink
 
 ------------------------------------------------------------
@@ -301,7 +301,7 @@ customerGatewaySink = CustomerGateway
 createCustomerGateway
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ Type
-    -> Text -- ^ IpAddress
+    -> IPv4 -- ^ IpAddress
     -> Int -- ^ BgpAsn
     -> EC2 m CustomerGateway
 createCustomerGateway type' ipAddr bgpAsn = do
@@ -310,7 +310,7 @@ createCustomerGateway type' ipAddr bgpAsn = do
   where
     params =
         [ ValueParam "Type" type' 
-        , ValueParam "IpAddress" ipAddr
+        , ValueParam "IpAddress" $ toText ipAddr
         , ValueParam "BgpAsn" (toText bgpAsn)
         ]
 

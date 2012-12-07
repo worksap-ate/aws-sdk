@@ -128,8 +128,8 @@ instanceStateSink :: MonadThrow m
     => Text -> GLSink Event m InstanceState
 instanceStateSink label = element label $
     codeToState
-    <$> getF "code" textToInt
-    <* getT "name"
+    <$> getT "code"
+    <*> getT "name"
 
 networkInterfaceSink :: MonadThrow m
     => GLSink Event m [InstanceNetworkInterface]
@@ -148,7 +148,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <*> element "attachment" (
         InstanceNetworkInterfaceAttachment
         <$> getT "attachmentId"
-        <*> getF "deviceIndex" textToInt
+        <*> getT "deviceIndex"
         <*> getT "status"
         <*> getF "attachTime" textToTime
         <*> getF "deleteOnTermination" textToBool
@@ -337,7 +337,8 @@ runInstances param =
                 <$> runInstancesRequestShutdownBehavior param
               )
             , ("PrivateIpAddress"
-              , runInstancesRequestPrivateIpAddress param
+              , toText
+                <$> runInstancesRequestPrivateIpAddress param
               )
             , ("ClientToken", runInstancesRequestClientToken param)
             , ("IamInstanceProfile.Arn"
@@ -403,7 +404,7 @@ networkInterfaceParams nips = f 1 nips
         , ValueParam (p n "Description") desc
         , ArrayParams (p n "SecurityroupId") sec
         , ValueParam (p n "DeleteOnTermination") $ boolToText dot
-        ] ++ maybeParams [(p n "PrivateIpAddress", pip)]
+        ] ++ maybeParams [(p n "PrivateIpAddress", toText <$> pip)]
           ++ s n sip
     p n name = "NetworkInterface." <> toText n <> "." <> name
     s _ SecondaryPrivateIpAddressParamNothing = []
@@ -461,7 +462,7 @@ describeInstanceAttribute
     -> EC2 m InstanceAttribute
 describeInstanceAttribute iid attr =
     ec2Query "DescribeInstanceAttribute" params
-        $ getT "instanceId" *> f attr
+        $ getT_ "instanceId" *> f attr
   where
     str = iar attr
     params =

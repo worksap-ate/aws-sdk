@@ -38,8 +38,8 @@ sinkDBInstances
     => GLSink Event m [DBInstance]
 sinkDBInstances = elements "DBInstance" $
     DBInstance
-    <$> getM "Iops" (textToInt <$>)
-    <*> getF "BackupRetentionPeriod" textToInt
+    <$> getMT "Iops"
+    <*> getT "BackupRetentionPeriod"
     <*> getF "MultiAZ" textToBool
     <*> getT "DBInstanceStatus"
     <*> getT "DBInstanceIdentifier"
@@ -81,7 +81,7 @@ sinkDBInstances = elements "DBInstance" $
         )
     <*> elementM "Endpoint"
         (Endpoint
-        <$> getF "Port" textToInt
+        <$> getT "Port"
         <*> getT "Address"
         )
     <*> getT "EngineVersion"
@@ -94,7 +94,7 @@ sinkDBInstances = elements "DBInstance" $
     <*> getMT "DBName"
     <*> getF "AutoMinorVersionUpgrade" textToBool
     <*> getM "InstanceCreateTime" (textToTime <$>)
-    <*> getF "AllocatedStorage" textToInt
+    <*> getT "AllocatedStorage"
     <*> getT "DBInstanceClass"
     <*> getT "MasterUsername" 
 
@@ -103,14 +103,14 @@ sinkPendingModifiedValues
     => GLSink Event m [PendingModifiedValue]
 sinkPendingModifiedValues = element "PendingModifiedValues" $
     catMaybes <$> sequence [ m "MasterUserPassword" PMVMasterUserPassword
-        , m "Iops" (PMVIops . textToInt)
+        , m "Iops" (PMVIops . textRead)
         , m "MultiAZ" (PMVMultiAZ . textToBool)
-        , m "AllocatedStorage" (PMVAllocatedStorage . textToInt)
+        , m "AllocatedStorage" (PMVAllocatedStorage . textRead)
         , m "EngineVersion" PMVEngineVersion
         , m "DBInstanceClass" PMVDBInstanceClass
         , m "BackupRetentionPeriod"
-            (PMVBackupRetentionPeriod . textToInt)
-        , m "Port" (PMVPort . textToInt)
+            (PMVBackupRetentionPeriod . textRead)
+        , m "Port" (PMVPort . textRead)
         ]
   where
     m t f = getM t (f <$>)

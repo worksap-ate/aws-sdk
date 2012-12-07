@@ -83,6 +83,7 @@ library
                    , strptime
                    , template-haskell
                    , parallel
+                   , iproute >= 1.2.9
 
 test-suite test
     type:              exitcode-stdio-1.0
@@ -104,6 +105,7 @@ test-suite test
                  , hspec
                  , HUnit
                  , lifted-base
+                 , iproute
 
 source-repository head
     type:            git

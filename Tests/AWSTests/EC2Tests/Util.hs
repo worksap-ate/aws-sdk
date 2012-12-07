@@ -15,6 +15,7 @@ import Control.Applicative
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Text (Text)
+import Data.IP (IPv4, AddrRange)
 
 import AWS
 import AWS.EC2
@@ -46,7 +47,7 @@ testEC2' region request = do
 
 withVpc
     :: (MonadBaseControl IO m, MonadResource m)
-    => Text -- ^ CIDR
+    => AddrRange IPv4 -- ^ CIDR
     -> (Vpc -> EC2 m a)
     -> EC2 m a
 withVpc cidr = E.bracket
@@ -55,11 +56,11 @@ withVpc cidr = E.bracket
 
 withSubnet
     :: (MonadBaseControl IO m, MonadResource m)
-    => Text -- ^ CIDR
+    => AddrRange IPv4 -- ^ CIDR
     -> (Subnet -> EC2 m a)
     -> EC2 m a
 withSubnet cidr f = withVpc cidr $ \vpc -> E.bracket
-    (createSubnet (CreateSubnetRequest (vpcId vpc) (vpcCidrBlock vpc) Nothing) <* sleep 2)
+    (createSubnet (CreateSubnetRequest (vpcId vpc) cidr Nothing) <* sleep 2)
     (\subnet -> retry 5 10 $ deleteSubnet $ subnetId subnet)
     f
 

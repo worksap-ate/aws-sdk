@@ -128,6 +128,7 @@ module AWS.EC2.Types
     , InternetGatewayAttachmentState(..)
     ) where
 
+import Data.IP (IPv4, AddrRange)
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 import Data.Time (UTCTime)
@@ -309,8 +310,8 @@ data Instance = Instance
     , instanceMonitoring :: InstanceMonitoringState
     , instanceSubnetId :: Maybe Text
     , instanceVpcId :: Maybe Text
-    , instancePrivateIpAddress :: Maybe Text
-    , instanceIpAddress :: Maybe Text
+    , instancePrivateIpAddress :: Maybe IPv4
+    , instanceIpAddress :: Maybe IPv4
     , instanceSourceDestCheck :: Maybe Bool
     , instancevpcGroupSet :: [Group]
     , instanceStateReason :: Maybe StateReason
@@ -436,7 +437,7 @@ data InstanceNetworkInterface = InstanceNetworkInterface
     , instanceNetworkInterfaceDescription :: Text
     , instanceNetworkInterfaceOwnerId :: Text
     , instanceNetworkInterfaceStatus :: Text
-    , instanceNetworkInterfacePrivateIpAddress :: Text
+    , instanceNetworkInterfacePrivateIpAddress :: IPv4
     , instanceNetworkInterfacePrivateDnsName :: Maybe Text
     , instanceNetworkInterfaceSourceDestCheck :: Bool
     , instanceNetworkInterfaceGroupSet :: [Group]
@@ -467,7 +468,7 @@ data InstanceNetworkInterfaceAssociation
   deriving (Show, Eq)
 
 data InstancePrivateIpAddress = InstancePrivateIpAddress
-    { instancePrivateIpAddressAddress :: Text
+    { instancePrivateIpAddressAddress :: IPv4
     , instancePrivateIpAddressPrimary :: Bool
     , instancePrivateIpAddressAssociation
         :: Maybe InstanceNetworkInterfaceAssociation
@@ -501,14 +502,14 @@ data InstanceAttribute
   deriving (Show, Eq)
 
 data Address = Address
-    { addressPublicIp :: Text
+    { addressPublicIp :: IPv4
     , addressAllocationId :: Maybe Text
     , addressDomain :: AddressDomain
     , addressInstanceId :: Maybe Text
     , addressAssociationId :: Maybe Text
     , addressNetworkInterfaceId :: Maybe Text
     , addressNetworkInterfaceOwnerId :: Maybe Text
-    , addressPrivateIpAddress :: Maybe Text
+    , addressPrivateIpAddress :: Maybe IPv4
     }
   deriving (Show, Eq)
 
@@ -516,7 +517,7 @@ data AddressDomain = AddressDomainStandard | AddressDomainVPC
   deriving (Show, Eq)
 
 data AllocateAddress = AllocateAddress
-    { allocateAddressPublicIp :: Text
+    { allocateAddressPublicIp :: IPv4
     , allocateAddressDomain :: AddressDomain
     , allocateAddressAllocationId :: Maybe Text
     }
@@ -651,7 +652,7 @@ data UserIdGroupPair = UserIdGroupPair
   deriving (Show, Eq)
 
 data IpRange = IpRange
-    { ipRangeCidrIp :: Text
+    { ipRangeCidrIp :: AddrRange IPv4
     }
   deriving (Show, Eq)
 
@@ -684,7 +685,7 @@ data NetworkInterfaceParam
         , networkInterfaceParamCreateSubnetId :: Text
         , networkInterfaceParamCreateDescription :: Text
         , networkInterfaceParamCreatePrivateIpAddress
-            :: Maybe Text
+            :: Maybe IPv4
         , networkInterfaceParamCreatePrivateIpAddresses
             :: SecondaryPrivateIpAddressParam
         , networkInterfaceParamCreateSecurityGroupIds :: [Text]
@@ -701,7 +702,7 @@ data SecondaryPrivateIpAddressParam
     = SecondaryPrivateIpAddressParamNothing
     | SecondaryPrivateIpAddressParamCount Int
     | SecondaryPrivateIpAddressParamSpecified
-      { secondaryPrivateIpAddressParamSpecifiedAddresses :: [Text]
+      { secondaryPrivateIpAddressParamSpecifiedAddresses :: [IPv4]
       , secondaryPrivateIpAddressParamSpecifiedPrimary
         :: Maybe Int
       }
@@ -729,7 +730,7 @@ data VpnConnectionState
   deriving (Show, Eq)
 
 data VpnTunnelTelemetry = VpnTunnelTelemetry
-    { vpnTunnelTelemetryOutsideIpAddress :: Text
+    { vpnTunnelTelemetryOutsideIpAddress :: IPv4
     , vpnTunnelTelemetryStatus :: VpnTunnelTelemetryStatus
     , vpnTunnelTelemetryLastStatusChange :: UTCTime
     , vpnTunnelTelemetryStatusMessage :: Text
@@ -788,7 +789,7 @@ data RunInstancesRequest = RunInstancesRequest
     , runInstancesRequestDisableApiTermination :: Maybe Bool
     , runInstancesRequestShutdownBehavior
         :: Maybe ShutdownBehavior
-    , runInstancesRequestPrivateIpAddress :: Maybe Text
+    , runInstancesRequestPrivateIpAddress :: Maybe IPv4
     , runInstancesRequestClientToken :: Maybe Text
     , runInstancesRequestNetworkInterfaces
         :: [NetworkInterfaceParam]
@@ -864,7 +865,7 @@ data CreateVolumeRequest
 
 data AssociateAddressRequest
     = AssociateAddressRequestEc2
-        { associateAddressRequestEc2PublicIp :: Text
+        { associateAddressRequestEc2PublicIp :: IPv4
         , associateAddressRequestEc2InstanceId :: Text
         }
     | AssociateAddressRequestVpc
@@ -872,15 +873,15 @@ data AssociateAddressRequest
         , associateAddressRequestVpcInstanceId :: Maybe Text
         , associateAddressRequestVpcNetworkInterfaceId
             :: Maybe Text
-        , associateAddressRequestVpcPrivateIpAddress :: Maybe Text
+        , associateAddressRequestVpcPrivateIpAddress :: Maybe IPv4
         , associateAddressRequestVpcAllowReassociation
             :: Maybe Bool
         }
   deriving (Show, Eq)
 
 data DisassociateAddressRequest
-    = DisassociateAddressRequestEc2 Text -- ^ PublicIp for EC2
-    | DisassociateAddressRequestVpc Text
+    = DisassociateAddressRequestEc2 IPv4 -- ^ PublicIp for EC2
+    | DisassociateAddressRequestVpc IPv4
       -- ^ AssociationId for VPC
   deriving (Show, Eq)
 
@@ -893,7 +894,7 @@ data Subnet = Subnet
     { subnetId :: Text
     , subnetState :: SubnetState
     , subnetVpicId :: Text
-    , subnetCidrBlock :: Text
+    , subnetCidrBlock :: AddrRange IPv4
     , subnetAvailableIpAddressCount :: Int
     , subnetAvailabilityZone :: Text
     , subnetTagSet :: [ResourceTag]
@@ -905,7 +906,7 @@ data SubnetState = SubnetStatePending | SubnetStateAvailable
 
 data CreateSubnetRequest = CreateSubnetRequest
     { createSubnetRequestVpcId :: Text
-    , createSubnetRequestCidrBlock :: Text
+    , createSubnetRequestCidrBlock :: AddrRange IPv4
     , createSubnetRequestAvailabilityZone :: Maybe Text
     }
   deriving (Show, Eq)
@@ -1065,7 +1066,7 @@ type PropagatingVgw = Text
 data Vpc = Vpc
     { vpcId :: Text
     , vpcState :: VpcState
-    , vpcCidrBlock :: Text
+    , vpcCidrBlock :: AddrRange IPv4
     , vpcDhcpOptionsId :: Text
     , vpcTagSet :: [ResourceTag]
     , vpcInstanceTenancy :: Text
@@ -1111,7 +1112,7 @@ data CustomerGateway = CustomerGateway
     { customerGatewayId :: Text
     , customerGatewayState :: CustomerGatewayState
     , customerGatewayType :: Text
-    , customerGatewayIpAddress :: Text
+    , customerGatewayIpAddress :: IPv4
     , customerGatewayBgpAsn :: Int
     , customerGatewayTagSet :: [ResourceTag]
     }
@@ -1156,7 +1157,7 @@ data NetworkInterface = NetworkInterface
     , networkInterfaceRequesterManaged :: Text
     , networkInterfaceStatus :: NetworkInterfaceStatus
     , networkInterfaceMacAddress :: Text
-    , networkInterfacePrivateIpAddress :: Text
+    , networkInterfacePrivateIpAddress :: IPv4
     , networkInterfacePrivateDnsName :: Maybe Text
     , networkInterfaceSourceDestCheck :: Bool
     , networkInterfaceGroupSet :: [Group]
@@ -1191,7 +1192,7 @@ data NetworkInterfaceAttachment = NetworkInterfaceAttachment
 data NetworkInterfaceAssociation = NetworkInterfaceAssociation
     { networkInterfaceAssociationAttachmentId :: Maybe Text
     , networkInterfaceAssociationInstanceId :: Maybe Text
-    , networkInterfaceAssociationPublicIp :: Text
+    , networkInterfaceAssociationPublicIp :: IPv4
     , networkInterfaceAssociationIpOwnerId :: Text
     , networkInterfaceAssociationId :: Text
     }
@@ -1199,7 +1200,7 @@ data NetworkInterfaceAssociation = NetworkInterfaceAssociation
 
 data NetworkInterfacePrivateIpAddress
     = NetworkInterfacePrivateIpAddress
-    { networkInterfacePrivateIpAddressPrivateIpAddress :: Text
+    { networkInterfacePrivateIpAddressPrivateIpAddress :: IPv4
     , networkInterfacePrivateIpAddressPrimary :: Bool
     , networkInterfacePrivateIpAddressAssociation
         :: Maybe NetworkInterfaceAssociation

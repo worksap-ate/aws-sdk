@@ -11,7 +11,7 @@ module AWS.EC2.Address
     ) where
 
 import Data.Text (Text)
-
+import Data.IP (IPv4)
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -73,14 +73,14 @@ allocateAddress isVpc = do
 -----------------------------------------------------
 releaseAddress
     :: (MonadResource m, MonadBaseControl IO m)
-    => Maybe Text -- ^ PublicIp
+    => Maybe IPv4 -- ^ PublicIp
     -> Maybe Text -- ^ AllocationId
     -> EC2 m EC2Return
 releaseAddress addr allocid = do
     ec2Query "ReleaseAddress" params $ getF "return" ec2Return
   where
     params = maybeParams
-        [ ("PublicIp", addr)
+        [ ("PublicIp", toText <$> addr)
         , ("AllocationId", allocid)
         ]
 
@@ -100,7 +100,7 @@ associateAddress param = ec2Query "AssociateAddress" params $
 associateAddressParam
     :: AssociateAddressRequest -> [QueryParam]
 associateAddressParam (AssociateAddressRequestEc2 ip iid) =
-    [ ValueParam "PublicIp" ip
+    [ ValueParam "PublicIp" $ toText ip
     , ValueParam "InstanceId" iid
     ]
 associateAddressParam
@@ -109,7 +109,7 @@ associateAddressParam
     ++ maybeParams
         [ ("InstanceId", iid)
         , ("NetworkInterfaceId", nid)
-        , ("PrivateIpAddress", pip)
+        , ("PrivateIpAddress", toText <$> pip)
         , ("AllowReassociation", boolToText <$> ar)
         ]
 
@@ -122,6 +122,6 @@ disassociateAddress param =
         $ getF "return" textToBool
   where
     p (DisassociateAddressRequestEc2 pip)
-        = [ValueParam "PublicIp" pip]
+        = [ValueParam "PublicIp" $ toText pip]
     p (DisassociateAddressRequestVpc aid)
-        = [ValueParam "AssociationId" aid]
+        = [ValueParam "AssociationId" $ toText aid]

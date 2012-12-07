@@ -53,15 +53,15 @@ describeSecurityGroups names ids filters =
 ipPermissionsSink :: MonadThrow m
     => Text -> GLSink Event m [IpPermission]
 ipPermissionsSink name = itemsSet name $ IpPermission
-    <$> getT "ipProtocol" <*> getM "fromPort" (textToInt <$>)
-    <*> getM "toPort" (textToInt <$>)
+    <$> getT "ipProtocol" <*> getM "fromPort" (textRead <$>)
+    <*> getM "toPort" (textRead <$>)
     <*> itemsSet "groups" (
         UserIdGroupPair
         <$> getMT "userId"
         <*> getT "groupId"
         <*> getMT "groupName"
         )
-    <*> itemsSet "ipRanges" (IpRange <$> getT "cidrIp")
+    <*> itemsSet "ipRanges" (IpRange <$> getF "cidrIp" textRead)
 
 createSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)
@@ -71,7 +71,7 @@ createSecurityGroup
     -> EC2 m (Maybe Text) -- ^ GroupId
 createSecurityGroup name desc vpc =
     ec2Query "CreateSecurityGroup" params
-        $ getT "return" *> getMT "groupId"
+        $ getT_ "return" *> getMT "groupId"
   where
     params =
         [ ValueParam "GroupName" name
@@ -170,4 +170,4 @@ ipPermissionParam num ipp =
             ])
     ipr n r = ValueParam
         (pre <> ".IPRanges." <> toText n <> ".CidrIp")
-        $ ipRangeCidrIp r
+        $ toText $ ipRangeCidrIp r

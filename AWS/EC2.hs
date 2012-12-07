@@ -69,9 +69,7 @@ setRegion
 setRegion name = do
     region <- Util.head $ describeRegions [name] []
     ctx <- State.get
-    maybe
-        (fail "region not found")
-        (\r -> State.put ctx { endpoint = f r })
-        region
+    maybe (fail "region not found") (f ctx) region
   where
-    f = textToBS . regionEndpoint
+    f ctx r = State.put ctx { endpoint = g r }
+    g = textToBS . regionEndpoint

@@ -4,6 +4,7 @@ module AWS.EC2.Convert
     where
 
 import Data.Text (Text)
+import Data.Maybe (fromMaybe)
 
 import AWS.Util
 import AWS.Lib.Convert
@@ -70,10 +71,9 @@ instanceStateCodes =
     , (80, InstanceStateStopped)
     ]
 
-codeToState :: Int -> InstanceState
-codeToState code = maybe
+codeToState :: Int -> Text -> InstanceState
+codeToState code _name = fromMaybe
     (InstanceStateUnknown code)
-    id
     (lookup code instanceStateCodes)
 
 mkConvertFunc

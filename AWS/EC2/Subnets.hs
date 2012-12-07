@@ -43,7 +43,7 @@ subnetSink = Subnet
     <*> getF "state" subnetState'
     <*> getT "vpcId"
     <*> getT "cidrBlock"
-    <*> getF "availableIpAddressCount" textToInt
+    <*> getT "availableIpAddressCount"
     <*> getT "availabilityZone"
     <*> resourceTagSink
 
@@ -63,7 +63,7 @@ createSubnet param =
 createSubnetParam :: CreateSubnetRequest -> [QueryParam]
 createSubnetParam (CreateSubnetRequest vid cidr zone) =
     [ ValueParam "VpcId" vid
-    , ValueParam "CidrBlock" cidr
+    , ValueParam "CidrBlock" $ toText cidr
     ] ++ maybe [] (\a -> [ValueParam "AvailabilityZone" a]) zone
 
 ------------------------------------------------------------

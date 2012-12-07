@@ -8,7 +8,6 @@ import Data.Maybe
 import Data.Monoid
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.Read as TR
 import Data.Time (UTCTime)
 import qualified Data.Time as Time
 import qualified Data.Time.Parse as TP
@@ -31,18 +30,6 @@ textToBool a
     | a == "true"  = True
     | a == "false" = False
     | otherwise    = err "value" a
-
-textToInt :: Integral a => Text -> a
-textToInt t = either 
-    (const $ error "not decimal")
-    fst
-    (TR.signed TR.decimal t)
-
-textToDouble :: Fractional a => Text -> a
-textToDouble t = either
-    (const $ error "not double value")
-    fst
-    (TR.signed TR.rational t)
 
 textToTime :: Text -> UTCTime
 textToTime

@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, ScopedTypeVariables #-}
 module AWS.Lib.Parser
     where
 
@@ -13,6 +12,8 @@ import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
 import Data.Monoid
 import Control.Monad.Trans.Class (lift)
+import Safe (readMay)
+import Data.Maybe (fromMaybe)
 
 import AWS.Class
 
@@ -74,10 +75,18 @@ getF :: MonadThrow m
     -> Pipe Event Event o u m b
 getF name f = tagContent name >>= return . f
 
-getT :: MonadThrow m
+textRead :: Read a => Text -> a
+textRead t = fromMaybe (read $ T.unpack t) . readMay . show $ t
+
+getT :: (MonadThrow m, Read a)
     => Text
-    -> Pipe Event Event o u m Text
-getT name = getF name id
+    -> Pipe Event Event o u m a
+getT name = getF name textRead
+
+getT_ :: forall m o u . MonadThrow m
+    => Text
+    -> Pipe Event Event o u m ()
+getT_ name = () <$ (getT name :: Pipe Event Event o u m Text)
 
 getM :: MonadThrow m
     => Text
@@ -85,10 +94,10 @@ getM :: MonadThrow m
     -> Pipe Event Event o u m b
 getM name f = tagContentM name >>= return . f
 
-getMT :: MonadThrow m
+getMT :: (MonadThrow m, Read a)
     => Text
-    -> Pipe Event Event o u m (Maybe Text)
-getMT name = getM name id
+    -> Pipe Event Event o u m (Maybe a)
+getMT name = getM name (textRead <$>)
 
 elementM :: MonadThrow m
     => Text
@@ -147,10 +156,8 @@ sinkEventBeginDocument = do
 
 sinkError :: MonadThrow m => ByteString -> Int -> GLSink Event m a
 sinkError action status = element "ErrorResponse" $ do
-    (_t,c,m) <- element "Error" $
-        (,,)
-        <$> getT "Type"
-        <*> getT "Code"
+    (c,m) <- element "Error" $ (,)
+        <$> (getT_ "Type" *> getT "Code")
         <*> getT "Message"
     rid <- getT "RequestId"
     lift $ monadThrow $ ClientError action status c m rid

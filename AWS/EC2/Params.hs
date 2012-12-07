@@ -3,6 +3,7 @@ module AWS.EC2.Params where
 import Control.Applicative
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.IP (IPv4)
 
 import AWS.EC2.Query (QueryParam(..))
 import AWS.EC2.Types
@@ -39,7 +40,8 @@ blockDeviceMappingParams =
         , ("Ebs.Iops", T.pack $ show iops)
         ]
 
-privateIpAddressesParam :: Text -> [Text] -> QueryParam
+privateIpAddressesParam :: Text -> [IPv4] -> QueryParam
 privateIpAddressesParam name addrs = StructArrayParams
     name
-    $ unconcat $ zip (repeat "PrivateIpAddress") addrs
+    $ unconcat $ zip (repeat "PrivateIpAddress")
+    $ map toText addrs

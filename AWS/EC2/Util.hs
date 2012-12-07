@@ -125,7 +125,7 @@ retry
     -> Int -- ^ number of retry
     -> EC2 m a
     -> EC2 m a
-retry _    0     f = f
+retry _   0   f = f
 retry sec cnt f = f `E.catch` handler
   where
     handler :: E.SomeException -> EC2 m a
