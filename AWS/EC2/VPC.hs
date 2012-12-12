@@ -145,7 +145,7 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
         <*> getF "status" vpnTunnelTelemetryStatus'
         <*> getF "lastStatusChange" textToTime
         <*> getT "statusMessage"
-        <*> getF "acceptedRouteCount" textRead
+        <*> getT "acceptedRouteCount"
         )
     <*> elementM "options"
         (VpnConnectionOptionsRequest
@@ -292,7 +292,7 @@ customerGatewaySink = CustomerGateway
     <*> getF "state" customerGatewayState'
     <*> getT "type"
     <*> getT "ipAddress"
-    <*> getF "bgpAsn" textRead
+    <*> getT "bgpAsn"
     <*> resourceTagSink
 
 ------------------------------------------------------------

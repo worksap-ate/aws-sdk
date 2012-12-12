@@ -78,7 +78,7 @@ networkInterfaceSink = NetworkInterface
     <*> getT "requesterManaged"
     <*> getF "status" networkInterfaceStatus'
     <*> getT "macAddress"
-    <*> getF "privateIpAddress" textRead
+    <*> getT "privateIpAddress"
     <*> getMT "privateDnsName"
     <*> getF "sourceDestCheck" textToBool
     <*> groupSetSink
@@ -86,7 +86,7 @@ networkInterfaceSink = NetworkInterface
         <$> getT "attachmentId"
         <*> getMT "instanceId"
         <*> getT "instanceOwnerId"
-        <*> getF "deviceIndex" textRead
+        <*> getT "deviceIndex"
         <*> getT "status"
         <*> getF "attachTime" textToTime
         <*> getF "deleteOnTermination" textToBool
@@ -95,7 +95,7 @@ networkInterfaceSink = NetworkInterface
     <*> resourceTagSink
     <*> itemsSet "privateIpAddressesSet" (
         NetworkInterfacePrivateIpAddress
-        <$> getF "privateIpAddress" textRead
+        <$> getT "privateIpAddress"
         <*> getF "primary" textToBool
         <*> networkInterfaceAssociationSink
         )
@@ -107,6 +107,6 @@ networkInterfaceAssociationSink =
     elementM "association" $ NetworkInterfaceAssociation
         <$> getMT "attachmentId"
         <*> getMT "instanceId"
-        <*> getF "publicIp" textRead
+        <*> getT "publicIp"
         <*> getT "ipOwnerId"
         <*> getT "associationId"

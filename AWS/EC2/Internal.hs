@@ -69,7 +69,7 @@ volumeTypeSink :: MonadThrow m
     => GLSink Event m VolumeType
 volumeTypeSink = volumeType
     <$> getT "volumeType"
-    <*> getM "iops" (textRead <$>)
+    <*> getMT "iops"
 
 returnBool :: MonadThrow m => GLSink Event m Bool
 returnBool = getF "return" textToBool

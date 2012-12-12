@@ -44,18 +44,18 @@ networkAclSink = NetworkAcl
     <*> getT "vpcId"
     <*> getF "default" textToBool
     <*> itemsSet "entrySet" (NetworkAclEntry
-        <$> getF "ruleNumber" textRead
-        <*> getF "protocol" textRead
+        <$> getT "ruleNumber"
+        <*> getT "protocol"
         <*> getF "ruleAction" networkAclRuleAction
         <*> getF "egress" textToBool
         <*> getT "cidrBlock"
         <*> elementM "icmpTypeCode" (IcmpTypeCode
-            <$> getF "code" textRead
-            <*> getF "type" textRead
+            <$> getT "code"
+            <*> getT "type"
             )
         <*> elementM "portRange" (PortRange
-            <$> getF "from" textRead
-            <*> getF "to" textRead))
+            <$> getT "from"
+            <*> getT "to"))
     <*> itemsSet "associationSet" (NetworkAclAssociation
         <$> getT "networkAclAssociationId"
         <*> getT "networkAclId"

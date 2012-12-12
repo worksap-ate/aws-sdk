@@ -43,7 +43,7 @@ volumeSink :: MonadThrow m
     => GLSink Event m Volume
 volumeSink = Volume
     <$> getT "volumeId"
-    <*> getF "size" textRead
+    <*> getT "size"
     <*> getMT "snapshotId"
     <*> getT "availabilityZone"
     <*> getF "status" volumeStatus'

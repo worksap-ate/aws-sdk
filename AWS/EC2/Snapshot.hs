@@ -47,7 +47,7 @@ snapshotSink = Snapshot
         <*> getF "startTime" textToTime
         <*> getT "progress"
         <*> getT "ownerId"
-        <*> getF "volumeSize" textRead
+        <*> getT "volumeSize"
         <*> getT "description"
         <*> getMT "ownerAlias"
         <*> resourceTagSink

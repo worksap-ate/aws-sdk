@@ -78,7 +78,7 @@ blockDeviceMappingSink = itemsSet "blockDeviceMapping" (
     <*> elementM "ebs" (
         EbsBlockDevice
         <$> getMT "snapshotId"
-        <*> getF "volumeSize" textRead
+        <*> getT "volumeSize"
         <*> getF "deleteOnTermination" textToBool
         <*> volumeTypeSink
         )

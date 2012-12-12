@@ -13,7 +13,6 @@ import Control.Applicative
 import Data.Monoid
 import Control.Monad.Trans.Class (lift)
 import Safe (readMay)
-import Data.Maybe (fromMaybe)
 
 import AWS.Class
 
@@ -73,15 +72,25 @@ getF :: MonadThrow m
     => Text
     -> (Text -> b)
     -> Pipe Event Event o u m b
-getF name f = tagContent name >>= return . f
+getF name f = f <$> tagContent name
 
-textRead :: Read a => Text -> a
-textRead t = fromMaybe (read $ T.unpack t) . readMay . show $ t
+textReadMay :: forall a . Read a => Text -> Maybe a
+textReadMay t
+    = maybe (readMay $ T.unpack t) Just
+    . readMay
+    . show
+    $ t
 
-getT :: (MonadThrow m, Read a)
+textReadM :: (Read a, MonadThrow m) => Text -> m a
+textReadM t = maybe
+    (monadThrow $ TextConversionException t)
+    return
+    $ textReadMay t
+
+getT :: (MonadThrow m, Read a, Show a)
     => Text
     -> Pipe Event Event o u m a
-getT name = getF name textRead
+getT name = tagContent name >>= lift . textReadM
 
 getT_ :: forall m o u . MonadThrow m
     => Text
@@ -92,12 +101,12 @@ getM :: MonadThrow m
     => Text
     -> (Maybe Text -> b)
     -> Pipe Event Event o u m b
-getM name f = tagContentM name >>= return . f
+getM name f = f <$> tagContentM name
 
 getMT :: (MonadThrow m, Read a)
     => Text
     -> Pipe Event Event o u m (Maybe a)
-getMT name = getM name (textRead <$>)
+getMT name = getM name (>>= textReadMay)
 
 elementM :: MonadThrow m
     => Text

@@ -11,6 +11,7 @@ module AWS.Class
     , runAWS
     , AWSException(..)
     , AWSContext(..)
+    , getLastRequestId
     ) where
 
 import Control.Monad.State (StateT(..), MonadState)
@@ -47,6 +48,8 @@ data AWSException
         , errorMessage :: Text
         , errorRequestId :: Text
         } -- ^ This error is caused by client requests.
+    | TextConversionException Text
+        -- ^ parse error: cannot convert Text to oher data type.
     | NextToken Text -- ^ This response has next token.
   deriving (Show, Typeable)
 
@@ -101,3 +104,6 @@ runAWS ctx cred app = do
     R.runReaderT
         (S.evalStateT (runAWST app) $ ctx mgr)
         cred
+
+getLastRequestId :: (Monad m, Functor m) => AWS AWSContext m (Maybe Text)
+getLastRequestId = lastRequestId <$> S.get

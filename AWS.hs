@@ -38,6 +38,7 @@ module AWS
       -- * Environment
     , AWS
     , AWSException(..)
+    , getLastRequestId
     ) where
 
 import AWS.Credential

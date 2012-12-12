@@ -102,15 +102,15 @@ sinkPendingModifiedValues
     :: MonadThrow m
     => GLSink Event m [PendingModifiedValue]
 sinkPendingModifiedValues = element "PendingModifiedValues" $
-    catMaybes <$> sequence [ m "MasterUserPassword" PMVMasterUserPassword
-        , m "Iops" (PMVIops . textRead)
-        , m "MultiAZ" (PMVMultiAZ . textToBool)
-        , m "AllocatedStorage" (PMVAllocatedStorage . textRead)
-        , m "EngineVersion" PMVEngineVersion
-        , m "DBInstanceClass" PMVDBInstanceClass
-        , m "BackupRetentionPeriod"
-            (PMVBackupRetentionPeriod . textRead)
-        , m "Port" (PMVPort . textRead)
+    catMaybes <$> sequence
+        [ f PMVMasterUserPassword "MasterUserPassword"
+        , f PMVIops "Iops"
+        , f PMVMultiAZ "MultiAZ"
+        , f PMVAllocatedStorage "AllocatedStorage"
+        , f PMVEngineVersion "EngineVersion"
+        , f PMVDBInstanceClass "DBInstanceClass"
+        , f PMVBackupRetentionPeriod "BackupRetentionPeriod"
+        , f PMVPort "Port"
         ]
   where
-    m t f = getM t (f <$>)
+    f c name = fmap c <$> getMT name
