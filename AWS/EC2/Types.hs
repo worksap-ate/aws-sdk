@@ -54,7 +54,6 @@ module AWS.EC2.Types
     , InstanceStatusDetailName
     , InstanceStatusDetailStatus
     , IpPermission(..)
-    , IpRange(..)
     , KeyPair(..)
     , ModifyInstanceAttributeRequest(..)
     , LaunchPermissionItem(..)
@@ -640,7 +639,7 @@ data IpPermission = IpPermission
     , ipPermissionFromPort :: Maybe Int
     , ipPermissionToPort :: Maybe Int
     , ipPermissionGroups :: [UserIdGroupPair]
-    , ipPermissionIpRanges :: [IpRange]
+    , ipPermissionIpRanges :: [AddrRange IPv4]
     }
   deriving (Show, Eq)
 
@@ -648,11 +647,6 @@ data UserIdGroupPair = UserIdGroupPair
     { userIdGroupPairUserId :: Maybe Text
     , userIdGroupPairGroupId :: Text
     , userIdGroupPairGroupName :: Maybe Text
-    }
-  deriving (Show, Eq)
-
-data IpRange = IpRange
-    { ipRangeCidrIp :: AddrRange IPv4
     }
   deriving (Show, Eq)
 

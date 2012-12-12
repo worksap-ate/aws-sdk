@@ -53,15 +53,16 @@ describeSecurityGroups names ids filters =
 ipPermissionsSink :: MonadThrow m
     => Text -> GLSink Event m [IpPermission]
 ipPermissionsSink name = itemsSet name $ IpPermission
-    <$> getT "ipProtocol" <*> getM "fromPort" (textRead <$>)
-    <*> getM "toPort" (textRead <$>)
+    <$> getT "ipProtocol"
+    <*> getMT "fromPort"
+    <*> getMT "toPort"
     <*> itemsSet "groups" (
         UserIdGroupPair
         <$> getMT "userId"
         <*> getT "groupId"
         <*> getMT "groupName"
         )
-    <*> itemsSet "ipRanges" (IpRange <$> getF "cidrIp" textRead)
+    <*> itemsSet "ipRanges" (getT "cidrIp")
 
 createSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)
@@ -170,4 +171,4 @@ ipPermissionParam num ipp =
             ])
     ipr n r = ValueParam
         (pre <> ".IPRanges." <> toText n <> ".CidrIp")
-        $ toText $ ipRangeCidrIp r
+        $ toText r
