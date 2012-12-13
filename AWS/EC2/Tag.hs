@@ -38,7 +38,7 @@ createTags
     -> [(Text, Text)] -- ^ (Key, Value)
     -> EC2 m Bool
 createTags rids kvs =
-    ec2Query "CreateTags" params returnBool
+    ec2Query "CreateTags" params $ getT "return"
   where
     params =
         [ ArrayParams "ResourceId" rids ]
@@ -54,7 +54,7 @@ deleteTags
     -> [ResourceTag]
     -> EC2 m Bool
 deleteTags rids tags =
-    ec2Query "DeleteTags" params returnBool
+    ec2Query "DeleteTags" params $ getT "return"
   where
     params =
         [ ArrayParams "ResourceId" rids ]

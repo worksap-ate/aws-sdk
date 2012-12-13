@@ -20,7 +20,6 @@ import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.Lib.Parser
-import AWS.Util
 
 ------------------------------------------------------------
 -- describeRouteTables
@@ -66,7 +65,7 @@ routeTableAssociationSink = itemsSet "associationSet" $ RouteTableAssociation
     <$> getT "routeTableAssociationId"
     <*> getT "routeTableId"
     <*> getMT "subnetId"
-    <*> getM "main" (textToBool <$>)
+    <*> getMT "main"
 
 ------------------------------------------------------------
 -- createRouteTable
@@ -112,8 +111,9 @@ disassociateRouteTable
     => Text -- ^ AssociationId
     -> EC2 m Bool -- ^ return
 disassociateRouteTable aid =
-   ec2Query "DisassociateRouteTable" [ValueParam "AssociationId" aid]
-        $ getF "return" textToBool
+    ec2Query "DisassociateRouteTable"
+        [ValueParam "AssociationId" aid]
+            $ getT "return"
 
 ------------------------------------------------------------
 -- replaceRouteTableAssociation

@@ -1,6 +1,24 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, ScopedTypeVariables, FlexibleInstances #-}
 module AWS.Lib.Parser
-    where
+    ( RequestId
+    , getT
+    , getT_
+    , getMT
+    , getF
+    , getM
+    , element
+    , elementM
+    , listConduit
+    , listConsumer
+    , isBeginTagName
+    , awaitWhile
+    , sinkResponse
+    , sinkResponseMetadata
+    , sinkError
+    , sinkEventBeginDocument
+    , members
+    , text
+    ) where
 
 import Data.XML.Types (Event(..), Name(..))
 import Data.Text (Text)
@@ -12,7 +30,6 @@ import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
 import Data.Monoid
 import Control.Monad.Trans.Class (lift)
-import Safe (readMay)
 
 import AWS.Class
 
@@ -74,23 +91,10 @@ getF :: MonadThrow m
     -> Pipe Event Event o u m b
 getF name f = f <$> tagContent name
 
-textReadMay :: forall a . Read a => Text -> Maybe a
-textReadMay t
-    = maybe (readMay $ T.unpack t) Just
-    . readMay
-    . show
-    $ t
-
-textReadM :: (Read a, MonadThrow m) => Text -> m a
-textReadM t = maybe
-    (monadThrow $ TextConversionException t)
-    return
-    $ textReadMay t
-
-getT :: (MonadThrow m, Read a, Show a)
+getT :: (MonadThrow m, FromText a)
     => Text
     -> Pipe Event Event o u m a
-getT name = tagContent name >>= lift . textReadM
+getT name = tagContent name >>= lift . fromText
 
 getT_ :: forall m o u . MonadThrow m
     => Text
@@ -103,10 +107,10 @@ getM :: MonadThrow m
     -> Pipe Event Event o u m b
 getM name f = f <$> tagContentM name
 
-getMT :: (MonadThrow m, Read a)
+getMT :: (MonadThrow m, FromText a)
     => Text
     -> Pipe Event Event o u m (Maybe a)
-getMT name = getM name (>>= textReadMay)
+getMT name = getM name (>>= fromTextMay)
 
 elementM :: MonadThrow m
     => Text

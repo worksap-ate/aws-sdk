@@ -40,7 +40,7 @@ sinkDBInstances = elements "DBInstance" $
     DBInstance
     <$> getMT "Iops"
     <*> getT "BackupRetentionPeriod"
-    <*> getF "MultiAZ" textToBool
+    <*> getT "MultiAZ"
     <*> getT "DBInstanceStatus"
     <*> getT "DBInstanceIdentifier"
     <*> getT "PreferredBackupWindow"
@@ -51,7 +51,7 @@ sinkDBInstances = elements "DBInstance" $
         <*> getT "Status"
         )
     <*> getT "AvailabilityZone"
-    <*> getM "LatestRestorableTime" (textToTime <$>)
+    <*> getMT "LatestRestorableTime"
     <*> elements "ReadReplicaDBInstanceIdentifier" text
     <*> getT "Engine"
     <*> sinkPendingModifiedValues
@@ -70,7 +70,7 @@ sinkDBInstances = elements "DBInstance" $
             <*> element "SubnetAvailabilityZone"
                 (AvailabilityZone
                 <$> getT "Name"
-                <*> getF "ProvisionedIopsCapable" textToBool
+                <*> getT "ProvisionedIopsCapable"
                 )
             )
         )
@@ -92,8 +92,8 @@ sinkDBInstances = elements "DBInstance" $
         <*> getT "DBSecurityGroupName"
         )
     <*> getMT "DBName"
-    <*> getF "AutoMinorVersionUpgrade" textToBool
-    <*> getM "InstanceCreateTime" (textToTime <$>)
+    <*> getT "AutoMinorVersionUpgrade"
+    <*> getMT "InstanceCreateTime"
     <*> getT "AllocatedStorage"
     <*> getT "DBInstanceClass"
     <*> getT "MasterUsername" 

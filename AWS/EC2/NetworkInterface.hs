@@ -28,7 +28,7 @@ assignPrivateIpAddresses
     -> Maybe Bool
     -> EC2 m Bool
 assignPrivateIpAddresses niid epip ar =
-    ec2Query "AssignPrivateIpAddresses" params returnBool
+    ec2Query "AssignPrivateIpAddresses" params $ getT "return"
   where
     params = [ValueParam "NetworkInterfaceId" niid]
         ++ either f g epip
@@ -43,7 +43,7 @@ unassignPrivateIpAddresses
     -> [IPv4] -- ^ PrivateIpAddresses
     -> EC2 m Bool
 unassignPrivateIpAddresses niid addrs =
-    ec2Query "UnassignPrivateIpAddresses" params returnBool
+    ec2Query "UnassignPrivateIpAddresses" params $ getT "return"
   where
     params =
         [ ValueParam "NetworkInterfaceId" niid
@@ -80,7 +80,7 @@ networkInterfaceSink = NetworkInterface
     <*> getT "macAddress"
     <*> getT "privateIpAddress"
     <*> getMT "privateDnsName"
-    <*> getF "sourceDestCheck" textToBool
+    <*> getT "sourceDestCheck"
     <*> groupSetSink
     <*> elementM "attachment" (NetworkInterfaceAttachment
         <$> getT "attachmentId"
@@ -88,15 +88,15 @@ networkInterfaceSink = NetworkInterface
         <*> getT "instanceOwnerId"
         <*> getT "deviceIndex"
         <*> getT "status"
-        <*> getF "attachTime" textToTime
-        <*> getF "deleteOnTermination" textToBool
+        <*> getT "attachTime"
+        <*> getT "deleteOnTermination"
         )
     <*> networkInterfaceAssociationSink
     <*> resourceTagSink
     <*> itemsSet "privateIpAddressesSet" (
         NetworkInterfacePrivateIpAddress
         <$> getT "privateIpAddress"
-        <*> getF "primary" textToBool
+        <*> getT "primary"
         <*> networkInterfaceAssociationSink
         )
 

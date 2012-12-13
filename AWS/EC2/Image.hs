@@ -50,7 +50,7 @@ imageItem = Image
     <*> getT "imageLocation"
     <*> getF "imageState" imageState
     <*> getT "imageOwnerId"
-    <*> getF "isPublic" textToBool
+    <*> getT "isPublic"
     <*> productCodeSink
     <*> getT "architecture"
     <*> getF "imageType" imageType
@@ -58,7 +58,7 @@ imageItem = Image
     <*> getMT "ramdiskId"
     <*> getM "platform" platform
     <*> stateReasonSink
-    <*> getM "viridianEnabled" (textToBool <$>)
+    <*> getMT "viridianEnabled"
     <*> getMT "imageOwnerAlias"
     <*> getM "name" orEmpty
     <*> getM "description" orEmpty
@@ -79,7 +79,7 @@ blockDeviceMappingSink = itemsSet "blockDeviceMapping" (
         EbsBlockDevice
         <$> getMT "snapshotId"
         <*> getT "volumeSize"
-        <*> getF "deleteOnTermination" textToBool
+        <*> getT "deleteOnTermination"
         <*> volumeTypeSink
         )
     )
@@ -133,7 +133,7 @@ deregisterImage
     => Text -- ^ ImageId
     -> EC2 m Bool
 deregisterImage iid =
-    ec2Query "DeregisterImage" params returnBool
+    ec2Query "DeregisterImage" params $ getT "return"
   where
     params = [ValueParam "ImageId" iid]
 

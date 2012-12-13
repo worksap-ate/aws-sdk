@@ -10,7 +10,6 @@ import Control.Applicative
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.XML.Types (Event(..))
 
-import AWS.Util
 import AWS.Lib.Parser
 import AWS.Lib.Query
 
@@ -34,7 +33,7 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
     LoadBalancerDescription
     <$> members "SecurityGroups" text
     <*> getT "LoadBalancerName"
-    <*> getF "CreatedTime" textToTime
+    <*> getT "CreatedTime"
     <*> element "HealthCheck"
         (HealthCheck
         <$> getT "Interval"

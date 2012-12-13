@@ -43,8 +43,7 @@ attachInternetGateway
     -> Text -- ^ VpcId
     -> EC2 m Bool
 attachInternetGateway internetGatewayId vid =
-    ec2Query "AttachInternetGateway" params $
-        getF "return" textToBool
+    ec2Query "AttachInternetGateway" params $ getT "return"
   where
     params =
         [ ValueParam "InternetGatewayId" internetGatewayId
@@ -59,8 +58,7 @@ detachInternetGateway
     -> Text -- ^ VpcId
     -> EC2 m Bool
 detachInternetGateway internetGatewayId vid =
-    ec2Query "DetachInternetGateway" params $
-        getF "return" textToBool
+    ec2Query "DetachInternetGateway" params $ getT "return"
   where
     params =
         [ ValueParam "InternetGatewayId" internetGatewayId
@@ -143,13 +141,13 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
         (VpnTunnelTelemetry
         <$> getT "outsideIpAddress"
         <*> getF "status" vpnTunnelTelemetryStatus'
-        <*> getF "lastStatusChange" textToTime
+        <*> getT "lastStatusChange"
         <*> getT "statusMessage"
         <*> getT "acceptedRouteCount"
         )
     <*> elementM "options"
         (VpnConnectionOptionsRequest
-        <$> getF "staticRoutesOnly" textToBool
+        <$> getT "staticRoutesOnly"
         )
     <*> elementM "routes"
         (VpnStaticRoute

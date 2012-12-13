@@ -42,12 +42,12 @@ networkAclSink :: MonadThrow m
 networkAclSink = NetworkAcl
     <$> getT "networkAclId"
     <*> getT "vpcId"
-    <*> getF "default" textToBool
+    <*> getT "default"
     <*> itemsSet "entrySet" (NetworkAclEntry
         <$> getT "ruleNumber"
         <*> getT "protocol"
         <*> getF "ruleAction" networkAclRuleAction
-        <*> getF "egress" textToBool
+        <*> getT "egress"
         <*> getT "cidrBlock"
         <*> elementM "icmpTypeCode" (IcmpTypeCode
             <$> getT "code"
@@ -98,7 +98,7 @@ createNetworkAclEntry
     => NetworkAclEntryRequest
     -> EC2 m Bool
 createNetworkAclEntry req =
-    ec2Query "CreateNetworkAclEntry" params returnBool
+    ec2Query "CreateNetworkAclEntry" params $ getT "return"
   where
     params = reqToParams req
 
@@ -145,7 +145,7 @@ deleteNetworkAclEntry
     -> Bool -- ^ Egress
     -> EC2 m Bool
 deleteNetworkAclEntry aclid rule egress =
-    ec2Query "DeleteNetworkAclEntry" params returnBool
+    ec2Query "DeleteNetworkAclEntry" params $ getT "return"
   where
     params =
         [ ValueParam "NetworkAclId" aclid
@@ -158,6 +158,6 @@ replaceNetworkAclEntry
     => NetworkAclEntryRequest
     -> EC2 m Bool
 replaceNetworkAclEntry req =
-    ec2Query "ReplaceNetworkAclEntry" params returnBool
+    ec2Query "ReplaceNetworkAclEntry" params $ getT "return"
   where
     params = reqToParams req

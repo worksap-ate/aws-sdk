@@ -47,7 +47,7 @@ volumeSink = Volume
     <*> getMT "snapshotId"
     <*> getT "availabilityZone"
     <*> getF "status" volumeStatus'
-    <*> getF "createTime" textToTime
+    <*> getT "createTime"
     <*> itemsSet "attachmentSet" attachmentSink
     <*> resourceTagSink
     <*> volumeTypeSink
@@ -58,8 +58,8 @@ attachmentSink = AttachmentSetItemResponse
     <*> getT "instanceId"
     <*> getT "device"
     <*> getF "status" attachmentSetItemResponseStatus'
-    <*> getF "attachTime" textToTime
-    <*> getM "deleteOnTermination" (textToBool <$>)
+    <*> getT "attachTime"
+    <*> getMT "deleteOnTermination"
 
 volumeTypeParam :: VolumeType -> [QueryParam]
 volumeTypeParam VolumeTypeStandard =
@@ -159,8 +159,8 @@ volumeStatusSink = VolumeStatus
         <$> getT "eventType"
         <*> getT "eventId"
         <*> getT "description"
-        <*> getM "notBefore" (textToTime <$>)
-        <*> getM "notAfter" (textToTime <$>)
+        <*> getMT "notBefore"
+        <*> getMT "notAfter"
         )
     <*> itemsSet "actionsSet" (VolumeStatusAction
         <$> getT "code"
@@ -175,7 +175,7 @@ modifyVolumeAttribute
     -> Bool -- ^ AutoEnableIO
     -> EC2 m Bool
 modifyVolumeAttribute vid enable =
-    ec2Query "ModifyVolumeAttribute" params returnBool
+    ec2Query "ModifyVolumeAttribute" params $ getT "return"
   where
     params =
         [ ValueParam "VolumeId" vid
@@ -187,7 +187,7 @@ enableVolumeIO
     => Text -- ^ VolumeId
     -> EC2 m Bool
 enableVolumeIO vid =
-    ec2Query "EnableVolumeIO" params returnBool
+    ec2Query "EnableVolumeIO" params $ getT "return"
   where
     params = [ValueParam "VolumeId" vid]
 
@@ -215,8 +215,7 @@ volumeAttributeSink
     -> GLSink Event m VolumeAttribute
 volumeAttributeSink VolumeAttributeRequestAutoEnableIO
     = VolumeAttributeAutoEnableIO
-    <$> element "autoEnableIO"
-        (getF "value" textToBool)
+    <$> element "autoEnableIO" (getT "value")
 volumeAttributeSink VolumeAttributeRequestProductCodes
     = VolumeAttributeProductCodes
     <$> productCodeSink

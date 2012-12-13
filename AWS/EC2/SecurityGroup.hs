@@ -84,8 +84,7 @@ deleteSecurityGroup
     => SecurityGroupRequest
     -> EC2 m Bool
 deleteSecurityGroup param =
-    ec2Query "DeleteSecurityGroup" [p param]
-        $ getF "return" textToBool
+    ec2Query "DeleteSecurityGroup" [p param] $ getT "return"
 
 p :: SecurityGroupRequest -> QueryParam
 p (SecurityGroupRequestGroupId t)   = ValueParam "GroupId" t
@@ -136,7 +135,7 @@ securityGroupQuery
     -> [IpPermission]
     -> EC2 m Bool
 securityGroupQuery act param ipps =
-    ec2Query act params $ getF "return" textToBool
+    ec2Query act params $ getT "return"
   where
     params = [p param]
         ++ concatMap (uncurry ipPermissionParam) (zip intstr ipps)

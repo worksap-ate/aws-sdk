@@ -17,7 +17,6 @@ import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.Lib.Parser
-import AWS.Util
 import AWS.EC2.Convert
 
 describeSnapshots
@@ -44,7 +43,7 @@ snapshotSink = Snapshot
         <$> getT "snapshotId"
         <*> getT "volumeId"
         <*> getF "status" snapshotStatus'
-        <*> getF "startTime" textToTime
+        <*> getT "startTime"
         <*> getT "progress"
         <*> getT "ownerId"
         <*> getT "volumeSize"
@@ -68,6 +67,6 @@ deleteSnapshot
     => Text -- ^ SnapshotId
     -> EC2 m Bool
 deleteSnapshot ssid =
-    ec2Query "DeleteSnapshot" params $ getF "return" textToBool
+    ec2Query "DeleteSnapshot" params $ getT "return"
   where
     params = [ValueParam "SnapshotId" ssid]

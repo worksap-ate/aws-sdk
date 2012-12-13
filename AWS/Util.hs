@@ -10,7 +10,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import qualified Data.Time as Time
-import qualified Data.Time.Parse as TP
+--import qualified Data.Time.Parse as TP
 import System.Locale (defaultTimeLocale)
 
 toS :: BSL.ByteString -> ByteString
@@ -24,21 +24,6 @@ bsShow = BSC.pack . show
 
 err :: String -> Text -> a
 err v m = error $ "unknown " ++ v ++ ": " ++ T.unpack m
-
-textToBool :: Text -> Bool
-textToBool a
-    | a == "true"  = True
-    | a == "false" = False
-    | otherwise    = err "value" a
-
-textToTime :: Text -> UTCTime
-textToTime
-    = Time.localTimeToUTC Time.utc
-    . maybe (error "time format error.") fst
-    . TP.strptime fmt
-    . T.unpack
-  where
-    fmt = "%FT%T"
 
 timeToText :: UTCTime -> Text
 timeToText
@@ -59,9 +44,6 @@ toText = T.pack . show
 
 bsToText :: ByteString -> Text
 bsToText = T.pack . BSC.unpack
-
-textToBS :: Text -> ByteString
-textToBS = BSC.pack . T.unpack
 
 unconcat :: [a] -> [[a]]
 unconcat = map (:[])

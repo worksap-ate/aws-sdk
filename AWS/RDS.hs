@@ -18,7 +18,7 @@ import qualified Network.HTTP.Conduit as HTTP
 import Data.Monoid ((<>))
 
 import AWS.Class
-import AWS.Util
+import AWS.Lib.Query (textToBS)
 
 import AWS
 import AWS.RDS.Internal

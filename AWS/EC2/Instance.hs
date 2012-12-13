@@ -24,6 +24,7 @@ import Control.Applicative
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
 import Data.Monoid
+import Control.Monad
 
 import AWS.EC2.Convert
 import AWS.EC2.Internal
@@ -74,7 +75,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getT "amiLaunchIndex"
     <*> productCodeSink
     <*> getT "instanceType"
-    <*> getF "launchTime" textToTime
+    <*> getT "launchTime"
     <*> element "placement" (
         Placement
         <$> getT "availabilityZone"
@@ -89,7 +90,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getMT "vpcId"
     <*> getMT "privateIpAddress"
     <*> getMT "ipAddress"
-    <*> getM "sourceDestCheck" (textToBool <$>)
+    <*> getMT "sourceDestCheck"
     <*> groupSetSink
     <*> stateReasonSink
     <*> getF "architecture" architecture
@@ -108,7 +109,7 @@ instanceSetSink = itemsSet "instancesSet" $
         <$> getT "arn"
         <*> getT "id"
         )
-    <*> getF "ebsOptimized" textToBool
+    <*> getT "ebsOptimized"
 
 instanceBlockDeviceMappingsSink :: MonadThrow m
     => GLSink Event m [InstanceBlockDeviceMapping]
@@ -119,8 +120,8 @@ instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
         EbsInstanceBlockDevice
         <$> getT "volumeId"
         <*> getF "status" attachmentSetItemResponseStatus'
-        <*> getF "attachTime" textToTime
-        <*> getF "deleteOnTermination" textToBool
+        <*> getT "attachTime"
+        <*> getT "deleteOnTermination"
         )
     )
 
@@ -143,21 +144,21 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <*> getT "status"
     <*> getT "privateIpAddress"
     <*> getMT "privateDnsName"
-    <*> getF "sourceDestCheck" textToBool
+    <*> getT "sourceDestCheck"
     <*> groupSetSink
     <*> element "attachment" (
         InstanceNetworkInterfaceAttachment
         <$> getT "attachmentId"
         <*> getT "deviceIndex"
         <*> getT "status"
-        <*> getF "attachTime" textToTime
-        <*> getF "deleteOnTermination" textToBool
+        <*> getT "attachTime"
+        <*> getT "deleteOnTermination"
         )
     <*> instanceNetworkInterfaceAssociationSink
     <*> itemsSet "privateIpAddressesSet" (
         InstancePrivateIpAddress
         <$> getT "privateIpAddress"
-        <*> getF "primary" textToBool
+        <*> getT "primary"
         <*> instanceNetworkInterfaceAssociationSink
         )
 
@@ -199,8 +200,8 @@ instanceStatusSet = do
             InstanceStatusEvent
             <$> getF "code" instanceStatusEventCode'
             <*> getT "description"
-            <*> getM "notBefore" (textToTime <$>)
-            <*> getM "notAfter" (textToTime <$>)
+            <*> getMT "notBefore"
+            <*> getMT "notAfter"
             )
         <*> instanceStateSink "instanceState"
         <*> instanceStatusTypeSink "systemStatus"
@@ -215,7 +216,7 @@ instanceStatusTypeSink name = element name $
         InstanceStatusDetail
         <$> getT "name"
         <*> getT "status"
-        <*> getM "impairedSince" (textToTime <$>)
+        <*> getMT "impairedSince"
         )
 
 ------------------------------------------------------------
@@ -262,7 +263,7 @@ rebootInstances
     => [Text] -- ^ InstanceIds
     -> EC2 m Bool
 rebootInstances instanceIds =
-    ec2Query "RebootInstances" params returnBool
+    ec2Query "RebootInstances" params $ getT "return"
   where
     params = [ArrayParams "InstanceId" instanceIds]
 
@@ -438,7 +439,7 @@ getConsoleOutput iid =
     ec2Query "GetConsoleOutput" [ValueParam "InstanceId" iid] $
         ConsoleOutput
         <$> getT "instanceId"
-        <*> getF "timestamp" textToTime
+        <*> getT "timestamp"
         <*> getT "output"
 
 ------------------------------------------------------------
@@ -452,7 +453,7 @@ getPasswordData iid =
     ec2Query "GetPasswordData" [ValueParam "InstanceId" iid] $
         PasswordData
         <$> getT "instanceId"
-        <*> getF "timestamp" textToTime
+        <*> getT "timestamp"
         <*> getT "passwordData"
 
 describeInstanceAttribute
@@ -484,17 +485,19 @@ describeInstanceAttribute iid attr =
         , (InstanceAttributeRequestRamdiskId, InstanceAttributeRamdiskId)
         , (InstanceAttributeRequestUserData, InstanceAttributeUserData)
         , (InstanceAttributeRequestDisableApiTermination,
-           InstanceAttributeDisableApiTermination
-           . textToBool . fromJust)
+           InstanceAttributeDisableApiTermination . just)
         , (InstanceAttributeRequestShutdownBehavior,
            InstanceAttributeShutdownBehavior
            . shutdownBehavior . fromJust)
-        , (InstanceAttributeRequestRootDeviceName, InstanceAttributeRootDeviceName)
+        , (InstanceAttributeRequestRootDeviceName,
+           InstanceAttributeRootDeviceName)
         , (InstanceAttributeRequestSourceDestCheck,
-           InstanceAttributeSourceDestCheck . (textToBool <$>))
+           InstanceAttributeSourceDestCheck
+           . fromTextMay . fromJust)
         , (InstanceAttributeRequestEbsOptimized,
-           InstanceAttributeEbsOptimized . textToBool . fromJust)
+           InstanceAttributeEbsOptimized . just)
         ]
+    just = fromJust . join . (fromTextMay <$>)
     valueSink name val =
         (element name $ getMT "value") >>= return . val
 
@@ -523,7 +526,7 @@ resetInstanceAttribute
     -> ResetInstanceAttributeRequest
     -> EC2 m Bool
 resetInstanceAttribute iid attr =
-    ec2Query "ResetInstanceAttribute" params returnBool
+    ec2Query "ResetInstanceAttribute" params $ getT "return"
   where
     params =
         [ ValueParam "InstanceId" iid
@@ -537,7 +540,7 @@ modifyInstanceAttribute
     -> [ModifyInstanceAttributeRequest]
     -> EC2 m Bool
 modifyInstanceAttribute iid attrs =
-    ec2Query "ModifyInstanceAttribute" params returnBool
+    ec2Query "ModifyInstanceAttribute" params $ getT "return"
   where
     params = ValueParam "InstanceId" iid:concatMap miap attrs
 

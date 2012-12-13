@@ -61,7 +61,7 @@ getMetricStatistics
 getMetricStatistics ds start end mn ns pe sts unit =
     cloudWatchQuery "GetMetricStatistics" params $ (,)
         <$> members "Datapoints" (Datapoint
-            <$> getF "Timestamp" textToTime
+            <$> getT "Timestamp"
             <*> getMT "SampleCount"
             <*> getT "Unit"
             <*> getMT "Minimum"

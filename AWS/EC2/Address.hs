@@ -92,7 +92,7 @@ associateAddress
     => AssociateAddressRequest
     -> EC2 m (Bool, Maybe Text)
 associateAddress param = ec2Query "AssociateAddress" params $
-    (,) <$> getF "return" textToBool
+    (,) <$> getT "return"
         <*> getMT "associationId"
   where
     params = associateAddressParam param
@@ -119,7 +119,7 @@ disassociateAddress
     -> EC2 m Bool
 disassociateAddress param =
     ec2Query "DisassociateAddress" (p param)
-        $ getF "return" textToBool
+        $ getT "return"
   where
     p (DisassociateAddressRequestEc2 pip)
         = [ValueParam "PublicIp" $ toText pip]

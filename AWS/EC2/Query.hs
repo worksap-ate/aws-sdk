@@ -132,4 +132,4 @@ ec2Delete
     -> Text -- ^ ID of Target
     -> EC2 m Bool
 ec2Delete apiName idName targetId = do
-    ec2Query apiName [ ValueParam idName targetId ] returnBool
+    ec2Query apiName [ ValueParam idName targetId ] $ getT "return"

@@ -9,12 +9,15 @@ module AWS.Lib.Query
 #ifdef DEBUG
     , debugQuery
 #endif
+    , textToBS
     ) where
 
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.ByteString.Lazy.Char8 ()
 import qualified Data.ByteString.Char8 as BSC
+import Data.Text (Text)
+import qualified Data.Text as T
 
 import Data.Monoid
 import Data.XML.Types (Event(..))
@@ -32,7 +35,6 @@ import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Exception.Lifted as E
-import Data.Text (Text)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 
@@ -86,6 +88,9 @@ mkUrl ep cred time action params ver = mconcat
   where
     qheader = Map.fromList $ queryHeader action time cred ver
     qparam = queryStr $ Map.unions (qheader : map toArrayParams params)
+
+textToBS :: Text -> ByteString
+textToBS = BSC.pack . T.unpack
 
 toArrayParams :: QueryParam -> Map ByteString ByteString
 toArrayParams (ArrayParams name params) = Map.fromList 

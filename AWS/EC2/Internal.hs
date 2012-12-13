@@ -1,7 +1,18 @@
 {-# LANGUAGE RankNTypes #-}
 
 module AWS.EC2.Internal
-    where
+    ( module AWS.Class
+    , EC2
+    , initialEC2Context
+    , runEC2
+    , itemConduit
+    , itemsSet
+    , resourceTagSink
+    , productCodeSink
+    , stateReasonSink
+    , volumeTypeSink
+    , groupSetSink
+    ) where
 
 import Control.Monad.IO.Class (MonadIO)
 import qualified Network.HTTP.Conduit as HTTP
@@ -15,7 +26,6 @@ import Data.Text (Text)
 import AWS.Class
 import AWS.EC2.Convert
 import AWS.Credential
-import AWS.Util
 import AWS.Lib.Parser
 import AWS.EC2.Types
 
@@ -70,9 +80,6 @@ volumeTypeSink :: MonadThrow m
 volumeTypeSink = volumeType
     <$> getT "volumeType"
     <*> getMT "iops"
-
-returnBool :: MonadThrow m => GLSink Event m Bool
-returnBool = getF "return" textToBool
 
 groupSetSink :: MonadThrow m => GLSink Event m [Group]
 groupSetSink = itemsSet "groupSet" $ Group
