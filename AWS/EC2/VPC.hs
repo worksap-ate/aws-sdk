@@ -25,7 +25,6 @@ import Data.IP (IPv4, AddrRange)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -111,7 +110,7 @@ internetGatewayAttachmentSink :: MonadThrow m
     => GLSink Event m InternetGatewayAttachment
 internetGatewayAttachmentSink = InternetGatewayAttachment
     <$> getT "vpcId"
-    <*> getF "state" internetGatewayAttachmentState'
+    <*> getT "state"
 describeVpnConnections
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ VpnConnectionIds
@@ -131,7 +130,7 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
     <$> do
         a <- getT "vpnConnectionId"
         traceShow a $ return a
-    <*> getF "state" vpnConnectionState'
+    <*> getT "state"
     <*> getT "customerGatewayConfiguration"
     <*> getT "type"
     <*> getT "customerGatewayId"
@@ -140,7 +139,7 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
     <*> itemsSet "vgwTelemetry"
         (VpnTunnelTelemetry
         <$> getT "outsideIpAddress"
-        <*> getF "status" vpnTunnelTelemetryStatus'
+        <*> getT "status"
         <*> getT "lastStatusChange"
         <*> getT "statusMessage"
         <*> getT "acceptedRouteCount"
@@ -152,8 +151,8 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
     <*> elementM "routes"
         (VpnStaticRoute
         <$> getT "destinationCidrBlock"
-        <*> getF "source" vpnStaticRouteSource'
-        <*> getF "state" vpnStaticRouteState'
+        <*> getT "source"
+        <*> getT "state"
         )
 
 ------------------------------------------------------------
@@ -177,7 +176,7 @@ vpcSink :: MonadThrow m
     => GLSink Event m Vpc
 vpcSink = Vpc
     <$> getT "vpcId"
-    <*> getF "state" vpcState'
+    <*> getT "state"
     <*> getT "cidrBlock"
     <*> getT "dhcpOptionsId"
     <*> resourceTagSink
@@ -229,9 +228,9 @@ vpnGatewaySink :: MonadThrow m
     => GLSink Event m VpnGateway
 vpnGatewaySink = VpnGateway
     <$> getT "vpnGatewayId"
-    <*> getF "state" vpnGatewayState'
+    <*> getT "state"
     <*> getT "type"
-    <*> getMT "availabilityZone"
+    <*> getT "availabilityZone"
     <*> itemsSet "attachments" attachmentSink
     <*> resourceTagSink
 
@@ -239,7 +238,7 @@ attachmentSink :: MonadThrow m
     => GLSink Event m Attachment
 attachmentSink = Attachment
     <$> getT "vpcId"
-    <*> getF "state" attachmentState'
+    <*> getT "state"
 
 ------------------------------------------------------------
 -- createVpnGateway
@@ -287,7 +286,7 @@ customerGatewaySink :: MonadThrow m
     => GLSink Event m CustomerGateway
 customerGatewaySink = CustomerGateway
     <$> getT "customerGatewayId"
-    <*> getF "state" customerGatewayState'
+    <*> getT "state"
     <*> getT "type"
     <*> getT "ipAddress"
     <*> getT "bgpAsn"

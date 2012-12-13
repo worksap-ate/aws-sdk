@@ -39,7 +39,7 @@ describeSecurityGroups names ids filters =
         <*> getT "groupId"
         <*> getT "groupName"
         <*> getT "groupDescription"
-        <*> getMT "vpcId"
+        <*> getT "vpcId"
         <*> ipPermissionsSink "ipPermissions"
         <*> ipPermissionsSink "ipPermissionsEgress"
         <*> resourceTagSink
@@ -54,13 +54,13 @@ ipPermissionsSink :: MonadThrow m
     => Text -> GLSink Event m [IpPermission]
 ipPermissionsSink name = itemsSet name $ IpPermission
     <$> getT "ipProtocol"
-    <*> getMT "fromPort"
-    <*> getMT "toPort"
+    <*> getT "fromPort"
+    <*> getT "toPort"
     <*> itemsSet "groups" (
         UserIdGroupPair
-        <$> getMT "userId"
+        <$> getT "userId"
         <*> getT "groupId"
-        <*> getMT "groupName"
+        <*> getT "groupName"
         )
     <*> itemsSet "ipRanges" (getT "cidrIp")
 
@@ -72,7 +72,7 @@ createSecurityGroup
     -> EC2 m (Maybe Text) -- ^ GroupId
 createSecurityGroup name desc vpc =
     ec2Query "CreateSecurityGroup" params
-        $ getT_ "return" *> getMT "groupId"
+        $ getT_ "return" *> getT "groupId"
   where
     params =
         [ ValueParam "GroupName" name

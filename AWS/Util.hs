@@ -4,13 +4,10 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
-import Data.Maybe
-import Data.Monoid
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
 import qualified Data.Time as Time
---import qualified Data.Time.Parse as TP
 import System.Locale (defaultTimeLocale)
 
 toS :: BSL.ByteString -> ByteString
@@ -31,9 +28,6 @@ timeToText
     . Time.formatTime defaultTimeLocale fmt
   where
     fmt = "%FT%T"
-
-orEmpty :: Monoid a => Maybe a -> a
-orEmpty = fromMaybe mempty
 
 boolToText :: Bool -> Text
 boolToText True  = "true"

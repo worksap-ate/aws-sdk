@@ -38,7 +38,7 @@ sinkDBInstances
     => GLSink Event m [DBInstance]
 sinkDBInstances = elements "DBInstance" $
     DBInstance
-    <$> getMT "Iops"
+    <$> getT "Iops"
     <*> getT "BackupRetentionPeriod"
     <*> getT "MultiAZ"
     <*> getT "DBInstanceStatus"
@@ -51,11 +51,11 @@ sinkDBInstances = elements "DBInstance" $
         <*> getT "Status"
         )
     <*> getT "AvailabilityZone"
-    <*> getMT "LatestRestorableTime"
+    <*> getT "LatestRestorableTime"
     <*> elements "ReadReplicaDBInstanceIdentifier" text
     <*> getT "Engine"
     <*> sinkPendingModifiedValues
-    <*> getMT "CharacterSetName"
+    <*> getT "CharacterSetName"
     <*> getT "LicenseModel"
     <*> elementM "DBSubnetGroup"
         (DBSubnetGroup
@@ -85,15 +85,15 @@ sinkDBInstances = elements "DBInstance" $
         <*> getT "Address"
         )
     <*> getT "EngineVersion"
-    <*> getMT "ReadReplicaSourceDBInstanceIdentifier"
+    <*> getT "ReadReplicaSourceDBInstanceIdentifier"
     <*> elements "DBSecurityGroup"
         (DBSecurityGroupMembership
         <$> getT "Status"
         <*> getT "DBSecurityGroupName"
         )
-    <*> getMT "DBName"
+    <*> getT "DBName"
     <*> getT "AutoMinorVersionUpgrade"
-    <*> getMT "InstanceCreateTime"
+    <*> getT "InstanceCreateTime"
     <*> getT "AllocatedStorage"
     <*> getT "DBInstanceClass"
     <*> getT "MasterUsername" 
@@ -113,4 +113,4 @@ sinkPendingModifiedValues = element "PendingModifiedValues" $
         , f PMVPort "Port"
         ]
   where
-    f c name = fmap c <$> getMT name
+    f c name = fmap c <$> getT name

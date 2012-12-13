@@ -17,7 +17,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Control.Monad (join)
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Params
@@ -48,36 +47,36 @@ imageItem :: MonadThrow m
 imageItem = Image
     <$> getT "imageId"
     <*> getT "imageLocation"
-    <*> getF "imageState" imageState
+    <*> getT "imageState"
     <*> getT "imageOwnerId"
     <*> getT "isPublic"
     <*> productCodeSink
     <*> getT "architecture"
-    <*> getF "imageType" imageType
-    <*> getMT "kernelId"
-    <*> getMT "ramdiskId"
-    <*> getM "platform" platform
+    <*> getT "imageType"
+    <*> getT "kernelId"
+    <*> getT "ramdiskId"
+    <*> getT "platform"
     <*> stateReasonSink
-    <*> getMT "viridianEnabled"
-    <*> getMT "imageOwnerAlias"
-    <*> getM "name" orEmpty
-    <*> getM "description" orEmpty
+    <*> getT "viridianEnabled"
+    <*> getT "imageOwnerAlias"
+    <*> getT "name"
+    <*> getT "description"
     <*> itemsSet "billingProducts" (getT "billingProduct")
-    <*> getF "rootDeviceType" rootDeviceType
-    <*> getMT "rootDeviceName"
+    <*> getT "rootDeviceType"
+    <*> getT "rootDeviceName"
     <*> blockDeviceMappingSink
-    <*> getF "virtualizationType" virtualizationType
+    <*> getT "virtualizationType"
     <*> resourceTagSink
-    <*> getF "hypervisor" hypervisor
+    <*> getT "hypervisor"
 
 blockDeviceMappingSink :: MonadThrow m => GLSink Event m [BlockDeviceMapping]
 blockDeviceMappingSink = itemsSet "blockDeviceMapping" (
     BlockDeviceMapping
     <$> getT "deviceName"
-    <*> getMT "virtualName"
+    <*> getT "virtualName"
     <*> elementM "ebs" (
         EbsBlockDevice
-        <$> getMT "snapshotId"
+        <$> getT "snapshotId"
         <*> getT "volumeSize"
         <*> getT "deleteOnTermination"
         <*> volumeTypeSink
@@ -157,7 +156,7 @@ describeImageAttribute iid attr =
         <*> getMMT "description"
         <*> blockDeviceMappingSink
   where
-    getMMT name = join <$> elementM name (getMT "value")
+    getMMT name = join <$> elementM name (getT "value")
     params = [ ValueParam "ImageId" iid
              , ValueParam "Attribute" param
              ]

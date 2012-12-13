@@ -107,7 +107,7 @@ ec2QuerySource' action params token cond = do
         (\t -> ValueParam "NextToken" t:params) token
 
 nextToken :: MonadThrow m => Conduit Event m o
-nextToken = getMT "nextToken" >>= maybe (return ()) (E.throw . NextToken)
+nextToken = getT "nextToken" >>= maybe (return ()) (E.throw . NextToken)
 
 #ifdef DEBUG
 ec2QueryDebug

@@ -13,7 +13,6 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Params
@@ -74,17 +73,17 @@ networkInterfaceSink = NetworkInterface
     <*> getT "availabilityZone"
     <*> getT "description"
     <*> getT "ownerId"
-    <*> getMT "requesterId"
+    <*> getT "requesterId"
     <*> getT "requesterManaged"
-    <*> getF "status" networkInterfaceStatus'
+    <*> getT "status"
     <*> getT "macAddress"
     <*> getT "privateIpAddress"
-    <*> getMT "privateDnsName"
+    <*> getT "privateDnsName"
     <*> getT "sourceDestCheck"
     <*> groupSetSink
     <*> elementM "attachment" (NetworkInterfaceAttachment
         <$> getT "attachmentId"
-        <*> getMT "instanceId"
+        <*> getT "instanceId"
         <*> getT "instanceOwnerId"
         <*> getT "deviceIndex"
         <*> getT "status"
@@ -105,8 +104,8 @@ networkInterfaceAssociationSink
     => GLSink Event m (Maybe NetworkInterfaceAssociation)
 networkInterfaceAssociationSink =
     elementM "association" $ NetworkInterfaceAssociation
-        <$> getMT "attachmentId"
-        <*> getMT "instanceId"
+        <$> getT "attachmentId"
+        <*> getT "instanceId"
         <*> getT "publicIp"
         <*> getT "ipOwnerId"
         <*> getT "associationId"

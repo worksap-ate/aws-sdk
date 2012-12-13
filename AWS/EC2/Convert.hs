@@ -1,54 +1,46 @@
 {-# LANGUAGE RankNTypes, TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module AWS.EC2.Convert
     where
 
 import Data.Text (Text)
 import Data.Maybe (fromMaybe)
+import Data.Conduit (monadThrow)
 
-import AWS.Util
 import AWS.Lib.Convert
 import AWS.EC2.Types
+import AWS.Class (FromText(..), AWSException(..))
 
-mkConvertFunc
-    "imageState"
+deriveFromText
     ''ImageState
     ["available", "pending", "failed"]
 
-mkConvertFunc
-    "productCodeType'"
+deriveFromText
     ''ProductCodeType
     ["devpay", "marketplace"]
 
-mkConvertFunc
-    "imageType"
+deriveFromText
     ''ImageType
     ["machine", "kernel", "ramdisk"]
 
-platform :: Maybe Text -> Platform
-platform Nothing   = PlatformOther
-platform (Just t)
-    | t == "windows" = PlatformWindows
-    | otherwise      = PlatformOther
+instance FromText Platform
+  where
+    fromMaybeText Nothing  = return PlatformOther
+    fromMaybeText (Just t)
+        | t == "windows" = return PlatformWindows
+        | otherwise      = return PlatformOther
 
-mkConvertFunc
-    "rootDeviceType"
+deriveFromText
     ''RootDeviceType
     ["ebs", "instance-store"]
 
-volumeType :: Text -> Maybe Int -> VolumeType
-volumeType t Nothing  | t == "standard" = VolumeTypeStandard
-volumeType t (Just i) | t == "io1"      = VolumeTypeIO1 i
-volumeType t _ = err "volume type" t
-
-mkConvertFunc
-    "virtualizationType"
+deriveFromText
     ''VirtualizationType ["paravirtual", "hvm"]
 
-mkConvertFunc "hypervisor" ''Hypervisor ["ovm", "xen"]
+deriveFromText ''Hypervisor ["ovm", "xen"]
 
-mkConvertFunc
-    "instanceStatusEventCode'"
+deriveFromText
     ''InstanceStatusEventCode
     [ "instance-reboot"
     , "instance-stop"
@@ -56,8 +48,7 @@ mkConvertFunc
     , "instance-retirement"
     ]
 
-mkConvertFunc
-    "instanceStatusTypeStatus'"
+deriveFromText
     ''InstanceStatusTypeStatus
     ["ok", "impaired", "insufficient-data", "not-applicable"]
 
@@ -76,32 +67,31 @@ codeToState code _name = fromMaybe
     (InstanceStateUnknown code)
     (lookup code instanceStateCodes)
 
-mkConvertFunc
-    "instanceMonitoringState"
+deriveFromText
     ''InstanceMonitoringState
     ["disabled", "enabled", "pending"]
 
-mkConvertFunc "architecture" ''Architecture ["i386", "x86_64"]
+deriveFromText ''Architecture ["i386", "x86_64"]
 
-addressDomain' :: Maybe Text -> AddressDomain
-addressDomain' Nothing = AddressDomainStandard
-addressDomain' (Just t)
-    | t == "standard" = AddressDomainStandard
-    | t == "vpc"      = AddressDomainVPC
-    | otherwise       = err "address domain" t
+instance FromText AddressDomain
+  where
+    fromMaybeText Nothing  = return AddressDomainStandard
+    fromMaybeText (Just t)
+        | t == "standard" = return AddressDomainStandard
+        | t == "vpc"      = return AddressDomainVPC
+        | otherwise       = monadThrow $ TextConversionException t
 
-ec2Return :: Text -> EC2Return
-ec2Return t
-    | t == "true" = EC2Success
-    | otherwise   = EC2Error t
+instance FromText EC2Return
+  where
+    fromTextMay t
+        | t == "true" = Just EC2Success
+        | otherwise   = Just $ EC2Error t
 
-mkConvertFunc
-    "snapshotStatus'"
+deriveFromText
     ''SnapshotStatus
     ["pending", "completed", "error"]
 
-mkConvertFunc
-    "volumeStatus'"
+deriveFromText
     ''VolumeState
     [ "creating"
     , "available"
@@ -110,96 +100,80 @@ mkConvertFunc
     , "deleted"
     , "error"]
 
-mkConvertFunc
-    "attachmentSetItemResponseStatus'"
+deriveFromText
     ''AttachmentSetItemResponseStatus
     ["attaching", "attached", "detaching", "detached"]
 
-mkConvertFunc
-    "shutdownBehavior"
+deriveFromText
     ''ShutdownBehavior
     ["stop", "terminate"]
 
-mkConvertFunc
-    "vpnConnectionState'"
+deriveFromText
     ''VpnConnectionState
     ["pending", "available", "deleting", "deleted"]
 
-mkConvertFunc
-    "vpnTunnelTelemetryStatus'"
+deriveFromText
     ''VpnTunnelTelemetryStatus
     ["UP", "DOWN"]
 
-mkConvertFunc
-    "vpnStaticRouteSource'"
+deriveFromText
     ''VpnStaticRouteSource
     ["Static"]
 
-mkConvertFunc
-    "vpnStaticRouteState'"
+deriveFromText
     ''VpnStaticRouteState
     ["pending", "available", "deleting", "deleted"]
 
-instanceLifecycle :: Maybe Text -> InstanceLifecycle
-instanceLifecycle Nothing = LifecycleNone
-instanceLifecycle (Just t)
-    | t == "spot"   = LifecycleSpot
-    | otherwise     = err "lifecycle" t
+instance FromText InstanceLifecycle
+  where
+    fromMaybeText Nothing  = return LifecycleNone
+    fromMaybeText (Just t)
+        | t == "spot" = return LifecycleSpot
+        | otherwise   = monadThrow $ TextConversionException t
 
-mkConvertFunc
-    "subnetState'"
+deriveFromText
     ''SubnetState
     ["pending", "available"]
 
-mkConvertFunc
-    "volumeStatusInfoStatus'"
+deriveFromText
     ''VolumeStatusInfoStatus
     ["ok", "impaired", "insufficient-data"]
 
-mkConvertFunc
-    "networkAclRuleAction"
+deriveFromText
     ''NetworkAclRuleAction
     ["allow", "deny"]
 
-mkConvertFunc
-    "routeState'"
+deriveFromText
     ''RouteState
     ["active", "blackhole"]
 
-mkConvertFunc
-    "routeOrigin'"
+deriveFromText
     ''RouteOrigin
     [ "CreateRouteTable"
     , "CreateRoute"
     , "EnableVgwRoutePropagation"
     ]
 
-mkConvertFunc
-    "vpcState'"
+deriveFromText
     ''VpcState
     ["pending", "available"]
 
-mkConvertFunc
-    "vpnGatewayState'"
+deriveFromText
     ''VpnGatewayState
     ["pending", "available", "deleting", "deleted"]
 
-mkConvertFunc
-    "attachmentState'"
+deriveFromText
     ''AttachmentState
     ["attaching", "attached", "detaching", "detached"]
 
-mkConvertFunc
-    "customerGatewayState'"
+deriveFromText
     ''CustomerGatewayState
     ["pending", "available", "deleting", "deleted"]
 
-mkConvertFunc
-    "internetGatewayAttachmentState'"
+deriveFromText
     ''InternetGatewayAttachmentState
     ["attaching", "attached", "detaching", "detached", "available"]
 
-mkConvertFunc
-    "networkInterfaceStatus'"
+deriveFromText
     ''NetworkInterfaceStatus
     ["available", "in-use"]

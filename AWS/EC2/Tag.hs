@@ -28,7 +28,7 @@ describeTags filters =
         <$> getT "resourceId"
         <*> getT "resourceType"
         <*> getT "key"
-        <*> getMT "value"
+        <*> getT "value"
   where
     params = [FilterParams filters]
 

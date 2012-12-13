@@ -17,7 +17,6 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -44,13 +43,13 @@ describeAddresses pubIps alloIds filters =
     addressSet :: MonadThrow m => GLConduit Event m Address
     addressSet = itemConduit "addressesSet" $ Address
         <$> getT "publicIp"
-        <*> getMT "allocationId"
-        <*> getM "domain" addressDomain'
-        <*> getMT "instanceId"
-        <*> getMT "associationId"
-        <*> getMT "networkInterfaceId"
-        <*> getMT "networkInterfaceOwnerId"
-        <*> getMT "privateIpAddress"
+        <*> getT "allocationId"
+        <*> getT "domain"
+        <*> getT "instanceId"
+        <*> getT "associationId"
+        <*> getT "networkInterfaceId"
+        <*> getT "networkInterfaceOwnerId"
+        <*> getT "privateIpAddress"
 
 -----------------------------------------------------
 -- AllocateAddress
@@ -63,8 +62,8 @@ allocateAddress isVpc = do
     ec2Query "AllocateAddress" params $
         AllocateAddress
         <$> getT "publicIp"
-        <*> getM "domain" addressDomain'
-        <*> getMT "allocationId"
+        <*> getT "domain"
+        <*> getT "allocationId"
   where
     params = if isVpc then [ValueParam "Domain" "vpc"] else []
 
@@ -77,7 +76,7 @@ releaseAddress
     -> Maybe Text -- ^ AllocationId
     -> EC2 m EC2Return
 releaseAddress addr allocid = do
-    ec2Query "ReleaseAddress" params $ getF "return" ec2Return
+    ec2Query "ReleaseAddress" params $ getT "return"
   where
     params = maybeParams
         [ ("PublicIp", toText <$> addr)
@@ -93,7 +92,7 @@ associateAddress
     -> EC2 m (Bool, Maybe Text)
 associateAddress param = ec2Query "AssociateAddress" params $
     (,) <$> getT "return"
-        <*> getMT "associationId"
+        <*> getT "associationId"
   where
     params = associateAddressParam param
 

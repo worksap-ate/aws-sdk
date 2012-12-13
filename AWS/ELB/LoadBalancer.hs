@@ -42,7 +42,7 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
         <*> getT "Timeout"
         <*> getT "UnhealthyThreshold"
         )
-    <*> getMT "VPCId"
+    <*> getT "VPCId"
     <*> members "ListenerDescriptions"
         (ListenerDescription
         <$> members "PolicyNames" text
@@ -51,7 +51,7 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
             <$> getT "Protocol"
             <*> getT "LoadBalancerPort"
             <*> getT "InstanceProtocol"
-            <*> getMT "SSLCertificateId"
+            <*> getT "SSLCertificateId"
             <*> getT "InstancePort"
             )
         )

@@ -15,7 +15,6 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -45,27 +44,27 @@ routeTableSink = RouteTable
     <*> getT "vpcId"
     <*> routeSink
     <*> routeTableAssociationSink
-    <*> getMT "propagatingVgwSet"
+    <*> getT "propagatingVgwSet"
     <*> resourceTagSink
 
 routeSink :: MonadThrow m
     => GLSink Event m [Route]
 routeSink = itemsSet "routeSet" $ Route
     <$> getT "destinationCidrBlock"
-    <*> getMT "gatewayId"
-    <*> getMT "instanceId"
-    <*> getMT "instanceOwnerId"
-    <*> getMT "networkInterfaceId"
-    <*> getF "state" routeState'
-    <*> getM "origin" (routeOrigin' <$>)
+    <*> getT "gatewayId"
+    <*> getT "instanceId"
+    <*> getT "instanceOwnerId"
+    <*> getT "networkInterfaceId"
+    <*> getT "state"
+    <*> getT "origin"
 
 routeTableAssociationSink :: MonadThrow m
     => GLSink Event m [RouteTableAssociation]
 routeTableAssociationSink = itemsSet "associationSet" $ RouteTableAssociation
     <$> getT "routeTableAssociationId"
     <*> getT "routeTableId"
-    <*> getMT "subnetId"
-    <*> getMT "main"
+    <*> getT "subnetId"
+    <*> getT "main"
 
 ------------------------------------------------------------
 -- createRouteTable

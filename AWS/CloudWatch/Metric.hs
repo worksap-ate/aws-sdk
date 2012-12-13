@@ -62,12 +62,12 @@ getMetricStatistics ds start end mn ns pe sts unit =
     cloudWatchQuery "GetMetricStatistics" params $ (,)
         <$> members "Datapoints" (Datapoint
             <$> getT "Timestamp"
-            <*> getMT "SampleCount"
+            <*> getT "SampleCount"
             <*> getT "Unit"
-            <*> getMT "Minimum"
-            <*> getMT "Maximum"
-            <*> getMT "Sum"
-            <*> getMT "Average"
+            <*> getT "Minimum"
+            <*> getT "Maximum"
+            <*> getT "Sum"
+            <*> getT "Average"
             )
         <*> getT "Label"
   where

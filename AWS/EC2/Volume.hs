@@ -18,7 +18,6 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -44,9 +43,9 @@ volumeSink :: MonadThrow m
 volumeSink = Volume
     <$> getT "volumeId"
     <*> getT "size"
-    <*> getMT "snapshotId"
+    <*> getT "snapshotId"
     <*> getT "availabilityZone"
-    <*> getF "status" volumeStatus'
+    <*> getT "status"
     <*> getT "createTime"
     <*> itemsSet "attachmentSet" attachmentSink
     <*> resourceTagSink
@@ -57,9 +56,9 @@ attachmentSink = AttachmentSetItemResponse
     <$> getT "volumeId"
     <*> getT "instanceId"
     <*> getT "device"
-    <*> getF "status" attachmentSetItemResponseStatus'
+    <*> getT "status"
     <*> getT "attachTime"
-    <*> getMT "deleteOnTermination"
+    <*> getT "deleteOnTermination"
 
 volumeTypeParam :: VolumeType -> [QueryParam]
 volumeTypeParam VolumeTypeStandard =
@@ -149,7 +148,7 @@ volumeStatusSink = VolumeStatus
     <$> getT "volumeId"
     <*> getT "availabilityZone"
     <*> element "volumeStatus" (VolumeStatusInfo
-        <$> getF "status" volumeStatusInfoStatus'
+        <$> getT "status"
         <*> itemsSet "details" (VolumeStatusDetail
             <$> getT "name"
             <*> getT "status"
@@ -159,8 +158,8 @@ volumeStatusSink = VolumeStatus
         <$> getT "eventType"
         <*> getT "eventId"
         <*> getT "description"
-        <*> getMT "notBefore"
-        <*> getMT "notAfter"
+        <*> getT "notBefore"
+        <*> getT "notAfter"
         )
     <*> itemsSet "actionsSet" (VolumeStatusAction
         <$> getT "code"

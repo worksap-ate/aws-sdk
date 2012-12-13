@@ -59,7 +59,7 @@ reservationSink =
     <*> getT "ownerId"
     <*> groupSetSink
     <*> instanceSetSink
-    <*> getMT "requesterId"
+    <*> getT "requesterId"
 
 instanceSetSink :: MonadThrow m
     => GLSink Event m [Instance]
@@ -71,7 +71,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getT "privateDnsName"
     <*> getT "dnsName"
     <*> getT "reason"
-    <*> getMT "keyName"
+    <*> getT "keyName"
     <*> getT "amiLaunchIndex"
     <*> productCodeSink
     <*> getT "instanceType"
@@ -82,27 +82,27 @@ instanceSetSink = itemsSet "instancesSet" $
         <*> getT "groupName"
         <*> getT "tenancy"
         )
-    <*> getMT "kernelId"
-    <*> getMT "ramdiskId"
-    <*> getMT "platform"
-    <*> element "monitoring" (getF "state" instanceMonitoringState)
-    <*> getMT "subnetId"
-    <*> getMT "vpcId"
-    <*> getMT "privateIpAddress"
-    <*> getMT "ipAddress"
-    <*> getMT "sourceDestCheck"
+    <*> getT "kernelId"
+    <*> getT "ramdiskId"
+    <*> getT "platform"
+    <*> element "monitoring" (getT "state")
+    <*> getT "subnetId"
+    <*> getT "vpcId"
+    <*> getT "privateIpAddress"
+    <*> getT "ipAddress"
+    <*> getT "sourceDestCheck"
     <*> groupSetSink
     <*> stateReasonSink
-    <*> getF "architecture" architecture
-    <*> getF "rootDeviceType" rootDeviceType
-    <*> getMT "rootDeviceName"
+    <*> getT "architecture"
+    <*> getT "rootDeviceType"
+    <*> getT "rootDeviceName"
     <*> instanceBlockDeviceMappingsSink
-    <*> getM "instanceLifecycle" instanceLifecycle
-    <*> getMT "spotInstanceRequestId"
-    <*> getF "virtualizationType" virtualizationType
+    <*> getT "instanceLifecycle"
+    <*> getT "spotInstanceRequestId"
+    <*> getT "virtualizationType"
     <*> getT "clientToken"
     <*> resourceTagSink
-    <*> getF "hypervisor" hypervisor
+    <*> getT "hypervisor"
     <*> networkInterfaceSink
     <*> elementM "iamInstanceProfile" (
         IamInstanceProfile
@@ -119,7 +119,7 @@ instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
     <*> element "ebs" (
         EbsInstanceBlockDevice
         <$> getT "volumeId"
-        <*> getF "status" attachmentSetItemResponseStatus'
+        <*> getT "status"
         <*> getT "attachTime"
         <*> getT "deleteOnTermination"
         )
@@ -139,11 +139,11 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <$> getT "networkInterfaceId"
     <*> getT "subnetId"
     <*> getT "vpcId"
-    <*> getM "description" orEmpty
+    <*> getT "description"
     <*> getT "ownerId"
     <*> getT "status"
     <*> getT "privateIpAddress"
-    <*> getMT "privateDnsName"
+    <*> getT "privateDnsName"
     <*> getT "sourceDestCheck"
     <*> groupSetSink
     <*> element "attachment" (
@@ -198,10 +198,10 @@ instanceStatusSet = do
         <*> getT "availabilityZone"
         <*> itemsSet "eventsSet" (
             InstanceStatusEvent
-            <$> getF "code" instanceStatusEventCode'
+            <$> getT "code"
             <*> getT "description"
-            <*> getMT "notBefore"
-            <*> getMT "notAfter"
+            <*> getT "notBefore"
+            <*> getT "notAfter"
             )
         <*> instanceStateSink "instanceState"
         <*> instanceStatusTypeSink "systemStatus"
@@ -211,12 +211,12 @@ instanceStatusTypeSink :: MonadThrow m
     => Text -> GLSink Event m InstanceStatusType
 instanceStatusTypeSink name = element name $
     InstanceStatusType
-    <$> getF "status" instanceStatusTypeStatus'
+    <$> getT "status"
     <*> itemsSet "details" (
         InstanceStatusDetail
         <$> getT "name"
         <*> getT "status"
-        <*> getMT "impairedSince"
+        <*> getT "impairedSince"
         )
 
 ------------------------------------------------------------
@@ -488,7 +488,7 @@ describeInstanceAttribute iid attr =
            InstanceAttributeDisableApiTermination . just)
         , (InstanceAttributeRequestShutdownBehavior,
            InstanceAttributeShutdownBehavior
-           . shutdownBehavior . fromJust)
+           . fromJust . fromTextMay . fromJust)
         , (InstanceAttributeRequestRootDeviceName,
            InstanceAttributeRootDeviceName)
         , (InstanceAttributeRequestSourceDestCheck,
@@ -499,7 +499,7 @@ describeInstanceAttribute iid attr =
         ]
     just = fromJust . join . (fromTextMay <$>)
     valueSink name val =
-        (element name $ getMT "value") >>= return . val
+        (element name $ getT "value") >>= return . val
 
 iar :: InstanceAttributeRequest -> Text
 iar InstanceAttributeRequestInstanceType          = "instanceType"

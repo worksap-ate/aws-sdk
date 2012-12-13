@@ -16,7 +16,6 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -46,7 +45,7 @@ networkAclSink = NetworkAcl
     <*> itemsSet "entrySet" (NetworkAclEntry
         <$> getT "ruleNumber"
         <*> getT "protocol"
-        <*> getF "ruleAction" networkAclRuleAction
+        <*> getT "ruleAction"
         <*> getT "egress"
         <*> getT "cidrBlock"
         <*> elementM "icmpTypeCode" (IcmpTypeCode

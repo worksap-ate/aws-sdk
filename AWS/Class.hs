@@ -20,7 +20,7 @@ import qualified Control.Monad.State as S
 import Control.Monad.Reader (ReaderT(..), MonadReader)
 import qualified Control.Monad.Reader as R
 import Control.Applicative
-import Control.Monad (liftM)
+import Control.Monad
 import Control.Monad.Base (MonadBase)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (MonadTrans, lift)
@@ -102,14 +102,29 @@ instance MonadBaseControl base m => MonadBaseControl base (AWS c m)
     liftBaseWith = defaultLiftBaseWith StMAWS
     restoreM = defaultRestoreM unStMAWS
 
-class Read a => FromText a where
+class Read a => FromText a
+  where
     fromText :: MonadThrow m => Text -> m a
     fromText t
         = maybe (monadThrow $ TextConversionException t) return
         . fromTextMay
         $ t
+
     fromTextMay :: Text -> Maybe a
     fromTextMay = readMay . T.unpack
+
+    fromMaybeText :: MonadThrow m => Maybe Text -> m a
+    fromMaybeText
+        = maybe
+            (monadThrow $ TextConversionException "no text")
+            fromText
+
+instance FromText a => FromText (Maybe a)
+  where
+    fromText = return . join . fromTextMay
+    fromMaybeText Nothing  = return Nothing
+    fromMaybeText (Just t) = fromText t >>= return . Just
+    fromTextMay = Just . fromTextMay
 
 instance FromText Int
 instance FromText Integer
@@ -117,15 +132,18 @@ instance FromText Double
 instance FromText IPv4
 instance FromText (AddrRange IPv4)
 
-instance FromText Text where
+instance FromText Text
+  where
     fromTextMay = Just
 
-instance FromText Bool where
+instance FromText Bool
+  where
     fromTextMay "true"  = Just True
     fromTextMay "false" = Just False
     fromTextMay _       = Nothing
 
-instance FromText UTCTime where
+instance FromText UTCTime
+  where
     fromTextMay t
         = Time.localTimeToUTC Time.utc . fst
         <$> (TP.strptime fmt $ T.unpack t)

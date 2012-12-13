@@ -147,8 +147,8 @@ data Image = Image
     , imageStateReason :: Maybe StateReason
     , imageViridianEnabled :: Maybe Bool
     , imageOwnerAlias :: Maybe Text
-    , imageName :: Text
-    , imageDescription :: Text
+    , imageName :: Maybe Text
+    , imageDescription :: Maybe Text
     , imageBillingProducts :: [Text]
     , imageRootDeviceType :: RootDeviceType
     , imageRootDeviceName :: Maybe Text
@@ -157,7 +157,7 @@ data Image = Image
     , imageTagSet :: [ResourceTag]
     , imageHypervisor :: Hypervisor
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AMIAttribute
     = AMIDescription
@@ -166,7 +166,7 @@ data AMIAttribute
     | AMILaunchPermission
     | AMIProductCodes
     | AMIBlockDeviceMapping
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AMIAttributeDescription = AMIAttributeDescription
     { amiAttributeDescriptionImageId :: Text
@@ -177,64 +177,64 @@ data AMIAttributeDescription = AMIAttributeDescription
     , amiAttributeDescriptionDescription :: Maybe Text
     , amiAttributeDescriptionBlockDeviceMapping :: [BlockDeviceMapping]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data LaunchPermissionItem = LaunchPermissionItem
     { launchPermissionItemGroup :: Text
     , launchPermissionUserId :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ImageState
     = ImageStateAvailable
     | ImageStatePending
     | ImageStateFailed
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ProductCode = ProductCode
     { productCodeCode :: Text
     , productCodeType :: ProductCodeType
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ProductCodeItem = ProductCodeItem
     { productCodeItemProductCode :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ProductCodeType
     = ProductCodeDevpay
     | ProductCodeMarketplace
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ImageType
     = ImageTypeMachine
     | ImageTypeKernel
     | ImageTypeRamDisk
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Platform
     = PlatformWindows
     | PlatformOther
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data StateReason = StateReason
     { stateReasonCode :: Text
     , stateReasonMessage :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data RootDeviceType
     = RootDeviceTypeEBS
     | RootDeviceTypeInstanceStore
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data BlockDeviceMapping = BlockDeviceMapping
     { blockDeviceMappingDeviceName :: Text
     , blockDeviceMappingVirtualName :: Maybe Text
     , blockDeviceMappingEbs :: Maybe EbsBlockDevice
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data EbsBlockDevice = EbsBlockDevice
     { ebsSnapshotId :: Maybe Text
@@ -242,34 +242,34 @@ data EbsBlockDevice = EbsBlockDevice
     , ebsDeleteOnTermination :: Bool
     , ebsVolumeType :: VolumeType
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeType
     = VolumeTypeStandard
     | VolumeTypeIO1 Int
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VirtualizationType
     = VirtualizationTypeParavirtual
     | VirtualizationTypeHVM
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ResourceTag = ResourceTag
     { resourceTagKey :: Text
     , resourceTagValue :: Maybe Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Hypervisor
     = HypervisorOVM
     | HypervisorXen
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Region = Region
     { regionName :: Text
     , regionEndpoint :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AvailabilityZone = AvailabilityZone
     { zoneName :: Text
@@ -277,7 +277,7 @@ data AvailabilityZone = AvailabilityZone
     , zoneRegionName :: Text
     , zoneMessageSet :: [AvailabilityZoneMessage]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 type AvailabilityZoneMessage = Text
 
@@ -288,7 +288,7 @@ data Reservation = Reservation
     , reservationInstanceSet :: [Instance]
     , reservationRequesterId :: Maybe Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Instance = Instance
     { instanceId :: Text
@@ -328,7 +328,7 @@ data Instance = Instance
     , instanceIamInstanceProfile :: Maybe IamInstanceProfile
     , instanceEbsOptimized :: Bool -- default: false
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceStatus = InstanceStatus
     { instanceStatusInstanceId :: Text
@@ -338,7 +338,7 @@ data InstanceStatus = InstanceStatus
     , instanceStatusSystemStatus :: InstanceStatusType
     , instanceStatusInstanceStatus :: InstanceStatusType
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceStatusEvent = InstanceStatusEvent
     { instanceStatusEventCode :: InstanceStatusEventCode
@@ -346,34 +346,34 @@ data InstanceStatusEvent = InstanceStatusEvent
     , instanceStatusEventNotBefore :: Maybe UTCTime
     , instanceStatusEventNotAfter :: Maybe UTCTime
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceStatusEventCode
     = InstanceStatusEventCodeInstanceReboot
     | InstanceStatusEventCodeInstanceStop
     | InstanceStatusEventCodeSystemReboot
     | InstanceStatusEventCodeInstanceRetirement
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceStatusType = InstanceStatusType
     { instanceStatusTypeStatus :: InstanceStatusTypeStatus
     , instanceStatusTypeDetails :: [InstanceStatusDetail]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceStatusTypeStatus
     = InstanceStatusTypeStatusOK
     | InstanceStatusTypeStatusImpaired
     | InstanceStatusTypeStatusInsufficientData
     | InstanceStatusTypeStatusNotApplicable
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceStatusDetail = InstanceStatusDetail
     { instanceStatusDetailName :: InstanceStatusDetailName
     , instanceStatusDetailStatus :: InstanceStatusDetailStatus
     , instanceStatusDetailImpairedSince :: Maybe UTCTime
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 type InstanceStatusDetailName = Text
 
@@ -383,7 +383,7 @@ data Group = Group
     { groupId :: Text
     , groupName :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceState
     = InstanceStatePending
@@ -393,28 +393,28 @@ data InstanceState
     | InstanceStateStopping
     | InstanceStateStopped
     | InstanceStateUnknown Int
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Placement = Placement
     { placementAvailabilityZone :: Text
     , placementGroupName :: Text
     , placementTenancy :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceMonitoringState
     = MonitoringDisabled
     | MonitoringEnabled
     | MonitoringPending
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
-data Architecture = I386 | X86_64 deriving (Show, Eq)
+data Architecture = I386 | X86_64 deriving (Show, Read, Eq)
 
 data InstanceBlockDeviceMapping = InstanceBlockDeviceMapping
     { instanceBlockDeviceMappingDeviceName :: Text
     , instanceBlockDeviceMappingEbs :: EbsInstanceBlockDevice
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data EbsInstanceBlockDevice = EbsInstanceBlockDevice
     { ebsInstanceBlockDeviceVolumeId :: Text
@@ -422,18 +422,18 @@ data EbsInstanceBlockDevice = EbsInstanceBlockDevice
     , ebsInstanceBlockDeviceAttachTime :: UTCTime
     , ebsInstanceBlockDeviceDeleteOnTermination :: Bool
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceLifecycle
     = LifecycleSpot
     | LifecycleNone
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceNetworkInterface = InstanceNetworkInterface
     { instanceNetworkInterfaceId :: Text
     , instanceNetworkInterfaceSubnetId :: Text
     , instanceNetworkInterfaceVpcId :: Text
-    , instanceNetworkInterfaceDescription :: Text
+    , instanceNetworkInterfaceDescription :: Maybe Text
     , instanceNetworkInterfaceOwnerId :: Text
     , instanceNetworkInterfaceStatus :: Text
     , instanceNetworkInterfacePrivateIpAddress :: IPv4
@@ -447,7 +447,7 @@ data InstanceNetworkInterface = InstanceNetworkInterface
     , instanceNetworkInterfacePrivateIpAddressesSet
         :: [InstancePrivateIpAddress]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceNetworkInterfaceAttachment = InstanceNetworkInterfaceAttachment
     { instanceNetworkInterfaceAttachmentId :: Text
@@ -457,14 +457,14 @@ data InstanceNetworkInterfaceAttachment = InstanceNetworkInterfaceAttachment
     , instanceNetworkInterfaceAttachmentDeleteOnTermination
         :: Bool
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceNetworkInterfaceAssociation
     = InstanceNetworkInterfaceAssociation
     { instanceNetworkInterfaceAssociationPublicIp :: Text
     , instanceNetworkInterfaceAssociationIpOwnerId :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstancePrivateIpAddress = InstancePrivateIpAddress
     { instancePrivateIpAddressAddress :: IPv4
@@ -472,18 +472,18 @@ data InstancePrivateIpAddress = InstancePrivateIpAddress
     , instancePrivateIpAddressAssociation
         :: Maybe InstanceNetworkInterfaceAssociation
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data IamInstanceProfile = IamInstanceProfile
     { iamInstanceProfileArn :: Text
     , iamInstanceProfileId :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ShutdownBehavior
     = ShutdownBehaviorStop
     | ShutdownBehaviorTerminate
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceAttribute
     = InstanceAttributeInstanceType Text
@@ -498,7 +498,7 @@ data InstanceAttribute
     | InstanceAttributeGroupSet [Text]
     | InstanceAttributeProductCodes [ProductCode]
     | InstanceAttributeEbsOptimized Bool
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Address = Address
     { addressPublicIp :: IPv4
@@ -510,20 +510,20 @@ data Address = Address
     , addressNetworkInterfaceOwnerId :: Maybe Text
     , addressPrivateIpAddress :: Maybe IPv4
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AddressDomain = AddressDomainStandard | AddressDomainVPC
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AllocateAddress = AllocateAddress
     { allocateAddressPublicIp :: IPv4
     , allocateAddressDomain :: AddressDomain
     , allocateAddressAllocationId :: Maybe Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data EC2Return = EC2Success | EC2Error Text
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Tag = Tag
     { tagResourceId :: Text
@@ -531,14 +531,14 @@ data Tag = Tag
     , tagKey :: Text
     , tagValue :: Maybe Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceStateChange = InstanceStateChange
     { instanceStateChangeInstanceId :: Text
     , instanceStateChangeCurrentState :: InstanceState
     , instanceStateChangePreviousState :: InstanceState
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ConsoleOutput = ConsoleOutput
     { consoleOutputInstanceId :: Text
@@ -546,7 +546,7 @@ data ConsoleOutput = ConsoleOutput
         -- ^ The time the data was last updated.
     , consoleOutputOutput :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data PasswordData = PasswordData
     { passwordDataInstanceId :: Text
@@ -554,7 +554,7 @@ data PasswordData = PasswordData
       -- ^ The time the data was last updated.
     , passwordDataPasswordData :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Snapshot = Snapshot
     { snapshotId :: Text
@@ -568,13 +568,13 @@ data Snapshot = Snapshot
     , snapshotOwnerAlias :: Maybe Text
     , snapshotTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data SnapshotStatus
     = SnapshotPending
     | SnapshotCompleted
     | SnapshotError
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Volume = Volume
     { volumeId :: Text
@@ -587,7 +587,7 @@ data Volume = Volume
     , volumeTagSet :: [ResourceTag]
     , volumeVolumeType :: VolumeType
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeState
     = VolumeStateCreating
@@ -596,7 +596,7 @@ data VolumeState
     | VolumeStateDeleting
     | VolumeStateDeleted
     | VolumeStateError
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AttachmentSetItemResponse = AttachmentSetItemResponse
     { attachmentSetItemResponseVolumeId :: Text
@@ -607,20 +607,20 @@ data AttachmentSetItemResponse = AttachmentSetItemResponse
     , attachmentSetItemResponseAttachTime :: UTCTime
     , attachmentSetItemResponseDeleteOnTermination :: Maybe Bool
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AttachmentSetItemResponseStatus
     = AttachmentSetItemResponseStatusAttaching
     | AttachmentSetItemResponseStatusAttached
     | AttachmentSetItemResponseStatusDetaching
     | AttachmentSetItemResponseStatusDetached
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data KeyPair = KeyPair
     { keyPairName :: Text
     , keyPairFingerprint :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data SecurityGroup = SecurityGroup
     { securityGroupOwnerId :: Text
@@ -632,7 +632,7 @@ data SecurityGroup = SecurityGroup
     , securityGroupIpPermissionsEgress :: [IpPermission]
     , securityGroupTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data IpPermission = IpPermission
     { ipPermissionIpProtocol :: Text
@@ -641,14 +641,14 @@ data IpPermission = IpPermission
     , ipPermissionGroups :: [UserIdGroupPair]
     , ipPermissionIpRanges :: [AddrRange IPv4]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data UserIdGroupPair = UserIdGroupPair
     { userIdGroupPairUserId :: Maybe Text
     , userIdGroupPairGroupId :: Text
     , userIdGroupPairGroupName :: Maybe Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data BlockDeviceMappingParam
     = BlockDeviceMappingParamEbs
@@ -666,12 +666,12 @@ data BlockDeviceMappingParam
         , blockDeviceMappingParamInstanceStoreVirtualName
             :: Maybe Text
         }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data EbsSource
     = EbsSourceSnapshotId Text
     | EbsSourceVolumeSize Int
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkInterfaceParam
     = NetworkInterfaceParamCreate
@@ -690,7 +690,7 @@ data NetworkInterfaceParam
         , networkInterfaceParamAttachDeviceIndex :: Int
         , networkInterfaceParamAttachDeleteOnTermination :: Bool
         }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data SecondaryPrivateIpAddressParam
     = SecondaryPrivateIpAddressParamNothing
@@ -700,7 +700,7 @@ data SecondaryPrivateIpAddressParam
       , secondaryPrivateIpAddressParamSpecifiedPrimary
         :: Maybe Int
       }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnConnection = VpnConnection
     { vpnConnectionId :: Text
@@ -714,14 +714,14 @@ data VpnConnection = VpnConnection
     , vpnConnectionOptions :: Maybe VpnConnectionOptionsRequest
     , vpnConnectionRoutes :: Maybe VpnStaticRoute
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnConnectionState
     = VpnConnectionStatePending
     | VpnConnectionStateAvailable
     | VpnConnectionStateDeleting
     | VpnConnectionStateDeleted
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnTunnelTelemetry = VpnTunnelTelemetry
     { vpnTunnelTelemetryOutsideIpAddress :: IPv4
@@ -730,34 +730,34 @@ data VpnTunnelTelemetry = VpnTunnelTelemetry
     , vpnTunnelTelemetryStatusMessage :: Text
     , vpnTunnelTelemetryAcceptRouteCount :: Int
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnTunnelTelemetryStatus
     = VpnTunnelTelemetryStatusUp
     | VpnTunnelTelemetryStatusDown
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnConnectionOptionsRequest = VpnConnectionOptionsRequest
     { vpnConnectionOptionsRequestStaticRoutesOnly :: Bool
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnStaticRoute = VpnStaticRoute
     { vpnStaticRouteDestinationCidrBlock :: Text
     , vpnStaticRouteSource :: VpnStaticRouteSource
     , vpnStaticRouteState :: VpnStaticRouteState
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnStaticRouteSource = VpnStaticRouteSourceStatic
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnStaticRouteState
     = VpnStaticRouteStatePending
     | VpnStaticRouteStateAvailable
     | VpnStaticRouteStateDeleting
     | VpnStaticRouteStateDeleted
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data RunInstancesRequest = RunInstancesRequest
     { runInstancesRequestImageId :: Text -- ^ Required
@@ -791,7 +791,7 @@ data RunInstancesRequest = RunInstancesRequest
         :: Maybe IamInstanceProfile
     , runInstancesRequestEbsOptimized :: Maybe Bool
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InstanceAttributeRequest
     = InstanceAttributeRequestInstanceType
@@ -812,7 +812,7 @@ data ResetInstanceAttributeRequest
     = ResetInstanceAttributeRequestKernel
     | ResetInstanceAttributeRequestRamdisk
     | ResetInstanceAttributeRequestSourceDestCheck
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data ModifyInstanceAttributeRequest
     = ModifyInstanceAttributeRequestInstanceType Text
@@ -828,7 +828,7 @@ data ModifyInstanceAttributeRequest
     | ModifyInstanceAttributeRequestSourceDestCheck Bool
     | ModifyInstanceAttributeRequestGroupSet [Text]
     | ModifyInstanceAttributeRequestEbsOptimized Bool
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data RegisterImageRequest = RegisterImageRequest
     { registerImageRequestName :: Text
@@ -841,7 +841,7 @@ data RegisterImageRequest = RegisterImageRequest
     , registerImageRequestBlockDeviceMappings
         :: [BlockDeviceMappingParam]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data CreateVolumeRequest
     = CreateNewVolume
@@ -855,7 +855,7 @@ data CreateVolumeRequest
         , createFromSnapshotSize :: Maybe Int
         , createFromSnapshotVolumeType :: Maybe VolumeType
         }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AssociateAddressRequest
     = AssociateAddressRequestEc2
@@ -871,18 +871,18 @@ data AssociateAddressRequest
         , associateAddressRequestVpcAllowReassociation
             :: Maybe Bool
         }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data DisassociateAddressRequest
     = DisassociateAddressRequestEc2 IPv4 -- ^ PublicIp for EC2
     | DisassociateAddressRequestVpc IPv4
       -- ^ AssociationId for VPC
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data SecurityGroupRequest
     = SecurityGroupRequestGroupId Text
     | SecurityGroupRequestGroupName Text
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Subnet = Subnet
     { subnetId :: Text
@@ -893,17 +893,17 @@ data Subnet = Subnet
     , subnetAvailabilityZone :: Text
     , subnetTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data SubnetState = SubnetStatePending | SubnetStateAvailable
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data CreateSubnetRequest = CreateSubnetRequest
     { createSubnetRequestVpcId :: Text
     , createSubnetRequestCidrBlock :: AddrRange IPv4
     , createSubnetRequestAvailabilityZone :: Maybe Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeStatus = VolumeStatus
     { volumeStatusVolumeId :: Text
@@ -912,25 +912,25 @@ data VolumeStatus = VolumeStatus
     , volumeStatusEventSet :: [VolumeStatusEvent]
     , volumeStatusActionSet :: [VolumeStatusAction]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeStatusInfo = VolumeStatusInfo
     { volumeStatusInfoStatus :: VolumeStatusInfoStatus
     , volumeStatusInfoDetails :: [VolumeStatusDetail]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeStatusInfoStatus
     = VolumeStatusInfoStatusOK
     | VolumeStatusInfoStatusImpaired
     | VolumeStatusInfoStatusInsufficientData
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeStatusDetail = VolumeStatusDetail
     { volumeStatusDetailName :: Text
     , volumeStatusDetailStatus :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeStatusEvent = VolumeStatusEvent
     { volumeStatusEventType :: Text
@@ -939,7 +939,7 @@ data VolumeStatusEvent = VolumeStatusEvent
     , volumeStatusEventNotBefore :: Maybe UTCTime
     , volumeStatusEventNotAfter :: Maybe UTCTime
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeStatusAction = VolumeStatusAction
     { volumeStatusActionCode :: Text
@@ -947,17 +947,17 @@ data VolumeStatusAction = VolumeStatusAction
     , volumeStatusActionEventId :: Text
     , volumeStatusActionDescription :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeAttribute
     = VolumeAttributeAutoEnableIO Bool
     | VolumeAttributeProductCodes [ProductCode]
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VolumeAttributeRequest
     = VolumeAttributeRequestAutoEnableIO
     | VolumeAttributeRequestProductCodes
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkAcl = NetworkAcl
     { networkAclId :: Text
@@ -967,7 +967,7 @@ data NetworkAcl = NetworkAcl
     , networkAclAssociationSet :: [NetworkAclAssociation]
     , networkAclTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkAclEntry = NetworkAclEntry
     { networkAclEntryRuleNumber :: Int
@@ -978,31 +978,31 @@ data NetworkAclEntry = NetworkAclEntry
     , networkAclEntryIcmpTypeCode :: Maybe IcmpTypeCode
     , networkAclEntryPortRange :: Maybe PortRange
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkAclRuleAction
     = NetworkAclRuleActionAllow
     | NetworkAclRuleActionDeny
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data IcmpTypeCode = IcmpTypeCode
     { icmpTypeCodeCode :: Int
     , icmpTypeCodeType :: Int
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data PortRange = PortRange
     { portRangeFrom :: Int
     , portRangeTo :: Int
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkAclAssociation = NetworkAclAssociation
     { networkAclAssociationId :: Text
     , networkAclAssociationNetworkAclId :: Text
     , networkAclAssociationSubnetId :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkAclEntryRequest = NetworkAclEntryRequest
     { networkAclEntryRequestNetworkAclId :: Text
@@ -1015,7 +1015,7 @@ data NetworkAclEntryRequest = NetworkAclEntryRequest
     , networkAclEntryRequestIcmp :: Maybe IcmpTypeCode
     , networkAclEntryRequestPortRange :: Maybe PortRange
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data RouteTable = RouteTable
     { routeTableId :: Text
@@ -1025,7 +1025,7 @@ data RouteTable = RouteTable
     , routeTablePropagatingVgw :: Maybe PropagatingVgw
     , routeTableTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Route = Route
     { routeDestinationCidrBlock :: Text
@@ -1036,16 +1036,16 @@ data Route = Route
     , routeState :: RouteState
     , routeOrigin :: Maybe RouteOrigin
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data RouteState = RouteStateActive | RouteStateBlackhole
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data RouteOrigin
     = RouteOriginCreateRouteTable
     | RouteOriginCreateRoute
     | RouteOriginTableEnableVgwRoutePropagation
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data RouteTableAssociation = RouteTableAssociation
     { routeTableAssociationId :: Text
@@ -1053,7 +1053,7 @@ data RouteTableAssociation = RouteTableAssociation
     , routeTableAssociationSubnetId :: Maybe Text
     , routeTableAssociationMain :: Maybe Bool
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 type PropagatingVgw = Text
 
@@ -1065,10 +1065,10 @@ data Vpc = Vpc
     , vpcTagSet :: [ResourceTag]
     , vpcInstanceTenancy :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpcState = VpcStatePending | VpcStateAvailable
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnGateway = VpnGateway
     { vpnGatewayId :: Text
@@ -1078,27 +1078,27 @@ data VpnGateway = VpnGateway
     , vpnGatewayAttachments :: [Attachment]
     , vpnGatewayTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data VpnGatewayState
     = VpnGatewayStatePending
     | VpnGatewayStateAvailable
     | VpnGatewayStateDeleting
     | VpnGatewayStateDeleted
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data Attachment = Attachment
     { attachmentVpcId :: Text
     , attachmentState :: AttachmentState
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data AttachmentState
     = AttachmentStateAttaching
     | AttachmentStateAttached
     | AttachmentStateDetaching
     | AttachmentStateDetached
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data CreateVpnGatewayType = CreateVpnGatewayTypeIpsec1
 
@@ -1110,27 +1110,27 @@ data CustomerGateway = CustomerGateway
     , customerGatewayBgpAsn :: Int
     , customerGatewayTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data CustomerGatewayState
     = CustomerGatewayStatePending
     | CustomerGatewayStateAvailable
     | CustomerGatewayStateDeleting
     | CustomerGatewayStateDeleted
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InternetGateway = InternetGateway
     { internetGatewayInternetGatewayId :: Text
     , internetGatewayAttachmentSet :: [InternetGatewayAttachment]
     , internetGatewayTagSet :: [ResourceTag]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InternetGatewayAttachment = InternetGatewayAttachment
     { internetGatewayAttachmentVpcId :: Text
     , internetGatewayAttachmentState :: InternetGatewayAttachmentState
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data InternetGatewayAttachmentState
     = InternetGatewayAttachmentStateAttaching
@@ -1138,7 +1138,7 @@ data InternetGatewayAttachmentState
     | InternetGatewayAttachmentStateDetaching
     | InternetGatewayAttachmentStateDetached
     | InternetGatewayAttachmentStateAvailable
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkInterface = NetworkInterface
     { networkInterfaceId :: Text
@@ -1163,14 +1163,14 @@ data NetworkInterface = NetworkInterface
     , networkInterfacePrivateIpAddressesSet
         :: [NetworkInterfacePrivateIpAddress]
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 type Filter = (Text, [Text])
 
 data NetworkInterfaceStatus
     = NetworkInterfaceStatusAvailable
     | NetworkInterfaceStatusInUse
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkInterfaceAttachment = NetworkInterfaceAttachment
     { networkInterfaceAttachmentId :: Text
@@ -1181,7 +1181,7 @@ data NetworkInterfaceAttachment = NetworkInterfaceAttachment
     , networkInterfaceAttachmentAttachTime :: UTCTime
     , networkInterfaceAttachmentDeleteOnTermination :: Bool
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkInterfaceAssociation = NetworkInterfaceAssociation
     { networkInterfaceAssociationAttachmentId :: Maybe Text
@@ -1190,7 +1190,7 @@ data NetworkInterfaceAssociation = NetworkInterfaceAssociation
     , networkInterfaceAssociationIpOwnerId :: Text
     , networkInterfaceAssociationId :: Text
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)
 
 data NetworkInterfacePrivateIpAddress
     = NetworkInterfacePrivateIpAddress
@@ -1199,4 +1199,4 @@ data NetworkInterfacePrivateIpAddress
     , networkInterfacePrivateIpAddressAssociation
         :: Maybe NetworkInterfaceAssociation
     }
-  deriving (Show, Eq)
+  deriving (Show, Read, Eq)

@@ -15,6 +15,7 @@ module AWS.EC2.Internal
     ) where
 
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Trans.Class (lift)
 import qualified Network.HTTP.Conduit as HTTP
 import Data.ByteString.Char8 ()
 import Control.Applicative
@@ -24,10 +25,10 @@ import Data.XML.Types (Event)
 import Data.Text (Text)
 
 import AWS.Class
-import AWS.EC2.Convert
 import AWS.Credential
 import AWS.Lib.Parser
 import AWS.EC2.Types
+import AWS.EC2.Convert ()
 
 initialEC2Context :: HTTP.Manager -> AWSContext
 initialEC2Context mgr = AWSContext
@@ -59,14 +60,14 @@ resourceTagSink :: MonadThrow m
 resourceTagSink = itemsSet "tagSet" $
     ResourceTag
     <$> getT "key"
-    <*> getMT "value"
+    <*> getT "value"
 
 productCodeSink :: MonadThrow m
     => GLSink Event m [ProductCode]
 productCodeSink = itemsSet "productCodes" $
     ProductCode
     <$> getT "productCode"
-    <*> getF "type" productCodeType'
+    <*> getT "type"
 
 stateReasonSink :: MonadThrow m
     => GLSink Event m (Maybe StateReason)
@@ -75,11 +76,17 @@ stateReasonSink = elementM "stateReason" $
     <$> getT "code"
     <*> getT "message"
 
+volumeType :: MonadThrow m => Text -> Maybe Int -> m VolumeType
+volumeType t Nothing  | t == "standard" = return $ VolumeTypeStandard
+volumeType t (Just i) | t == "io1"      = return $ VolumeTypeIO1 i
+volumeType t _ = monadThrow $ TextConversionException t
+
 volumeTypeSink :: MonadThrow m
     => GLSink Event m VolumeType
-volumeTypeSink = volumeType
-    <$> getT "volumeType"
-    <*> getMT "iops"
+volumeTypeSink = do
+    t <- getT "volumeType"
+    ps <- getT "iops"
+    lift $ volumeType t ps
 
 groupSetSink :: MonadThrow m => GLSink Event m [Group]
 groupSetSink = itemsSet "groupSet" $ Group

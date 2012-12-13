@@ -5,20 +5,21 @@ module AWS.Lib.Convert
 
 import Language.Haskell.TH
 import Control.Applicative ((<$>))
-import Data.Text (Text)
 
-import AWS.Util
+import AWS.Class
 
-mkConvertFunc :: String -> Name -> [String] -> Q [Dec]
-mkConvertFunc fs d strs = runQ $ do
-  v <- newName "v"
-  ctrs <- (\(TyConI (DataD [] _ [] x [])) -> map (\(NormalC name []) -> name) x)
-          <$> reify d
-  return $
-      [ SigD (mkName fs) (AppT (AppT ArrowT (ConT ''Text)) (ConT d))
-      , FunD (mkName fs) [Clause [VarP v] (NormalB
-        (CaseE (VarE v)
-           $ (map (\(s,t) -> Match (LitP (StringL s)) (NormalB (ConE t)) []) $ zip strs ctrs)
-           ++ [Match WildP (NormalB (AppE (AppE (VarE 'err) (LitE (StringL $ show d))) (LitE (StringL $ show v)))) []])
-      ) []]
-      ]
+deriveFromText :: Name -> [String] -> DecsQ
+deriveFromText d strs = do
+    ctrs <- map (\(NormalC name _) -> name) <$> cons
+    x <- newName "x"
+    let cases = caseE (varE x) (map f (zip strs ctrs) ++ [wild])
+    let fun = funD 'fromTextMay [clause [varP x] (normalB cases) []]
+    (:[]) <$> instanceD ctx typ [fun]
+  where
+    cons = do
+        (TyConI (DataD _ _ _ cs _)) <- reify d
+        return cs
+    f (s, t) = match (litP $ stringL s) (normalB $ [|Just $(conE t)|]) []
+    wild = match wildP (normalB [|Nothing|]) []
+    typ = appT (conT ''FromText) (conT d)
+    ctx = return []

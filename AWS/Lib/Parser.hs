@@ -3,9 +3,6 @@ module AWS.Lib.Parser
     ( RequestId
     , getT
     , getT_
-    , getMT
-    , getF
-    , getM
     , element
     , elementM
     , listConduit
@@ -85,32 +82,15 @@ awaitWhile f = await >>= g
         | f a       = return $ Just a
         | otherwise = awaitWhile f
 
-getF :: MonadThrow m
-    => Text
-    -> (Text -> b)
-    -> Pipe Event Event o u m b
-getF name f = f <$> tagContent name
-
 getT :: (MonadThrow m, FromText a)
     => Text
     -> Pipe Event Event o u m a
-getT name = tagContent name >>= lift . fromText
+getT name = tagContentM name >>= lift . fromMaybeText
 
 getT_ :: forall m o u . MonadThrow m
     => Text
     -> Pipe Event Event o u m ()
 getT_ name = () <$ (getT name :: Pipe Event Event o u m Text)
-
-getM :: MonadThrow m
-    => Text
-    -> (Maybe Text -> b)
-    -> Pipe Event Event o u m b
-getM name f = f <$> tagContentM name
-
-getMT :: (MonadThrow m, FromText a)
-    => Text
-    -> Pipe Event Event o u m (Maybe a)
-getMT name = getM name (>>= fromTextMay)
 
 elementM :: MonadThrow m
     => Text
@@ -132,12 +112,6 @@ tagContentM :: MonadThrow m
     => Text
     -> GLSink Event m (Maybe Text)
 tagContentM name = elementM name text
-
-tagContent :: MonadThrow m
-    => Text
-    -> GLSink Event m Text
-tagContent name =
-    XML.force ("parse error:" ++ T.unpack name) $ tagContentM name
 
 sinkResponse
     :: MonadThrow m

@@ -17,7 +17,6 @@ import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.Lib.Parser
-import AWS.EC2.Convert
 
 describeSnapshots
     :: (MonadResource m, MonadBaseControl IO m)
@@ -42,13 +41,13 @@ snapshotSink :: MonadThrow m
 snapshotSink = Snapshot
         <$> getT "snapshotId"
         <*> getT "volumeId"
-        <*> getF "status" snapshotStatus'
+        <*> getT "status"
         <*> getT "startTime"
         <*> getT "progress"
         <*> getT "ownerId"
         <*> getT "volumeSize"
         <*> getT "description"
-        <*> getMT "ownerAlias"
+        <*> getT "ownerAlias"
         <*> resourceTagSink
 
 createSnapshot

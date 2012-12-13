@@ -12,7 +12,6 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -40,7 +39,7 @@ subnetSink :: MonadThrow m
     => GLSink Event m Subnet
 subnetSink = Subnet
     <$> getT "subnetId"
-    <*> getF "state" subnetState'
+    <*> getT "state"
     <*> getT "vpcId"
     <*> getT "cidrBlock"
     <*> getT "availableIpAddressCount"
