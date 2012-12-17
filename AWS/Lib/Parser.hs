@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes, ScopedTypeVariables, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module AWS.Lib.Parser
     ( RequestId
     , getT
@@ -15,11 +17,11 @@ module AWS.Lib.Parser
     , sinkEventBeginDocument
     , members
     , text
+    , FromText(..)
     ) where
 
 import Data.XML.Types (Event(..), Name(..))
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.ByteString (ByteString)
 import Data.Conduit
 import qualified Data.Conduit.List as CL
@@ -29,6 +31,7 @@ import Data.Monoid
 import Control.Monad.Trans.Class (lift)
 
 import AWS.Class
+import AWS.Lib.FromText
 
 type RequestId = Text
 
@@ -85,14 +88,14 @@ awaitWhile f = await >>= g
 getT :: (MonadThrow m, FromText a)
     => Text
     -> Pipe Event Event o u m a
-getT name = tagContentM name >>= lift . fromMaybeText
+getT name = elementM name text >>= lift . fromMaybeText
 
 getT_ :: forall m o u . MonadThrow m
     => Text
     -> Pipe Event Event o u m ()
 getT_ name = () <$ (getT name :: Pipe Event Event o u m Text)
 
-elementM :: MonadThrow m
+elementM :: forall o u m a . MonadThrow m
     => Text
     -> Pipe Event Event o u m a
     -> Pipe Event Event o u m (Maybe a)
@@ -102,16 +105,12 @@ elementM name inner = do
   where
     g n = (nameLocalName n == name)
 
-element :: MonadThrow m
+element :: forall o u m a . MonadThrow m
     => Text
     -> Pipe Event Event o u m a
     -> Pipe Event Event o u m a
-element name inner = XML.force ("parse error:" ++ T.unpack name) $ elementM name inner
-
-tagContentM :: MonadThrow m
-    => Text
-    -> GLSink Event m (Maybe Text)
-tagContentM name = elementM name text
+element name inner = elementM name inner >>=
+    maybe (lift $ monadThrow $ ResponseParseError name) return
 
 sinkResponse
     :: MonadThrow m

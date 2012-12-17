@@ -21,12 +21,11 @@ import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
-import Data.Maybe (fromJust)
+import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Map as Map
 import Data.Monoid
 import Control.Monad
 
-import AWS.EC2.Convert
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Params
@@ -125,10 +124,24 @@ instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
         )
     )
 
+instanceStateCodes :: [(Int, InstanceState)]
+instanceStateCodes =
+    [ ( 0, InstanceStatePending)
+    , (16, InstanceStateRunning)
+    , (32, InstanceStateShuttingDown)
+    , (48, InstanceStateTerminated)
+    , (64, InstanceStateStopping)
+    , (80, InstanceStateStopped)
+    ]
+
+codeToState :: Int -> Text -> InstanceState
+codeToState code _name = fromMaybe
+    (InstanceStateUnknown code)
+    (lookup code instanceStateCodes)
+
 instanceStateSink :: MonadThrow m
     => Text -> GLSink Event m InstanceState
-instanceStateSink label = element label $
-    codeToState
+instanceStateSink label = element label $ codeToState
     <$> getT "code"
     <*> getT "name"
 
