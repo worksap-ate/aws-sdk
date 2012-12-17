@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module AWS.EC2.Types
     ( Address(..)
     , AddressDomain(..)
@@ -131,6 +132,9 @@ import Data.IP (IPv4, AddrRange)
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 import Data.Time (UTCTime)
+
+import AWS.Class
+import AWS.Lib.FromText
 
 data Image = Image
     { imageId :: Text
@@ -1200,3 +1204,87 @@ data NetworkInterfacePrivateIpAddress
         :: Maybe NetworkInterfaceAssociation
     }
   deriving (Show, Read, Eq)
+
+instance FromText Platform
+  where
+    fromMaybeText Nothing  = return PlatformOther
+    fromMaybeText (Just t)
+        | t == "windows" = return PlatformWindows
+        | otherwise      = return PlatformOther
+
+instance FromText AddressDomain
+  where
+    fromMaybeText Nothing  = return AddressDomainStandard
+    fromMaybeText (Just t)
+        | t == "standard" = return AddressDomainStandard
+        | t == "vpc"      = return AddressDomainVPC
+        | otherwise       = monadThrow $ TextConversionException t
+
+instance FromText EC2Return
+  where
+    fromTextMay t
+        | t == "true" = Just EC2Success
+        | otherwise   = Just $ EC2Error t
+
+instance FromText InstanceLifecycle
+  where
+    fromMaybeText Nothing  = return LifecycleNone
+    fromMaybeText (Just t)
+        | t == "spot" = return LifecycleSpot
+        | otherwise   = monadThrow $ TextConversionException t
+
+deriveFromText "ImageState" ["available", "pending", "failed"]
+deriveFromText "ProductCodeType" ["devpay", "marketplace"]
+deriveFromText "ImageType" ["machine", "kernel", "ramdisk"]
+deriveFromText "RootDeviceType" ["ebs", "instance-store"]
+deriveFromText "VirtualizationType" ["paravirtual", "hvm"]
+deriveFromText "Hypervisor" ["ovm", "xen"]
+deriveFromText "InstanceStatusEventCode"
+    [ "instance-reboot"
+    , "instance-stop"
+    , "system-reboot"
+    , "instance-retirement"
+    ]
+deriveFromText "InstanceStatusTypeStatus"
+    ["ok", "impaired", "insufficient-data", "not-applicable"]
+deriveFromText "InstanceMonitoringState"
+    ["disabled", "enabled", "pending"]
+deriveFromText "Architecture" ["i386", "x86_64"]
+deriveFromText "SnapshotStatus" ["pending", "completed", "error"]
+deriveFromText "VolumeState"
+    [ "creating"
+    , "available"
+    , "in-use"
+    , "deleting"
+    , "deleted"
+    , "error"
+    ]
+deriveFromText "AttachmentSetItemResponseStatus"
+    ["attaching", "attached", "detaching", "detached"]
+deriveFromText "ShutdownBehavior" ["stop", "terminate"]
+deriveFromText "VpnConnectionState"
+    ["pending", "available", "deleting", "deleted"]
+deriveFromText "VpnTunnelTelemetryStatus" ["UP", "DOWN"]
+deriveFromText "VpnStaticRouteSource" ["Static"]
+deriveFromText "VpnStaticRouteState"
+    ["pending", "available", "deleting", "deleted"]
+deriveFromText "SubnetState" ["pending", "available"]
+deriveFromText "VolumeStatusInfoStatus"
+    ["ok", "impaired", "insufficient-data"]
+deriveFromText "NetworkAclRuleAction" ["allow", "deny"]
+deriveFromText "RouteState" ["active", "blackhole"]
+deriveFromText "RouteOrigin"
+    [ "CreateRouteTable"
+    , "CreateRoute"
+    , "EnableVgwRoutePropagation"
+    ]
+deriveFromText "VpcState" ["pending", "available"]
+deriveFromText "VpnGatewayState"
+    ["pending", "available", "deleting", "deleted"]
+deriveFromText "AttachmentState"
+    ["attaching", "attached", "detaching", "detached"]
+deriveFromText "CustomerGatewayState"
+    ["pending", "available", "deleting", "deleted"]
+deriveFromText "InternetGatewayAttachmentState"
+    ["attaching", "attached", "detaching", "detached", "available"]
+deriveFromText "NetworkInterfaceStatus" ["available", "in-use"]
