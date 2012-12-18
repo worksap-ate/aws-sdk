@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AWS.EC2.Internal
     ( module AWS.Class
@@ -28,7 +29,6 @@ import AWS.Class
 import AWS.Credential
 import AWS.Lib.Parser
 import AWS.EC2.Types
-import AWS.EC2.Convert ()
 
 initialEC2Context :: HTTP.Manager -> AWSContext
 initialEC2Context mgr = AWSContext
@@ -82,11 +82,8 @@ volumeType t (Just i) | t == "io1"      = return $ VolumeTypeIO1 i
 volumeType t _ = monadThrow $ TextConversionException t
 
 volumeTypeSink :: MonadThrow m
-    => GLSink Event m VolumeType
-volumeTypeSink = do
-    t <- getT "volumeType"
-    ps <- getT "iops"
-    lift $ volumeType t ps
+    => Pipe Event Event o u m VolumeType
+volumeTypeSink = volumeType <$> getT "volumeType" <*> getT "iops" >>= lift
 
 groupSetSink :: MonadThrow m => GLSink Event m [Group]
 groupSetSink = itemsSet "groupSet" $ Group

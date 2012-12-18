@@ -30,7 +30,6 @@ library
                    , AWS.EC2.Internal
                    , AWS.EC2.Address
                    , AWS.EC2.AvailabilityZone
-                   , AWS.EC2.Convert
                    , AWS.EC2.Image
                    , AWS.EC2.Instance
                    , AWS.EC2.Volume
@@ -46,7 +45,7 @@ library
                    , AWS.EC2.NetworkInterface
                    , AWS.EC2.Tag
                    , AWS.EC2.Params
-                   , AWS.Lib.Convert
+                   , AWS.Lib.FromText
                    , AWS.Lib.Parser
                    , AWS.Lib.Query
                    , AWS.RDS.Internal
