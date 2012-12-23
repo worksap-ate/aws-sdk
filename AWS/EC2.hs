@@ -6,6 +6,7 @@ module AWS.EC2
       EC2
     , runEC2
     , setRegion
+    , setEndpoint
       -- * Instances
     , module AWS.EC2.Instance
       -- * Images
@@ -38,6 +39,7 @@ import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Control.Monad.State as State
 import Data.Text (Text)
+import Data.ByteString (ByteString)
 
 import AWS.Class
 import AWS.Lib.Query (textToBS)
@@ -61,15 +63,21 @@ import AWS.EC2.Acl
 import AWS.EC2.RouteTable
 import AWS.EC2.NetworkInterface
 
--- | set endpoint to EC2 context.
+-- | set endpoint to EC2 context by giving the EC2 region.
 setRegion
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ RegionName
     -> EC2 m ()
 setRegion name = do
     region <- Util.head $ describeRegions [name] []
-    ctx <- State.get
-    maybe (fail "region not found") (f ctx) region
+    maybe (fail "region not found") (setEndpoint . g) region
   where
-    f ctx r = State.put ctx { endpoint = g r }
     g = textToBS . regionEndpoint
+
+-- | set endpoint to EC2 context.
+setEndpoint :: (MonadResource m, MonadBaseControl IO m)
+    => ByteString -- ^ ec2 endpoint domain <http://docs.amazonwebservices.com/general/latest/gr/rande.html>
+    -> EC2 m ()
+setEndpoint endpoint = do
+    ctx <- State.get
+    State.put ctx { endpoint = endpoint }
