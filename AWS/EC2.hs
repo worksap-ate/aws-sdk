@@ -5,6 +5,7 @@ module AWS.EC2
     ( -- * EC2 Environment
       EC2
     , runEC2
+    , runEC2Endpoint
     , setRegion
       -- * Instances
     , module AWS.EC2.Instance

@@ -24,7 +24,7 @@
 -- >     cred <- loadCredential
 -- >     doc <- runResourceT $
 -- >         runEC2 cred $
--- >             Util.asList $ describeInstances [] []
+-- >             Util.list $ describeInstances [] []
 -- >     print doc
 -- >     putStr "Length: "
 -- >     print $ length doc

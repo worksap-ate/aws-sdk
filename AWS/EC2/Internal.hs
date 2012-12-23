@@ -6,6 +6,7 @@ module AWS.EC2.Internal
     , EC2
     , initialEC2Context
     , runEC2
+    , runEC2Endpoint
     , itemConduit
     , itemsSet
     , resourceTagSink
@@ -24,6 +25,7 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Data.XML.Types (Event)
 import Data.Text (Text)
+import Data.ByteString (ByteString)
 
 import AWS.Class
 import AWS.Credential
@@ -41,6 +43,14 @@ type EC2 m a = AWS AWSContext m a
 
 runEC2 :: MonadIO m => Credential -> AWS AWSContext m a -> m a
 runEC2 = runAWS initialEC2Context
+
+runEC2Endpoint :: MonadIO m
+               => Credential
+               -> ByteString -- ^ ec2 endpoint domain <http://docs.amazonwebservices.com/general/latest/gr/rande.html>
+               -> AWS AWSContext m a
+               -> m a
+runEC2Endpoint cred endpoint  =
+  runAWS (\mgr -> (initialEC2Context mgr){ endpoint = endpoint }) cred
 
 itemConduit :: MonadThrow m
     => Text
