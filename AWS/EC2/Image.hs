@@ -6,6 +6,7 @@ module AWS.EC2.Image
     , registerImage
     , deregisterImage
     , describeImageAttribute
+    , modifyImageAttribute
     ) where
 
 import Data.Text (Text)
@@ -168,3 +169,30 @@ describeImageAttribute iid attr =
           | attr == AMIProductCodes       = "productCodes"
           | attr == AMIBlockDeviceMapping = "blockDeviceMapping"
           | otherwise                     = err "AMIAttribute" $ T.pack $ show attr
+
+modifyImageAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ ImageId
+    -> LaunchPermission -- ^ LaunchPermission
+    -> [Text] -- ^ ProductCode
+    -> Maybe Text -- ^ Description
+    -> EC2 m Bool
+modifyImageAttribute iid lp pcs desc =
+    ec2Query "ModifyImageAttribute" params $ getT "return"
+  where
+    params =
+        [ ValueParam "ImageId" iid
+        , ArrayParams "ProductCode" pcs
+        ] ++ launchPermissionParams lp
+          ++ maybeParams [ ("Description.Value", desc) ]
+
+launchPermissionParams :: LaunchPermission -> [QueryParam]
+launchPermissionParams lp =
+    [ params "Add" $ launchPermissionAdd lp
+    , params "Remove" $ launchPermissionRemove lp
+    ]
+  where
+    toTuples (LaunchPermissionItem group user) =
+        filter (not . T.null . snd) [("Group", group), ("UserId", user)]
+    params t =
+        StructArrayParams ("LaunchPermission." `T.append` t) . map toTuples

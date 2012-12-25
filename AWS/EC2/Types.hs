@@ -57,6 +57,7 @@ module AWS.EC2.Types
     , IpPermission(..)
     , KeyPair(..)
     , ModifyInstanceAttributeRequest(..)
+    , LaunchPermission(..)
     , LaunchPermissionItem(..)
     , NetworkAcl(..)
     , NetworkAclAssociation(..)
@@ -180,6 +181,12 @@ data AMIAttributeDescription = AMIAttributeDescription
     , amiAttributeDescriptionRamdisk :: Maybe Text
     , amiAttributeDescriptionDescription :: Maybe Text
     , amiAttributeDescriptionBlockDeviceMapping :: [BlockDeviceMapping]
+    }
+  deriving (Show, Read, Eq)
+
+data LaunchPermission = LaunchPermission
+    { launchPermissionAdd :: [LaunchPermissionItem]
+    , launchPermissionRemove :: [LaunchPermissionItem]
     }
   deriving (Show, Read, Eq)
 
