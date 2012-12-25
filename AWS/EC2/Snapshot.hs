@@ -52,7 +52,7 @@ snapshotSink = Snapshot
 
 createSnapshot
     :: (MonadResource m, MonadBaseControl IO m)
-    => Text -- ^ SnapshotId
+    => Text -- ^ VolumeId
     -> Maybe Text -- ^ Description
     -> EC2 m Snapshot
 createSnapshot volid desc =
