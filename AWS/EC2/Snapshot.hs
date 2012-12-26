@@ -4,6 +4,7 @@ module AWS.EC2.Snapshot
     ( describeSnapshots
     , createSnapshot
     , deleteSnapshot
+    , copySnapshot
     ) where
 
 import Data.Text (Text)
@@ -69,3 +70,16 @@ deleteSnapshot ssid =
     ec2Query "DeleteSnapshot" params $ getT "return"
   where
     params = [ValueParam "SnapshotId" ssid]
+
+copySnapshot
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SourceRegion
+    -> Text -- ^ SourceSnapshotId
+    -> Maybe Text -- ^ Description
+    -> EC2 m Text
+copySnapshot region sid desc =
+    ec2Query "CopySnapshot" params $ getT "snapshotId"
+  where
+    params = [ ValueParam "SourceRegion" region
+             , ValueParam "SourceSnapshotId" sid
+             ] ++ maybeParams [("Description", desc)]
