@@ -95,6 +95,7 @@ networkInterfaceSink = NetworkInterface
     <*> itemsSet "privateIpAddressesSet" (
         NetworkInterfacePrivateIpAddress
         <$> getT "privateIpAddress"
+        <*> getT "privateDnsName"
         <*> getT "primary"
         <*> networkInterfaceAssociationSink
         )
@@ -107,5 +108,6 @@ networkInterfaceAssociationSink =
         <$> getT "attachmentId"
         <*> getT "instanceId"
         <*> getT "publicIp"
+        <*> getT "publicDnsName"
         <*> getT "ipOwnerId"
         <*> getT "associationId"

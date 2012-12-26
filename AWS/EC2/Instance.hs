@@ -155,6 +155,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <*> getT "description"
     <*> getT "ownerId"
     <*> getT "status"
+    <*> getT "macAddress"
     <*> getT "privateIpAddress"
     <*> getT "privateDnsName"
     <*> getT "sourceDestCheck"
@@ -171,6 +172,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <*> itemsSet "privateIpAddressesSet" (
         InstancePrivateIpAddress
         <$> getT "privateIpAddress"
+        <*> getT "privateDnsName"
         <*> getT "primary"
         <*> instanceNetworkInterfaceAssociationSink
         )

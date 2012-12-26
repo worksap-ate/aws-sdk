@@ -41,7 +41,7 @@ import qualified Data.Conduit.Binary as CB
 #endif
 
 apiVersion :: ByteString
-apiVersion = "2012-10-01"
+apiVersion = "2012-12-01"
 
 sinkRequestId :: MonadThrow m
     => GLSink Event m Text

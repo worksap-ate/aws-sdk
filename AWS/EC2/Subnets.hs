@@ -44,6 +44,8 @@ subnetSink = Subnet
     <*> getT "cidrBlock"
     <*> getT "availableIpAddressCount"
     <*> getT "availabilityZone"
+    <*> getT "defaultForAz"
+    <*> getT "mapPublicIpOnLaunch"
     <*> resourceTagSink
 
 ------------------------------------------------------------

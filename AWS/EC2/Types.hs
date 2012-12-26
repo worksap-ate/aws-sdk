@@ -305,9 +305,9 @@ data Instance = Instance
     { instanceId :: Text
     , instanceImageId :: Text
     , instanceState :: InstanceState
-    , instancePrivateDnsName :: Text
-    , instanceDnsName :: Text
-    , instanceReason :: Text
+    , instancePrivateDnsName :: Maybe Text
+    , instanceDnsName :: Maybe Text
+    , instanceReason :: Maybe Text
     , instanceKeyName :: Maybe Text
     , instanceAmiLaunchIndex :: Text
     , instanceProductCodes :: [ProductCode]
@@ -329,10 +329,10 @@ data Instance = Instance
     , instanceRootDeviceType :: RootDeviceType
     , instanceRootDeviceName :: Maybe Text
     , instanceBlockDeviceMappings :: [InstanceBlockDeviceMapping]
-    , instanceInstanceLifecycle :: InstanceLifecycle
+    , instanceInstanceLifecycle :: Maybe InstanceLifecycle
     , instanceSpotInstanceRequestId :: Maybe Text
     , instanceVirtualizationType :: VirtualizationType
-    , instanceClientToken :: Text
+    , instanceClientToken :: Maybe Text
     , instanceTagSet :: [ResourceTag]
     , instanceHypervisor :: Hypervisor
     , instanceNetworkInterfaceSet :: [InstanceNetworkInterface]
@@ -408,7 +408,7 @@ data InstanceState
 
 data Placement = Placement
     { placementAvailabilityZone :: Text
-    , placementGroupName :: Text
+    , placementGroupName :: Maybe Text
     , placementTenancy :: Text
     }
   deriving (Show, Read, Eq)
@@ -447,6 +447,7 @@ data InstanceNetworkInterface = InstanceNetworkInterface
     , instanceNetworkInterfaceDescription :: Maybe Text
     , instanceNetworkInterfaceOwnerId :: Text
     , instanceNetworkInterfaceStatus :: Text
+    , instanceNetworkInterfaceMacAddress :: Text
     , instanceNetworkInterfacePrivateIpAddress :: IPv4
     , instanceNetworkInterfacePrivateDnsName :: Maybe Text
     , instanceNetworkInterfaceSourceDestCheck :: Bool
@@ -479,6 +480,7 @@ data InstanceNetworkInterfaceAssociation
 
 data InstancePrivateIpAddress = InstancePrivateIpAddress
     { instancePrivateIpAddressAddress :: IPv4
+    , instancePrivateIpAddressDnsName :: Maybe Text
     , instancePrivateIpAddressPrimary :: Bool
     , instancePrivateIpAddressAssociation
         :: Maybe InstanceNetworkInterfaceAssociation
@@ -902,6 +904,8 @@ data Subnet = Subnet
     , subnetCidrBlock :: AddrRange IPv4
     , subnetAvailableIpAddressCount :: Int
     , subnetAvailabilityZone :: Text
+    , subnetDefaultForAz :: Maybe Bool
+    , subnetMapPublicIpOnLaunch :: Maybe Bool
     , subnetTagSet :: [ResourceTag]
     }
   deriving (Show, Read, Eq)
@@ -1198,6 +1202,7 @@ data NetworkInterfaceAssociation = NetworkInterfaceAssociation
     { networkInterfaceAssociationAttachmentId :: Maybe Text
     , networkInterfaceAssociationInstanceId :: Maybe Text
     , networkInterfaceAssociationPublicIp :: IPv4
+    , networkInterfaceAssociationPublicDnsName :: Maybe Text
     , networkInterfaceAssociationIpOwnerId :: Text
     , networkInterfaceAssociationId :: Text
     }
@@ -1206,6 +1211,7 @@ data NetworkInterfaceAssociation = NetworkInterfaceAssociation
 data NetworkInterfacePrivateIpAddress
     = NetworkInterfacePrivateIpAddress
     { networkInterfacePrivateIpAddressPrivateIpAddress :: IPv4
+    , networkInterfacePrivateIpAddressDnsName :: Maybe Text
     , networkInterfacePrivateIpAddressPrimary :: Bool
     , networkInterfacePrivateIpAddressAssociation
         :: Maybe NetworkInterfaceAssociation
