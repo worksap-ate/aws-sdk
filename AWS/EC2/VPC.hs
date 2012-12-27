@@ -5,6 +5,7 @@ module AWS.EC2.VPC
     , createVpnGateway
     , createCustomerGateway
     , createInternetGateway
+    , createDhcpOptions
     , deleteVpc
     , deleteVpnGateway
     , deleteCustomerGateway
@@ -23,6 +24,7 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
 import Data.IP (IPv4, AddrRange)
+import Data.Monoid ((<>))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
@@ -354,3 +356,24 @@ dhcpConfigurationSink = DhcpConfiguration
         (DhcpValue
         <$> getT "value"
         )
+
+------------------------------------------------------------
+-- createDhcpOptions
+------------------------------------------------------------
+createDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [DhcpConfiguration] -- ^ DhcpConfigurations
+    -> EC2 m DhcpOptions
+createDhcpOptions confs =
+    ec2Query "CreateDhcpOptions" params $
+        element "dhcpOptions" dhcpOptionsSink
+  where
+    numTexts = map (("DhcpConfiguration." <>) . toText) ([1..] :: [Int])
+    f (t, conf) =
+        [ ValueParam (t <> ".Key") $
+            dhcpConfigurationKey conf
+        , ArrayParams (t <> ".Value") $
+            map dhcpValueValue $
+            dhcpConfigurationDhcpValueSet conf
+        ]
+    params = concat $ map f $ zip numTexts confs
