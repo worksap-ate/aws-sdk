@@ -181,6 +181,7 @@ vpcSink = Vpc
     <*> getT "dhcpOptionsId"
     <*> resourceTagSink
     <*> getT "instanceTenancy"
+    <*> getT "isDefault"
 
 ------------------------------------------------------------
 -- createVpc

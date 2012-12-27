@@ -1079,6 +1079,7 @@ data Vpc = Vpc
     , vpcDhcpOptionsId :: Text
     , vpcTagSet :: [ResourceTag]
     , vpcInstanceTenancy :: Text
+    , vpcIsDefault :: Maybe Text
     }
   deriving (Show, Read, Eq)
 
