@@ -1,20 +1,24 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AWS.EC2.VPC
-    ( createVpc
+    ( associateDhcpOptions
+    , attachInternetGateway
+    , createVpc
     , createVpnGateway
     , createCustomerGateway
     , createInternetGateway
+    , createDhcpOptions
     , deleteVpc
     , deleteVpnGateway
     , deleteCustomerGateway
     , deleteInternetGateway
+    , deleteDhcpOptions
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
     , describeCustomerGateway
     , describeInternetGateways
-    , attachInternetGateway
+    , describeDhcpOptions
     , detachInternetGateway
     ) where
 
@@ -22,6 +26,7 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
 import Data.IP (IPv4, AddrRange)
+import Data.Monoid ((<>))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
@@ -320,3 +325,85 @@ deleteCustomerGateway
     => Text -- ^ CustomerGatewayId
     -> EC2 m Bool
 deleteCustomerGateway = ec2Delete "DeleteCustomerGateway" "CustomerGatewayId"
+
+------------------------------------------------------------
+-- describeDhcpOptions
+------------------------------------------------------------
+describeDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ DhcpOptionsIds
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m DhcpOptions)
+describeDhcpOptions ids filters =
+    ec2QuerySource "DescribeDhcpOptions" params $
+        itemConduit "dhcpOptionsSet" dhcpOptionsSink
+  where
+    params =
+        [ ArrayParams "DhcpOptionsId" ids
+        , FilterParams filters
+        ]
+
+dhcpOptionsSink :: MonadThrow m
+    => GLSink Event m DhcpOptions
+dhcpOptionsSink = DhcpOptions
+    <$> getT "dhcpOptionsId"
+    <*> itemsSet "dhcpConfigurationSet" dhcpConfigurationSink
+    <*> resourceTagSink
+
+dhcpConfigurationSink :: MonadThrow m
+    => GLSink Event m DhcpConfiguration
+dhcpConfigurationSink = DhcpConfiguration
+    <$> getT "key"
+    <*> itemsSet "valueSet"
+        (DhcpValue
+        <$> getT "value"
+        )
+
+------------------------------------------------------------
+-- createDhcpOptions
+------------------------------------------------------------
+createDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [DhcpConfiguration] -- ^ DhcpConfigurations
+    -> EC2 m DhcpOptions
+createDhcpOptions confs =
+    ec2Query "CreateDhcpOptions" params $
+        element "dhcpOptions" dhcpOptionsSink
+  where
+    numTexts = map (("DhcpConfiguration." <>) . toText) ([1..] :: [Int])
+    f (t, conf) =
+        [ ValueParam (t <> ".Key") $
+            dhcpConfigurationKey conf
+        , ArrayParams (t <> ".Value") $
+            map dhcpValueValue $
+            dhcpConfigurationDhcpValueSet conf
+        ]
+    params = concat $ map f $ zip numTexts confs
+
+------------------------------------------------------------
+-- deleteDhcpOptions
+------------------------------------------------------------
+deleteDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ DhcpOptionsId
+    -> EC2 m Bool
+deleteDhcpOptions doid =
+    ec2Query "DeleteDhcpOptions" params $ getT "return"
+  where
+    params = [ValueParam "DhcpOptionsId" doid]
+
+------------------------------------------------------------
+-- associateDhcpOptions
+------------------------------------------------------------
+associateDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ DhcpOptionsId
+    -> Text -- ^ VpcId
+    -> EC2 m Bool
+associateDhcpOptions doid vpcid =
+    ec2Query "AssociateDhcpOptions" params $ getT "return"
+  where
+    params =
+        [ ValueParam "DhcpOptionsId" doid
+        , ValueParam "VpcId" vpcid
+        ]
