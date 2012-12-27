@@ -10,6 +10,7 @@ module AWS.EC2.VPC
     , deleteVpnGateway
     , deleteCustomerGateway
     , deleteInternetGateway
+    , deleteDhcpOptions
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
@@ -377,3 +378,15 @@ createDhcpOptions confs =
             dhcpConfigurationDhcpValueSet conf
         ]
     params = concat $ map f $ zip numTexts confs
+
+------------------------------------------------------------
+-- deleteDhcpOptions
+------------------------------------------------------------
+deleteDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ DhcpOptionsId
+    -> EC2 m Bool
+deleteDhcpOptions doid =
+    ec2Query "DeleteDhcpOptions" params $ getT "return"
+  where
+    params = [ValueParam "DhcpOptionsId" doid]
