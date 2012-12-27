@@ -14,6 +14,7 @@ module AWS.EC2.VPC
     , describeVpcs
     , describeCustomerGateway
     , describeInternetGateways
+    , describeDhcpOptions
     , attachInternetGateway
     , detachInternetGateway
     ) where
@@ -320,3 +321,36 @@ deleteCustomerGateway
     => Text -- ^ CustomerGatewayId
     -> EC2 m Bool
 deleteCustomerGateway = ec2Delete "DeleteCustomerGateway" "CustomerGatewayId"
+
+------------------------------------------------------------
+-- describeDhcpOptions
+------------------------------------------------------------
+describeDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ DhcpOptionsIds
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m DhcpOptions)
+describeDhcpOptions ids filters =
+    ec2QuerySource "DescribeDhcpOptions" params $
+        itemConduit "dhcpOptionsSet" dhcpOptionsSink
+  where
+    params =
+        [ ArrayParams "DhcpOptionsId" ids
+        , FilterParams filters
+        ]
+
+dhcpOptionsSink :: MonadThrow m
+    => GLSink Event m DhcpOptions
+dhcpOptionsSink = DhcpOptions
+    <$> getT "dhcpOptionsId"
+    <*> itemsSet "dhcpConfigurationSet" dhcpConfigurationSink
+    <*> resourceTagSink
+
+dhcpConfigurationSink :: MonadThrow m
+    => GLSink Event m DhcpConfiguration
+dhcpConfigurationSink = DhcpConfiguration
+    <$> getT "key"
+    <*> itemsSet "valueSet"
+        (DhcpValue
+        <$> getT "value"
+        )

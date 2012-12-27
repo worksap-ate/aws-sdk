@@ -21,6 +21,9 @@ module AWS.EC2.Types
     , CreateVpnGatewayType(..)
     , CustomerGateway(..)
     , CustomerGatewayState(..)
+    , DhcpConfiguration(..)
+    , DhcpOptions(..)
+    , DhcpValue(..)
     , DisassociateAddressRequest(..)
     , EbsBlockDevice(..)
     , EbsInstanceBlockDevice(..)
@@ -1154,6 +1157,24 @@ data InternetGatewayAttachmentState
     | InternetGatewayAttachmentStateDetaching
     | InternetGatewayAttachmentStateDetached
     | InternetGatewayAttachmentStateAvailable
+  deriving (Show, Read, Eq)
+
+data DhcpOptions = DhcpOptions
+    { dhcpOptionsId :: Text
+    , dhcpOptionsDhcpConfigurationSet :: [DhcpConfiguration]
+    , dhcpOptionsTagSet :: [ResourceTag]
+    }
+  deriving (Show, Read, Eq)
+
+data DhcpConfiguration = DhcpConfiguration
+    { dhcpConfigurationKey :: Text
+    , dhcpConfigurationDhcpValueSet :: [DhcpValue]
+    }
+  deriving (Show, Read, Eq)
+
+data DhcpValue = DhcpValue
+    { dhcpValueValue :: Text
+    }
   deriving (Show, Read, Eq)
 
 data NetworkInterface = NetworkInterface
