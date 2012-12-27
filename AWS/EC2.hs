@@ -78,6 +78,6 @@ setRegion name = do
 setEndpoint :: (MonadResource m, MonadBaseControl IO m)
     => ByteString -- ^ ec2 endpoint domain <http://docs.amazonwebservices.com/general/latest/gr/rande.html>
     -> EC2 m ()
-setEndpoint endpoint = do
+setEndpoint ep = do
     ctx <- State.get
-    State.put ctx { endpoint = endpoint }
+    State.put ctx { endpoint = ep }
