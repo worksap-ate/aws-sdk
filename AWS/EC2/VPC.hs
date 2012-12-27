@@ -1,7 +1,9 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AWS.EC2.VPC
-    ( createVpc
+    ( associateDhcpOptions
+    , attachInternetGateway
+    , createVpc
     , createVpnGateway
     , createCustomerGateway
     , createInternetGateway
@@ -17,7 +19,6 @@ module AWS.EC2.VPC
     , describeCustomerGateway
     , describeInternetGateways
     , describeDhcpOptions
-    , attachInternetGateway
     , detachInternetGateway
     ) where
 
@@ -390,3 +391,19 @@ deleteDhcpOptions doid =
     ec2Query "DeleteDhcpOptions" params $ getT "return"
   where
     params = [ValueParam "DhcpOptionsId" doid]
+
+------------------------------------------------------------
+-- associateDhcpOptions
+------------------------------------------------------------
+associateDhcpOptions
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ DhcpOptionsId
+    -> Text -- ^ VpcId
+    -> EC2 m Bool
+associateDhcpOptions doid vpcid =
+    ec2Query "AssociateDhcpOptions" params $ getT "return"
+  where
+    params =
+        [ ValueParam "DhcpOptionsId" doid
+        , ValueParam "VpcId" vpcid
+        ]
