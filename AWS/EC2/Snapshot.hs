@@ -6,10 +6,13 @@ module AWS.EC2.Snapshot
     , deleteSnapshot
     , copySnapshot
     , describeSnapshotAttribute
+    , modifySnapshotAttribute
     ) where
 
+import Data.Maybe (fromMaybe)
+import Data.Monoid ((<>))
 import Data.Text (Text)
-
+import qualified Data.Text as T
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -113,3 +116,30 @@ snapshotAttributeSink = SnapshotAttribute
         <*> getT "group"
         )
     <*> productCodeSink
+
+modifySnapshotAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> CreateVolumePermission -- ^ CreateVolumePermission
+    -> EC2 m Bool
+modifySnapshotAttribute ssid cvp =
+    ec2Query "ModifySnapshotAttribute" params $ getT "return"
+  where
+    params =
+        [ ValueParam "SnapshotId" ssid
+        ] ++ createVolumePermissionParams cvp
+
+createVolumePermissionParams
+    :: CreateVolumePermission
+    -> [QueryParam]
+createVolumePermissionParams cvp =
+    [ param "Add" $ createVolumePermissionAdd cvp
+    , param "Remove" $ createVolumePermissionRemove cvp
+    ]
+  where
+    toTuples (CreateVolumePermissionItem user group) =
+        filter (not . T.null . snd) .
+        map (fmap (fromMaybe "")) $
+        [("UserId", user), ("Group", group)]
+    param t =
+        StructArrayParams ("CreateVolumePermission." <> t) . map toTuples

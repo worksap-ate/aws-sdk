@@ -17,6 +17,7 @@ module AWS.EC2.Types
     , BlockDeviceMappingParam(..)
     , ConsoleOutput(..)
     , CreateSubnetRequest(..)
+    , CreateVolumePermission(..)
     , CreateVolumePermissionItem(..)
     , CreateVolumeRequest(..)
     , CreateVpnGatewayType(..)
@@ -605,6 +606,12 @@ data SnapshotAttribute = SnapshotAttribute
     , snapshotAttributeCreateVolumePermissionItems
         :: [CreateVolumePermissionItem]
     , snapshotAttributeProductCodes :: [ProductCode]
+    }
+  deriving (Show, Read, Eq)
+
+data CreateVolumePermission = CreateVolumePermission
+    { createVolumePermissionAdd :: [CreateVolumePermissionItem]
+    , createVolumePermissionRemove :: [CreateVolumePermissionItem]
     }
   deriving (Show, Read, Eq)
 
