@@ -7,6 +7,7 @@ module AWS.EC2.Snapshot
     , copySnapshot
     , describeSnapshotAttribute
     , modifySnapshotAttribute
+    , resetSnapshotAttribute
     ) where
 
 import Data.Maybe (fromMaybe)
@@ -143,3 +144,18 @@ createVolumePermissionParams cvp =
         [("UserId", user), ("Group", group)]
     param t =
         StructArrayParams ("CreateVolumePermission." <> t) . map toTuples
+
+resetSnapshotAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> ResetSnapshotAttributeRequest -- ^ Attribute
+    -> EC2 m Bool
+resetSnapshotAttribute ssid attr =
+    ec2Query "ResetSnapshotAttribute" params $ getT "return"
+  where
+    params =
+        [ ValueParam "SnapshotId" ssid
+        , ValueParam "Attribute" $ attrText attr
+        ]
+    attrText ResetSnapshotAttributeRequestCreateVolumePermission
+        = "createVolumePermission"

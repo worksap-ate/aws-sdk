@@ -86,6 +86,7 @@ module AWS.EC2.Types
     , RegisterImageRequest(..)
     , Reservation(..)
     , ResetInstanceAttributeRequest(..)
+    , ResetSnapshotAttributeRequest(..)
     , ResourceTag(..)
     , RootDeviceType(..)
     , Route(..)
@@ -599,6 +600,10 @@ data SnapshotStatus
 data SnapshotAttributeRequest
     = SnapshotAttributeRequestCreateVolumePermission
     | SnapshotAttributeRequestProductCodes
+  deriving (Show, Read, Eq)
+
+data ResetSnapshotAttributeRequest
+    = ResetSnapshotAttributeRequestCreateVolumePermission
   deriving (Show, Read, Eq)
 
 data SnapshotAttribute = SnapshotAttribute
