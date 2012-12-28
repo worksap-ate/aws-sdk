@@ -5,6 +5,7 @@ module AWS.EC2.Snapshot
     , createSnapshot
     , deleteSnapshot
     , copySnapshot
+    , describeSnapshotAttribute
     ) where
 
 import Data.Text (Text)
@@ -83,3 +84,32 @@ copySnapshot region sid desc =
     params = [ ValueParam "SourceRegion" region
              , ValueParam "SourceSnapshotId" sid
              ] ++ maybeParams [("Description", desc)]
+
+describeSnapshotAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> SnapshotAttributeRequest -- ^ Attribute
+    -> EC2 m SnapshotAttribute
+describeSnapshotAttribute ssid attr =
+    ec2Query "DescribeSnapshotAttribute" params snapshotAttributeSink
+  where
+    params =
+        [ ValueParam "SnapshotId" ssid
+        , ValueParam "Attribute" $ attrText attr
+        ]
+    attrText SnapshotAttributeRequestCreateVolumePermission
+        = "createVolumePermission"
+    attrText SnapshotAttributeRequestProductCodes
+        = "productCodes"
+
+snapshotAttributeSink
+    :: MonadThrow m
+    => GLSink Event m SnapshotAttribute
+snapshotAttributeSink = SnapshotAttribute
+    <$> getT "snapshotId"
+    <*> itemsSet "createVolumePermission" (
+        CreateVolumePermissionItem
+        <$> getT "userId"
+        <*> getT "group"
+        )
+    <*> productCodeSink
