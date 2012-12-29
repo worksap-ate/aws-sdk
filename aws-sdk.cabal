@@ -1,7 +1,12 @@
 name:                aws-sdk
 version:             0.7.1.0
 synopsis:            AWS SDK for Haskell
-description:         An AWS(Amazon Web Services) liblary for Haskell.
+description: AWS (Amazon Web Services) sdk for Haskell.
+             .
+             This library closesly follows the official sdk.
+             To find more documentation, you can lookup functions in the official sdk docs for other languages:
+             <http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/ec2/model/DescribeInstancesRequest.html>
+
 license:             BSD3
 license-file:        LICENSE
 author:              Yusuke Nomura <yunomu@gmail.com>
