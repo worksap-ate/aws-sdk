@@ -10,10 +10,7 @@ module AWS.EC2.Snapshot
     , resetSnapshotAttribute
     ) where
 
-import Data.Maybe (fromMaybe)
-import Data.Monoid ((<>))
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -36,10 +33,10 @@ describeSnapshots ssids owners restby filters =
         itemConduit "snapshotSet" snapshotSink
   where
     params =
-        [ ArrayParams "SnapshotId" ssids
-        , ArrayParams "Owner" owners
-        , ArrayParams "RestorableBy" restby
-        , FilterParams filters
+        [ "SnapshotId" |.#= ssids
+        , "Owner" |.#= owners
+        , "RestorableBy" |.#= restby
+        , filtersParam filters
         ]
 
 snapshotSink :: MonadThrow m
@@ -64,8 +61,10 @@ createSnapshot
 createSnapshot volid desc =
     ec2Query "CreateSnapshot" params snapshotSink
   where
-    params = [ValueParam "VolumeId" volid]
-        ++ maybe [] (\a -> [ValueParam "Description" a]) desc
+    params =
+        [ "VolumeId" |= volid
+        , "Description" |=? desc
+        ]
 
 deleteSnapshot
     :: (MonadResource m, MonadBaseControl IO m)
@@ -74,7 +73,7 @@ deleteSnapshot
 deleteSnapshot ssid =
     ec2Query "DeleteSnapshot" params $ getT "return"
   where
-    params = [ValueParam "SnapshotId" ssid]
+    params = ["SnapshotId" |= ssid]
 
 copySnapshot
     :: (MonadResource m, MonadBaseControl IO m)
@@ -85,9 +84,10 @@ copySnapshot
 copySnapshot region sid desc =
     ec2Query "CopySnapshot" params $ getT "snapshotId"
   where
-    params = [ ValueParam "SourceRegion" region
-             , ValueParam "SourceSnapshotId" sid
-             ] ++ maybeParams [("Description", desc)]
+    params = [ "SourceRegion" |= region
+             , "SourceSnapshotId" |= sid
+             , "Description" |=? desc
+             ]
 
 describeSnapshotAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -98,8 +98,8 @@ describeSnapshotAttribute ssid attr =
     ec2Query "DescribeSnapshotAttribute" params snapshotAttributeSink
   where
     params =
-        [ ValueParam "SnapshotId" ssid
-        , ValueParam "Attribute" $ attrText attr
+        [ "SnapshotId" |= ssid
+        , "Attribute" |= attrText attr
         ]
     attrText SnapshotAttributeRequestCreateVolumePermission
         = "createVolumePermission"
@@ -127,23 +127,22 @@ modifySnapshotAttribute ssid cvp =
     ec2Query "ModifySnapshotAttribute" params $ getT "return"
   where
     params =
-        [ ValueParam "SnapshotId" ssid
-        ] ++ createVolumePermissionParams cvp
+        [ "SnapshotId" |= ssid
+        , "CreateVolumePermission" |. createVolumePermissionParams cvp
+        ]
 
 createVolumePermissionParams
     :: CreateVolumePermission
     -> [QueryParam]
 createVolumePermissionParams cvp =
-    [ param "Add" $ createVolumePermissionAdd cvp
-    , param "Remove" $ createVolumePermissionRemove cvp
+    [ "Add" |.#. itemParams <$> createVolumePermissionAdd cvp
+    , "Remove" |.#. itemParams <$> createVolumePermissionRemove cvp
     ]
   where
-    toTuples (CreateVolumePermissionItem user group) =
-        filter (not . T.null . snd) .
-        map (fmap (fromMaybe "")) $
-        [("UserId", user), ("Group", group)]
-    param t =
-        StructArrayParams ("CreateVolumePermission." <> t) . map toTuples
+    itemParams item =
+        [ "UserId" |=? createVolumePermissionItemUserId item
+        , "Group" |=? createVolumePermissionItemGroup item
+        ]
 
 resetSnapshotAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -154,8 +153,8 @@ resetSnapshotAttribute ssid attr =
     ec2Query "ResetSnapshotAttribute" params $ getT "return"
   where
     params =
-        [ ValueParam "SnapshotId" ssid
-        , ValueParam "Attribute" $ attrText attr
+        [ "SnapshotId" |= ssid
+        , "Attribute" |= attrText attr
         ]
     attrText ResetSnapshotAttributeRequestCreateVolumePermission
         = "createVolumePermission"

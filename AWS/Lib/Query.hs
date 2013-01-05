@@ -1,10 +1,17 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.Lib.Query
-    ( requestQuery
-    , QueryParam(..)
+    ( QueryParam
     , Filter
-    , maybeParams
+    , (|.+)
+    , putNumberV, putNumberP
+    , filtersParam
+    , maybeParam
+    , nothingParam
+    , (|=), (|.)
+    , (|=?), (|.?)
+    , (|.#=), (|.#.)
+    , requestQuery
     , commonQuery
 #ifdef DEBUG
     , debugQuery
@@ -19,6 +26,7 @@ import qualified Data.ByteString.Char8 as BSC
 import Data.Text (Text)
 import qualified Data.Text as T
 
+import Data.List (transpose)
 import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Conduit
@@ -49,11 +57,71 @@ import qualified Data.Conduit.Binary as CB
 #endif
 
 data QueryParam
-    = ArrayParams Text [Text]
-    | FilterParams [Filter]
-    | ValueParam Text Text
-    | StructArrayParams Text [[(Text, Text)]]
-  deriving (Show)
+    = Leaf Text Text
+    | Inner Text [QueryParam]
+
+infixr 3 |.+
+(|.+) :: Text -> QueryParam -> QueryParam
+t |.+ (Leaf k v) = t <> "." <> k |= v
+t |.+ (Inner k ps) = t <> "." <> k |. ps
+
+paramsToMap :: [QueryParam] -> Map ByteString ByteString
+paramsToMap = Map.fromList . map tup . concat . map partition
+  where
+    tup (Leaf k v) = (textToBS k, textToBS v)
+    tup (Inner _ _) = error "partition param error"
+
+-- | partition to unit
+partition :: QueryParam -> [QueryParam]
+partition p@(Leaf _ _) = [p]
+partition (Inner k ps) = concat $ map (partition . (k |.+)) ps
+
+-- | put a number to each value
+putNumberV :: [Text] -> [QueryParam]
+putNumberV = map (uncurry Leaf) . zip (map toText ([1..] :: [Int]))
+
+-- | put a number to each params
+putNumberP :: [[QueryParam]] -> [QueryParam]
+putNumberP = map (uncurry Inner) . zip (map toText ([1..] :: [Int]))
+
+filtersParam :: [Filter] -> QueryParam
+filtersParam filters = "Filter" |.#. transpose [keyParams, valParams]
+  where
+    keyParams = map (("Key" |=) . fst) filters
+    valParams = map (("Value" |.#=) . snd) filters
+
+maybeParam :: Maybe QueryParam -> QueryParam
+maybeParam (Just p) = p
+maybeParam Nothing = nothingParam
+
+nothingParam :: QueryParam
+nothingParam = Inner "" []
+
+infixr 3 |=
+(|=) :: Text -> Text -> QueryParam
+(|=) = Leaf
+
+infixr 3 |.
+(|.) :: Text -> [QueryParam] -> QueryParam
+(|.) = Inner
+
+infixr 3 |=?
+(|=?) :: Text -> Maybe Text -> QueryParam
+t |=? (Just a) = t |= a
+_ |=? Nothing = nothingParam
+
+infixr 3 |.?
+(|.?) :: Text -> Maybe [QueryParam] -> QueryParam
+t |.? (Just ps) = t |. ps
+_ |.? Nothing = nothingParam
+
+infixr 3 |.#=
+(|.#=) :: Text -> [Text] -> QueryParam
+t |.#= ts = t |. putNumberV ts
+
+infixr 3 |.#.
+(|.#.) :: Text -> [[QueryParam]] -> QueryParam
+t |.#. ps = t |. putNumberP ps
 
 queryHeader
     :: ByteString
@@ -87,34 +155,10 @@ mkUrl ep cred time action params ver = mconcat
     ]
   where
     qheader = Map.fromList $ queryHeader action time cred ver
-    qparam = queryStr $ Map.unions (qheader : map toArrayParams params)
+    qparam = queryStr $ Map.union qheader $ paramsToMap params
 
 textToBS :: Text -> ByteString
 textToBS = BSC.pack . T.unpack
-
-toArrayParams :: QueryParam -> Map ByteString ByteString
-toArrayParams (ArrayParams name params) = Map.fromList 
-    [ (textToBS name <> "." <> bsShow i, textToBS param)
-    | (i, param) <- zip ([1..]::[Int]) params
-    ]
-toArrayParams (FilterParams kvs) =
-    Map.fromList . concat . map f1 $ zip ([1..]::[Int]) kvs
-  where
-    f1 (n, (key, vals)) = (filt n <> ".Name", textToBS key) :
-        [ (filt n <> ".Value." <> bsShow i, textToBS param)
-        | (i, param) <- zip ([1..]::[Int]) vals
-        ]
-    filt n = "Filter." <> bsShow n
-toArrayParams (ValueParam k v) =
-    Map.singleton (textToBS k) (textToBS v)
-toArrayParams (StructArrayParams name vss) = Map.fromList l
-  where
-    bsName =  textToBS name
-    struct n (k, v) = (n <> "." <> textToBS k, textToBS v)
-    l = mconcat
-        [ map (struct (bsName <> "." <> bsShow i)) kvs
-        | (i, kvs) <- zip ([1..]::[Int]) vss
-        ]
 
 queryStr :: Map ByteString ByteString -> ByteString
 queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
@@ -175,11 +219,6 @@ requestQuery cred ctx action params ver errSink = do
         else do
             clientError st body $ errSink action
             fail "not reached"
-
-maybeParams :: [(Text, Maybe Text)] -> [QueryParam]
-maybeParams params = params >>= uncurry mk
-  where
-    mk name = maybe [] (\a -> [ValueParam name a])
 
 commonQuery
     :: (MonadBaseControl IO m, MonadResource m)

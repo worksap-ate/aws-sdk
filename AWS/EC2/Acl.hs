@@ -32,8 +32,8 @@ describeNetworkAcls nids filters = do
         itemConduit "networkAclSet" networkAclSink
   where
     params =
-        [ ArrayParams "NetworkAclId" nids
-        , FilterParams filters
+        [ "NetworkAclId" |.#= nids
+        , filtersParam filters
         ]
 
 networkAclSink :: MonadThrow m
@@ -70,7 +70,7 @@ createNetworkAcl vpcid =
     ec2Query "CreateNetworkAcl" params $
         element "networkAcl" networkAclSink
   where
-    params = [ValueParam "VpcId" vpcid]
+    params = ["VpcId" |= vpcid]
 
 deleteNetworkAcl
     :: (MonadResource m, MonadBaseControl IO m)
@@ -88,8 +88,8 @@ replaceNetworkAclAssociation assoc aclid =
         getT "newAssociationId"
   where
     params =
-        [ ValueParam "AssociationId" assoc
-        , ValueParam "NetworkAclId" aclid
+        [ "AssociationId" |= assoc
+        , "NetworkAclId" |= aclid
         ]
 
 createNetworkAclEntry
@@ -103,39 +103,33 @@ createNetworkAclEntry req =
 
 reqToParams :: NetworkAclEntryRequest -> [QueryParam]
 reqToParams req =
-        [ ValueParam "NetworkAclId" $
+        [ "NetworkAclId" |=
             networkAclEntryRequestNetworkAclId req
-        , ValueParam "RuleNumber" $
-            toText $ networkAclEntryRequestRuleNumber req
-        , ValueParam "Protocol" $
-            toText $ networkAclEntryRequestProtocol req
-        , ValueParam "RuleAction" $
-            ruleToText $ networkAclEntryRequestRuleAction req
-        , ValueParam "CidrBlock" $
+        , "RuleNumber" |=
+            toText (networkAclEntryRequestRuleNumber req)
+        , "Protocol" |=
+            toText (networkAclEntryRequestProtocol req)
+        , "RuleAction" |=
+            ruleToText (networkAclEntryRequestRuleAction req)
+        , "CidrBlock" |=
             networkAclEntryRequestCidrBlock req
-        , ValueParam "Egress" $
-            boolToText $ networkAclEntryRequestEgress req
-        ] ++ maybeParams
-        [ ("Icmp.Code",
-            toText
-            <$> icmpTypeCodeCode
-            <$> networkAclEntryRequestIcmp req)
-        , ("Icmp.Type",
-            toText
-            <$> icmpTypeCodeType
-            <$> networkAclEntryRequestIcmp req)
-        , ("PortRange.From",
-            toText
-            <$> portRangeFrom
-            <$> networkAclEntryRequestPortRange req)
-        , ("PortRange.To",
-            toText
-            <$> portRangeTo
-            <$> networkAclEntryRequestPortRange req)
+        , "Egress" |=
+            boolToText (networkAclEntryRequestEgress req)
+        , "Icmp" |.? icmpParams <$> networkAclEntryRequestIcmp req
+        , "PortRange" |.?
+             portRangeParams <$> networkAclEntryRequestPortRange req
         ]
   where
     ruleToText NetworkAclRuleActionAllow = "allow"
     ruleToText NetworkAclRuleActionDeny = "deny"
+    icmpParams icmp =
+        [ "Code" |= toText (icmpTypeCodeCode icmp)
+        , "Type" |= toText (icmpTypeCodeType icmp)
+        ]
+    portRangeParams pr =
+        [ "From" |= toText (portRangeFrom pr)
+        , "To" |= toText (portRangeTo pr)
+        ]
 
 deleteNetworkAclEntry
     :: (MonadResource m, MonadBaseControl IO m)
@@ -147,9 +141,9 @@ deleteNetworkAclEntry aclid rule egress =
     ec2Query "DeleteNetworkAclEntry" params $ getT "return"
   where
     params =
-        [ ValueParam "NetworkAclId" aclid
-        , ValueParam "RuleNumber" $ toText rule
-        , ValueParam "Egress" $ boolToText egress
+        [ "NetworkAclId" |= aclid
+        , "RuleNumber" |= toText rule
+        , "Egress" |= boolToText egress
         ]
 
 replaceNetworkAclEntry

@@ -31,8 +31,8 @@ describeSubnets subnets filters = do
         itemConduit "subnetSet" subnetSink
   where
     params =
-        [ ArrayParams "SubnetId" subnets
-        , FilterParams filters
+        [ "SubnetId" |.#= subnets
+        , filtersParam filters
         ]
 
 subnetSink :: MonadThrow m
@@ -56,16 +56,17 @@ createSubnet
     => CreateSubnetRequest
     -> EC2 m Subnet
 createSubnet param =
-    ec2Query "CreateSubnet" param' $
+    ec2Query "CreateSubnet" params $
           element "subnet" subnetSink
   where
-    param' = createSubnetParam param
+    params = createSubnetParams param
 
-createSubnetParam :: CreateSubnetRequest -> [QueryParam]
-createSubnetParam (CreateSubnetRequest vid cidr zone) =
-    [ ValueParam "VpcId" vid
-    , ValueParam "CidrBlock" $ toText cidr
-    ] ++ maybe [] (\a -> [ValueParam "AvailabilityZone" a]) zone
+createSubnetParams :: CreateSubnetRequest -> [QueryParam]
+createSubnetParams (CreateSubnetRequest vid cidr zone) =
+    [ "VpcId" |= vid
+    , "CidrBlock" |= toText cidr
+    , "AvailabilityZone" |=? zone
+    ]
 
 ------------------------------------------------------------
 -- DeleteSubnet

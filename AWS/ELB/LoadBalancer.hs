@@ -24,8 +24,10 @@ describeLoadBalancers
 describeLoadBalancers lbs marker =
     elbQuery "DescribeLoadBalancers" params sinkLoadBalancers
   where
-    params = [ArrayParams "LoadBalancerNames.member" lbs]
-        ++ maybe [] (\a -> [ValueParam "Marker" a]) marker
+    params =
+        [ "LoadBalancerNames.member" |.#= lbs
+        , "Marker" |=? marker
+        ]
 
 sinkLoadBalancers :: MonadThrow m
     => GLSink Event m [LoadBalancerDescription]

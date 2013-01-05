@@ -29,12 +29,13 @@ assignPrivateIpAddresses
 assignPrivateIpAddresses niid epip ar =
     ec2Query "AssignPrivateIpAddresses" params $ getT "return"
   where
-    params = [ValueParam "NetworkInterfaceId" niid]
-        ++ either f g epip
-        ++ maybeParams [("AllowReassignment", boolToText <$> ar)]
-    f addrs = [privateIpAddressesParam "PrivateIpAddress" addrs]
-    g cnt = [ValueParam "SecondaryPrivateIpAddressCount"
-        $ toText cnt]
+    params =
+        [ "NetworkInterfaceId" |= niid
+        , either f g epip
+        , "AllowReassignment" |=? boolToText <$> ar
+        ]
+    f = privateIpAddressesParam "PrivateIpAddress"
+    g = ("SecondaryPrivateIpAddressCount" |=) . toText
 
 unassignPrivateIpAddresses
     :: (MonadBaseControl IO m, MonadResource m)
@@ -45,7 +46,7 @@ unassignPrivateIpAddresses niid addrs =
     ec2Query "UnassignPrivateIpAddresses" params $ getT "return"
   where
     params =
-        [ ValueParam "NetworkInterfaceId" niid
+        [ "NetworkInterfaceId" |= niid
         , privateIpAddressesParam "PrivateIpAddress" addrs
         ]
 
@@ -59,8 +60,8 @@ describeNetworkInterfaces niid filters =
         $ itemConduit "networkInterfaceSet" networkInterfaceSink
   where
     params =
-        [ ArrayParams "NetworkInterfaceId" niid
-        , FilterParams filters
+        [ "NetworkInterfaceId" |.#= niid
+        , filtersParam filters
         ]
 
 networkInterfaceSink

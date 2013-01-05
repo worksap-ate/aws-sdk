@@ -10,8 +10,6 @@ module AWS.EC2.Image
     ) where
 
 import Data.Text (Text)
-import qualified Data.Text as T
-
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -34,13 +32,12 @@ describeImages
     -> EC2 m (ResumableSource m Image)
 describeImages imageIds owners execby filters =
     ec2QuerySource "DescribeImages" params $ itemConduit "imagesSet" imageItem
---    ec2QueryDebug "DescribeImages" params
   where
     params =
-        [ ArrayParams "ImageId" imageIds
-        , ArrayParams "Owner" owners
-        , ArrayParams "ExecutableBy" execby
-        , FilterParams filters
+        [ "ImageId" |.#= imageIds
+        , "Owner" |.#= owners
+        , "ExecutableBy" |.#= execby
+        , filtersParam filters
         ]
 
 imageItem :: MonadThrow m
@@ -95,13 +92,13 @@ createImage
 createImage iid name desc noReboot bdms =
     ec2Query "CreateImage" params $ getT "imageId"
   where
-    param n = maybe [] (\a -> [ValueParam n a])
     params =
-        [ ValueParam "InstanceId" iid
-        , ValueParam "Name" name
-        , ValueParam "NoReboot" (boolToText noReboot)
-        ] ++ param "Description" desc
-          ++ [blockDeviceMappingParams bdms]
+        [ "InstanceId" |= iid
+        , "Name" |= name
+        , "NoReboot" |= boolToText noReboot
+        , "Description" |=? desc
+        , blockDeviceMappingsParam bdms
+        ]
 
 registerImage
     :: (MonadResource m, MonadBaseControl IO m)
@@ -110,23 +107,17 @@ registerImage
 registerImage req =
     ec2Query "RegisterImage" params $ getT "imageId"
   where
-    params = [ValueParam "Name" $ registerImageRequestName req]
-        ++ [blockDeviceMappingParams
-            $ registerImageRequestBlockDeviceMappings req]
-        ++ maybeParams
-            [ ("ImageLocation"
-              , registerImageRequestImageLocation req
-              )
-            , ("Description", registerImageRequestDescription req)
-            , ("Architecture"
-              , registerImageRequestArchitecture req
-              )
-            , ("KernelId", registerImageRequestKernelId req)
-            , ("RamdiskId", registerImageRequestRamdiskId req)
-            , ("RootDeviceName"
-              , registerImageRequestRootDeviceName req
-              )
-            ]
+    params =
+        [ "Name" |= registerImageRequestName req
+        , "ImageLocation" |=? registerImageRequestImageLocation req
+        , "Description" |=? registerImageRequestDescription req
+        , "Architecture" |=? registerImageRequestArchitecture req
+        , "KernelId" |=? registerImageRequestKernelId req
+        , "RamdiskId" |=? registerImageRequestRamdiskId req
+        , "RootDeviceName" |=? registerImageRequestRootDeviceName req
+        , blockDeviceMappingsParam $
+            registerImageRequestBlockDeviceMappings req
+        ]
 
 deregisterImage
     :: (MonadResource m, MonadBaseControl IO m)
@@ -135,7 +126,7 @@ deregisterImage
 deregisterImage iid =
     ec2Query "DeregisterImage" params $ getT "return"
   where
-    params = [ValueParam "ImageId" iid]
+    params = ["ImageId" |= iid]
 
 describeImageAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -158,17 +149,15 @@ describeImageAttribute iid attr =
         <*> blockDeviceMappingSink
   where
     getMMT name = join <$> elementM name (getT "value")
-    params = [ ValueParam "ImageId" iid
-             , ValueParam "Attribute" param
+    params = [ "ImageId" |= iid
+             , "Attribute" |= attrText attr
              ]
-    param :: Text
-    param | attr == AMIDescription        = "description"
-          | attr == AMIKernel             = "kernel"
-          | attr == AMIRamdisk            = "ramdisk"
-          | attr == AMILaunchPermission   = "launchPermission"
-          | attr == AMIProductCodes       = "productCodes"
-          | attr == AMIBlockDeviceMapping = "blockDeviceMapping"
-          | otherwise                     = err "AMIAttribute" $ T.pack $ show attr
+    attrText AMIDescription        = "description"
+    attrText AMIKernel             = "kernel"
+    attrText AMIRamdisk            = "ramdisk"
+    attrText AMILaunchPermission   = "launchPermission"
+    attrText AMIProductCodes       = "productCodes"
+    attrText AMIBlockDeviceMapping = "blockDeviceMapping"
 
 modifyImageAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -181,18 +170,19 @@ modifyImageAttribute iid lp pcs desc =
     ec2Query "ModifyImageAttribute" params $ getT "return"
   where
     params =
-        [ ValueParam "ImageId" iid
-        , ArrayParams "ProductCode" pcs
-        ] ++ launchPermissionParams lp
-          ++ maybeParams [ ("Description.Value", desc) ]
+        [ "ImageId" |= iid
+        , "ProductCode" |.#= pcs
+        , "LaunchPermission" |. launchPermissionParams lp
+        , "Description" |.+ "Value" |=? desc
+        ]
 
 launchPermissionParams :: LaunchPermission -> [QueryParam]
 launchPermissionParams lp =
-    [ params "Add" $ launchPermissionAdd lp
-    , params "Remove" $ launchPermissionRemove lp
+    [ "Add" |.#. map itemParams (launchPermissionAdd lp)
+    , "Remove" |.#. map itemParams (launchPermissionRemove lp)
     ]
   where
-    toTuples (LaunchPermissionItem group user) =
-        filter (not . T.null . snd) [("Group", group), ("UserId", user)]
-    params t =
-        StructArrayParams ("LaunchPermission." `T.append` t) . map toTuples
+    itemParams item =
+        [ "Group" |= launchPermissionItemGroup item
+        , "UserId" |= launchPermissionUserId item
+        ]

@@ -7,7 +7,6 @@ module AWS.EC2.Tag
     ) where
 
 import Data.Text (Text)
-import Data.Monoid
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
@@ -16,7 +15,6 @@ import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.Lib.Parser
-import AWS.Util
 
 describeTags
     :: (MonadResource m, MonadBaseControl IO m)
@@ -30,7 +28,7 @@ describeTags filters =
         <*> getT "key"
         <*> getT "value"
   where
-    params = [FilterParams filters]
+    params = [filtersParam filters]
 
 createTags
     :: (MonadResource m, MonadBaseControl IO m)
@@ -41,11 +39,12 @@ createTags rids kvs =
     ec2Query "CreateTags" params $ getT "return"
   where
     params =
-        [ ArrayParams "ResourceId" rids ]
-        ++ concatMap (uncurry tags) (zip ([1..]::[Int]) kvs)
-    tags n (k, v) =
-        [ ValueParam ("Tag." <> toText n <> ".Key") k
-        , ValueParam ("Tag." <> toText n <> ".Value") v
+        [ "ResourceId" |.#= rids
+        , "Tag" |.#. map tagParams kvs
+        ]
+    tagParams (k, v) =
+        [ "Key" |= k
+        , "Value" |= v
         ]
 
 deleteTags
@@ -57,11 +56,10 @@ deleteTags rids tags =
     ec2Query "DeleteTags" params $ getT "return"
   where
     params =
-        [ ArrayParams "ResourceId" rids ]
-        ++ concatMap (uncurry tagParam) (zip ([1..]::[Int]) tags)
-    tagParam n tag =
-        [ ValueParam ("Tag." <> toText n <> ".Key")
-         $ resourceTagKey tag ]
-        ++ maybe []
-            (\a -> [ValueParam ("Tag." <> toText n <> ".Value") a])
-            (resourceTagValue tag)
+        [ "ResourceId" |.#= rids
+        , "Tag" |.#. map tagParams tags
+        ]
+    tagParams tag =
+        [ "Key" |= resourceTagKey tag
+        , "Value" |=? resourceTagValue tag
+        ]

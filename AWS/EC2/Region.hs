@@ -25,8 +25,8 @@ describeRegions regions filters =
     ec2QuerySource "DescribeRegions" params regionInfoConduit
   where
     params =
-        [ ArrayParams "RegionName" regions
-        , FilterParams filters
+        [ "RegionName" |.#= regions
+        , filtersParam filters
         ]
     regionInfoConduit :: MonadThrow m
         => GLConduit Event m Region
