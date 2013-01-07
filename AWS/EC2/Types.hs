@@ -17,6 +17,8 @@ module AWS.EC2.Types
     , BlockDeviceMappingParam(..)
     , ConsoleOutput(..)
     , CreateSubnetRequest(..)
+    , CreateVolumePermission(..)
+    , CreateVolumePermissionItem(..)
     , CreateVolumeRequest(..)
     , CreateVpnGatewayType(..)
     , CustomerGateway(..)
@@ -84,6 +86,7 @@ module AWS.EC2.Types
     , RegisterImageRequest(..)
     , Reservation(..)
     , ResetInstanceAttributeRequest(..)
+    , ResetSnapshotAttributeRequest(..)
     , ResourceTag(..)
     , RootDeviceType(..)
     , Route(..)
@@ -97,6 +100,8 @@ module AWS.EC2.Types
     , SecurityGroupRequest(..)
     , ShutdownBehavior(..)
     , Snapshot(..)
+    , SnapshotAttribute(..)
+    , SnapshotAttributeRequest(..)
     , SnapshotStatus(..)
     , StateReason(..)
     , Subnet(..)
@@ -590,6 +595,35 @@ data SnapshotStatus
     = SnapshotPending
     | SnapshotCompleted
     | SnapshotError
+  deriving (Show, Read, Eq)
+
+data SnapshotAttributeRequest
+    = SnapshotAttributeRequestCreateVolumePermission
+    | SnapshotAttributeRequestProductCodes
+  deriving (Show, Read, Eq)
+
+data ResetSnapshotAttributeRequest
+    = ResetSnapshotAttributeRequestCreateVolumePermission
+  deriving (Show, Read, Eq)
+
+data SnapshotAttribute = SnapshotAttribute
+    { snapshotAttributeSnapshotId :: Text
+    , snapshotAttributeCreateVolumePermissionItems
+        :: [CreateVolumePermissionItem]
+    , snapshotAttributeProductCodes :: [ProductCode]
+    }
+  deriving (Show, Read, Eq)
+
+data CreateVolumePermission = CreateVolumePermission
+    { createVolumePermissionAdd :: [CreateVolumePermissionItem]
+    , createVolumePermissionRemove :: [CreateVolumePermissionItem]
+    }
+  deriving (Show, Read, Eq)
+
+data CreateVolumePermissionItem = CreateVolumePermissionItem
+    { createVolumePermissionItemUserId :: Maybe Text
+    , createVolumePermissionItemGroup :: Maybe Text
+    }
   deriving (Show, Read, Eq)
 
 data Volume = Volume

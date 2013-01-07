@@ -5,10 +5,15 @@ module AWS.EC2.Snapshot
     , createSnapshot
     , deleteSnapshot
     , copySnapshot
+    , describeSnapshotAttribute
+    , modifySnapshotAttribute
+    , resetSnapshotAttribute
     ) where
 
+import Data.Maybe (fromMaybe)
+import Data.Monoid ((<>))
 import Data.Text (Text)
-
+import qualified Data.Text as T
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -83,3 +88,74 @@ copySnapshot region sid desc =
     params = [ ValueParam "SourceRegion" region
              , ValueParam "SourceSnapshotId" sid
              ] ++ maybeParams [("Description", desc)]
+
+describeSnapshotAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> SnapshotAttributeRequest -- ^ Attribute
+    -> EC2 m SnapshotAttribute
+describeSnapshotAttribute ssid attr =
+    ec2Query "DescribeSnapshotAttribute" params snapshotAttributeSink
+  where
+    params =
+        [ ValueParam "SnapshotId" ssid
+        , ValueParam "Attribute" $ attrText attr
+        ]
+    attrText SnapshotAttributeRequestCreateVolumePermission
+        = "createVolumePermission"
+    attrText SnapshotAttributeRequestProductCodes
+        = "productCodes"
+
+snapshotAttributeSink
+    :: MonadThrow m
+    => GLSink Event m SnapshotAttribute
+snapshotAttributeSink = SnapshotAttribute
+    <$> getT "snapshotId"
+    <*> itemsSet "createVolumePermission" (
+        CreateVolumePermissionItem
+        <$> getT "userId"
+        <*> getT "group"
+        )
+    <*> productCodeSink
+
+modifySnapshotAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> CreateVolumePermission -- ^ CreateVolumePermission
+    -> EC2 m Bool
+modifySnapshotAttribute ssid cvp =
+    ec2Query "ModifySnapshotAttribute" params $ getT "return"
+  where
+    params =
+        [ ValueParam "SnapshotId" ssid
+        ] ++ createVolumePermissionParams cvp
+
+createVolumePermissionParams
+    :: CreateVolumePermission
+    -> [QueryParam]
+createVolumePermissionParams cvp =
+    [ param "Add" $ createVolumePermissionAdd cvp
+    , param "Remove" $ createVolumePermissionRemove cvp
+    ]
+  where
+    toTuples (CreateVolumePermissionItem user group) =
+        filter (not . T.null . snd) .
+        map (fmap (fromMaybe "")) $
+        [("UserId", user), ("Group", group)]
+    param t =
+        StructArrayParams ("CreateVolumePermission." <> t) . map toTuples
+
+resetSnapshotAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SnapshotId
+    -> ResetSnapshotAttributeRequest -- ^ Attribute
+    -> EC2 m Bool
+resetSnapshotAttribute ssid attr =
+    ec2Query "ResetSnapshotAttribute" params $ getT "return"
+  where
+    params =
+        [ ValueParam "SnapshotId" ssid
+        , ValueParam "Attribute" $ attrText attr
+        ]
+    attrText ResetSnapshotAttributeRequestCreateVolumePermission
+        = "createVolumePermission"
