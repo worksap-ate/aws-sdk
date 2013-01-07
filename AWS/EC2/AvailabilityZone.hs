@@ -25,8 +25,8 @@ describeAvailabilityZones zones filters =
     ec2QuerySource "DescribeAvailabilityZones" params availabilityZoneInfo
   where
     params =
-        [ ArrayParams "ZoneName" zones
-        , FilterParams filters
+        [ "ZoneName" |.#= zones
+        , filtersParam filters
         ]
     availabilityZoneInfo :: MonadThrow m
         => GLConduit Event m AvailabilityZone

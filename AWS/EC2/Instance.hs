@@ -23,7 +23,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Map as Map
-import Data.Monoid
 import Control.Monad
 
 import AWS.EC2.Internal
@@ -46,8 +45,8 @@ describeInstances instances filters = do
         itemConduit "reservationSet" reservationSink
   where
     params =
-        [ ArrayParams "InstanceId" instances
-        , FilterParams filters
+        [ "InstanceId" |.#= instances
+        , filtersParam filters
         ]
 
 reservationSink :: MonadThrow m
@@ -199,9 +198,9 @@ describeInstanceStatus instanceIds isAll filters token =
     ec2QuerySource' "DescribeInstanceStatus" params token instanceStatusSet
   where
     params =
-        [ ArrayParams "InstanceId" instanceIds
-        , ValueParam "IncludeAllInstances" $ boolToText isAll
-        , FilterParams filters
+        [ "InstanceId" |.#= instanceIds
+        , "IncludeAllInstances" |= boolToText isAll
+        , filtersParam filters
         ]
 
 instanceStatusSet :: MonadThrow m
@@ -244,7 +243,7 @@ startInstances
 startInstances instanceIds =
     ec2QuerySource "StartInstances" params instanceStateChangeSet
   where
-    params = [ArrayParams "InstanceId" instanceIds]
+    params = ["InstanceId" |.#= instanceIds]
 
 instanceStateChangeSet
     :: (MonadResource m, MonadBaseControl IO m)
@@ -267,8 +266,8 @@ stopInstances instanceIds force =
     ec2QuerySource "StopInstances" params instanceStateChangeSet
   where
     params =
-        [ ArrayParams "InstanceId" instanceIds
-        , ValueParam "Force" $ boolToText force]
+        [ "InstanceId" |.#= instanceIds
+        , "Force" |= boolToText force]
 
 ------------------------------------------------------------
 -- RebootInstances
@@ -280,7 +279,7 @@ rebootInstances
 rebootInstances instanceIds =
     ec2Query "RebootInstances" params $ getT "return"
   where
-    params = [ArrayParams "InstanceId" instanceIds]
+    params = ["InstanceId" |.#= instanceIds]
 
 ------------------------------------------------------------
 -- TerminateInstances
@@ -293,7 +292,7 @@ terminateInstances instanceIds =
     ec2QuerySource "TerminateInstances" params
         instanceStateChangeSet
   where
-    params = [ArrayParams "InstanceId" instanceIds]
+    params = ["InstanceId" |.#= instanceIds]
 
 ------------------------------------------------------------
 -- RunInstances
@@ -307,69 +306,47 @@ runInstances param =
     ec2Query "RunInstances" params reservationSink
   where
     params =
-        [ ValueParam "ImageId" $ runInstancesRequestImageId param
-        , ValueParam "MinCount"
-            $ toText $ runInstancesRequestMinCount param
-        , ValueParam "MaxCount"
-            $ toText $ runInstancesRequestMaxCount param
-        , ArrayParams "SecurityGroupId"
-            $ runInstancesRequestSecurityGroupIds param
-        , ArrayParams "SecurityGroup"
-            $ runInstancesRequestSecurityGroups param
-        , blockDeviceMappingParams
-            $ runInstancesRequestBlockDeviceMappings param
-        ] ++ networkInterfaceParams
-             (runInstancesRequestNetworkInterfaces param)
-          ++ maybeParams
-            [ ("KeyName", runInstancesRequestKeyName param)
-            , ("UserData"
-              , bsToText <$> runInstancesRequestUserData param
-              )
-            , ("InstanceType"
-              , runInstancesRequestInstanceType param
-              )
-            , ("Placement.AvailabilityZone"
-              , runInstancesRequestAvailabilityZone param
-              )
-            , ("Placement.GroupName"
-              , runInstancesRequestPlacementGroup param
-              )
-            , ("Placement.Tenancy"
-              , runInstancesRequestTenancy param
-              )
-            , ("KernelId", runInstancesRequestKernelId param)
-            , ("RamdiskId", runInstancesRequestRamdiskId param)
-            , ("Monitoring.Enabled"
-              , boolToText
-                <$> runInstancesRequestMonitoringEnabled param
-              )
-            , ("SubnetId", runInstancesRequestSubnetId param)
-            , ("DisableApiTermination"
-              , boolToText
-                <$> runInstancesRequestDisableApiTermination param
-              )
-            , ("InstanceInitiatedShutdownBehavior"
-              , sbToText
-                <$> runInstancesRequestShutdownBehavior param
-              )
-            , ("PrivateIpAddress"
-              , toText
-                <$> runInstancesRequestPrivateIpAddress param
-              )
-            , ("ClientToken", runInstancesRequestClientToken param)
-            , ("IamInstanceProfile.Arn"
-              , iamInstanceProfileArn
-                <$> runInstancesRequestIamInstanceProfile param
-              )
-            , ("IamInstanceProfile.Name"
-              , iamInstanceProfileId
-                <$> runInstancesRequestIamInstanceProfile param
-              )
-            , ("EbsOptimized"
-              , boolToText
-                <$> runInstancesRequestEbsOptimized param
-              )
+        [ "ImageId" |= runInstancesRequestImageId param
+        , "MinCount" |= toText (runInstancesRequestMinCount param)
+        , "MaxCount" |= toText (runInstancesRequestMaxCount param)
+        , "KeyName" |=? runInstancesRequestKeyName param
+        , "SecurityGroupId" |.#= runInstancesRequestSecurityGroupIds param
+        , "SecurityGroup" |.#= runInstancesRequestSecurityGroups param
+        , "UserData" |=? bsToText <$> runInstancesRequestUserData param
+        , "InstanceType" |=? runInstancesRequestInstanceType param
+        , "Placement" |.
+            [ "AvailabilityZone" |=?
+                runInstancesRequestAvailabilityZone param
+            , "GroupName" |=?
+                runInstancesRequestPlacementGroup param
+            , "Tenancy" |=?
+                runInstancesRequestTenancy param
             ]
+        , "KernelId" |=? runInstancesRequestKernelId param
+        , "RamdiskId" |=? runInstancesRequestRamdiskId param
+        , blockDeviceMappingsParam $
+            runInstancesRequestBlockDeviceMappings param
+        , "Monitoring" |.+ "Enabled" |=?
+            boolToText <$> runInstancesRequestMonitoringEnabled param
+        , "SubnetId" |=? runInstancesRequestSubnetId param
+        , "DisableApiTermination" |=?
+            boolToText <$> runInstancesRequestDisableApiTermination param
+        , "InstanceInitiatedShutdownBehavior" |=?
+            sbToText <$> runInstancesRequestShutdownBehavior param
+        , "PrivateIpAddress" |=?
+            toText <$> runInstancesRequestPrivateIpAddress param
+        , "ClientToken" |=? runInstancesRequestClientToken param
+        , "NetworkInterface" |.#. map networkInterfaceParams
+            (runInstancesRequestNetworkInterfaces param)
+        , "IamInstanceProfile" |.? iamInstanceProfileParams <$>
+            runInstancesRequestIamInstanceProfile param
+        , "EbsOptimized" |=?
+            boolToText <$> runInstancesRequestEbsOptimized param
+        ]
+    iamInstanceProfileParams iam =
+        [ "Arn" |= iamInstanceProfileArn iam
+        , "Name" |= iamInstanceProfileId iam
+        ]
 
 -- | RunInstances parameter utility
 defaultRunInstancesRequest
@@ -403,41 +380,30 @@ defaultRunInstancesRequest iid minCount maxCount
         Nothing
         Nothing
 
-networkInterfaceParams :: [NetworkInterfaceParam] -> [QueryParam]
-networkInterfaceParams nips = f 1 nips
+networkInterfaceParams :: NetworkInterfaceParam -> [QueryParam]
+networkInterfaceParams (NetworkInterfaceParamCreate di si d pia pias sgi dot) =
+    [ "DeviceIndex" |= toText di
+    , "SubnetId" |= si
+    , "Description" |= d
+    , "PrivateIpAddress" |=? toText <$> pia
+    , "SecurityGroupId" |.#= sgi
+    , "DeleteOnTermination" |= boolToText dot
+    ] ++ s pias
   where
-    f :: Int -> [NetworkInterfaceParam] -> [QueryParam]
-    f _ [] = []
-    f n (ni:nis) = g n ni ++ f (n + 1) nis
-    g n (NetworkInterfaceParamAttach nid idx dot) =
-        [ ValueParam (p n "NetworkInterfaceId") nid
-        , ValueParam (p n "DeviceIndex") $ toText idx
-        , ValueParam (p n "DeleteOnTermination") $ boolToText dot
+    s SecondaryPrivateIpAddressParamNothing = []
+    s (SecondaryPrivateIpAddressParamCount c) =
+        ["SecondaryPrivateIpAddressCount" |= toText c]
+    s (SecondaryPrivateIpAddressParamSpecified addrs pr) =
+        [ privateIpAddressesParam "PrivateIpAddresses" addrs
+        , maybeParam $ ipAddressPrimaryParam <$> pr
         ]
-    g n (NetworkInterfaceParamCreate idx sn desc pip sip sec dot) =
-        [ ValueParam (p n "DeviceIndex") $ toText idx
-        , ValueParam (p n "SubnetId") sn
-        , ValueParam (p n "Description") desc
-        , ArrayParams (p n "SecurityroupId") sec
-        , ValueParam (p n "DeleteOnTermination") $ boolToText dot
-        ] ++ maybeParams [(p n "PrivateIpAddress", toText <$> pip)]
-          ++ s n sip
-    p n name = "NetworkInterface." <> toText n <> "." <> name
-    s _ SecondaryPrivateIpAddressParamNothing = []
-    s n (SecondaryPrivateIpAddressParamCount c) =
-        [ ValueParam
-          (p n "SecondaryPrivateIpAddressCount")
-          $ toText c
-        ]
-    s n (SecondaryPrivateIpAddressParamSpecified addrs pr) =
-        [ privateIpAddressesParam (p n "PrivateIpAddresses") addrs
-        ] ++ maybe
-            []
-            (\i -> [
-              ValueParam
-              (p n "PrivateIpAddresses." <> toText i <> ".Primary")
-              "true"])
-            pr
+    ipAddressPrimaryParam i =
+        "PrivateIpAddresses" |.+ toText i |.+ "Primary" |= "true"
+networkInterfaceParams (NetworkInterfaceParamAttach nid idx dot) =
+    [ "NetworkInterfaceId" |= nid
+    , "DeviceIndex" |= toText idx
+    , "DeleteOnTermination" |= boolToText dot
+    ]
 
 sbToText :: ShutdownBehavior -> Text
 sbToText ShutdownBehaviorStop      = "stop"
@@ -451,7 +417,7 @@ getConsoleOutput
     => Text -- ^ InstanceId
     -> EC2 m ConsoleOutput
 getConsoleOutput iid =
-    ec2Query "GetConsoleOutput" [ValueParam "InstanceId" iid] $
+    ec2Query "GetConsoleOutput" ["InstanceId" |= iid] $
         ConsoleOutput
         <$> getT "instanceId"
         <*> getT "timestamp"
@@ -465,7 +431,7 @@ getPasswordData
     => Text -- ^ InstanceId
     -> EC2 m PasswordData
 getPasswordData iid =
-    ec2Query "GetPasswordData" [ValueParam "InstanceId" iid] $
+    ec2Query "GetPasswordData" ["InstanceId" |= iid] $
         PasswordData
         <$> getT "instanceId"
         <*> getT "timestamp"
@@ -482,8 +448,8 @@ describeInstanceAttribute iid attr =
   where
     str = iar attr
     params =
-        [ ValueParam "InstanceId" iid
-        , ValueParam "Attribute" str
+        [ "InstanceId" |= iid
+        , "Attribute" |= str
         ]
     f InstanceAttributeRequestBlockDeviceMapping = instanceBlockDeviceMappingsSink
         >>= return . InstanceAttributeBlockDeviceMapping
@@ -544,8 +510,8 @@ resetInstanceAttribute iid attr =
     ec2Query "ResetInstanceAttribute" params $ getT "return"
   where
     params =
-        [ ValueParam "InstanceId" iid
-        , ValueParam "Attribute" $ riap attr
+        [ "InstanceId" |= iid
+        , "Attribute" |= riap attr
         ]
 
 -- | not tested
@@ -557,29 +523,28 @@ modifyInstanceAttribute
 modifyInstanceAttribute iid attrs =
     ec2Query "ModifyInstanceAttribute" params $ getT "return"
   where
-    params = ValueParam "InstanceId" iid:concatMap miap attrs
+    params = ("InstanceId" |= iid) : map miap attrs
 
-miap :: ModifyInstanceAttributeRequest -> [QueryParam]
+miap :: ModifyInstanceAttributeRequest -> QueryParam
 miap (ModifyInstanceAttributeRequestInstanceType a) =
-    [ValueParam "InstanceType.Value" a]
+    "InstanceType" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestKernelId a) =
-    [ValueParam "Kernel.Value"  a]
+    "Kernel" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestRamdiskId a) =
-    [ValueParam "Ramdisk.Value" a]
+    "Ramdisk" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestUserData a) =
-    [ValueParam "UserData.Value" a]
+    "UserData" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestDisableApiTermination a) =
-    [ValueParam "DisableApiTermination.Value" $ toText a]
+    "DisableApiTermination" |.+ "Value" |= toText a
 miap (ModifyInstanceAttributeRequestShutdownBehavior a) =
-    [ValueParam "InstanceInitiatedShutdownBehavior.Value"
-     $ sbToText a]
+    "InstanceInitiatedShutdownBehavior" |.+ "Value" |= sbToText a
 miap (ModifyInstanceAttributeRequestRootDeviceName a) =
-    [ValueParam "RootDeviceName" a]
+    "RootDeviceName" |= a
 miap (ModifyInstanceAttributeRequestBlockDeviceMapping a) =
-    [blockDeviceMappingParams a]
+    blockDeviceMappingsParam a
 miap (ModifyInstanceAttributeRequestSourceDestCheck a) =
-    [ValueParam "SourceDestCheck.Value" $ toText a]
+    "SourceDestCheck" |.+ "Value" |= toText a
 miap (ModifyInstanceAttributeRequestGroupSet a) =
-    [ArrayParams "GroupId" a]
+    "GroupId" |.#= a
 miap (ModifyInstanceAttributeRequestEbsOptimized a) =
-    [ValueParam "EbsOptimized" $ toText a]
+    "EbsOptimized" |= toText a

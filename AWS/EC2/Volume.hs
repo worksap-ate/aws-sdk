@@ -19,6 +19,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Internal
+import AWS.EC2.Params
 import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.Lib.Parser
@@ -34,8 +35,8 @@ describeVolumes vids filters =
         itemConduit "volumeSet" volumeSink
   where
     params =
-        [ ArrayParams "VolumeId" vids
-        , FilterParams filters
+        [ "VolumeId" |.#= vids
+        , filtersParam filters
         ]
 
 volumeSink :: MonadThrow m
@@ -60,14 +61,6 @@ attachmentSink = AttachmentSetItemResponse
     <*> getT "attachTime"
     <*> getT "deleteOnTermination"
 
-volumeTypeParam :: VolumeType -> [QueryParam]
-volumeTypeParam VolumeTypeStandard =
-    [ValueParam "VolumeType" "standard"]
-volumeTypeParam (VolumeTypeIO1 iops) =
-    [ ValueParam "VolumeType" "io1"
-    , ValueParam "Iops" $ toText iops
-    ]
-
 createVolume
     :: (MonadResource m, MonadBaseControl IO m)
     => CreateVolumeRequest
@@ -75,19 +68,18 @@ createVolume
 createVolume param =
     ec2Query "CreateVolume" param' volumeSink
   where
-    param' = createVolumeParam param
+    param' = createVolumeParams param
 
-createVolumeParam :: CreateVolumeRequest -> [QueryParam]
-createVolumeParam (CreateNewVolume size zone vtype) =
-    [ ValueParam "Size" $ toText size
-    , ValueParam "AvailabilityZone" zone
-    ] ++ maybe [] volumeTypeParam vtype
-createVolumeParam (CreateFromSnapshot sid zone size vtype) =
-    [ ValueParam "SnapshotId" sid
-    , ValueParam "AvailabilityZone" zone
-    ]
-    ++ maybe [] (\a -> [ValueParam "Size" $ toText a]) size
-    ++ maybe [] volumeTypeParam vtype
+createVolumeParams :: CreateVolumeRequest -> [QueryParam]
+createVolumeParams (CreateNewVolume size zone vtype) =
+    [ "Size" |= toText size
+    , "AvailabilityZone" |= zone
+    ] ++ maybe [] volumeTypeParams vtype
+createVolumeParams (CreateFromSnapshot sid zone size vtype) =
+    [ "SnapshotId" |= sid
+    , "AvailabilityZone" |= zone
+    , "Size" |=? toText <$> size
+    ] ++ maybe [] volumeTypeParams vtype
 
 deleteVolume
     :: (MonadResource m, MonadBaseControl IO m)
@@ -105,9 +97,9 @@ attachVolume volid iid dev =
     ec2Query "AttachVolume" params attachmentSink
   where
     params =
-        [ ValueParam "VolumeId" volid
-        , ValueParam "InstanceId" iid
-        , ValueParam "Device" dev
+        [ "VolumeId" |= volid
+        , "InstanceId" |= iid
+        , "Device" |= dev
         ]
 
 detachVolume
@@ -120,12 +112,12 @@ detachVolume
 detachVolume volid iid dev force =
     ec2Query "DetachVolume" params attachmentSink
   where
-    params = [ValueParam "VolumeId" volid]
-        ++ maybeParams
-            [ ("InstanceId", iid)
-            , ("Device", dev)
-            , ("Force", toText <$> force)
-            ]
+    params =
+        [ "VolumeId" |= volid
+        , "InstanceId" |=? iid
+        , "Device" |=? dev
+        , "Force" |=? toText <$> force
+        ]
 
 describeVolumeStatus
     :: (MonadResource m, MonadBaseControl IO m)
@@ -138,8 +130,8 @@ describeVolumeStatus vids filters token =
        itemConduit "volumeStatusSet" $ volumeStatusSink
   where
     params =
-        [ ArrayParams "VolumeId" vids
-        , FilterParams filters
+        [ "VolumeId" |.#= vids
+        , filtersParam filters
         ]
 
 volumeStatusSink :: MonadThrow m
@@ -177,8 +169,8 @@ modifyVolumeAttribute vid enable =
     ec2Query "ModifyVolumeAttribute" params $ getT "return"
   where
     params =
-        [ ValueParam "VolumeId" vid
-        , ValueParam "AutoEnableIO.Value" $ boolToText enable
+        [ "VolumeId" |= vid
+        , "AutoEnableIO" |.+ "Value" |= boolToText enable
         ]
 
 enableVolumeIO
@@ -188,7 +180,7 @@ enableVolumeIO
 enableVolumeIO vid =
     ec2Query "EnableVolumeIO" params $ getT "return"
   where
-    params = [ValueParam "VolumeId" vid]
+    params = ["VolumeId" |= vid]
 
 -- | return (volumeId, Attribute)
 describeVolumeAttribute
@@ -202,8 +194,8 @@ describeVolumeAttribute vid attr =
         <*> volumeAttributeSink attr
   where
     params =
-        [ ValueParam "VolumeId" vid
-        , ValueParam "Attribute" $ s attr
+        [ "VolumeId" |= vid
+        , "Attribute" |= s attr
         ]
     s VolumeAttributeRequestAutoEnableIO = "autoEnableIO"
     s VolumeAttributeRequestProductCodes = "productCodes"

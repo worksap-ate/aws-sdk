@@ -17,7 +17,6 @@ import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
-import Data.Monoid
 
 import AWS.EC2.Internal
 import AWS.EC2.Types
@@ -45,9 +44,9 @@ describeSecurityGroups names ids filters =
         <*> resourceTagSink
   where
     params =
-        [ ArrayParams "GroupName" names
-        , ArrayParams "GroupId" ids
-        , FilterParams filters
+        [ "GroupName" |.#= names
+        , "GroupId" |.#= ids
+        , filtersParam filters
         ]
 
 ipPermissionsSink :: MonadThrow m
@@ -75,20 +74,25 @@ createSecurityGroup name desc vpc =
         $ getT_ "return" *> getT "groupId"
   where
     params =
-        [ ValueParam "GroupName" name
-        , ValueParam "GroupDescription" desc
-        ] ++ maybe [] (\a -> [ValueParam "VpcId" a]) vpc
+        [ "GroupName" |= name
+        , "GroupDescription" |= desc
+        , "VpcId" |=? vpc
+        ]
 
 deleteSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)
     => SecurityGroupRequest
     -> EC2 m Bool
 deleteSecurityGroup param =
-    ec2Query "DeleteSecurityGroup" [p param] $ getT "return"
+    ec2Query "DeleteSecurityGroup" params $ getT "return"
+  where
+    params = [securityGroupRequestParam param]
 
-p :: SecurityGroupRequest -> QueryParam
-p (SecurityGroupRequestGroupId t)   = ValueParam "GroupId" t
-p (SecurityGroupRequestGroupName t) = ValueParam "GroupName" t
+securityGroupRequestParam :: SecurityGroupRequest -> QueryParam
+securityGroupRequestParam (SecurityGroupRequestGroupId t) =
+    "GroupId" |= t
+securityGroupRequestParam (SecurityGroupRequestGroupName t) =
+    "GroupName" |= t
 
 -- | not tested
 authorizeSecurityGroupIngress
@@ -137,37 +141,22 @@ securityGroupQuery
 securityGroupQuery act param ipps =
     ec2Query act params $ getT "return"
   where
-    params = [p param]
-        ++ concatMap (uncurry ipPermissionParam) (zip intstr ipps)
+    params =
+        [ securityGroupRequestParam param
+        , "IpPermissions" |.#. map ipPermissionParams ipps
+        ]
 
-intstr :: [Int]
-intstr = [1..]
-
-ipPermissionParam :: Int -> IpPermission -> [QueryParam]
-ipPermissionParam num ipp =
-    [ValueParam (pre <> ".IpProtocol") $
-        ipPermissionIpProtocol ipp]
-    ++ (uncurry (mk pre) =<<
-        [ (".FromPort", toText <$> ipPermissionFromPort ipp)
-        , (".ToPort", toText <$> ipPermissionToPort ipp)
-        ])
-    ++ map
-        (uncurry ipr)
-        (zip intstr $ ipPermissionIpRanges ipp)
-    ++ concatMap
-        (uncurry grp)
-        (zip intstr $ ipPermissionGroups ipp)
+ipPermissionParams :: IpPermission -> [QueryParam]
+ipPermissionParams ipp =
+    [ "IpProtocol" |= ipPermissionIpProtocol ipp
+    , "FromPort" |=? toText <$> ipPermissionFromPort ipp
+    , "ToPort" |=? toText <$> ipPermissionToPort ipp
+    , "Groups" |.#. map groupPairParams (ipPermissionGroups ipp)
+    , "IpRanges" |.#. map (\a -> ["CidrIp" |= toText a]) (ipPermissionIpRanges ipp)
+    ]
   where
-    pre = "IpPermissions." <> toText num
-    mk h name = maybe [] (\a -> [ValueParam (h <> name) a])
-    grph n = pre <> ".Groups." <> toText n
-    grp n g = 
-        [ ValueParam (grph n <> ".GroupId") $
-            userIdGroupPairGroupId g
-        ] ++ (uncurry (mk (grph n)) =<<
-            [ (".UserId", userIdGroupPairUserId g)
-            , (".GroupName", userIdGroupPairGroupName g)
-            ])
-    ipr n r = ValueParam
-        (pre <> ".IPRanges." <> toText n <> ".CidrIp")
-        $ toText r
+    groupPairParams gp =
+        [ "UserId" |=? userIdGroupPairUserId gp
+        , "GroupId" |= userIdGroupPairGroupId gp
+        , "GroupName" |=? userIdGroupPairGroupName gp
+        ]

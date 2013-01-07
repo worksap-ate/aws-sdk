@@ -26,7 +26,6 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
 import Data.IP (IPv4, AddrRange)
-import Data.Monoid ((<>))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
@@ -50,8 +49,8 @@ attachInternetGateway internetGatewayId vid =
     ec2Query "AttachInternetGateway" params $ getT "return"
   where
     params =
-        [ ValueParam "InternetGatewayId" internetGatewayId
-        , ValueParam "VpcId" vid ]
+        [ "InternetGatewayId" |= internetGatewayId
+        , "VpcId" |= vid ]
 
 ------------------------------------------------------------
 -- detachInternetGateway
@@ -65,8 +64,8 @@ detachInternetGateway internetGatewayId vid =
     ec2Query "DetachInternetGateway" params $ getT "return"
   where
     params =
-        [ ValueParam "InternetGatewayId" internetGatewayId
-        , ValueParam "VpcId" vid ]
+        [ "InternetGatewayId" |= internetGatewayId
+        , "VpcId" |= vid ]
 
 ------------------------------------------------------------
 -- deleteInternetGateway
@@ -100,8 +99,8 @@ describeInternetGateways internetGatewayIds filters = do
         itemConduit "internetGatewaySet" internetGatewaySink
   where
     params =
-        [ ArrayParams "InternetGatewayId" internetGatewayIds
-        , FilterParams filters
+        [ "InternetGatewayId" |.#= internetGatewayIds
+        , filtersParam filters
         ]
 
 internetGatewaySink :: MonadThrow m
@@ -124,8 +123,10 @@ describeVpnConnections
 describeVpnConnections ids filters =
     ec2QuerySource "DescribeVpnConnections" params vpnConnectionConduit
   where
-    params = [ArrayParams "VpnConnectionId" ids]
-        ++ [FilterParams filters]
+    params =
+        [ "VpnConnectionId" |.#= ids
+        , filtersParam filters
+        ]
 
 vpnConnectionConduit
     :: (MonadBaseControl IO m, MonadResource m)
@@ -173,8 +174,8 @@ describeVpcs vpcIds filters = do
         itemConduit "vpcSet" vpcSink
   where
     params =
-        [ ArrayParams "VpcId" vpcIds
-        , FilterParams filters
+        [ "VpcId" |.#= vpcIds
+        , filtersParam filters
         ]
 
 vpcSink :: MonadThrow m
@@ -201,8 +202,9 @@ createVpc cidrBlock instanceTenancy =
         element "vpc" vpcSink
   where
     params =
-        [ ValueParam "CidrBlock" $ toText cidrBlock
-        ] ++ maybeParams [ ("instanceTenancy", instanceTenancy) ]
+        [ "CidrBlock" |= toText cidrBlock
+        , "instanceTenancy" |=? instanceTenancy
+        ]
 
 ------------------------------------------------------------
 -- deleteVpc
@@ -226,8 +228,8 @@ describeVpnGateways ids filters = do
         itemConduit "vpnGatewaySet" vpnGatewaySink
   where
     params =
-        [ ArrayParams "VpnGatewayId" ids
-        , FilterParams filters
+        [ "VpnGatewayId" |.#= ids
+        , filtersParam filters
         ]
 
 vpnGatewaySink :: MonadThrow m
@@ -254,13 +256,15 @@ createVpnGateway
     => CreateVpnGatewayType -- ^ Type. The valid value is CreateVpnGatewayTypeIpsec1
     -> Maybe Text -- ^ AvailabilityZone
     -> EC2 m VpnGateway
-createVpnGateway _ availabilityZone = do
+createVpnGateway type' availabilityZone = do
     ec2Query "CreateVpnGateway" params $
         element "vpnGateway" vpnGatewaySink
   where
     params =
-        [ ValueParam "Type" "ipsec.1"
-        ] ++ maybeParams [ ("AvailabilityZone", availabilityZone) ]
+        [ "Type" |= createVpnGatewayTypeText type'
+        , "AvailabilityZone" |=? availabilityZone
+        ]
+    createVpnGatewayTypeText CreateVpnGatewayTypeIpsec1 = "ipsec.1"
 
 ------------------------------------------------------------
 -- deleteVpnGateway
@@ -284,8 +288,8 @@ describeCustomerGateway ids filters = do
         itemConduit "customerGatewaySet" customerGatewaySink
   where
     params =
-        [ ArrayParams "CustomerGatewayId" ids
-        , FilterParams filters
+        [ "CustomerGatewayId" |.#= ids
+        , filtersParam filters
         ]
 
 customerGatewaySink :: MonadThrow m
@@ -312,9 +316,9 @@ createCustomerGateway type' ipAddr bgpAsn = do
         element "customerGateway" customerGatewaySink
   where
     params =
-        [ ValueParam "Type" type' 
-        , ValueParam "IpAddress" $ toText ipAddr
-        , ValueParam "BgpAsn" (toText bgpAsn)
+        [ "Type" |= type'
+        , "IpAddress" |= toText ipAddr
+        , "BgpAsn" |= toText bgpAsn
         ]
 
 ------------------------------------------------------------
@@ -339,8 +343,8 @@ describeDhcpOptions ids filters =
         itemConduit "dhcpOptionsSet" dhcpOptionsSink
   where
     params =
-        [ ArrayParams "DhcpOptionsId" ids
-        , FilterParams filters
+        [ "DhcpOptionsId" |.#= ids
+        , filtersParam filters
         ]
 
 dhcpOptionsSink :: MonadThrow m
@@ -370,15 +374,11 @@ createDhcpOptions confs =
     ec2Query "CreateDhcpOptions" params $
         element "dhcpOptions" dhcpOptionsSink
   where
-    numTexts = map (("DhcpConfiguration." <>) . toText) ([1..] :: [Int])
-    f (t, conf) =
-        [ ValueParam (t <> ".Key") $
-            dhcpConfigurationKey conf
-        , ArrayParams (t <> ".Value") $
-            map dhcpValueValue $
-            dhcpConfigurationDhcpValueSet conf
+    params = ["DhcpConfiguration" |.#. map dhcpConfigurationParams confs]
+    dhcpConfigurationParams conf =
+        [ "Key" |= dhcpConfigurationKey conf
+        , "Value" |.#= map dhcpValueValue (dhcpConfigurationDhcpValueSet conf)
         ]
-    params = concat $ map f $ zip numTexts confs
 
 ------------------------------------------------------------
 -- deleteDhcpOptions
@@ -390,7 +390,7 @@ deleteDhcpOptions
 deleteDhcpOptions doid =
     ec2Query "DeleteDhcpOptions" params $ getT "return"
   where
-    params = [ValueParam "DhcpOptionsId" doid]
+    params = ["DhcpOptionsId" |= doid]
 
 ------------------------------------------------------------
 -- associateDhcpOptions
@@ -404,6 +404,6 @@ associateDhcpOptions doid vpcid =
     ec2Query "AssociateDhcpOptions" params $ getT "return"
   where
     params =
-        [ ValueParam "DhcpOptionsId" doid
-        , ValueParam "VpcId" vpcid
+        [ "DhcpOptionsId" |= doid
+        , "VpcId" |= vpcid
         ]

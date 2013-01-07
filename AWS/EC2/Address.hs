@@ -35,9 +35,9 @@ describeAddresses
 describeAddresses pubIps alloIds filters =
     ec2QuerySource "DescribeAddresses" params addressSet where
     params =
-        [ ArrayParams "PublicIp" pubIps
-        , ArrayParams "AllocationId" alloIds
-        , FilterParams filters
+        [ "PublicIp" |.#= pubIps
+        , "AllocationId" |.#= alloIds
+        , filtersParam filters
         ]
 
     addressSet :: MonadThrow m => GLConduit Event m Address
@@ -65,7 +65,7 @@ allocateAddress isVpc = do
         <*> getT "domain"
         <*> getT "allocationId"
   where
-    params = if isVpc then [ValueParam "Domain" "vpc"] else []
+    params = if isVpc then ["Domain" |= "vpc"] else []
 
 -----------------------------------------------------
 -- ReleaseAddress
@@ -78,9 +78,9 @@ releaseAddress
 releaseAddress addr allocid = do
     ec2Query "ReleaseAddress" params $ getT "return"
   where
-    params = maybeParams
-        [ ("PublicIp", toText <$> addr)
-        , ("AllocationId", allocid)
+    params =
+        [ "PublicIp" |=? toText <$> addr
+        , "AllocationId" |=? allocid
         ]
 
 -----------------------------------------------------
@@ -94,23 +94,21 @@ associateAddress param = ec2Query "AssociateAddress" params $
     (,) <$> getT "return"
         <*> getT "associationId"
   where
-    params = associateAddressParam param
+    params = associateAddressParams param
 
-associateAddressParam
+associateAddressParams
     :: AssociateAddressRequest -> [QueryParam]
-associateAddressParam (AssociateAddressRequestEc2 ip iid) =
-    [ ValueParam "PublicIp" $ toText ip
-    , ValueParam "InstanceId" iid
+associateAddressParams (AssociateAddressRequestEc2 ip iid) =
+    [ "PublicIp" |= toText ip
+    , "InstanceId" |= iid
     ]
-associateAddressParam
-    (AssociateAddressRequestVpc aid iid nid pip ar) =
-    [ ValueParam "AllocationId" aid ]
-    ++ maybeParams
-        [ ("InstanceId", iid)
-        , ("NetworkInterfaceId", nid)
-        , ("PrivateIpAddress", toText <$> pip)
-        , ("AllowReassociation", boolToText <$> ar)
-        ]
+associateAddressParams (AssociateAddressRequestVpc aid iid nid pip ar) =
+    [ "AllocationId" |= aid
+    , "InstanceId" |=? iid
+    , "NetworkInterfaceId" |=? nid
+    , "PrivateIpAddress" |=? toText <$> pip
+    , "AllowReassociation" |=? boolToText <$> ar
+    ]
 
 disassociateAddress
     :: (MonadResource m, MonadBaseControl IO m)
@@ -121,6 +119,6 @@ disassociateAddress param =
         $ getT "return"
   where
     p (DisassociateAddressRequestEc2 pip)
-        = [ValueParam "PublicIp" $ toText pip]
+        = ["PublicIp" |= toText pip]
     p (DisassociateAddressRequestVpc aid)
-        = [ValueParam "AssociationId" $ toText aid]
+        = ["AssociationId" |= toText aid]

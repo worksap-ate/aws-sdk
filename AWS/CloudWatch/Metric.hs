@@ -17,11 +17,14 @@ import AWS.Lib.Query
 import AWS.Lib.Parser
 import AWS.CloudWatch.Types
 
-dimensionFilterParams :: [DimensionFilter] -> QueryParam
-dimensionFilterParams filters =
-    StructArrayParams "Dimensions.member" $ map f filters
+dimensionFiltersParam :: [DimensionFilter] -> QueryParam
+dimensionFiltersParam =
+    ("Dimensions" |.+) . ("member" |.#.) . map filterParams
   where
-    f (k, v) = [("Name", k), ("Value", v)]
+    filterParams (k, v) =
+        [ "Name" |= k
+        , "Value" |= v
+        ]
 
 listMetrics
     :: (MonadBaseControl IO m, MonadResource m)
@@ -40,11 +43,10 @@ listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
         <*> getT "Namespace"
   where
     params =
-        dimensionFilterParams ds :
-        maybeParams
-        [ ("MetricName", mn)
-        , ("Namespace", ns)
-        , ("NextToken", nt)
+        [ dimensionFiltersParam ds
+        , "MetricName" |=? mn
+        , "Namespace" |=? ns
+        , "NextToken" |=? nt
         ]
 
 getMetricStatistics
@@ -71,14 +73,16 @@ getMetricStatistics ds start end mn ns pe sts unit =
             )
         <*> getT "Label"
   where
-    params = dimensionFilterParams ds :
-        [ ValueParam "StartTime" $ timeToText start
-        , ValueParam "EndTime" $ timeToText end
-        , ValueParam "MetricName" mn
-        , ValueParam "Namespace" ns
-        , ValueParam "Period" $ toText pe
-        , ArrayParams "Statistics.member" $ map s sts
-        ] ++ maybeParams [("Unit", unit)]
+    params =
+        [ dimensionFiltersParam ds
+        , "StartTime" |= timeToText start
+        , "EndTime" |= timeToText end
+        , "MetricName" |= mn
+        , "Namespace" |= ns
+        , "Period" |= toText pe
+        , "Statistics" |.+ "member" |.#= map s sts
+        , "Unit" |=? unit
+        ]
     s StatisticAverage     = "Average"
     s StatisticSum         = "Sum"
     s StatisticSampleCount = "SampleCount"

@@ -27,10 +27,10 @@ describeDBInstances
 describeDBInstances dbid maxRecords marker =
     rdsQuery "DescribeDBInstances" params sinkDBInstances
   where
-    params = maybeParams
-        [ ("DBInstanceIdentifier", dbid)
-        , ("MaxRecords", toText <$> maxRecords)
-        , ("Marker", marker)
+    params =
+        [ "DBInstanceIdentifier" |=? dbid
+        , "MaxRecords" |=? toText <$> maxRecords
+        , "Marker" |=? marker
         ]
 
 sinkDBInstances
@@ -96,7 +96,7 @@ sinkDBInstances = elements "DBInstance" $
     <*> getT "InstanceCreateTime"
     <*> getT "AllocatedStorage"
     <*> getT "DBInstanceClass"
-    <*> getT "MasterUsername" 
+    <*> getT "MasterUsername"
 
 sinkPendingModifiedValues
     :: MonadThrow m
