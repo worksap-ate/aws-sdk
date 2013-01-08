@@ -103,8 +103,7 @@ ec2QuerySource' action params token cond = do
     State.put ctx{lastRequestId = Just rid}
     lift $ src1 $=+ (cond >> nextToken)
   where
-    params' = maybe params
-        (\t -> ValueParam "NextToken" t:params) token
+    params' = ("NextToken" |=? token) : params
 
 nextToken :: MonadThrow m => Conduit Event m o
 nextToken = getT "nextToken" >>= maybe (return ()) (E.throw . NextToken)
@@ -132,4 +131,4 @@ ec2Delete
     -> Text -- ^ ID of Target
     -> EC2 m Bool
 ec2Delete apiName idName targetId = do
-    ec2Query apiName [ ValueParam idName targetId ] $ getT "return"
+    ec2Query apiName [ idName |= targetId ] $ getT "return"

@@ -29,8 +29,8 @@ describeKeyPairs names filters =
         $ itemConduit "keySet" keyPairSink
   where
     params =
-        [ ArrayParams "KeyName" names
-        , FilterParams filters
+        [ "KeyName" |.#= names
+        , filtersParam filters
         ]
 
 keyPairSink :: MonadThrow m => GLSink Event m KeyPair
@@ -43,7 +43,7 @@ createKeyPair
     => Text -- ^ KeyName
     -> EC2 m (KeyPair, Text) -- ^ KeyPair and KeyMaterial
 createKeyPair name =
-    ec2Query "CreateKeyPair" [ValueParam "KeyName" name]
+    ec2Query "CreateKeyPair" ["KeyName" |= name]
         $ (,) <$> keyPairSink <*> getT "keyMaterial"
 
 deleteKeyPair
@@ -61,6 +61,6 @@ importKeyPair name material =
     ec2Query "ImportKeyPair" params keyPairSink
   where
     params =
-        [ ValueParam "KeyName" name
-        , ValueParam "PublicKeyMaterial" material
+        [ "KeyName" |= name
+        , "PublicKeyMaterial" |= material
         ]

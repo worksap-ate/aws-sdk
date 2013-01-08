@@ -33,8 +33,8 @@ describeRouteTables routeTables filters = do
         itemConduit "routeTableSet" routeTableSink
   where
     params =
-        [ ArrayParams "RouteTableId" routeTables
-        , FilterParams filters
+        [ "RouteTableId" |.#= routeTables
+        , filtersParam filters
         ]
 
 routeTableSink :: MonadThrow m
@@ -74,7 +74,7 @@ createRouteTable
     => Text
     -> EC2 m RouteTable
 createRouteTable vid =
-    ec2Query "CreateRouteTable" [ValueParam "VpcId" vid] $
+    ec2Query "CreateRouteTable" ["VpcId" |= vid] $
         element "routeTable" routeTableSink
 
 ------------------------------------------------------------
@@ -98,8 +98,8 @@ associateRouteTable rtid sid =
     ec2Query "AssociateRouteTable" params
         $ getT "associationId"
   where
-    params = [ ValueParam "RouteTableId" rtid
-             , ValueParam "SubnetId" sid
+    params = [ "RouteTableId" |= rtid
+             , "SubnetId" |= sid
              ]
 
 ------------------------------------------------------------
@@ -110,9 +110,8 @@ disassociateRouteTable
     => Text -- ^ AssociationId
     -> EC2 m Bool -- ^ return
 disassociateRouteTable aid =
-    ec2Query "DisassociateRouteTable"
-        [ValueParam "AssociationId" aid]
-            $ getT "return"
+    ec2Query "DisassociateRouteTable" ["AssociationId" |= aid]
+        $ getT "return"
 
 ------------------------------------------------------------
 -- replaceRouteTableAssociation
@@ -126,6 +125,6 @@ replaceRouteTableAssociation aid rtid =
     ec2Query "ReplaceRouteTableAssociation" params
         $ getT "newAssociationId"
   where
-    params = [ ValueParam "AssociationId" aid
-             , ValueParam "RouteTableId" rtid
+    params = [ "AssociationId" |= aid
+             , "RouteTableId" |= rtid
              ]
