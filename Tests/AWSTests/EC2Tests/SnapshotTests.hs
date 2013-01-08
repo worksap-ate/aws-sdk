@@ -19,6 +19,7 @@ region = "ap-northeast-1"
 runSnapshotTests :: IO ()
 runSnapshotTests = do
     hspec describeSnapshotsTest
+    hspec createSnapshotTest
     hspec describeSnapshotAttributeTest
 
 describeSnapshotsTest :: Spec
@@ -26,6 +27,18 @@ describeSnapshotsTest = do
     describe "describeSnapshots doesn't fail" $ do
         it "describeSnapshots doesn't throw any exception" $ do
             testEC2 region (describeSnapshots [] [] [] []) `miss` anyHttpException
+
+createSnapshotTest :: Spec
+createSnapshotTest = do
+    describe "createSnapshot doesn't fail" $ do
+        it "createSnapshot, deleteSnapshot and copySnapshot doesn't any exception" $ do
+            volumes <- testEC2 region (describeVolumes [] [])
+            let vid = volumeId $ head volumes
+            snapshot <- testEC2' region (createSnapshot vid Nothing)
+            let sid = snapshotId snapshot
+            copyId <- testEC2' region (copySnapshot region sid Nothing)
+            testEC2' region (deleteSnapshot sid) `shouldReturn` True
+            testEC2' region (deleteSnapshot copyId) `shouldReturn` True
 
 describeSnapshotAttributeTest :: Spec
 describeSnapshotAttributeTest = do
