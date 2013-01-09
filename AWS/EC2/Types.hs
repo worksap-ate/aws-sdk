@@ -1276,15 +1276,15 @@ data NetworkInterfacePrivateIpAddress
 
 instance FromText Platform
   where
-    fromMaybeText Nothing  = return PlatformOther
-    fromMaybeText (Just t)
+    fromMaybeText _name Nothing  = return PlatformOther
+    fromMaybeText _name (Just t)
         | t == "windows" = return PlatformWindows
         | otherwise      = return PlatformOther
 
 instance FromText AddressDomain
   where
-    fromMaybeText Nothing  = return AddressDomainStandard
-    fromMaybeText (Just t)
+    fromMaybeText _name Nothing  = return AddressDomainStandard
+    fromMaybeText _name (Just t)
         | t == "standard" = return AddressDomainStandard
         | t == "vpc"      = return AddressDomainVPC
         | otherwise       = monadThrow $ TextConversionException t
@@ -1297,8 +1297,8 @@ instance FromText EC2Return
 
 instance FromText InstanceLifecycle
   where
-    fromMaybeText Nothing  = return LifecycleNone
-    fromMaybeText (Just t)
+    fromMaybeText _name Nothing  = return LifecycleNone
+    fromMaybeText _name (Just t)
         | t == "spot" = return LifecycleSpot
         | otherwise   = monadThrow $ TextConversionException t
 

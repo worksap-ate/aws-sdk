@@ -88,7 +88,7 @@ awaitWhile f = await >>= g
 getT :: (MonadThrow m, FromText a)
     => Text
     -> Pipe Event Event o u m a
-getT name = elementM name text >>= lift . fromMaybeText
+getT name = elementM name text >>= lift . fromMaybeText name
 
 getT_ :: forall m o u . MonadThrow m
     => Text

@@ -7,6 +7,7 @@ import Control.Applicative ((<$>))
 import Control.Monad
 import Data.Conduit (MonadThrow)
 import Data.IP (IPv4, AddrRange)
+import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
@@ -28,17 +29,17 @@ class Read a => FromText a
     fromTextMay :: Text -> Maybe a
     fromTextMay = readMay . T.unpack
 
-    fromMaybeText :: MonadThrow m => Maybe Text -> m a
-    fromMaybeText
+    fromMaybeText :: MonadThrow m => Text -> Maybe Text -> m a
+    fromMaybeText name
         = maybe
-            (monadThrow $ TextConversionException "no text")
+            (monadThrow $ TextConversionException $ "no text: " <> name)
             fromText
 
 instance FromText a => FromText (Maybe a)
   where
     fromText = return . join . fromTextMay
-    fromMaybeText Nothing  = return Nothing
-    fromMaybeText (Just t) = fromText t >>= return . Just
+    fromMaybeText _name Nothing  = return Nothing
+    fromMaybeText _name (Just t) = fromText t >>= return . Just
     fromTextMay = Just . fromTextMay
 
 instance FromText Int
