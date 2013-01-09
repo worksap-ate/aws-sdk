@@ -118,7 +118,7 @@ ec2QueryDebug action params = do
     cred <- Reader.ask
     ctx <- State.get
     lift $ do
-        liftIO $ mapM_ print params
+        liftIO $ mapM_ putStrLn $ showUnitParams params
         response <- requestQuery cred ctx action params apiVersion sinkError
         (res, _) <- unwrapResumable response
         res $$ CB.sinkFile "debug.txt" >>= fail "debug"

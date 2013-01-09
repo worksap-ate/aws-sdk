@@ -3,6 +3,7 @@
 module AWS.Lib.Query
     ( QueryParam
     , Filter
+    , showUnitParams
     , (|.+)
     , putNumberV, putNumberP
     , filtersParam
@@ -59,6 +60,17 @@ import qualified Data.Conduit.Binary as CB
 data QueryParam
     = Leaf Text Text
     | Inner Text [QueryParam]
+
+instance Show QueryParam where
+    show = show . paramToText
+
+paramToText :: QueryParam -> Text
+paramToText (Leaf k v) = k <> "=" <> v
+paramToText p@(Inner _ _) =
+    T.intercalate "&" . map paramToText $ partition p
+
+showUnitParams :: [QueryParam] -> [String]
+showUnitParams = map show . concat . map partition
 
 infixr 3 |.+
 (|.+) :: Text -> QueryParam -> QueryParam
