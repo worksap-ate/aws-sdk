@@ -450,8 +450,8 @@ data InstanceLifecycle
 
 data InstanceNetworkInterface = InstanceNetworkInterface
     { instanceNetworkInterfaceId :: Text
-    , instanceNetworkInterfaceSubnetId :: Text
-    , instanceNetworkInterfaceVpcId :: Text
+    , instanceNetworkInterfaceSubnetId :: Maybe Text
+    , instanceNetworkInterfaceVpcId :: Maybe Text
     , instanceNetworkInterfaceDescription :: Maybe Text
     , instanceNetworkInterfaceOwnerId :: Text
     , instanceNetworkInterfaceStatus :: Text
