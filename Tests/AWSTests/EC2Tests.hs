@@ -7,6 +7,7 @@ module AWSTests.EC2Tests
     , module AWSTests.EC2Tests.SubnetsTests
     , module AWSTests.EC2Tests.VolumeTests
     , module AWSTests.EC2Tests.SecurityGroupTests
+    , module AWSTests.EC2Tests.RouteTests
     , module AWSTests.EC2Tests.RouteTableTests
     , module AWSTests.EC2Tests.RegionTests
     , module AWSTests.EC2Tests.AvailabilityZoneTests
@@ -24,6 +25,7 @@ import AWSTests.EC2Tests.ImageTests
 import AWSTests.EC2Tests.SubnetsTests
 import AWSTests.EC2Tests.VolumeTests
 import AWSTests.EC2Tests.SecurityGroupTests
+import AWSTests.EC2Tests.RouteTests
 import AWSTests.EC2Tests.RouteTableTests
 import AWSTests.EC2Tests.RegionTests
 import AWSTests.EC2Tests.AvailabilityZoneTests
