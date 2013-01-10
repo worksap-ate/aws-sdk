@@ -24,7 +24,10 @@ runVpcTests = do
     hspec describeVpnConnectionsTest
     hspec describeCustomerGatewayTest
     hspec describeInternetGatewaysTest
+    hspec describeDhcpOptionsTest
     -- hspec createVpcTest
+    hspec createDhcpOptionsTest
+
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -62,3 +65,18 @@ createVpcTest = do
         it "createVpc and deleteVpc doesn't fail" $ do
             vpc <- testEC2' region (createVpc "80.0.0.0/16" Nothing)
             testEC2' region (deleteVpc $ vpcId vpc) `shouldReturn` True
+
+describeDhcpOptionsTest :: Spec
+describeDhcpOptionsTest = do
+    describe "describeDhcpOptions doesn't fail" $ do
+        it "describeDhcpOptions doesn't throw any exception" $ do
+            testEC2 region (describeDhcpOptions [] []) `miss` anyHttpException
+
+createDhcpOptionsTest :: Spec
+createDhcpOptionsTest = do
+    describe "createDhcpOptions doesn't fail" $ do
+        it "createDhcpOptions and deleteDhcpOptions doesn't fail" $ do
+            options <- testEC2' region (createDhcpOptions [param])
+            testEC2' region (deleteDhcpOptions $ dhcpOptionsId options) `shouldReturn` True
+  where
+    param = DhcpConfiguration "domain-name" [DhcpValue "example.com"]
