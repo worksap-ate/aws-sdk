@@ -16,6 +16,7 @@ main = do
     runSubnetsTests
     runVolumeTests
     runSecurityGroupTests
+    runRouteTests
     runRouteTableTests
     runRegionTests
     runInstanceTests

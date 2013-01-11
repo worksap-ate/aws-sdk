@@ -16,6 +16,7 @@ module AWS.EC2.Types
     , BlockDeviceMapping(..)
     , BlockDeviceMappingParam(..)
     , ConsoleOutput(..)
+    , CreateRouteRequest(..)
     , CreateSubnetRequest(..)
     , CreateVolumePermission(..)
     , CreateVolumePermissionItem(..)
@@ -1105,6 +1106,24 @@ data RouteTableAssociation = RouteTableAssociation
     , routeTableAssociationSubnetId :: Maybe Text
     , routeTableAssociationMain :: Maybe Bool
     }
+  deriving (Show, Read, Eq)
+
+data CreateRouteRequest
+    = CreateRouteToGateway
+        { createRouteTableId :: Text
+        , createRouteDestinationCidrBlock :: AddrRange IPv4
+        , createRouteGatewayId :: Text
+        }
+    | CreateRouteToInstance
+        { createRouteTableId :: Text
+        , createRouteDestinationCidrBlock :: AddrRange IPv4
+        , createRouteInstanceId :: Text
+        }
+    | CreateRouteToNetworkInterface
+        { createRouteTableId :: Text
+        , createRouteDestinationCidrBlock :: AddrRange IPv4
+        , createRouteNetworkInterfaceId :: Text
+        }
   deriving (Show, Read, Eq)
 
 type PropagatingVgw = Text

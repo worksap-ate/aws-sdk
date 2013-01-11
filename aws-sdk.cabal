@@ -39,6 +39,7 @@ library
                    , AWS.EC2.Instance
                    , AWS.EC2.Volume
                    , AWS.EC2.KeyPair
+                   , AWS.EC2.Route
                    , AWS.EC2.RouteTable
                    , AWS.EC2.Snapshot
                    , AWS.EC2.SecurityGroup
