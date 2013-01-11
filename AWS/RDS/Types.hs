@@ -91,3 +91,22 @@ data PendingModifiedValue
     | PMVMultiAZ Bool
     | PMVPort Int
   deriving (Show, Eq)
+
+data DBSnapshot = DBSnapshot
+    { dbsPort :: Int
+    , dbsIops :: Maybe Int
+    , dbsEngine :: Text
+    , dbsStatus :: Text
+    , dbsSnapshotType :: Text
+    , dbsLicenseModel :: Text
+    , dbsDBInstanceIdentifier :: Text
+    , dbsEngineVersion :: Text
+    , dbsDBSnapshotIdentifier :: Text
+    , dbsSnapshotCreateTime :: Maybe UTCTime
+    , dbsVpcId :: Maybe Text
+    , dbsAvailabilityZone :: Text
+    , dbsInstanceCreateTime :: UTCTime
+    , dbsAllocatedStorage :: Int
+    , dbsMasterUsername :: Text
+    }
+  deriving (Show, Eq)

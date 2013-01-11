@@ -7,6 +7,8 @@ module AWS.RDS
     , setRegion
       -- * DBInstance
     , module AWS.RDS.DBInstance
+      -- * DBSnapshot
+    , module AWS.RDS.DBSnapshot
     ) where
 
 import Data.Text (Text)
@@ -23,6 +25,7 @@ import AWS.Lib.Query (textToBS)
 import AWS
 import AWS.RDS.Internal
 import AWS.RDS.DBInstance
+import AWS.RDS.DBSnapshot
 
 initialRDSContext :: HTTP.Manager -> AWSContext
 initialRDSContext mgr = AWSContext
