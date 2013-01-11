@@ -29,3 +29,4 @@ main = do
 
     -- RDS Tests
     runDBInstanceTests
+    runDBSnapshotTests
