@@ -56,6 +56,7 @@ library
                    , AWS.Lib.Query
                    , AWS.RDS.Internal
                    , AWS.RDS.DBInstance
+                   , AWS.RDS.DBSnapshot
                    , AWS.ELB.Internal
                    , AWS.ELB.LoadBalancer
                    , AWS.CloudWatch.Internal
