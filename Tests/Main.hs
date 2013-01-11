@@ -5,9 +5,11 @@
 module Main where
 
 import AWSTests.EC2Tests
+import AWSTests.RDSTests
 
 main :: IO ()
 main = do
+    -- EC2 Tests
     runInstanceTests
     runVpcTests
     runAddressTests
@@ -24,3 +26,6 @@ main = do
     runTagTests
     runKeyPairTests
     runNetworkInterfaceTests
+
+    -- RDS Tests
+    runDBInstanceTests
