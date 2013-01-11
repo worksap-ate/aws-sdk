@@ -2,6 +2,7 @@
 
 module AWS.RDS.DBSnapshot
     ( describeDBSnapshots
+    , createDBSnapshot
     ) where
 
 import Data.Text (Text)
@@ -60,3 +61,17 @@ sinkDBSnapshot = DBSnapshot
     <*> getT "InstanceCreateTime"
     <*> getT "AllocatedStorage"
     <*> getT "MasterUsername"
+
+createDBSnapshot
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBInstanceIdentifier
+    -> Text -- ^ DBSnapshotIdentifier
+    -> RDS m DBSnapshot
+createDBSnapshot dbiid dbsid =
+    rdsQuery "CreateDBSnapshot" params $
+        element "DBSnapshot" sinkDBSnapshot
+  where
+    params =
+        [ "DBInstanceIdentifier" |= dbiid
+        , "DBSnapshotIdentifier" |= dbsid
+        ]
