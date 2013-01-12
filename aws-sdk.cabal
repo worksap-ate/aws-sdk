@@ -26,6 +26,7 @@ library
                    , AWS.EC2.Metadata
                    , AWS.RDS
                    , AWS.RDS.Types
+                   , AWS.RDS.Util
                    , AWS.ELB
                    , AWS.ELB.Types
                    , AWS.CloudWatch
