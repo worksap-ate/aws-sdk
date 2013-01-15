@@ -457,9 +457,9 @@ data InstanceNetworkInterface = InstanceNetworkInterface
     , instanceNetworkInterfaceOwnerId :: Text
     , instanceNetworkInterfaceStatus :: Text
     , instanceNetworkInterfaceMacAddress :: Maybe Text
-    , instanceNetworkInterfacePrivateIpAddress :: IPv4
+    , instanceNetworkInterfacePrivateIpAddress :: Maybe IPv4
     , instanceNetworkInterfacePrivateDnsName :: Maybe Text
-    , instanceNetworkInterfaceSourceDestCheck :: Bool
+    , instanceNetworkInterfaceSourceDestCheck :: Maybe Bool
     , instanceNetworkInterfaceGroupSet :: [Group]
     , instanceNetworkInterfaceAttachment
         :: InstanceNetworkInterfaceAttachment
