@@ -4,6 +4,7 @@ module AWS.EC2.NetworkInterface
     ( assignPrivateIpAddresses
     , unassignPrivateIpAddresses
     , describeNetworkInterfaces
+    , deleteNetworkInterface
     ) where
 
 import Data.IP (IPv4)
@@ -112,3 +113,10 @@ networkInterfaceAssociationSink =
         <*> getT "publicDnsName"
         <*> getT "ipOwnerId"
         <*> getT "associationId"
+
+deleteNetworkInterface
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the network interface.
+    -> EC2 m Bool
+deleteNetworkInterface networkInterface =
+    ec2Query "DeleteNetworkInterface" ["NetworkInterfaceId" |= networkInterface] $ getT "return"
