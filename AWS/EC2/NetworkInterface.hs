@@ -4,6 +4,7 @@ module AWS.EC2.NetworkInterface
     ( assignPrivateIpAddresses
     , unassignPrivateIpAddresses
     , describeNetworkInterfaces
+    , createNetworkInterface
     , deleteNetworkInterface
     ) where
 
@@ -113,6 +114,34 @@ networkInterfaceAssociationSink =
         <*> getT "publicDnsName"
         <*> getT "ipOwnerId"
         <*> getT "associationId"
+
+createNetworkInterface
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the subnet to associate with the network interface.
+    -> SecondaryPrivateIpAddressParam -- ^ The private IP address of the specified network interface.
+    -> Maybe Text -- ^ The description of the network interface.
+    -> [Text] -- ^ A list of security group IDs for use by the network interface.
+    -> EC2 m NetworkInterface
+createNetworkInterface subnet privateAddresses description securityGroupIds =
+    ec2Query "CreateNetworkInterface" params $ element "networkInterface" networkInterfaceSink
+  where
+    params :: [QueryParam]
+    params =
+        [ "SubnetId" |= subnet
+        , "Description" |=? description
+        , "SecurityGroup" |.#= securityGroupIds
+        ] ++ fromSecondary privateAddresses
+
+    fromSecondary :: SecondaryPrivateIpAddressParam -> [QueryParam]
+    fromSecondary SecondaryPrivateIpAddressParamNothing = []
+    fromSecondary (SecondaryPrivateIpAddressParamCount n) = ["SecondaryPrivateIpAddressCount" |= toText n]
+    fromSecondary (SecondaryPrivateIpAddressParamSpecified addrs primary) =
+        [ "PrivateIpAddresses" |.#. map (\addr -> ["PrivateIpAddress" |= toText addr]) addrs
+        , maybeParam $ primaryParam <$> primary
+        ]
+
+    primaryParam :: Int -> QueryParam
+    primaryParam n = "PrivateIpAddresses" |.+ toText n |.+ "Primary" |= "true"
 
 deleteNetworkInterface
     :: (MonadBaseControl IO m, MonadResource m)
