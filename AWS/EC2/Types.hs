@@ -1260,6 +1260,7 @@ type Filter = (Text, [Text])
 data NetworkInterfaceStatus
     = NetworkInterfaceStatusAvailable
     | NetworkInterfaceStatusInUse
+    | NetworkInterfaceStatusPending
   deriving (Show, Read, Eq)
 
 data NetworkInterfaceAttachment = NetworkInterfaceAttachment
@@ -1375,4 +1376,4 @@ deriveFromText "CustomerGatewayState"
     ["pending", "available", "deleting", "deleted"]
 deriveFromText "InternetGatewayAttachmentState"
     ["attaching", "attached", "detaching", "detached", "available"]
-deriveFromText "NetworkInterfaceStatus" ["available", "in-use"]
+deriveFromText "NetworkInterfaceStatus" ["available", "in-use", "pending"]
