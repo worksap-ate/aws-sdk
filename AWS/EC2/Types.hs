@@ -757,7 +757,7 @@ data VpnConnection = VpnConnection
     { vpnConnectionId :: Text
     , vpnConnectionState :: VpnConnectionState
     , vpnConnectionCustomerGatewayConfiguration :: Text
-    , vpnConnectionType :: Text
+    , vpnConnectionType :: Maybe Text
     , vpnConnectionCustomerGatewayId :: Text
     , vpnConnectionVpnGatewayId :: Text
     , vpnConnectionTagSet :: [ResourceTag]

@@ -4,6 +4,7 @@ module AWS.EC2.VPC
     ( associateDhcpOptions
     , attachInternetGateway
     , createVpc
+    , createVpnConnection
     , createVpnGateway
     , createCustomerGateway
     , createInternetGateway
@@ -115,27 +116,29 @@ internetGatewayAttachmentSink :: MonadThrow m
 internetGatewayAttachmentSink = InternetGatewayAttachment
     <$> getT "vpcId"
     <*> getT "state"
+
+------------------------------------------------------------
+-- describeVpnConnections
+------------------------------------------------------------
 describeVpnConnections
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ VpnConnectionIds
-    -> [Filter]
+    -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m VpnConnection)
 describeVpnConnections ids filters =
-    ec2QuerySource "DescribeVpnConnections" params vpnConnectionConduit
+    ec2QuerySource "DescribeVpnConnections" params $
+        itemConduit "vpnConnectionSet" vpnConnectionSink
   where
     params =
         [ "VpnConnectionId" |.#= ids
         , filtersParam filters
         ]
 
-vpnConnectionConduit
-    :: (MonadBaseControl IO m, MonadResource m)
-    => GLConduit Event m VpnConnection
-vpnConnectionConduit = itemConduit "vpnConnectionSet" $
-    VpnConnection
-    <$> do
-        a <- getT "vpnConnectionId"
-        traceShow a $ return a
+vpnConnectionSink
+    :: MonadThrow m
+    => GLSink Event m VpnConnection
+vpnConnectionSink = VpnConnection
+    <$> getT "vpnConnectionId"
     <*> getT "state"
     <*> getT "customerGatewayConfiguration"
     <*> getT "type"
@@ -160,6 +163,29 @@ vpnConnectionConduit = itemConduit "vpnConnectionSet" $
         <*> getT "source"
         <*> getT "state"
         )
+
+------------------------------------------------------------
+-- createVpnConnection
+------------------------------------------------------------
+createVpnConnection
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ Type. The valid value is ipsec.1
+    -> Text -- ^ CustomerGatewayId
+    -> Text -- ^ VpnGatewayId
+    -> Maybe Text -- ^ AvailabilityZone
+    -> Maybe Bool -- ^ Option
+    -> EC2 m VpnConnection
+createVpnConnection type' cgid vgid zone option =
+    ec2Query "CreateVpnConnection" params $
+        element "vpnConnection" vpnConnectionSink
+  where
+    params =
+        [ "Type" |= type'
+        , "CustomerGatewayId" |= cgid
+        , "VpnGatewayId" |= vgid
+        , "AvailabilityZone" |=? zone
+        , "Options" |.+ "StaticRoutesOnly" |=? boolToText <$> option
+        ]
 
 ------------------------------------------------------------
 -- describeVpcs
