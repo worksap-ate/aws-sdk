@@ -4,6 +4,10 @@ module AWS.EC2.NetworkInterfaceAttribute
    , describeNetworkInterfaceGroupSet
    , describeNetworkInterfaceSourceDestCheck
    , describeNetworkInterfaceAttachment
+   , modifyNetworkInterfaceDescription
+   , modifyNetworkInterfaceSecurityGroup
+   , modifyNetworkInterfaceSourceDestCheck
+   , modifyNetworkInterfaceAttachment
    ) where
 
 import Data.Text (Text)
@@ -11,9 +15,10 @@ import Data.Conduit (GLSink, MonadBaseControl, MonadResource)
 import Data.XML.Types (Event)
 
 import AWS.EC2.Internal (EC2, groupSetSink, networkInterfaceAttachmentSink)
-import AWS.EC2.Query (ec2Query, (|=))
+import AWS.EC2.Query
 import AWS.EC2.Types (Group, NetworkInterfaceAttachment(..))
 import AWS.Lib.Parser (element, getT, getT_)
+import AWS.Util (toText)
 
 describeNetworkInterfaceDescription
     :: (MonadBaseControl IO m, MonadResource m)
@@ -55,3 +60,51 @@ describeNetworkInterfaceAttribute action sink networkInterface =
         [ "NetworkInterfaceId" |= networkInterface
         , "Attribute" |= action
         ]
+
+modifyNetworkInterfaceDescription
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the network interface.
+    -> Text -- ^ The description of the network interface.
+    -> EC2 m Bool
+modifyNetworkInterfaceDescription iface desc =
+    modifyNetworkInterfaceAttribute iface ["Description.Value" |= desc]
+
+modifyNetworkInterfaceSecurityGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the network interface.
+    -> [Text] -- ^ The security group ids that a network interface is in.
+    -> EC2 m Bool
+modifyNetworkInterfaceSecurityGroup iface groups =
+    modifyNetworkInterfaceAttribute iface ["SecurityGroupId" |.#= groups]
+
+modifyNetworkInterfaceSourceDestCheck
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the network interface.
+    -> Bool -- ^ Enables a Network Address Translation (NAT) instance in a VPC to perform NAT.
+    -> EC2 m Bool
+modifyNetworkInterfaceSourceDestCheck iface check =
+    modifyNetworkInterfaceAttribute iface ["SourceDestCheck.Value" |= toText check]
+
+modifyNetworkInterfaceAttachment
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the network interface.
+    -> Text -- ^ The ID of the interface attachment.
+    -> Bool -- ^ Specifies whether to delete the attachment when terminating the instance.
+    -> EC2 m Bool
+modifyNetworkInterfaceAttachment iface attachment deleteOnTermination =
+    modifyNetworkInterfaceAttribute iface params
+  where
+    params =
+        [ "Attachment.AttachmentId" |= attachment
+        , "Attachment.DeleteOnTermination" |= toText deleteOnTermination
+        ]
+
+modifyNetworkInterfaceAttribute
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> [QueryParam]
+    -> EC2 m Bool
+modifyNetworkInterfaceAttribute iface params =
+    ec2Query "ModifyNetworkInterfaceAttribute" params' $ getT "return"
+  where
+    params' = ("NetworkInterfaceId" |= iface) : params
