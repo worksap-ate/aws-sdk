@@ -6,6 +6,7 @@ module AWS.EC2.NetworkInterface
     , describeNetworkInterfaces
     , createNetworkInterface
     , deleteNetworkInterface
+    , attachNetworkInterface
     ) where
 
 import Data.IP (IPv4)
@@ -149,3 +150,18 @@ deleteNetworkInterface
     -> EC2 m Bool
 deleteNetworkInterface networkInterface =
     ec2Query "DeleteNetworkInterface" ["NetworkInterfaceId" |= networkInterface] $ getT "return"
+
+attachNetworkInterface
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the network interface to attach.
+    -> Text -- ^ The ID of the instance to attach to the network interface.
+    -> Int -- ^ The index of the device for the network interface attachment.
+    -> EC2 m Text -- ^ The ID of the attachment.
+attachNetworkInterface networkInterface inst deviceIdx =
+    ec2Query "AttachNetworkInterface" params $ getT "attachmentId"
+  where
+    params =
+        [ "NetworkInterfaceId" |= networkInterface
+        , "InstanceId" |= inst
+        , "DeviceIndex" |= toText deviceIdx
+        ]
