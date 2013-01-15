@@ -7,6 +7,7 @@ module AWS.EC2.NetworkInterface
     , createNetworkInterface
     , deleteNetworkInterface
     , attachNetworkInterface
+    , detachNetworkInterface
     ) where
 
 import Data.IP (IPv4)
@@ -164,4 +165,17 @@ attachNetworkInterface networkInterface inst deviceIdx =
         [ "NetworkInterfaceId" |= networkInterface
         , "InstanceId" |= inst
         , "DeviceIndex" |= toText deviceIdx
+        ]
+
+detachNetworkInterface
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the attachment.
+    -> Maybe Bool -- ^ Set to true to force a detachment.
+    -> EC2 m Bool
+detachNetworkInterface attachment force =
+    ec2Query "DetachNetworkInterface" params $ getT "return"
+  where
+    params =
+        [ "AttachmentId" |= attachment
+        , "Force" |=? toText <$> force
         ]
