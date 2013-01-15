@@ -756,7 +756,7 @@ data SecondaryPrivateIpAddressParam
 data VpnConnection = VpnConnection
     { vpnConnectionId :: Text
     , vpnConnectionState :: VpnConnectionState
-    , vpnConnectionCustomerGatewayConfiguration :: Text
+    , vpnConnectionCustomerGatewayConfiguration :: Maybe Text
     , vpnConnectionType :: Maybe Text
     , vpnConnectionCustomerGatewayId :: Text
     , vpnConnectionVpnGatewayId :: Text

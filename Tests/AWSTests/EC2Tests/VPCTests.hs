@@ -5,11 +5,13 @@ module AWSTests.EC2Tests.VPCTests
     )
     where
 
+import Control.Applicative ((<$>))
 import Data.Text (Text)
 import Test.Hspec
 
 import AWS.EC2
 import AWS.EC2.Types
+import AWS.EC2.Util (wait, list)
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -27,7 +29,7 @@ runVpcTests = do
     hspec describeDhcpOptionsTest
     -- hspec createVpcTest
     hspec createDhcpOptionsTest
-
+    hspec vpnConnectionTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -80,3 +82,21 @@ createDhcpOptionsTest = do
             testEC2' region (deleteDhcpOptions $ dhcpOptionsId options) `shouldReturn` True
   where
     param = DhcpConfiguration "domain-name" [DhcpValue "example.com"]
+
+vpnConnectionTest :: Spec
+vpnConnectionTest = do
+    describe "{create,delete}CustomerGateway, {create,delete}VpnGateway and {create,delete}VpnConnection don't fail" $ do
+        it "{create,delete}CustomerGateway, {create,delete}VpnGateway and {create,delete}VpnConnection don't throw any exception" $ do
+            testEC2' region test `miss` anyHttpException
+  where
+    test = do
+        cgid <- customerGatewayId <$> createCustomerGateway "ipsec.1" "202.202.202.20" 65000
+        vpnid <- vpnGatewayId <$> createVpnGateway CreateVpnGatewayTypeIpsec1 Nothing
+        cid <- vpnConnectionId <$> createVpnConnection "ipsec.1" cgid vpnid Nothing Nothing
+        deleteVpnConnection cid
+        wait
+            (\connection -> vpnConnectionState connection == VpnConnectionStateDeleted)
+            (\cid' -> list $ describeVpnConnections [cid'] [])
+            cid
+        deleteCustomerGateway cgid
+        deleteVpnGateway vpnid
