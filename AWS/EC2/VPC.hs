@@ -10,6 +10,7 @@ module AWS.EC2.VPC
     , createInternetGateway
     , createDhcpOptions
     , deleteVpc
+    , deleteVpnConnection
     , deleteVpnGateway
     , deleteCustomerGateway
     , deleteInternetGateway
@@ -186,6 +187,15 @@ createVpnConnection type' cgid vgid zone option =
         , "AvailabilityZone" |=? zone
         , "Options" |.+ "StaticRoutesOnly" |=? boolToText <$> option
         ]
+
+------------------------------------------------------------
+-- deleteVpnConnection
+------------------------------------------------------------
+deleteVpnConnection
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VpnConnectionId
+    -> EC2 m Bool
+deleteVpnConnection = ec2Delete "DeleteVpnConnection" "VpnConnectionId"
 
 ------------------------------------------------------------
 -- describeVpcs
