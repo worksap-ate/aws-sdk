@@ -13,6 +13,7 @@ module AWS.EC2.Internal
     , stateReasonSink
     , volumeTypeSink
     , groupSetSink
+    , networkInterfaceAttachmentSink
     ) where
 
 import Control.Monad.IO.Class (MonadIO)
@@ -89,3 +90,16 @@ groupSetSink :: MonadThrow m => GLSink Event m [Group]
 groupSetSink = itemsSet "groupSet" $ Group
     <$> getT "groupId"
     <*> getT "groupName"
+
+networkInterfaceAttachmentSink
+    :: MonadThrow m
+    => GLSink Event m (Maybe NetworkInterfaceAttachment)
+networkInterfaceAttachmentSink = elementM "attachment" $
+    NetworkInterfaceAttachment
+    <$> getT "attachmentId"
+    <*> getT "instanceId"
+    <*> getT "instanceOwnerId"
+    <*> getT "deviceIndex"
+    <*> getT "status"
+    <*> getT "attachTime"
+    <*> getT "deleteOnTermination"

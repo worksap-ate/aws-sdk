@@ -26,6 +26,7 @@ main = do
     runTagTests
     runKeyPairTests
     runNetworkInterfaceTests
+    runNetworkInterfaceAttributeTests
 
     -- RDS Tests
     runDBInstanceTests
