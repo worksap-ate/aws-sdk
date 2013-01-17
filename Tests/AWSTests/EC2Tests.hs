@@ -15,6 +15,7 @@ module AWSTests.EC2Tests
     , module AWSTests.EC2Tests.KeyPairTests
     , module AWSTests.EC2Tests.NetworkInterfaceTests
     , module AWSTests.EC2Tests.NetworkInterfaceAttributeTests
+    , module AWSTests.EC2Tests.PlacementGroupTests
     )
     where
 
@@ -34,3 +35,4 @@ import AWSTests.EC2Tests.TagTests
 import AWSTests.EC2Tests.KeyPairTests
 import AWSTests.EC2Tests.NetworkInterfaceTests
 import AWSTests.EC2Tests.NetworkInterfaceAttributeTests
+import AWSTests.EC2Tests.PlacementGroupTests

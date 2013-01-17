@@ -53,6 +53,7 @@ library
                    , AWS.EC2.NetworkInterfaceAttribute
                    , AWS.EC2.Tag
                    , AWS.EC2.Params
+                   , AWS.EC2.PlacementGroup
                    , AWS.Lib.FromText
                    , AWS.Lib.Parser
                    , AWS.Lib.Query

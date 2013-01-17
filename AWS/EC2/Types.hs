@@ -78,6 +78,9 @@ module AWS.EC2.Types
     , NetworkInterfaceStatus(..)
     , PasswordData(..)
     , Placement(..)
+    , PlacementGroup(..)
+    , PlacementGroupState(..)
+    , PlacementGroupStrategy(..)
     , Platform(..)
     , PortRange(..)
     , ProductCode(..)
@@ -420,6 +423,24 @@ data Placement = Placement
     , placementGroupName :: Maybe Text
     , placementTenancy :: Text
     }
+  deriving (Show, Read, Eq)
+
+data PlacementGroup = PlacementGroup
+    { placementGroupGroupName :: Text
+    , placementGroupStrategy :: PlacementGroupStrategy
+    , placementGroupState :: PlacementGroupState
+    }
+  deriving (Show, Read, Eq)
+
+data PlacementGroupState
+    = PlacementGroupStatePending
+    | PlacementGroupStateAvailable
+    | PlacementGroupStateDeleting
+    | PlacementGroupStateDeleted
+  deriving (Show, Read, Eq)
+
+data PlacementGroupStrategy
+    = PlacementGroupStrategyCluster
   deriving (Show, Read, Eq)
 
 data InstanceMonitoringState
@@ -1377,3 +1398,5 @@ deriveFromText "CustomerGatewayState"
 deriveFromText "InternetGatewayAttachmentState"
     ["attaching", "attached", "detaching", "detached", "available"]
 deriveFromText "NetworkInterfaceStatus" ["available", "in-use", "pending"]
+deriveFromText "PlacementGroupState" ["pending", "available", "deleting", "deleted"]
+deriveFromText "PlacementGroupStrategy" ["cluster"]

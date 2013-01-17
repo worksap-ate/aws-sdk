@@ -35,6 +35,7 @@ module AWS.EC2
     , module AWS.EC2.Acl
     , module AWS.EC2.RouteTable
     , module AWS.EC2.Route
+    , module AWS.EC2.PlacementGroup
     ) where
 
 import Data.Conduit
@@ -65,6 +66,7 @@ import AWS.EC2.Route
 import AWS.EC2.RouteTable
 import AWS.EC2.NetworkInterface
 import AWS.EC2.NetworkInterfaceAttribute
+import AWS.EC2.PlacementGroup
 
 -- | set endpoint to EC2 context by giving the EC2 region.
 setRegion
