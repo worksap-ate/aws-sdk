@@ -8,6 +8,7 @@ module AWS.EC2.NetworkInterfaceAttribute
    , modifyNetworkInterfaceSecurityGroup
    , modifyNetworkInterfaceSourceDestCheck
    , modifyNetworkInterfaceAttachment
+   , resetNetworkInterfaceSourceDestCheck
    ) where
 
 import Data.Text (Text)
@@ -108,3 +109,22 @@ modifyNetworkInterfaceAttribute iface params =
     ec2Query "ModifyNetworkInterfaceAttribute" params' $ getT "return"
   where
     params' = ("NetworkInterfaceId" |= iface) : params
+
+resetNetworkInterfaceSourceDestCheck
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the network interface.
+    -> EC2 m Bool
+resetNetworkInterfaceSourceDestCheck = resetNetworkInterfaceAttribute "sourceDestCheck"
+
+resetNetworkInterfaceAttribute
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> Text
+    -> EC2 m Bool
+resetNetworkInterfaceAttribute attrName iface =
+    ec2Query "ResetNetworkInterfaceAttribute" params $ getT "return"
+  where
+    params =
+        [ "NetworkInterfaceId" |= iface
+        , "Attribute" |= attrName
+        ]
