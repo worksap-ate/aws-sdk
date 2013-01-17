@@ -2,6 +2,7 @@
 module AWS.EC2.PlacementGroup
     ( describePlacementGroups
     , createPlacementGroup
+    , deletePlacementGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -51,3 +52,10 @@ createPlacementGroup groupName strategy =
 
 stringifyStrategy :: PlacementGroupStrategy -> Text
 stringifyStrategy PlacementGroupStrategyCluster = "cluster"
+
+deletePlacementGroup
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ The name of the placement group.
+    -> EC2 m Bool
+deletePlacementGroup groupName =
+    ec2Query "DeletePlacementGroup" ["GroupName" |= groupName] $ getT "return"
