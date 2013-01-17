@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 module AWS.EC2.PlacementGroup
     ( describePlacementGroups
+    , createPlacementGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -9,10 +10,10 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 
 import AWS.EC2.Internal (EC2, itemConduit)
-import AWS.EC2.Query (ec2QuerySource)
-import AWS.EC2.Types (Filter, PlacementGroup(..))
+import AWS.EC2.Query (ec2Query, ec2QuerySource)
+import AWS.EC2.Types (Filter, PlacementGroup(..), PlacementGroupStrategy(..))
 import AWS.Lib.Parser (getT)
-import AWS.Lib.Query ((|.#=), filtersParam)
+import AWS.Lib.Query ((|=), (|.#=), filtersParam)
 
 describePlacementGroups
     :: (MonadResource m, MonadBaseControl IO m)
@@ -34,3 +35,19 @@ placementGroupSink =
     <$> getT "groupName"
     <*> getT "strategy"
     <*> getT "state"
+
+createPlacementGroup
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ A name for the placement group.
+    -> PlacementGroupStrategy -- ^ The placement group strategy.
+    -> EC2 m Bool
+createPlacementGroup groupName strategy =
+    ec2Query "CreatePlacementGroup" params $ getT "return"
+  where
+    params =
+        [ "GroupName" |= groupName
+        , "Strategy" |= stringifyStrategy strategy
+        ]
+
+stringifyStrategy :: PlacementGroupStrategy -> Text
+stringifyStrategy PlacementGroupStrategyCluster = "cluster"
