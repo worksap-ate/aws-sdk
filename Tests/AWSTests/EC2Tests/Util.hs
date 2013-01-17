@@ -13,7 +13,6 @@ import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
 import Control.Applicative
 import qualified Control.Exception.Lifted as E
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Text (Text)
 import Data.IP (IPv4, AddrRange)
 

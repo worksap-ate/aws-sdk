@@ -9,7 +9,6 @@ module AWS.RDS.DBSnapshot
 import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.XML.Types (Event(..))
 
 import AWS.Util

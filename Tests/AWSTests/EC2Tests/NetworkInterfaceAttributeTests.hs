@@ -4,8 +4,7 @@ module AWSTests.EC2Tests.NetworkInterfaceAttributeTests
     ) where
 
 import Data.Text (Text)
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Conduit (($$+-), MonadResource)
+import Data.Conduit (($$+-), MonadBaseControl, MonadResource)
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
 import Test.Hspec

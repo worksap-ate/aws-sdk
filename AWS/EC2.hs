@@ -38,7 +38,6 @@ module AWS.EC2
     ) where
 
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Control.Monad.State as State
 import Data.Text (Text)
 import Data.ByteString (ByteString)

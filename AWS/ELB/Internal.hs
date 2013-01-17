@@ -5,7 +5,6 @@ module AWS.ELB.Internal
 
 import Data.ByteString (ByteString)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.XML.Types (Event(..))
 
 import AWS.Class

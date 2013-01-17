@@ -7,7 +7,6 @@ module AWS.RDS.DBInstance
 import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.XML.Types (Event(..))
 import Data.Maybe (catMaybes)
 

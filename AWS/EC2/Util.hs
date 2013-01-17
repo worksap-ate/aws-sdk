@@ -25,7 +25,6 @@ import Control.Applicative
 import Control.Parallel (par)
 import Data.List (find)
 import qualified Control.Exception.Lifted as E
-import Control.Monad.Trans.Control (MonadBaseControl)
 
 import AWS.EC2.Internal
 import AWS.EC2.Types (ResourceTag(resourceTagKey))

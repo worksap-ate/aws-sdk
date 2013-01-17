@@ -5,9 +5,8 @@ module AWS.EC2.Route
     , replaceRoute
     ) where
 
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.ByteString (ByteString)
-import Data.Conduit (MonadResource)
+import Data.Conduit (MonadBaseControl, MonadResource)
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 

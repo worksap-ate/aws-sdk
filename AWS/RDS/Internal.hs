@@ -6,7 +6,6 @@ module AWS.RDS.Internal
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Monoid ((<>))
 import Data.XML.Types (Event(..))
 

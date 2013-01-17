@@ -8,7 +8,6 @@ module AWS.CloudWatch.Metric
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.Util

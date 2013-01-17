@@ -13,7 +13,6 @@ module AWS.RDS
 
 import Data.Text (Text)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.IO.Class (MonadIO)
 import qualified Control.Monad.State as State
 import qualified Network.HTTP.Conduit as HTTP

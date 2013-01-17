@@ -13,7 +13,6 @@ module AWS.EC2.Snapshot
 import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Internal

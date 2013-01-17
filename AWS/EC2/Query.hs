@@ -18,7 +18,6 @@ import           Data.ByteString.Lazy.Char8 ()
 import Data.XML.Types (Event(..))
 import Data.Conduit
 import qualified Data.Conduit.List as CL
-import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Text.XML.Stream.Parse as XmlP
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (MonadIO)

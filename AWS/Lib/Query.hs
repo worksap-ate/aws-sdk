@@ -31,7 +31,6 @@ import Data.List (transpose)
 import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
 import Data.Time (UTCTime, formatTime, getCurrentTime)

@@ -28,7 +28,6 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
 import Data.IP (IPv4, AddrRange)
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Internal
@@ -36,8 +35,6 @@ import AWS.EC2.Types
 import AWS.EC2.Query
 import AWS.Lib.Parser
 import AWS.Util
-
-import Debug.Trace
 
 ------------------------------------------------------------
 -- attachInternetGateway

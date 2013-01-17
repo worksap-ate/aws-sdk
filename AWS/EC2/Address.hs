@@ -14,7 +14,6 @@ import Data.Text (Text)
 import Data.IP (IPv4)
 import Data.XML.Types (Event)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Internal

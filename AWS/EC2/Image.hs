@@ -12,7 +12,6 @@ module AWS.EC2.Image
 import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Control.Monad (join)
 

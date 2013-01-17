@@ -8,7 +8,6 @@ module AWS.EC2.Tag
 
 import Data.Text (Text)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 
 import AWS.EC2.Internal

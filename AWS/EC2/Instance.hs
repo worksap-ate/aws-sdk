@@ -19,7 +19,6 @@ module AWS.EC2.Instance
 import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
-import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Applicative
 import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Map as Map
