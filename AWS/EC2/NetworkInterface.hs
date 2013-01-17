@@ -86,15 +86,7 @@ networkInterfaceSink = NetworkInterface
     <*> getT "privateDnsName"
     <*> getT "sourceDestCheck"
     <*> groupSetSink
-    <*> elementM "attachment" (NetworkInterfaceAttachment
-        <$> getT "attachmentId"
-        <*> getT "instanceId"
-        <*> getT "instanceOwnerId"
-        <*> getT "deviceIndex"
-        <*> getT "status"
-        <*> getT "attachTime"
-        <*> getT "deleteOnTermination"
-        )
+    <*> networkInterfaceAttachmentSink
     <*> networkInterfaceAssociationSink
     <*> resourceTagSink
     <*> itemsSet "privateIpAddressesSet" (

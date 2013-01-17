@@ -50,6 +50,7 @@ library
                    , AWS.EC2.VPC
                    , AWS.EC2.Acl
                    , AWS.EC2.NetworkInterface
+                   , AWS.EC2.NetworkInterfaceAttribute
                    , AWS.EC2.Tag
                    , AWS.EC2.Params
                    , AWS.Lib.FromText

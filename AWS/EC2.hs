@@ -23,6 +23,7 @@ module AWS.EC2
     , module AWS.EC2.SecurityGroup
       -- * NetworkInterface
     , module AWS.EC2.NetworkInterface
+    , module AWS.EC2.NetworkInterfaceAttribute
       -- * Placements
     , module AWS.EC2.Region
     , module AWS.EC2.AvailabilityZone
@@ -64,6 +65,7 @@ import AWS.EC2.Acl
 import AWS.EC2.Route
 import AWS.EC2.RouteTable
 import AWS.EC2.NetworkInterface
+import AWS.EC2.NetworkInterfaceAttribute
 
 -- | set endpoint to EC2 context by giving the EC2 region.
 setRegion
