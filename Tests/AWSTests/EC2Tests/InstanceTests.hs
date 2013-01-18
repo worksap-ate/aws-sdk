@@ -5,6 +5,7 @@ module AWSTests.EC2Tests.InstanceTests
     )
     where
 
+import Control.Applicative ((<$>))
 import Data.Text (Text)
 import Data.List
 import Test.Hspec
@@ -22,6 +23,7 @@ runInstanceTests = do
     hspec describeInstancesTest
     hspec describeInstanceStatusTest
     hspec describeInstanceAttributeTest
+    hspec monitorAndUnmonitorInstancesTest
 
 describeInstancesTest :: Spec
 describeInstancesTest = do
@@ -44,3 +46,16 @@ describeInstanceAttributeTest = do
             reservations <- testEC2 region (describeInstances [] [])
             let iid = instanceId $ head $ reservationInstanceSet $ head reservations
             testEC2' region (describeInstanceAttribute iid InstanceAttributeRequestInstanceType) `miss` anyHttpException
+
+monitorAndUnmonitorInstancesTest :: Spec
+monitorAndUnmonitorInstancesTest = do
+    describe "{monitor,unmonitor}Instances doesn't fail" $ do
+        it "{monitor,unmonitor}Instances doesn't throw any exception" $ do
+            reservations <- testEC2 region $ describeInstances [] [("monitoring-state", ["disabled"])]
+            let iid = instanceId $ head $ reservationInstanceSet $ head reservations
+            testState (monitorInstances [iid]) `shouldReturn` MonitoringPending
+            testState (unmonitorInstances [iid]) `shouldReturn` MonitoringDisabling
+  where
+    testState ec2 =
+        monitorInstancesResponseInstanceMonitoringState . head
+        <$> testEC2 region ec2
