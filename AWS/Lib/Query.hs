@@ -98,7 +98,7 @@ putNumberP = map (uncurry Inner) . zip (map toText ([1..] :: [Int]))
 filtersParam :: [Filter] -> QueryParam
 filtersParam filters = "Filter" |.#. transpose [keyParams, valParams]
   where
-    keyParams = map (("Key" |=) . fst) filters
+    keyParams = map (("Name" |=) . fst) filters
     valParams = map (("Value" |.#=) . snd) filters
 
 maybeParam :: Maybe QueryParam -> QueryParam
