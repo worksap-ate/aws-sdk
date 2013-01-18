@@ -448,6 +448,7 @@ data InstanceMonitoringState
     = MonitoringDisabled
     | MonitoringEnabled
     | MonitoringPending
+    | MonitoringDisabling
   deriving (Show, Read, Eq)
 
 data Architecture = I386 | X86_64 deriving (Show, Read, Eq)
@@ -1366,7 +1367,7 @@ deriveFromText "InstanceStatusEventCode"
 deriveFromText "InstanceStatusTypeStatus"
     ["ok", "impaired", "insufficient-data", "not-applicable"]
 deriveFromText "InstanceMonitoringState"
-    ["disabled", "enabled", "pending"]
+    ["disabled", "enabled", "pending", "disabling"]
 deriveFromText "Architecture" ["i386", "x86_64"]
 deriveFromText "SnapshotStatus" ["pending", "completed", "error"]
 deriveFromText "VolumeState"

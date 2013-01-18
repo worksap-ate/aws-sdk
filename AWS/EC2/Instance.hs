@@ -15,6 +15,7 @@ module AWS.EC2.Instance
     , resetInstanceAttribute
     , modifyInstanceAttribute
     , monitorInstances
+    , unmonitorInstances
     ) where
 
 import Data.Text (Text)
@@ -567,3 +568,14 @@ monitorInstancesResponseSink = itemConduit "instancesSet" $
     MonitorInstancesResponse
     <$> getT "instanceId"
     <*> element "monitoring" (getT "state")
+
+------------------------------------------------------------
+-- UnmonitorInstances
+------------------------------------------------------------
+unmonitorInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> EC2 m (ResumableSource m MonitorInstancesResponse)
+unmonitorInstances iids =
+    ec2QuerySource "UnmonitorInstances" ["InstanceId" |.#= iids]
+        monitorInstancesResponseSink
