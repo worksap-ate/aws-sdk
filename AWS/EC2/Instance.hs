@@ -14,6 +14,7 @@ module AWS.EC2.Instance
     , describeInstanceAttribute
     , resetInstanceAttribute
     , modifyInstanceAttribute
+    , monitorInstances
     ) where
 
 import Data.Text (Text)
@@ -547,3 +548,22 @@ miap (ModifyInstanceAttributeRequestGroupSet a) =
     "GroupId" |.#= a
 miap (ModifyInstanceAttributeRequestEbsOptimized a) =
     "EbsOptimized" |= toText a
+
+------------------------------------------------------------
+-- MonitorInstances
+------------------------------------------------------------
+monitorInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> EC2 m (ResumableSource m MonitorInstancesResponse)
+monitorInstances iids =
+    ec2QuerySource "MonitorInstances" ["InstanceId" |.#= iids]
+        monitorInstancesResponseSink
+
+monitorInstancesResponseSink
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Conduit Event m MonitorInstancesResponse
+monitorInstancesResponseSink = itemConduit "instancesSet" $
+    MonitorInstancesResponse
+    <$> getT "instanceId"
+    <*> element "monitoring" (getT "state")

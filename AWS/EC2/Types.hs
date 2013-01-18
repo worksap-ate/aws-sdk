@@ -63,6 +63,7 @@ module AWS.EC2.Types
     , IpPermission(..)
     , KeyPair(..)
     , ModifyInstanceAttributeRequest(..)
+    , MonitorInstancesResponse(..)
     , LaunchPermission(..)
     , LaunchPermissionItem(..)
     , NetworkAcl(..)
@@ -596,6 +597,13 @@ data PasswordData = PasswordData
     , passwordDataTimestamp :: UTCTime
       -- ^ The time the data was last updated.
     , passwordDataPasswordData :: Text
+    }
+  deriving (Show, Read, Eq)
+
+data MonitorInstancesResponse = MonitorInstancesResponse
+    { monitorInstancesResponseInstanceId :: Text
+    , monitorInstancesResponseInstanceMonitoringState
+        :: InstanceMonitoringState
     }
   deriving (Show, Read, Eq)
 
