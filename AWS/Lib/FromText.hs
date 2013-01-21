@@ -39,7 +39,7 @@ instance FromText a => FromText (Maybe a)
   where
     fromText = return . join . fromTextMay
     fromMaybeText _name Nothing  = return Nothing
-    fromMaybeText _name (Just t) = fromText t >>= return . Just
+    fromMaybeText _name (Just t) = return $ fromTextMay t
     fromTextMay = Just . fromTextMay
 
 instance FromText Int
@@ -50,7 +50,9 @@ instance FromText (AddrRange IPv4)
 
 instance FromText Text
   where
-    fromTextMay = Just
+    fromTextMay t
+        | t == ""   = Nothing
+        | otherwise = Just t
 
 instance FromText Bool
   where

@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.9.0.0
+version:             0.9.1.0
 synopsis:            AWS SDK for Haskell
 description: AWS (Amazon Web Services) sdk for Haskell.
              .

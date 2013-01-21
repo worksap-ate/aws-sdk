@@ -27,7 +27,7 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
-import Data.Monoid
+import Data.Monoid ((<>))
 import Control.Monad.Trans.Class (lift)
 
 import AWS.Class

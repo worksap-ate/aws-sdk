@@ -42,6 +42,7 @@ describeInstances
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Reservation)
 describeInstances instances filters = do
+--    ec2QueryDebug "DescribeInstances" params
     ec2QuerySource "DescribeInstances" params $
         itemConduit "reservationSet" reservationSink
   where
@@ -182,6 +183,7 @@ instanceNetworkInterfaceAssociationSink :: MonadThrow m
 instanceNetworkInterfaceAssociationSink = elementM "association" $
     InstanceNetworkInterfaceAssociation
     <$> getT "publicIp"
+    <*> getT "publicDnsName"
     <*> getT "ipOwnerId"
 
 ------------------------------------------------------------

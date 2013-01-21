@@ -505,7 +505,9 @@ data InstanceNetworkInterfaceAttachment = InstanceNetworkInterfaceAttachment
 
 data InstanceNetworkInterfaceAssociation
     = InstanceNetworkInterfaceAssociation
-    { instanceNetworkInterfaceAssociationPublicIp :: Text
+    { instanceNetworkInterfaceAssociationPublicIp :: IPv4
+    , instanceNetworkInterfaceAssociationPublicDnsName
+        :: Maybe Text
     , instanceNetworkInterfaceAssociationIpOwnerId :: Text
     }
   deriving (Show, Read, Eq)
@@ -610,13 +612,13 @@ data MonitorInstancesResponse = MonitorInstancesResponse
 
 data Snapshot = Snapshot
     { snapshotId :: Text
-    , snapshotVolumeId :: Text
+    , snapshotVolumeId :: Maybe Text
     , snapshotStatus :: SnapshotStatus
     , snapshotStartTime :: UTCTime
-    , snapshotProgress :: Text
+    , snapshotProgress :: Maybe Text
     , snapshotOwnerId :: Text
     , snapshotVolumeSize :: Int
-    , snapshotDescription :: Text
+    , snapshotDescription :: Maybe Text
     , snapshotOwnerAlias :: Maybe Text
     , snapshotTagSet :: [ResourceTag]
     }
@@ -1265,7 +1267,7 @@ data NetworkInterface = NetworkInterface
     , networkInterfaceSubnetId :: Text
     , networkInterfaceVpcId :: Text
     , networkInterfaceAvailabilityZone :: Text
-    , networkInterfaceDescription :: Text
+    , networkInterfaceDescription :: Maybe Text
     , networkInterfaceOwnerId :: Text
     , networkInterfaceRequesterId :: Maybe Text
     , networkInterfaceRequesterManaged :: Text
