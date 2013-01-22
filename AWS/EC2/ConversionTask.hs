@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 module AWS.EC2.ConversionTask
     ( describeConversionTasks
+    , cancelConversionTask
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -73,3 +74,10 @@ diskImageVolumeDescriptionSink
 diskImageVolumeDescriptionSink = DiskImageVolumeDescription
     <$> getT "size"
     <*> getT "id"
+
+cancelConversionTask
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ ConversionTaskId
+    -> EC2 m Bool
+cancelConversionTask =
+    ec2Delete "CancelConversionTask" "ConversionTaskId"
