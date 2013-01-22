@@ -5,6 +5,7 @@ module AWS.ELB
       ELB
     , runELB
     , setRegion
+    , apiVersion
       -- * LoadBalancer
     , module AWS.ELB.LoadBalancer
     ) where

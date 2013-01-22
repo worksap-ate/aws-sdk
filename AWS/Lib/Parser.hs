@@ -93,7 +93,7 @@ getT name = elementM name text >>= lift . fromMaybeText name
 getT_ :: forall m o u . MonadThrow m
     => Text
     -> Pipe Event Event o u m ()
-getT_ name = () <$ (getT name :: Pipe Event Event o u m Text)
+getT_ name = () <$ (getT name :: Pipe Event Event o u m (Maybe Text))
 
 elementM :: forall o u m a . MonadThrow m
     => Text

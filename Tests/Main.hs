@@ -6,6 +6,7 @@ module Main where
 
 import AWSTests.EC2Tests
 import AWSTests.RDSTests
+import AWSTests.ELBTests
 
 main :: IO ()
 main = do
@@ -32,3 +33,6 @@ main = do
     -- RDS Tests
     runDBInstanceTests
     runDBSnapshotTests
+
+    -- ELB Tests
+    runLoadBalancerTests

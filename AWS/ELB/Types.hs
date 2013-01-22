@@ -4,82 +4,83 @@ module AWS.ELB.Types
 import Data.Text (Text)
 import Data.Time (UTCTime)
 
-data LoadBalancerDescription = LoadBalancerDescription
-    { lbSecurityGroups :: [Text]
-    , lbLoadBalancerName :: Text
-    , lbCreatedTime :: UTCTime
-    , lbHealthCheck :: HealthCheck
-    , lbVPCId :: Maybe Text
-    , lbListenerDescriptions :: [ListenerDescription]
-    , lbInstances :: [Instance]
-    , lbPolicies :: Policies
-    , lbAvailabilityZones :: [Text]
-    , lbCanonicalHostedZoneName :: Text
-    , lbCanonicalHostedZoneNameID :: Text
-    , lbScheme :: Text
-    , lbSourceSecurityGroup :: Maybe SourceSecurityGroup
-    , lbDNSName :: Text
-    , lbBackendServerDescriptions :: [BackendServerDescription]
-    , lbSubnets :: [Text]
+data LoadBalancer = LoadBalancer
+    { loadBalancerSecurityGroups :: [Text]
+    , loadBalancerCreatedTime :: UTCTime
+    , loadBalancerLoadBalancerName :: Text
+    , loadBalancerHealthCheck :: HealthCheck
+    , loadBalancerVPCId :: Maybe Text
+    , loadBalancerListenerDescriptions :: [ListenerDescription]
+    , loadBalancerInstances :: [Instance]
+    , loadBalancerPolicies :: Policies
+    , loadBalancerAvailabilityZones :: [Text]
+    , loadBalancerCanonicalHostedZoneName :: Maybe Text
+    , loadBalancerCanonicalHostedZoneNameID :: Maybe Text
+    , loadBalancerScheme :: Text
+    , loadBalancerSourceSecurityGroup :: Maybe SourceSecurityGroup
+    , loadBalancerDNSName :: Text
+    , loadBalancerBackendServerDescriptions
+        :: [BackendServerDescription]
+    , loadBalancerSubnets :: [Text]
     }
   deriving (Show, Eq)
 
 data BackendServerDescription = BackendServerDescription
-    { bsInstancePort :: Int
-    , bsPolicyNames :: [Text]
+    { backendServerInstancePort :: Int
+    , backendServerPolicyNames :: [Text]
     }
   deriving (Show, Eq)
 
 data HealthCheck = HealthCheck
-    { hcInterval :: Int
-    , hcTarget :: Text
-    , hcHealthyThreshold :: Int
-    , hcTimeout :: Int
-    , hcUnhealthyThreshold :: Int
+    { healthCheckInterval :: Int
+    , healthCheckTarget :: Text
+    , healthCheckHealthyThreshold :: Int
+    , healthCheckTimeout :: Int
+    , healthCheckUnhealthyThreshold :: Int
     }
   deriving (Show, Eq)
 
 data Instance = Instance
-    { iInstanceId :: Text
+    { instanceId :: Text
     }
   deriving (Show, Eq)
 
 data ListenerDescription = ListenerDescription
-    { ldPolicyNames :: [Text]
-    , ldListener :: Listener
+    { listenerDescriptionPolicyNames :: [Text]
+    , listenerDescriptionListener :: Listener
     }
   deriving (Show, Eq)
 
 data Listener = Listener
-    { lProtocol :: Text
-    , lLoadBalancerPort :: Int
-    , lInstanceProtocol :: Text
-    , lSSLCertificateId :: Maybe Text
-    , lInstancePort :: Int
+    { listenerProtocol :: Text
+    , listenerLoadBalancerPort :: Int
+    , listenerInstanceProtocol :: Text
+    , listenerSSLCertificateId :: Maybe Text
+    , listenerInstancePort :: Int
     }
   deriving (Show, Eq)
 
 data Policies = Policies
-    { pAppCookieStickinessPolicies :: [AppCookieStickinessPolicy]
-    , pOtherPolicies :: [Text]
-    , pLBCookieStickinessPolicies :: [LBCookieStickinessPolicy]
+    { policiesAppCookieStickinessPolicies :: [AppCookieStickinessPolicy]
+    , policiesOtherPolicies :: [Text]
+    , policiesLBCookieStickinessPolicies :: [LBCookieStickinessPolicy]
     }
   deriving (Show, Eq)
 
 data AppCookieStickinessPolicy = AppCookieStickinessPolicy
-    { acspCookieName :: Text
-    , acspPolicyName :: Text
+    { appCookieStickinessPolicyCookieName :: Text
+    , appCookieStickinessPolicyPolicyName :: Text
     }
   deriving (Show, Eq)
 
 data LBCookieStickinessPolicy = LBCookieStickinessPolicy
-    { lbcspCookieExpirationPeriod :: Integer
-    , lbcspPolicyName :: Text
+    { lbCookieStickinessPolicyCookieExpirationPeriod :: Integer
+    , lbCookieStickinessPolicyPolicyName :: Text
     }
   deriving (Show, Eq)
 
 data SourceSecurityGroup = SourceSecurityGroup
-    { ssgOwnerAlias :: Text
-    , ssgGroupName :: Text
+    { sourceSecurityGroupOwnerAlias :: Text
+    , sourceSecurityGroupGroupName :: Text
     }
   deriving (Show, Eq)
