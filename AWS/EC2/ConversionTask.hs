@@ -2,6 +2,7 @@
 module AWS.EC2.ConversionTask
     ( describeConversionTasks
     , cancelConversionTask
+    , importVolume
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -13,6 +14,7 @@ import AWS.EC2.Internal
 import AWS.EC2.Query
 import AWS.EC2.Types
 import AWS.Lib.Parser
+import AWS.Util (toText)
 
 describeConversionTasks
     :: (MonadResource m, MonadBaseControl IO m)
@@ -81,3 +83,26 @@ cancelConversionTask
     -> EC2 m Bool
 cancelConversionTask =
     ec2Delete "CancelConversionTask" "ConversionTaskId"
+
+importVolume
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ AvailabilityZone
+    -> ImportVolumeRequestImage -- ^ Image
+    -> Maybe Text -- ^ Description
+    -> Int -- ^ Volume Size
+    -> EC2 m ConversionTask
+importVolume zone image desc size =
+    ec2Query "ImportVolume" params $
+        element "conversionTask" conversionTaskSink
+  where
+    params =
+        [ "AvailabilityZone" |= zone
+        , "Image" |. imageParams image
+        , "Description" |=? desc
+        , "Volume" |.+ "Size" |= toText size
+        ]
+    imageParams img =
+        [ "Format" |= importVolumeRequestImageFormat img
+        , "Bytes" |= toText (importVolumeRequestImageBytes img)
+        , "ImportManifestUrl" |= importVolumeRequestImageImportManifestUrl img
+        ]

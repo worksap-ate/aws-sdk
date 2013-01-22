@@ -45,6 +45,7 @@ module AWS.EC2.Types
     , ImageType(..)
     , ImportInstanceTaskDetailItem(..)
     , ImportInstanceTaskDetails(..)
+    , ImportVolumeRequestImage(..)
     , ImportVolumeTaskDetails(..)
     , Instance(..)
     , InstanceAttribute(..)
@@ -1048,6 +1049,13 @@ data VolumeAttribute
 data VolumeAttributeRequest
     = VolumeAttributeRequestAutoEnableIO
     | VolumeAttributeRequestProductCodes
+  deriving (Show, Read, Eq)
+
+data ImportVolumeRequestImage = ImportVolumeRequestImage
+    { importVolumeRequestImageFormat :: Text
+    , importVolumeRequestImageBytes :: Int
+    , importVolumeRequestImageImportManifestUrl :: Text
+    }
   deriving (Show, Read, Eq)
 
 data ConversionTask = ConversionTask
