@@ -16,6 +16,7 @@ module AWS.EC2.Types
     , BlockDeviceMapping(..)
     , BlockDeviceMappingParam(..)
     , ConsoleOutput(..)
+    , ConversionTask(..)
     , CreateRouteRequest(..)
     , CreateSubnetRequest(..)
     , CreateVolumePermission(..)
@@ -28,6 +29,8 @@ module AWS.EC2.Types
     , DhcpOptions(..)
     , DhcpValue(..)
     , DisassociateAddressRequest(..)
+    , DiskImageDescription(..)
+    , DiskImageVolumeDescription(..)
     , EbsBlockDevice(..)
     , EbsInstanceBlockDevice(..)
     , EbsSource(..)
@@ -40,6 +43,9 @@ module AWS.EC2.Types
     , Image(..)
     , ImageState(..)
     , ImageType(..)
+    , ImportInstanceTaskDetailItem(..)
+    , ImportInstanceTaskDetails(..)
+    , ImportVolumeTaskDetails(..)
     , Instance(..)
     , InstanceAttribute(..)
     , InstanceAttributeRequest(..)
@@ -1044,6 +1050,65 @@ data VolumeAttributeRequest
     | VolumeAttributeRequestProductCodes
   deriving (Show, Read, Eq)
 
+data ConversionTask = ConversionTask
+    { conversionTaskId :: Text
+    , conversionTaskExpirationTime :: Text
+    , conversionTaskImportVolume :: ImportVolumeTaskDetails
+    , conversionTaskImportInstance :: Maybe ImportInstanceTaskDetails
+    , conversionTaskState :: ConversionTaskState
+    , conversionTaskStatusMessage :: Text
+    }
+  deriving (Show, Read, Eq)
+
+data ImportVolumeTaskDetails = ImportVolumeTaskDetails
+    { importVolumeTaskDetailsBytesConverted :: Int
+    , importVolumeTaskDetailsAvailabilityZone :: Text
+    , importVolumeTaskDetailsDescription :: Maybe Text
+    , importVolumeTaskDetailsImage :: DiskImageDescription
+    , importVolumeTaskDetailsVolume :: DiskImageVolumeDescription
+    }
+  deriving (Show, Read, Eq)
+
+data DiskImageDescription = DiskImageDescription
+    { diskImageDescriptionFormat :: Text
+    , diskImageDescriptionSize :: Int
+    , diskImageDescriptionImportManifestUrl :: Text
+    , diskImageDescriptionChecksum :: Maybe Text
+    }
+  deriving (Show, Read, Eq)
+
+data DiskImageVolumeDescription = DiskImageVolumeDescription
+    { diskImageVolumeDescriptionSize :: Int
+    , diskImageVolumeDescriptionId :: Maybe Text
+    }
+  deriving (Show, Read, Eq)
+
+data ImportInstanceTaskDetails = ImportInstanceTaskDetails
+    { importInstanceTaskDetailsVolumes :: ImportInstanceTaskDetailItem
+    , importInstanceTaskDetailsInstanceId :: Text
+    , importInstanceTaskDetailsPlatform :: Text
+    , importInstanceTaskDetailsDescription :: Text
+    }
+  deriving (Show, Read, Eq)
+
+data ImportInstanceTaskDetailItem = ImportInstanceTaskDetailItem
+    { importInstanceTaskDetailItemBytesConverted :: Int
+    , importInstanceTaskDetailItemAvailabilityZone :: Text
+    , importInstanceTaskDetailItemImage :: DiskImageDescription
+    , importInstanceTaskDetailItemDescription :: Text
+    , importInstanceTaskDetailItemVolume :: DiskImageVolumeDescription
+    , importInstanceTaskDetailItemStatus :: Text
+    , importInstanceTaskDetailItemStatusMessage :: Text
+    }
+  deriving (Show, Read, Eq)
+
+data ConversionTaskState
+    = ConversionTaskActive
+    | ConversionTaskCancelling
+    | ConversionTaskCancelled
+    | ConversionTaskCompleted
+  deriving (Show, Read, Eq)
+
 data NetworkAcl = NetworkAcl
     { networkAclId :: Text
     , networkAclVpcId :: Text
@@ -1411,3 +1476,4 @@ deriveFromText "InternetGatewayAttachmentState"
 deriveFromText "NetworkInterfaceStatus" ["available", "in-use", "pending"]
 deriveFromText "PlacementGroupState" ["pending", "available", "deleting", "deleted"]
 deriveFromText "PlacementGroupStrategy" ["cluster"]
+deriveFromText "ConversionTaskState" ["active", "cancelling", "cancelled", "completed"]

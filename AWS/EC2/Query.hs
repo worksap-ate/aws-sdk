@@ -43,7 +43,7 @@ apiVersion :: ByteString
 apiVersion = "2012-12-01"
 
 sinkRequestId :: MonadThrow m
-    => GLSink Event m Text
+    => GLSink Event m (Maybe Text)
 sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
@@ -99,7 +99,7 @@ ec2QuerySource' action params token cond = do
         response <- requestQuery cred ctx action params' apiVersion sinkError
         res <- response $=+ XmlP.parseBytes XmlP.def
         res $$++ sinkRequestId
-    State.put ctx{lastRequestId = Just rid}
+    State.put ctx{lastRequestId = rid}
     lift $ src1 $=+ (cond >> nextToken)
   where
     params' = ("NextToken" |=? token) : params
