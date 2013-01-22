@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.9.2.0
+version:             0.9.2.1
 synopsis:            AWS SDK for Haskell
 description: AWS (Amazon Web Services) sdk for Haskell.
              .
@@ -79,7 +79,7 @@ library
                    , old-locale
                    , http-conduit
                    , data-default
-                   , xml-conduit
+                   , xml-conduit >= 1.0.3.3
                    , xml-types
                    , text
                    , monad-control
