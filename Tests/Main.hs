@@ -34,6 +34,7 @@ main = do
     -- RDS Tests
     runDBInstanceTests
     runDBSnapshotTests
+    runEventTests
 
     -- ELB Tests
     runLoadBalancerTests
