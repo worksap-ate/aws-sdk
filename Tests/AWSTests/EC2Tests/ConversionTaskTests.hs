@@ -9,7 +9,7 @@ import Data.Text (Text)
 import Test.Hspec
 
 import AWS.EC2
-import AWS.EC2.Types (ConversionTask(..), ImportVolumeRequestImage(..))
+import AWS.EC2.Types
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -20,6 +20,7 @@ runConversionTaskTests :: IO ()
 runConversionTaskTests = do
     hspec describeConversionTasksTest
     hspec importVolumeTest
+    hspec importInstanceTest
 
 describeConversionTasksTest :: Spec
 describeConversionTasksTest = do
@@ -41,3 +42,18 @@ importVolumeTest = do
         (ImportVolumeRequestImage "RAW" 8 "https://test.test")
         Nothing
         8
+
+importInstanceTest :: Spec
+importInstanceTest = do
+    describe "importInstance doesn't fail" $ do
+        it "importInstance doesn't throw any exception" $ do
+            task <- testEC2' region test
+            let taskId = conversionTaskId task
+            testEC2' region (cancelConversionTask taskId)
+                `shouldReturn` True
+  where
+    test = importInstance
+        Nothing
+        (LaunchSpecification I386 [] Nothing "m1.small" Nothing Nothing Nothing Nothing Nothing)
+        [DiskImage "VMDK" 1024 "https://test.test" Nothing 2]
+        PlatformWindows
