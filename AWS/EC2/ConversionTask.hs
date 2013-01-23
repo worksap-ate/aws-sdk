@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
 module AWS.EC2.ConversionTask
     ( describeConversionTasks
     , cancelConversionTask
     , importVolume
+    , importInstance
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -34,7 +35,7 @@ conversionTaskSink
 conversionTaskSink = ConversionTask
     <$> getT "conversionTaskId"
     <*> getT "expirationTime"
-    <*> element "importVolume" (
+    <*> elementM "importVolume" (
         ImportVolumeTaskDetails
         <$> getT "bytesConverted"
         <*> getT "availabilityZone"
@@ -44,7 +45,7 @@ conversionTaskSink = ConversionTask
         )
     <*> elementM "importInstance" (
         ImportInstanceTaskDetails
-        <$> element "volumes" (
+        <$> itemsSet "volumes" (
             ImportInstanceTaskDetailItem
             <$> getT "bytesConverted"
             <*> getT "availabilityZone"
@@ -106,3 +107,52 @@ importVolume zone image desc size =
         , "Bytes" |= toText (importVolumeRequestImageBytes img)
         , "ImportManifestUrl" |= importVolumeRequestImageImportManifestUrl img
         ]
+
+importInstance
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Maybe Text -- ^ Description
+    -> LaunchSpecification -- ^ LaunchSpecification
+    -> [DiskImage] -- ^ DiskImages
+    -> Platform -- ^ Platform
+    -> EC2 m ConversionTask
+importInstance desc ls images platform =
+    ec2Query "ImportInstance" params $
+        element "conversionTask" conversionTaskSink
+  where
+    params =
+        [ "Description" |=? desc
+        , "LaunchSpecification" |. launchSpecificationParams ls
+        , "DiskImage" |.#. diskImageParams <$> images
+        , "Platform" |= platformText platform
+        ]
+    launchSpecificationParams (LaunchSpecification{..}) =
+        [ "Architecture" |=
+            architectureText launchSpecificationArchitecture
+        , "GroupName" |.#= launchSpecificationGroupNames
+        , "UserData" |=? launchSpecificationUserData
+        , "InstanceType" |= launchSpecificationInstanceType
+        , "Placement" |.+ "AvailabilityZone" |=?
+            launchSpecificationPlacementAvailabilityZone
+        , "Monitoring" |.+ "Enabled" |=?
+            toText <$> launchSpecificationMonitoringEnabled
+        , "SubnetId" |=? launchSpecificationSubnetId
+        , "InstanceInitiatedShutdownBehavior" |=?
+            shutdownBehaviorText <$> launchSpecificationInstanceInitiatedShutdownBehavior
+        , "PrivateIpAddress" |=?
+            toText <$> launchSpecificationPrivateIpAddress
+        ]
+    diskImageParams (DiskImage{..}) =
+        [ "Image" |.
+            [ "Format" |= diskImageFormat
+            , "Bytes" |= toText diskImageBytes
+            , "ImportManifestUrl" |= diskImageImportManifestUrl
+            , "Description" |=? diskImageDescripsion
+            ]
+        , "Volume" |.+ "Size" |= toText diskImageVolumeSize
+        ]
+    shutdownBehaviorText ShutdownBehaviorStop = "stop"
+    shutdownBehaviorText ShutdownBehaviorTerminate = "terminate"
+    platformText PlatformWindows = "Windows"
+    platformText PlatformOther = error "Valid value is `Windows'"
+    architectureText I386 = "i386"
+    architectureText X86_64 = "x86_64"
