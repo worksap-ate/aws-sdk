@@ -13,14 +13,6 @@ import AWS.Class
 import AWS.Lib.Query
 import AWS.Lib.Parser
 
-#ifdef DEBUG
-import Control.Monad.IO.Class (liftIO)
-import qualified Control.Monad.Reader as Reader
-import qualified Control.Monad.State as State
-import Control.Monad.Trans.Class (lift)
-import qualified Data.Conduit.Binary as CB
-#endif
-
 apiVersion :: ByteString
 apiVersion = "2012-09-17"
 
@@ -46,12 +38,5 @@ rdsQueryDebug
     => ByteString
     -> [QueryParam]
     -> RDS m a
-rdsQueryDebug action params = do
-    cred <- Reader.ask
-    ctx <- State.get
-    lift $ do
-        liftIO $ mapM_ putStrLn $ showUnitParams params
-        response <- requestQuery cred ctx action params apiVersion sinkError
-        (res, _) <- unwrapResumable response
-        res $$ CB.sinkFile "debug.txt" >>= fail "debug"
+rdsQueryDebug = debugQuery apiVersion
 #endif
