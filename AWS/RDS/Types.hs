@@ -7,8 +7,9 @@ import Data.Time (UTCTime)
 data DBInstance = DBInstance
     { dbiIops :: Maybe Int
     , dbiBackupRetentionPeriod :: Int
-    , dbiMultiAZ :: Bool
     , dbiDBInstanceStatus :: Text
+    , dbiMultiAZ :: Bool
+    , dbiVpcSecurityGroups :: [VpcSecurityGroupMembership]
     , dbiDBInstanceIdentifier :: Text
     , dbiPreferredBackupWindow :: Text
     , dbiPreferredMaintenanceWindow :: Text
@@ -25,13 +26,20 @@ data DBInstance = DBInstance
     , dbiEndpoint :: Maybe Endpoint
     , dbiEngineVersion :: Text
     , dbiReadReplicaSourceDBInstanceIdentifier :: Maybe Text
+    , dbiPubliclyAccessible :: Bool
     , dbiSecurityGroups :: [DBSecurityGroupMembership]
-    , dbiDBName :: Maybe Text
     , dbiAutoMinorVersionUpgrade :: Bool
+    , dbiDBName :: Maybe Text
     , dbiInstanceCreateTime :: Maybe UTCTime
     , dbiAllocatedStorage :: Int -- ^ storage size in gigabytes
     , dbiDBInstanceClass :: Text
     , dbiMasterUsername :: Text
+    }
+  deriving (Show, Eq)
+
+data VpcSecurityGroupMembership = VpcSecurityGroupMembership
+    { vpcSecurityGroupMembershipStatus :: Text
+    , vpcSecurityGroupMembershipVpcSecurityGroupId :: Text
     }
   deriving (Show, Eq)
 

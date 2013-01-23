@@ -14,7 +14,7 @@ import AWS.Lib.Query
 import AWS.Lib.Parser
 
 apiVersion :: ByteString
-apiVersion = "2012-09-17"
+apiVersion = "2013-01-10"
 
 type RDS m a = AWS AWSContext m a
 
@@ -30,7 +30,14 @@ elements :: MonadThrow m
     => Text
     -> GLSink Event m a
     -> GLSink Event m [a]
-elements name f = element (name <> "s") $ listConsumer name f
+elements name = elements' (name <> "s") name
+
+elements' :: MonadThrow m
+    => Text
+    -> Text
+    -> GLSink Event m a
+    -> GLSink Event m [a]
+elements' setName itemName = element setName . listConsumer itemName
 
 #ifdef DEBUG
 rdsQueryDebug
