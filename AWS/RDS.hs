@@ -9,6 +9,8 @@ module AWS.RDS
     , module AWS.RDS.DBInstance
       -- * DBSnapshot
     , module AWS.RDS.DBSnapshot
+      -- * Event
+    , module AWS.RDS.Event
     ) where
 
 import Data.Text (Text)
@@ -25,6 +27,7 @@ import AWS
 import AWS.RDS.Internal
 import AWS.RDS.DBInstance
 import AWS.RDS.DBSnapshot
+import AWS.RDS.Event
 
 initialRDSContext :: HTTP.Manager -> AWSContext
 initialRDSContext mgr = AWSContext

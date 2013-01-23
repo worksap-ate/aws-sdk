@@ -15,7 +15,7 @@ import AWS.Util
 import AWS.Lib.Query
 import AWS.Lib.Parser
 
-import AWS.RDS.Types
+import AWS.RDS.Types hiding (Event)
 import AWS.RDS.Internal
 
 describeDBSnapshots

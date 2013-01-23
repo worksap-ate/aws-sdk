@@ -1,8 +1,11 @@
+{-# LANGUAGE TemplateHaskell #-}
 module AWS.RDS.Types
     where
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
+
+import AWS.Lib.FromText
 
 data DBInstance = DBInstance
     { dbiIops :: Maybe Int
@@ -118,3 +121,21 @@ data DBSnapshot = DBSnapshot
     , dbsMasterUsername :: Text
     }
   deriving (Show, Eq)
+
+data Event = Event
+    { eventMessage :: Text
+    , eventSourceType :: SourceType
+    , eventEventCategories :: [Text]
+    , eventDate :: UTCTime
+    , eventSourceIdentifier :: Text
+    }
+  deriving (Show, Eq)
+
+data SourceType
+    = SourceTypeDBInstance
+    | SourceTypeDBParameterGroup
+    | SourceTypeDBSecurityGroup
+    | SourceTypeDBSnapshot
+  deriving (Show, Read, Eq)
+
+deriveFromText "SourceType" ["db-instance", "db-parameter-group", "db-security-group", "db-snapshot"]
