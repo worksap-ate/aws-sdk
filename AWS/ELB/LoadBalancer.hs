@@ -8,6 +8,7 @@ module AWS.ELB.LoadBalancer
     , detachLoadBalancerFromSubnets
     , applySecurityGroupsToLoadBalancer
     , registerInstancesWithLoadBalancer
+    , deregisterInstancesFromLoadBalancer
     ) where
 
 import Data.Text (Text)
@@ -192,3 +193,16 @@ registerInstancesWithLoadBalancer insts name =
 
 toInstanceParam :: Text -> [QueryParam]
 toInstanceParam inst = ["InstanceId" |= inst ]
+
+deregisterInstancesFromLoadBalancer
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ A list of EC2 instance IDs consisting of all instances to be deregistered.
+    -> Text -- ^ A list of EC2 instance IDs consisting of all instances to be deregistered.
+    -> ELB m [Instance]
+deregisterInstancesFromLoadBalancer insts name =
+    elbQuery "DeregisterInstancesFromLoadBalancer" params $ members "Instances" sinkInstance
+  where
+    params =
+        [ "Instances.member" |.#. map toInstanceParam insts
+        , "LoadBalancerName" |= name
+        ]
