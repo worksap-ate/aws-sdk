@@ -32,6 +32,8 @@
 module AWS
     ( -- * Credentials
       Credential
+    , AccessKey
+    , SecretAccessKey
     , newCredential
     , loadCredential
     , loadCredentialFromFile
