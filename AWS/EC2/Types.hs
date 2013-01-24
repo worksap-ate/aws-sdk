@@ -1411,7 +1411,7 @@ data NetworkInterfaceAssociation = NetworkInterfaceAssociation
     , networkInterfaceAssociationPublicIp :: IPv4
     , networkInterfaceAssociationPublicDnsName :: Maybe Text
     , networkInterfaceAssociationIpOwnerId :: Text
-    , networkInterfaceAssociationId :: Text
+    , networkInterfaceAssociationId :: Maybe Text
     }
   deriving (Show, Read, Eq)
 
