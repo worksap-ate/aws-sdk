@@ -11,6 +11,7 @@ module AWS.ELB.LoadBalancer
     , deregisterInstancesFromLoadBalancer
     , setLoadBalancerListenerSSLCertificate
     , createLoadBalancerListeners
+    , deleteLoadBalancerListeners
     ) where
 
 import Data.Text (Text)
@@ -245,3 +246,16 @@ toListenerParam Listener{..} =
     , "SSLCertificateId" |=? listenerSSLCertificateId
     , "InstancePort" |= toText listenerInstancePort
     ]
+
+deleteLoadBalancerListeners
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The mnemonic name associated with the LoadBalancer.
+    -> [Int] -- ^ The client port number(s) of the LoadBalancerListener(s) to be removed.
+    -> ELB m ()
+deleteLoadBalancerListeners lb ports =
+    elbQuery "DeleteLoadBalancerListeners" params $ getT_ "DeleteLoadBalancerListenersResult"
+  where
+    params =
+        [ "LoadBalancerName" |= lb
+        , "LoadBalancerPorts.member" |.#= map toText ports
+        ]
