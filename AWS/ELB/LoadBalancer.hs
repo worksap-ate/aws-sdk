@@ -7,6 +7,7 @@ module AWS.ELB.LoadBalancer
     , attachLoadBalancerToSubnets
     , detachLoadBalancerFromSubnets
     , applySecurityGroupsToLoadBalancer
+    , registerInstancesWithLoadBalancer
     ) where
 
 import Data.Text (Text)
@@ -64,8 +65,7 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
             <*> getT "InstancePort"
             )
         )
-    <*> members "Instances"
-        (Instance <$> getT "InstanceId")
+    <*> members "Instances" sinkInstance
     <*> element "Policies"
         (Policies
         <$> members "AppCookieStickinessPolicies"
@@ -96,6 +96,9 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
         <*> members "PolicyNames" text
         )
     <*> members "Subnets" text
+
+sinkInstance :: MonadThrow m => GLSink Event m Instance
+sinkInstance = Instance <$> getT "InstanceId"
 
 createLoadBalancer
     :: (MonadBaseControl IO m, MonadResource m)
@@ -173,3 +176,19 @@ applySecurityGroupsToLoadBalancer name sgs =
         [ "LoadBalancerName" |= name
         , "SecurityGroups.member" |.#= sgs
         ]
+
+registerInstancesWithLoadBalancer
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ A list of instance IDs that should be registered with the LoadBalancer.
+    -> Text -- ^ The name associated with the LoadBalancer.
+    -> ELB m [Instance]
+registerInstancesWithLoadBalancer insts name =
+    elbQuery "RegisterInstancesWithLoadBalancer" params $ members "Instances" sinkInstance
+  where
+    params =
+        [ "Instances.member" |.#. map toInstanceParam insts
+        , "LoadBalancerName" |= name
+        ]
+
+toInstanceParam :: Text -> [QueryParam]
+toInstanceParam inst = ["InstanceId" |= inst ]
