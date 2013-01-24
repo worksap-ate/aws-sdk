@@ -9,6 +9,7 @@ module AWS.ELB.LoadBalancer
     , applySecurityGroupsToLoadBalancer
     , registerInstancesWithLoadBalancer
     , deregisterInstancesFromLoadBalancer
+    , setLoadBalancerListenerSSLCertificate
     ) where
 
 import Data.Text (Text)
@@ -205,4 +206,19 @@ deregisterInstancesFromLoadBalancer insts name =
     params =
         [ "Instances.member" |.#. map toInstanceParam insts
         , "LoadBalancerName" |= name
+        ]
+
+setLoadBalancerListenerSSLCertificate
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The name of the the LoadBalancer.
+    -> Int -- ^ The port that uses the specified SSL certificate.
+    -> Text -- ^ The ID of the SSL certificate chain to use.
+    -> ELB m ()
+setLoadBalancerListenerSSLCertificate lb port cert =
+    elbQuery "SetLoadBalancerListenerSSLCertificate" params $ getT_ "SetLoadBalancerListenerSSLCertificateResult"
+  where
+    params =
+        [ "LoadBalancerName" |= lb
+        , "LoadBalancerPort" |= toText port
+        , "SSLCertificateId" |= cert
         ]
