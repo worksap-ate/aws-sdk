@@ -6,6 +6,7 @@ module AWS.ELB.LoadBalancer
     , deleteLoadBalancer
     , attachLoadBalancerToSubnets
     , detachLoadBalancerFromSubnets
+    , applySecurityGroupsToLoadBalancer
     ) where
 
 import Data.Text (Text)
@@ -158,4 +159,17 @@ detachLoadBalancerFromSubnets name subnets =
     params =
         [ "LoadBalancerName" |= name
         , "Subnets.member" |.#= subnets
+        ]
+
+applySecurityGroupsToLoadBalancer
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The name associated with the LoadBalancer.
+    -> [Text] -- ^ A list of security group IDs to associate with your LoadBalancer in VPC.
+    -> ELB m [Text] -- ^ A list of security group IDs associated with your LoadBalancer.
+applySecurityGroupsToLoadBalancer name sgs =
+    elbQuery "ApplySecurityGroupsToLoadBalancer" params $ members "SecurityGroups" text
+  where
+    params =
+        [ "LoadBalancerName" |= name
+        , "SecurityGroups.member" |.#= sgs
         ]
