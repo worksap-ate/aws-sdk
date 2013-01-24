@@ -4,6 +4,7 @@ module AWS.ELB.LoadBalancer
     ( describeLoadBalancers
     , createLoadBalancer
     , deleteLoadBalancer
+    , attachLoadBalancerToSubnets
     ) where
 
 import Data.Text (Text)
@@ -131,3 +132,16 @@ deleteLoadBalancer name = elbQuery "DeleteLoadBalancer" params $
     getT_ "DeleteLoadBalancerResult"
   where
     params = ["LoadBalancerName" |= name]
+
+attachLoadBalancerToSubnets
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The name associated with the LoadBalancer.
+    -> [Text] -- ^ A list of subnet IDs to add for the LoadBalancer.
+    -> ELB m [Text] -- ^ A list of subnet IDs added for the LoadBalancer.
+attachLoadBalancerToSubnets name subnets =
+    elbQuery "AttachLoadBalancerToSubnets" params $ members "Subnets" text
+  where
+    params =
+        [ "LoadBalancerName" |= name
+        , "Subnets.member" |.#= subnets
+        ]
