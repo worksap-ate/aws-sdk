@@ -47,7 +47,7 @@ data AWSException
         { errorAction :: ByteString
         , errorStatus :: Int
         , errorCode :: Text
-        , errorMessage :: Text
+        , errorMessage :: Maybe Text
         , errorRequestId :: Text
         } -- ^ This error is caused by client requests.
     | ResponseParseError Text
