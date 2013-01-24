@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
 
 module AWS.ELB.LoadBalancer
     ( describeLoadBalancers
@@ -10,6 +10,7 @@ module AWS.ELB.LoadBalancer
     , registerInstancesWithLoadBalancer
     , deregisterInstancesFromLoadBalancer
     , setLoadBalancerListenerSSLCertificate
+    , createLoadBalancerListeners
     ) where
 
 import Data.Text (Text)
@@ -222,3 +223,25 @@ setLoadBalancerListenerSSLCertificate lb port cert =
         , "LoadBalancerPort" |= toText port
         , "SSLCertificateId" |= cert
         ]
+
+createLoadBalancerListeners
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Listener] -- ^ A list of Listeners
+    -> Text -- ^ The name of the LoadBalancer.
+    -> ELB m ()
+createLoadBalancerListeners listeners lb =
+    elbQuery "CreateLoadBalancerListeners" params $ getT_ "CreateLoadBalancerListenersResult"
+  where
+    params =
+        [ "Listeners.member" |.#. map toListenerParam listeners
+        , "LoadBalancerName" |= lb
+        ]
+
+toListenerParam :: Listener -> [QueryParam]
+toListenerParam Listener{..} =
+    [ "Protocol" |= listenerProtocol
+    , "LoadBalancerPort" |= toText listenerLoadBalancerPort
+    , "InstanceProtocol" |= listenerInstanceProtocol
+    , "SSLCertificateId" |=? listenerSSLCertificateId
+    , "InstancePort" |= toText listenerInstancePort
+    ]
