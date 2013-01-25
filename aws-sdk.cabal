@@ -55,6 +55,25 @@ library
                    , AWS.EC2.Tag
                    , AWS.EC2.Params
                    , AWS.EC2.PlacementGroup
+                   , AWS.EC2.Types.Acl
+                   , AWS.EC2.Types.Address
+                   , AWS.EC2.Types.AvailabilityZone
+                   , AWS.EC2.Types.ConversionTask
+                   , AWS.EC2.Types.Common
+                   , AWS.EC2.Types.Image
+                   , AWS.EC2.Types.Instance
+                   , AWS.EC2.Types.KeyPair
+                   , AWS.EC2.Types.NetworkInterface
+                   , AWS.EC2.Types.PlacementGroup
+                   , AWS.EC2.Types.Region
+                   , AWS.EC2.Types.Route
+                   , AWS.EC2.Types.RouteTable
+                   , AWS.EC2.Types.SecurityGroup
+                   , AWS.EC2.Types.Snapshot
+                   , AWS.EC2.Types.Subnets
+                   , AWS.EC2.Types.Tag
+                   , AWS.EC2.Types.VPC
+                   , AWS.EC2.Types.Volume
                    , AWS.Lib.FromText
                    , AWS.Lib.Parser
                    , AWS.Lib.Query
