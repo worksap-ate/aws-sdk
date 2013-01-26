@@ -17,8 +17,6 @@ module AWS.EC2.Types.Common
     , VirtualizationType(..)
     ) where
 
-import Data.Text (Text)
-
 import AWS.Lib.FromText
 
 data Architecture

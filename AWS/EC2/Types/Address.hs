@@ -8,10 +8,6 @@ module AWS.EC2.Types.Address
     , DisassociateAddressRequest(..)
     ) where
 
-import Data.IP (IPv4)
-import Data.Text (Text)
-
-import AWS.Class
 import AWS.Lib.FromText
 
 data Address = Address

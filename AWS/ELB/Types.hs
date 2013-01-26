@@ -1,8 +1,7 @@
 module AWS.ELB.Types
     where
 
-import Data.Text (Text)
-import Data.Time (UTCTime)
+import AWS.Lib.FromText
 
 data LoadBalancer = LoadBalancer
     { loadBalancerSecurityGroups :: [Text]

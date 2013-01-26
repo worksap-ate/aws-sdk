@@ -10,10 +10,6 @@ module AWS.EC2.Types.NetworkInterface
     , SecondaryPrivateIpAddressParam(..)
     ) where
 
-import Data.IP (IPv4)
-import Data.Text (Text)
-import Data.Time (UTCTime)
-
 import AWS.EC2.Types.Common (Group, ResourceTag)
 import AWS.Lib.FromText
 

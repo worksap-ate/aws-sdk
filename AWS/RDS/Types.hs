@@ -2,9 +2,6 @@
 module AWS.RDS.Types
     where
 
-import Data.Text (Text)
-import Data.Time (UTCTime)
-
 import AWS.Lib.FromText
 
 data DBInstance = DBInstance

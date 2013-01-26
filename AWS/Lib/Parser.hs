@@ -21,7 +21,6 @@ module AWS.Lib.Parser
     ) where
 
 import Data.XML.Types (Event(..), Name(..))
-import Data.Text (Text)
 import Data.ByteString (ByteString)
 import Data.Conduit
 import qualified Data.Conduit.List as CL

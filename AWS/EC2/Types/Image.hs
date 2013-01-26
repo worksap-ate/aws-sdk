@@ -16,8 +16,6 @@ module AWS.EC2.Types.Image
     , RegisterImageRequest(..)
     ) where
 
-import Data.Text (Text)
-
 import AWS.EC2.Types.Common
 import AWS.EC2.Types.Volume (VolumeType)
 import AWS.Lib.FromText

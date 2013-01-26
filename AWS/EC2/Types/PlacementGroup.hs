@@ -6,8 +6,6 @@ module AWS.EC2.Types.PlacementGroup
     , PlacementGroupStrategy(..)
     ) where
 
-import Data.Text (Text)
-
 import AWS.Lib.FromText
 
 data PlacementGroup = PlacementGroup

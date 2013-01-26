@@ -1,7 +1,16 @@
 {-# LANGUAGE RankNTypes, OverloadedStrings, TemplateHaskell, FlexibleInstances #-}
 
 module AWS.Lib.FromText
-    where
+    ( FromText(..)
+    , deriveFromText
+    -- re-exports
+    , monadThrow
+    , IPv4
+    , AddrRange
+    , Text
+    , UTCTime
+    , AWSException(..)
+    ) where
 
 import Control.Applicative ((<$>))
 import Control.Monad

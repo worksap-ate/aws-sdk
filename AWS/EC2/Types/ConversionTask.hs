@@ -13,9 +13,6 @@ module AWS.EC2.Types.ConversionTask
     , LaunchSpecification(..)
     ) where
 
-import Data.IP (IPv4)
-import Data.Text (Text)
-
 import AWS.EC2.Types.Common (Architecture, ShutdownBehavior)
 import AWS.Lib.FromText
 

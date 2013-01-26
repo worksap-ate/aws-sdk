@@ -2,7 +2,7 @@ module AWS.EC2.Types.KeyPair
     ( KeyPair(..)
     ) where
 
-import Data.Text (Text)
+import AWS.Lib.FromText
 
 data KeyPair = KeyPair
     { keyPairName :: Text

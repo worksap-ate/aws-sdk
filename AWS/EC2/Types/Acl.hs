@@ -10,8 +10,6 @@ module AWS.EC2.Types.Acl
     , PortRange(..)
     ) where
 
-import Data.Text (Text)
-
 import AWS.EC2.Types.Common (ResourceTag)
 import AWS.Lib.FromText
 

@@ -33,9 +33,6 @@ module AWS.EC2.Types.Instance
     ) where
 
 import Data.ByteString (ByteString)
-import Data.IP (IPv4)
-import Data.Text (Text)
-import Data.Time (UTCTime)
 
 import AWS.Class
 import AWS.EC2.Types.Common

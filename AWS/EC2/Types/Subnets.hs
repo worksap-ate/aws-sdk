@@ -6,9 +6,6 @@ module AWS.EC2.Types.Subnets
     , SubnetState
     ) where
 
-import Data.IP (AddrRange, IPv4)
-import Data.Text (Text)
-
 import AWS.EC2.Types.Common (ResourceTag)
 import AWS.Lib.FromText
 

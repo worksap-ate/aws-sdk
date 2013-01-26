@@ -17,9 +17,6 @@ module AWS.EC2.Types.Volume
     , VolumeType(..)
     ) where
 
-import Data.Text (Text)
-import Data.Time (UTCTime)
-
 import AWS.EC2.Types.Common (ProductCode, ResourceTag)
 import AWS.Lib.FromText
 
