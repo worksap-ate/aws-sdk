@@ -46,9 +46,19 @@ describeLoadBalancersTest = do
                 lb:_ <- describeLoadBalancers [] Nothing
                 describeInstanceHealth [] $ loadBalancerLoadBalancerName lb
                 ) `miss` anyHttpException
+        it "configureHealthCheck doesn't throw any exception" $ do
+            testELB region (withLoadBalancer name [listener] $ configureHealthCheck hc name) `miss` anyHttpException
+
   where
     listener = Listener "http" 80 "http" Nothing 80
     name = "sdkhspectest"
+    hc = HealthCheck
+        { healthCheckHealthyThreshold = 10
+        , healthCheckInterval = 60
+        , healthCheckTimeout = 3
+        , healthCheckTarget = "TCP:80"
+        , healthCheckUnhealthyThreshold = 3
+        }
 
 withLoadBalancer :: (MonadBaseControl IO m, MonadResource m) => Text -> [Listener] -> ELB m a -> ELB m a
 withLoadBalancer name listeners f = E.bracket

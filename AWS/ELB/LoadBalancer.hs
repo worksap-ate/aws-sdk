@@ -17,6 +17,7 @@ module AWS.ELB.LoadBalancer
     , createLoadBalancerPolicy
     , deleteLoadBalancerPolicy
     , describeInstanceHealth
+    , configureHealthCheck
     ) where
 
 import Data.Text (Text)
@@ -53,14 +54,7 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
     <$> members "SecurityGroups" text
     <*> getT "CreatedTime"
     <*> getT "LoadBalancerName"
-    <*> element "HealthCheck"
-        (HealthCheck
-        <$> getT "Interval"
-        <*> getT "Target"
-        <*> getT "HealthyThreshold"
-        <*> getT "Timeout"
-        <*> getT "UnhealthyThreshold"
-        )
+    <*> element "HealthCheck" sinkHealthCheck
     <*> getT "VPCId"
     <*> members "ListenerDescriptions"
         (ListenerDescription
@@ -108,6 +102,15 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
 
 sinkInstance :: MonadThrow m => GLSink Event m Instance
 sinkInstance = Instance <$> getT "InstanceId"
+
+sinkHealthCheck :: MonadThrow m => GLSink Event m HealthCheck
+sinkHealthCheck =
+    HealthCheck
+    <$> getT "Interval"
+    <*> getT "Target"
+    <*> getT "HealthyThreshold"
+    <*> getT "Timeout"
+    <*> getT "UnhealthyThreshold"
 
 createLoadBalancer
     :: (MonadBaseControl IO m, MonadResource m)
@@ -372,3 +375,25 @@ sinkInstanceState =
     <*> getT "InstanceId"
     <*> getT "State"
     <*> getT "ReasonCode"
+
+configureHealthCheck
+    :: (MonadBaseControl IO m, MonadResource m)
+    => HealthCheck -- ^ A structure containing the configuration information for the new healthcheck.
+    -> Text -- ^ The mnemonic name associated with the LoadBalancer.
+    -> ELB m HealthCheck
+configureHealthCheck hc lb =
+    elbQuery "ConfigureHealthCheck" params $ element "HealthCheck" sinkHealthCheck
+  where
+    params =
+        [ "HealthCheck" |. toHealthCheckParams hc
+        , "LoadBalancerName" |= lb
+        ]
+
+toHealthCheckParams :: HealthCheck -> [QueryParam]
+toHealthCheckParams HealthCheck{..} =
+    [ "HealthyThreshold" |= toText healthCheckHealthyThreshold
+    , "Interval" |= toText healthCheckInterval
+    , "Target" |= healthCheckTarget
+    , "Timeout" |= toText healthCheckTimeout
+    , "UnhealthyThreshold" |= toText healthCheckUnhealthyThreshold
+    ]
