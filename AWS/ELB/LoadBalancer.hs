@@ -18,6 +18,7 @@ module AWS.ELB.LoadBalancer
     , deleteLoadBalancerPolicy
     , describeInstanceHealth
     , configureHealthCheck
+    , enableAvailabilityZonesForLoadBalancer
     ) where
 
 import Data.Text (Text)
@@ -397,3 +398,16 @@ toHealthCheckParams HealthCheck{..} =
     , "Timeout" |= toText healthCheckTimeout
     , "UnhealthyThreshold" |= toText healthCheckUnhealthyThreshold
     ]
+
+enableAvailabilityZonesForLoadBalancer
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ A list of new Availability Zones for the LoadBalancer.
+    -> Text -- ^ The name associated with the LoadBalancer.
+    -> ELB m [Text] -- ^ An updated list of Availability Zones for the LoadBalancer.
+enableAvailabilityZonesForLoadBalancer zones lb =
+    elbQuery "EnableAvailabilityZonesForLoadBalancer" params $ members "AvailabilityZones" text
+  where
+    params =
+        [ "AvailabilityZones.member" |.#= zones
+        , "LoadBalancerName" |= lb
+        ]
