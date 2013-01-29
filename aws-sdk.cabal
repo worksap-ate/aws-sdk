@@ -89,7 +89,7 @@ library
                      -fno-warn-unused-do-bind
   extensions: OverloadedStrings
   build-depends:     base >= 4 && < 5
-                   , containers <= 0.4.2.1
+                   , containers
                    , SHA
                    , base64-bytestring >= 1.0.0.0
                    , bytestring
