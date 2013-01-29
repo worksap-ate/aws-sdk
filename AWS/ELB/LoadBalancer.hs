@@ -15,6 +15,7 @@ module AWS.ELB.LoadBalancer
     , describeLoadBalancerPolicies
     , describeLoadBalancerPolicyTypes
     , createLoadBalancerPolicy
+    , deleteLoadBalancerPolicy
     ) where
 
 import Data.Text (Text)
@@ -336,3 +337,16 @@ toAttributeParams PolicyAttribute{..} =
     [ "AttributeName" |= policyAttributeName
     , "AttributeValue" |= policyAttributeValue
     ]
+
+deleteLoadBalancerPolicy
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The mnemonic name associated with the LoadBalancer.
+    -> Text -- ^ The mnemonic name for the policy being deleted.
+    -> ELB m ()
+deleteLoadBalancerPolicy lb policyName =
+    elbQuery "DeleteLoadBalancerPolicy" params $ getT_ "DeleteLoadBalancerPolicyResult"
+  where
+    params =
+        [ "LoadBalancerName" |= lb
+        , "PolicyName" |= policyName
+        ]
