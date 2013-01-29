@@ -50,11 +50,12 @@ describeInstanceAttributeTest = do
 monitorAndUnmonitorInstancesTest :: Spec
 monitorAndUnmonitorInstancesTest = do
     describe "{monitor,unmonitor}Instances doesn't fail" $ do
-        it "{monitor,unmonitor}Instances doesn't throw any exception" $ do
+        it "{monitor,unmonitor}Instances doesn't throw any exception" $ (do
             reservations <- testEC2 region $ describeInstances [] [("monitoring-state", ["disabled"])]
             let iid = instanceId $ head $ reservationInstanceSet $ head reservations
             testState (monitorInstances [iid]) `shouldReturn` MonitoringPending
             testState (unmonitorInstances [iid]) `shouldReturn` MonitoringDisabling
+            ) `miss` anyHttpException
   where
     testState ec2 =
         monitorInstancesResponseInstanceMonitoringState . head
