@@ -30,6 +30,8 @@ describeLoadBalancersTest = do
                 (\_ -> deleteLoadBalancer name)
                 (\_ -> return ())
               ) `miss` anyHttpException
+        it "describeLoadBalancerPolicies doesn't throw any exception" $ do
+            testELB region (describeLoadBalancerPolicies Nothing []) `miss` anyHttpException
   where
     listener = Listener "http" 80 "http" Nothing 80
     name = "sdkhspectest"

@@ -12,6 +12,7 @@ module AWS.ELB.LoadBalancer
     , setLoadBalancerListenerSSLCertificate
     , createLoadBalancerListeners
     , deleteLoadBalancerListeners
+    , describeLoadBalancerPolicies
     ) where
 
 import Data.Text (Text)
@@ -259,3 +260,29 @@ deleteLoadBalancerListeners lb ports =
         [ "LoadBalancerName" |= lb
         , "LoadBalancerPorts.member" |.#= map toText ports
         ]
+
+describeLoadBalancerPolicies
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Text -- ^ The mnemonic name associated with the LoadBalancer.
+    -> [Text] -- ^ The names of LoadBalancer policies you've created or Elastic Load Balancing sample policy names.
+    -> ELB m [PolicyDescription]
+describeLoadBalancerPolicies mlb policies =
+    elbQuery "DescribeLoadBalancerPolicies" params $ members "PolicyDescriptions" sinkPolicyDescription
+  where
+    params =
+        [ "LoadBalancerName" |=? mlb
+        , "PolicyNames.member" |.#= policies
+        ]
+
+sinkPolicyDescription :: MonadThrow m => GLSink Event m PolicyDescription
+sinkPolicyDescription =
+    PolicyDescription
+    <$> getT "PolicyName"
+    <*> getT "PolicyTypeName"
+    <*> members "PolicyAttributeDescriptions" sinkPolicyAttribute
+
+sinkPolicyAttribute :: MonadThrow m => GLSink Event m PolicyAttribute
+sinkPolicyAttribute =
+    PolicyAttribute
+    <$> getT "AttributeName"
+    <*> getT "AttributeValue"

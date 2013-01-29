@@ -83,3 +83,16 @@ data SourceSecurityGroup = SourceSecurityGroup
     , sourceSecurityGroupGroupName :: Text
     }
   deriving (Show, Eq)
+
+data PolicyDescription = PolicyDescription
+    { policyName :: Text
+    , policyTypeName :: Text
+    , policyAttributes :: [PolicyAttribute]
+    }
+  deriving (Show, Eq)
+
+data PolicyAttribute = PolicyAttribute
+    { policyAttributeName :: Text
+    , policyAttributeValue :: Text
+    }
+  deriving (Show, Eq)
