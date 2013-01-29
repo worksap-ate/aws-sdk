@@ -145,6 +145,7 @@ test-suite test
                  , HUnit
                  , lifted-base
                  , iproute
+                 , tls
 
 source-repository head
     type:            git
