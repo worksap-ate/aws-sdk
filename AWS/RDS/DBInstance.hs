@@ -61,23 +61,7 @@ sinkDBInstances = elements "DBInstance" $
     <*> sinkPendingModifiedValues
     <*> getT "CharacterSetName"
     <*> getT "LicenseModel"
-    <*> elementM "DBSubnetGroup"
-        (DBSubnetGroup
-        <$> getT "VpcId"
-        <*> getT "SubnetGroupStatus"
-        <*> getT "DBSubnetGroupDescription"
-        <*> getT "DBSubnetGroupName"
-        <*> elements "Subnet"
-            (Subnet
-            <$> getT "SubnetStatus"
-            <*> getT "SubnetIdentifier"
-            <*> element "SubnetAvailabilityZone"
-                (AvailabilityZone
-                <$> getT "Name"
-                <*> getT "ProvisionedIopsCapable"
-                )
-            )
-        )
+    <*> elementM "DBSubnetGroup" dbSubnetGroupSink
     <*> elements "DBParameterGroup"
         (DBParameterGroupStatus
         <$> getT "ParameterApplyStatus"

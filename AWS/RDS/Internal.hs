@@ -1,8 +1,18 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.RDS.Internal
-    where
+    ( apiVersion
+    , RDS
+    , rdsQuery
+    , elements
+    , elements'
+#ifdef DEBUG
+    , rdsQueryDebug
+#endif
+    , dbSubnetGroupSink
+    ) where
 
+import Control.Applicative ((<$>), (<*>))
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit
@@ -12,6 +22,7 @@ import Data.XML.Types (Event(..))
 import AWS.Class
 import AWS.Lib.Query
 import AWS.Lib.Parser
+import AWS.RDS.Types (DBSubnetGroup(..), Subnet(..), AvailabilityZone(..))
 
 apiVersion :: ByteString
 apiVersion = "2013-01-10"
@@ -47,3 +58,22 @@ rdsQueryDebug
     -> RDS m a
 rdsQueryDebug = debugQuery apiVersion
 #endif
+
+dbSubnetGroupSink
+    :: MonadThrow m
+    => GLSink Event m DBSubnetGroup
+dbSubnetGroupSink = DBSubnetGroup
+    <$> getT "VpcId"
+    <*> getT "SubnetGroupStatus"
+    <*> getT "DBSubnetGroupDescription"
+    <*> getT "DBSubnetGroupName"
+    <*> elements "Subnet" (
+        Subnet
+        <$> getT "SubnetStatus"
+        <*> getT "SubnetIdentifier"
+        <*> element "SubnetAvailabilityZone" (
+            AvailabilityZone
+            <$> getT "Name"
+            <*> getT "ProvisionedIopsCapable"
+            )
+        )
