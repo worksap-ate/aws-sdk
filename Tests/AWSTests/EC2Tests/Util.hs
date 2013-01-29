@@ -5,6 +5,9 @@ module AWSTests.EC2Tests.Util
     , withVpc
     , withSubnet
     , withInstance
+    , withRouteTable
+    , withInternetGateway
+    , withInternetGatewayAttached
     )
     where
 
@@ -71,3 +74,19 @@ withInstance
 withInstance req = E.bracket
     (head . reservationInstanceSet <$> runInstances req <* sleep 2)
     (\i -> terminateInstances [instanceId i])
+
+withRouteTable :: (MonadBaseControl IO m, MonadResource m) => Text -> (RouteTable -> EC2 m a) -> EC2 m a
+withRouteTable vpc = E.bracket
+    (createRouteTable vpc)
+    (deleteRouteTable . routeTableId)
+
+withInternetGateway :: (MonadBaseControl IO m, MonadResource m) => (InternetGateway -> EC2 m a) -> EC2 m a
+withInternetGateway = E.bracket
+    createInternetGateway
+    (deleteInternetGateway . internetGatewayInternetGatewayId)
+
+withInternetGatewayAttached :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> EC2 m a -> EC2 m a
+withInternetGatewayAttached gateway vpc f = E.bracket
+    (attachInternetGateway gateway vpc)
+    (const $ detachInternetGateway gateway vpc)
+    (const f)

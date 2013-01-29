@@ -13,7 +13,7 @@ import Control.Monad.Trans.Class (lift)
 import Test.Hspec
 
 import AWS.EC2
-import AWS.EC2.Types (RouteTable(..), InternetGateway(..), CreateRouteRequest(..))
+import AWS.EC2.Types
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -32,13 +32,12 @@ routeTest = do
     describe "{create,replace,delete}Route doesn't fail" $ do
         it "{create,replace,delete}Route doesn't throw any exception" $ do
             testEC2' region (do
-                tablesSrc <- describeRouteTables [] []
-                Just table <- lift $ tablesSrc $$+- CL.head
-                let tableId = routeTableId table
-                gatewaysSrc <- describeInternetGateways [] []
-                Just gateway <- lift $ gatewaysSrc $$+- CL.head
-                let gatewayId = internetGatewayInternetGatewayId gateway
-                createRoute $ CreateRouteToGateway tableId cidr gatewayId
-                replaceRoute $ CreateRouteToGateway tableId cidr gatewayId
-                deleteRoute tableId cidr
+                vpcSrc <- describeVpcs [] []
+                Just Vpc{vpcId = vpc} <- lift $ vpcSrc $$+- CL.head
+                withRouteTable vpc $ \RouteTable{routeTableId = tableId} ->
+                    withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = gatewayId} ->
+                        withInternetGatewayAttached gatewayId vpc $ do
+                            createRoute $ CreateRouteToGateway tableId cidr gatewayId
+                            replaceRoute $ CreateRouteToGateway tableId cidr gatewayId
+                            deleteRoute tableId cidr
                 ) `miss` anyHttpException
