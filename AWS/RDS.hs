@@ -9,6 +9,8 @@ module AWS.RDS
     , module AWS.RDS.DBInstance
       -- * DBParameterGroup
     , module AWS.RDS.DBParameterGroup
+      -- * DBSecurityGroup
+    , module AWS.RDS.DBSecurityGroup
       -- * DBSnapshot
     , module AWS.RDS.DBSnapshot
       -- * DBSubnetGroup
@@ -31,6 +33,7 @@ import AWS
 import AWS.RDS.Internal
 import AWS.RDS.DBInstance
 import AWS.RDS.DBParameterGroup
+import AWS.RDS.DBSecurityGroup
 import AWS.RDS.DBSnapshot
 import AWS.RDS.DBSubnetGroup
 import AWS.RDS.Event
