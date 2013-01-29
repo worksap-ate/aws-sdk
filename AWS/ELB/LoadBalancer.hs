@@ -14,6 +14,7 @@ module AWS.ELB.LoadBalancer
     , deleteLoadBalancerListeners
     , describeLoadBalancerPolicies
     , describeLoadBalancerPolicyTypes
+    , createLoadBalancerPolicy
     ) where
 
 import Data.Text (Text)
@@ -312,3 +313,26 @@ sinkPolicyAttributeType =
     <*> getT "DefaultValue"
     <*> getT "Cardinality"
     <*> getT "Description"
+
+createLoadBalancerPolicy
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The name associated with the LoadBalancer for which the policy is being created.
+    -> [PolicyAttribute] -- ^ A list of attributes associated with the policy being created.
+    -> Text -- ^ The name of the LoadBalancer policy being created.
+    -> Text -- ^ The name of the base policy type being used to create this policy.
+    -> ELB m ()
+createLoadBalancerPolicy lb attrs name typeName =
+    elbQuery "CreateLoadBalancerPolicy" params $ getT_ "CreateLoadBalancerPolicyResult"
+  where
+    params =
+        [ "LoadBalancerName" |= lb
+        , "PolicyAttributes.member" |.#. map toAttributeParams attrs
+        , "PolicyName" |= name
+        , "PolicyTypeName" |= typeName
+        ]
+
+toAttributeParams :: PolicyAttribute -> [QueryParam]
+toAttributeParams PolicyAttribute{..} =
+    [ "AttributeName" |= policyAttributeName
+    , "AttributeValue" |= policyAttributeValue
+    ]
