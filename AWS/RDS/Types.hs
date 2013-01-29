@@ -1,6 +1,8 @@
 module AWS.RDS.Types
     ( -- * DBInstance
       module AWS.RDS.Types.DBInstance
+      -- * DBParameterGroup
+    , module AWS.RDS.Types.DBParameterGroup
       -- * DBSnapshot
     , module AWS.RDS.Types.DBSnapshot
       -- * DBSubnetGroup
@@ -10,6 +12,7 @@ module AWS.RDS.Types
     ) where
 
 import AWS.RDS.Types.DBInstance
+import AWS.RDS.Types.DBParameterGroup
 import AWS.RDS.Types.DBSnapshot
 import AWS.RDS.Types.DBSubnetGroup
 import AWS.RDS.Types.Event

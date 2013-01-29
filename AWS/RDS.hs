@@ -7,6 +7,8 @@ module AWS.RDS
     , setRegion
       -- * DBInstance
     , module AWS.RDS.DBInstance
+      -- * DBParameterGroup
+    , module AWS.RDS.DBParameterGroup
       -- * DBSnapshot
     , module AWS.RDS.DBSnapshot
       -- * DBSubnetGroup
@@ -28,6 +30,7 @@ import AWS.Lib.Query (textToBS)
 import AWS
 import AWS.RDS.Internal
 import AWS.RDS.DBInstance
+import AWS.RDS.DBParameterGroup
 import AWS.RDS.DBSnapshot
 import AWS.RDS.DBSubnetGroup
 import AWS.RDS.Event

@@ -79,10 +79,12 @@ library
                    , AWS.Lib.Query
                    , AWS.RDS.Internal
                    , AWS.RDS.DBInstance
+                   , AWS.RDS.DBParameterGroup
                    , AWS.RDS.DBSnapshot
                    , AWS.RDS.DBSubnetGroup
                    , AWS.RDS.Event
                    , AWS.RDS.Types.DBInstance
+                   , AWS.RDS.Types.DBParameterGroup
                    , AWS.RDS.Types.DBSnapshot
                    , AWS.RDS.Types.DBSubnetGroup
                    , AWS.RDS.Types.Event
