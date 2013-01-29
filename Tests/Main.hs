@@ -33,6 +33,7 @@ main = do
 
     -- RDS Tests
     runDBInstanceTests
+    runDBParameterGroupTests
     runDBSnapshotTests
     runDBSubnetGroupTests
     runEventTests
