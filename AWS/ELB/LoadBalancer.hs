@@ -12,6 +12,10 @@ module AWS.ELB.LoadBalancer
     , setLoadBalancerListenerSSLCertificate
     , createLoadBalancerListeners
     , deleteLoadBalancerListeners
+    , describeLoadBalancerPolicies
+    , describeLoadBalancerPolicyTypes
+    , createLoadBalancerPolicy
+    , deleteLoadBalancerPolicy
     ) where
 
 import Data.Text (Text)
@@ -258,4 +262,91 @@ deleteLoadBalancerListeners lb ports =
     params =
         [ "LoadBalancerName" |= lb
         , "LoadBalancerPorts.member" |.#= map toText ports
+        ]
+
+describeLoadBalancerPolicies
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Text -- ^ The mnemonic name associated with the LoadBalancer.
+    -> [Text] -- ^ The names of LoadBalancer policies you've created or Elastic Load Balancing sample policy names.
+    -> ELB m [PolicyDescription]
+describeLoadBalancerPolicies mlb policies =
+    elbQuery "DescribeLoadBalancerPolicies" params $ members "PolicyDescriptions" sinkPolicyDescription
+  where
+    params =
+        [ "LoadBalancerName" |=? mlb
+        , "PolicyNames.member" |.#= policies
+        ]
+
+sinkPolicyDescription :: MonadThrow m => GLSink Event m PolicyDescription
+sinkPolicyDescription =
+    PolicyDescription
+    <$> getT "PolicyName"
+    <*> getT "PolicyTypeName"
+    <*> members "PolicyAttributeDescriptions" sinkPolicyAttribute
+
+sinkPolicyAttribute :: MonadThrow m => GLSink Event m PolicyAttribute
+sinkPolicyAttribute =
+    PolicyAttribute
+    <$> getT "AttributeName"
+    <*> getT "AttributeValue"
+
+describeLoadBalancerPolicyTypes
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ Specifies the name of the policy types.
+    -> ELB m [PolicyType]
+describeLoadBalancerPolicyTypes typeNames =
+    elbQuery "DescribeLoadBalancerPolicyTypes" params $ members "PolicyTypeDescriptions" sinkPolicyType
+  where
+    params = ["PolicyTypeNames.member" |.#= typeNames]
+
+sinkPolicyType :: MonadThrow m => GLSink Event m PolicyType
+sinkPolicyType =
+    PolicyType
+    <$> members "PolicyAttributeTypeDescriptions" sinkPolicyAttributeType
+    <*> getT "PolicyTypeName"
+    <*> getT "Description"
+
+sinkPolicyAttributeType :: MonadThrow m => GLSink Event m PolicyAttributeType
+sinkPolicyAttributeType =
+    PolicyAttributeType
+    <$> getT "AttributeName"
+    <*> getT "AttributeType"
+    <*> getT "DefaultValue"
+    <*> getT "Cardinality"
+    <*> getT "Description"
+
+createLoadBalancerPolicy
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The name associated with the LoadBalancer for which the policy is being created.
+    -> [PolicyAttribute] -- ^ A list of attributes associated with the policy being created.
+    -> Text -- ^ The name of the LoadBalancer policy being created.
+    -> Text -- ^ The name of the base policy type being used to create this policy.
+    -> ELB m ()
+createLoadBalancerPolicy lb attrs name typeName =
+    elbQuery "CreateLoadBalancerPolicy" params $ getT_ "CreateLoadBalancerPolicyResult"
+  where
+    params =
+        [ "LoadBalancerName" |= lb
+        , "PolicyAttributes.member" |.#. map toAttributeParams attrs
+        , "PolicyName" |= name
+        , "PolicyTypeName" |= typeName
+        ]
+
+toAttributeParams :: PolicyAttribute -> [QueryParam]
+toAttributeParams PolicyAttribute{..} =
+    [ "AttributeName" |= policyAttributeName
+    , "AttributeValue" |= policyAttributeValue
+    ]
+
+deleteLoadBalancerPolicy
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The mnemonic name associated with the LoadBalancer.
+    -> Text -- ^ The mnemonic name for the policy being deleted.
+    -> ELB m ()
+deleteLoadBalancerPolicy lb policyName =
+    elbQuery "DeleteLoadBalancerPolicy" params $ getT_ "DeleteLoadBalancerPolicyResult"
+  where
+    params =
+        [ "LoadBalancerName" |= lb
+        , "PolicyName" |= policyName
         ]
