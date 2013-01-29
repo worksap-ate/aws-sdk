@@ -81,6 +81,10 @@ library
                    , AWS.RDS.DBInstance
                    , AWS.RDS.DBSnapshot
                    , AWS.RDS.Event
+                   , AWS.RDS.Types.DBInstance
+                   , AWS.RDS.Types.DBSnapshot
+                   , AWS.RDS.Types.DBSubnetGroup
+                   , AWS.RDS.Types.Event
                    , AWS.ELB.Internal
                    , AWS.ELB.LoadBalancer
                    , AWS.CloudWatch.Internal
