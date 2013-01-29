@@ -122,3 +122,18 @@ data PolicyAttributeCardinality
   deriving (Show, Eq, Read)
 
 deriveFromText "PolicyAttributeCardinality" ["ONE", "ZERO_OR_ONE", "ZERO_OR_MORE", "ONE_OR_MORE"]
+
+data InstanceState = InstanceState
+    { instanceStateDescription :: Text
+    , instanceStateInstanceId :: Text
+    , instanceStateState :: InstanceStateState
+    , instanceStateReasonCode :: Maybe Text
+    }
+  deriving (Show, Eq)
+
+data InstanceStateState
+    = InstanceStateInService
+    | InstanceStateOutOfService
+    deriving (Show, Eq, Read)
+
+deriveFromText "InstanceStateState" ["InService", "OutOfService"]

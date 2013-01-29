@@ -16,6 +16,7 @@ module AWS.ELB.LoadBalancer
     , describeLoadBalancerPolicyTypes
     , createLoadBalancerPolicy
     , deleteLoadBalancerPolicy
+    , describeInstanceHealth
     ) where
 
 import Data.Text (Text)
@@ -350,3 +351,24 @@ deleteLoadBalancerPolicy lb policyName =
         [ "LoadBalancerName" |= lb
         , "PolicyName" |= policyName
         ]
+
+describeInstanceHealth
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ A list of instance IDs whose states are being queried.
+    -> Text -- ^ The name associated with the LoadBalancer.
+    -> ELB m [InstanceState]
+describeInstanceHealth insts lb =
+    elbQuery "DescribeInstanceHealth" params $ members "InstanceStates" sinkInstanceState
+  where
+    params =
+        [ "Instances.member" |.#. map toInstanceParam insts
+        , "LoadBalancerName" |= lb
+        ]
+
+sinkInstanceState :: MonadThrow m => GLSink Event m InstanceState
+sinkInstanceState =
+    InstanceState
+    <$> getT "Description"
+    <*> getT "InstanceId"
+    <*> getT "State"
+    <*> getT "ReasonCode"

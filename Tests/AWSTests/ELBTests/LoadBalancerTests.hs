@@ -41,6 +41,11 @@ describeLoadBalancersTest = do
                 createLoadBalancerPolicy name [attr] pName pTypeName
                 deleteLoadBalancerPolicy name pName
                 ) `miss` anyHttpException
+        it "describeInstanceHealth doesn't throw any exception" $ do
+            testELB region (do
+                lb:_ <- describeLoadBalancers [] Nothing
+                describeInstanceHealth [] $ loadBalancerLoadBalancerName lb
+                ) `miss` anyHttpException
   where
     listener = Listener "http" 80 "http" Nothing 80
     name = "sdkhspectest"
