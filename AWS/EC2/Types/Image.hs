@@ -67,7 +67,7 @@ data BlockDeviceMappingParam
 
 data EbsBlockDevice = EbsBlockDevice
     { ebsSnapshotId :: Maybe Text
-    , ebsVolumeSize :: Int
+    , ebsVolumeSize :: Maybe Int
     , ebsDeleteOnTermination :: Bool
     , ebsVolumeType :: VolumeType
     }
