@@ -50,9 +50,11 @@ describeLoadBalancersTest = do
             testELB region (withLoadBalancer name [listener] zones $
                 configureHealthCheck hc name
                 ) `miss` anyHttpException
-        it "enableAvailabilityZonesForLoadBalancer doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $
-                enableAvailabilityZonesForLoadBalancer zones name
+        it "{enable,disable}AvailabilityZonesForLoadBalancer doesn't throw any exception" $ do
+            testELB region (withLoadBalancer name [listener] zones $ do
+                let zone = "ap-northeast-1b"
+                enableAvailabilityZonesForLoadBalancer [zone] name
+                disableAvailabilityZonesForLoadBalancer [zone] name
                 ) `miss` anyHttpException
 
   where

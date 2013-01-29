@@ -19,6 +19,7 @@ module AWS.ELB.LoadBalancer
     , describeInstanceHealth
     , configureHealthCheck
     , enableAvailabilityZonesForLoadBalancer
+    , disableAvailabilityZonesForLoadBalancer
     ) where
 
 import Data.Text (Text)
@@ -406,6 +407,19 @@ enableAvailabilityZonesForLoadBalancer
     -> ELB m [Text] -- ^ An updated list of Availability Zones for the LoadBalancer.
 enableAvailabilityZonesForLoadBalancer zones lb =
     elbQuery "EnableAvailabilityZonesForLoadBalancer" params $ members "AvailabilityZones" text
+  where
+    params =
+        [ "AvailabilityZones.member" |.#= zones
+        , "LoadBalancerName" |= lb
+        ]
+
+disableAvailabilityZonesForLoadBalancer
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ A list of Availability Zones to be removed from the LoadBalancer.
+    -> Text -- ^ The name associated with the LoadBalancer.
+    -> ELB m [Text] -- ^ A list of updated Availability Zones for the LoadBalancer.
+disableAvailabilityZonesForLoadBalancer zones lb =
+    elbQuery "DisableAvailabilityZonesForLoadBalancer" params $ members "AvailabilityZones" text
   where
     params =
         [ "AvailabilityZones.member" |.#= zones
