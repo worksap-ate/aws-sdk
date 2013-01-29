@@ -13,6 +13,7 @@ module AWS.ELB.LoadBalancer
     , createLoadBalancerListeners
     , deleteLoadBalancerListeners
     , describeLoadBalancerPolicies
+    , describeLoadBalancerPolicyTypes
     ) where
 
 import Data.Text (Text)
@@ -286,3 +287,28 @@ sinkPolicyAttribute =
     PolicyAttribute
     <$> getT "AttributeName"
     <*> getT "AttributeValue"
+
+describeLoadBalancerPolicyTypes
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ Specifies the name of the policy types.
+    -> ELB m [PolicyType]
+describeLoadBalancerPolicyTypes typeNames =
+    elbQuery "DescribeLoadBalancerPolicyTypes" params $ members "PolicyTypeDescriptions" sinkPolicyType
+  where
+    params = ["PolicyTypeNames.member" |.#= typeNames]
+
+sinkPolicyType :: MonadThrow m => GLSink Event m PolicyType
+sinkPolicyType =
+    PolicyType
+    <$> members "PolicyAttributeTypeDescriptions" sinkPolicyAttributeType
+    <*> getT "PolicyTypeName"
+    <*> getT "Description"
+
+sinkPolicyAttributeType :: MonadThrow m => GLSink Event m PolicyAttributeType
+sinkPolicyAttributeType =
+    PolicyAttributeType
+    <$> getT "AttributeName"
+    <*> getT "AttributeType"
+    <*> getT "DefaultValue"
+    <*> getT "Cardinality"
+    <*> getT "Description"

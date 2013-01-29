@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module AWS.ELB.Types
     where
 
@@ -96,3 +97,28 @@ data PolicyAttribute = PolicyAttribute
     , policyAttributeValue :: Text
     }
   deriving (Show, Eq)
+
+data PolicyType = PolicyType
+    { policyTypeAttributeTypes :: [PolicyAttributeType]
+    , policyTypeTypeName :: Text
+    , policyTypeDescription :: Text
+    }
+  deriving (Show, Eq)
+
+data PolicyAttributeType = PolicyAttributeType
+    { policyAttributeTypeAttributeName :: Text
+    , policyAttributeTypeAttributeType :: Text
+    , policyAttributeTypeDefaultValue :: Maybe Text
+    , policyAttributeTypeCardinality :: PolicyAttributeCardinality
+    , policyAttributeTypeDescription :: Maybe Text
+    }
+  deriving (Show, Eq)
+
+data PolicyAttributeCardinality
+    = PolicyAttributeCardinalityOne
+    | PolicyAttributeCardinalityZeroOrOne
+    | PolicyAttributeCardinalityZeroOrMore
+    | PolicyAttributeCardinalityOneOrMore
+  deriving (Show, Eq, Read)
+
+deriveFromText "PolicyAttributeCardinality" ["ONE", "ZERO_OR_ONE", "ZERO_OR_MORE", "ONE_OR_MORE"]
