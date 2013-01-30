@@ -18,6 +18,7 @@ import Data.Text (Text)
 import Data.Conduit
 import Data.Monoid ((<>))
 import Data.XML.Types (Event(..))
+import Data.Maybe (fromMaybe)
 
 import AWS.Class
 import AWS.Lib.Query
@@ -43,12 +44,13 @@ elements :: MonadThrow m
     -> GLSink Event m [a]
 elements name = elements' (name <> "s") name
 
-elements' :: MonadThrow m
+elements' :: forall m a . MonadThrow m
     => Text
     -> Text
     -> GLSink Event m a
     -> GLSink Event m [a]
-elements' setName itemName = element setName . listConsumer itemName
+elements' setName itemName inner =
+    fromMaybe [] <$> elementM setName (listConsumer itemName inner)
 
 #ifdef DEBUG
 rdsQueryDebug

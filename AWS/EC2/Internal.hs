@@ -25,6 +25,7 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Data.XML.Types (Event)
 import Data.Text (Text)
+import Data.Maybe (fromMaybe)
 
 import AWS.Class
 import AWS.Credential
@@ -48,7 +49,7 @@ itemConduit :: MonadThrow m
     -> GLSink Event m o
     -> GLConduit Event m o
 itemConduit tag inner =
-    maybe (()) id <$> elementM tag (listConduit "item" inner)
+    fromMaybe (()) <$> elementM tag (listConduit "item" inner)
 
 itemsSet :: MonadThrow m
     => Text
