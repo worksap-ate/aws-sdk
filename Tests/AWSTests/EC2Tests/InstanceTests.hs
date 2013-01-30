@@ -11,6 +11,7 @@ import Data.List
 import Test.Hspec
 
 import AWS.EC2
+import qualified AWS.EC2.Util as Util
 import AWS.EC2.Types
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
@@ -35,17 +36,21 @@ describeInstanceStatusTest :: Spec
 describeInstanceStatusTest = do
     describe "describeInstanceStatus doesn't fail" $ do
         it "describeInstanceStatus doesn't throw any exception" $ do
-            reservations <- testEC2 region (describeInstances [] [])
-            let instances = nub $ concat $ map reservationInstanceSet reservations
-            testEC2 region (describeInstanceStatus (map instanceId instances) True [] Nothing) `miss` anyHttpException
+            testEC2 region (do
+                reservations <- Util.list $ describeInstances [] []
+                let instances = nub $ concat $ map reservationInstanceSet reservations
+                describeInstanceStatus (map instanceId instances) True [] Nothing
+              ) `miss` anyHttpException
 
 describeInstanceAttributeTest :: Spec
 describeInstanceAttributeTest = do
     describe "describeInstanceAttribute doesn't fail" $ do
         it "describeInstanceAttribute doesn't throw any exception" $ do
-            reservations <- testEC2 region (describeInstances [] [])
-            let iid = instanceId $ head $ reservationInstanceSet $ head reservations
-            testEC2' region (describeInstanceAttribute iid InstanceAttributeRequestInstanceType) `miss` anyHttpException
+            testEC2' region (do
+                reservations <- Util.list $ describeInstances [] []
+                let iid = instanceId $ head $ reservationInstanceSet $ head reservations
+                describeInstanceAttribute iid InstanceAttributeRequestInstanceType 
+              ) `miss` anyHttpException
 
 monitorAndUnmonitorInstancesTest :: Spec
 monitorAndUnmonitorInstancesTest = do
