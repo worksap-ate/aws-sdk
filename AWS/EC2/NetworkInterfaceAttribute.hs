@@ -24,7 +24,7 @@ import AWS.Util (toText)
 describeNetworkInterfaceDescription
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ The ID of the network interface.
-    -> EC2 m Text
+    -> EC2 m (Maybe Text)
 describeNetworkInterfaceDescription = describeNetworkInterfaceAttribute "description" $
   element "description" $ getT "value"
 

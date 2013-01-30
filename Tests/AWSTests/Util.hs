@@ -6,6 +6,8 @@ import Test.Hspec
 import Control.Exception
 import Data.Typeable
 import Network.HTTP.Conduit hiding (path)
+import Network.TLS (HandshakeFailed)
+import Data.Maybe (isJust)
 
 miss :: Exception e => IO a -> Selector e -> Expectation
 action `miss` p = do
@@ -24,5 +26,7 @@ action `miss` p = do
         instanceOf :: Selector a -> a
         instanceOf _ = error "brocken Typeable instance"
 
-anyHttpException :: Selector HttpException
-anyHttpException = const True
+anyHttpException :: Selector SomeException
+anyHttpException e
+    =  isJust (fromException e :: Maybe HttpException)
+    || isJust (fromException e :: Maybe HandshakeFailed)

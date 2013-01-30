@@ -14,7 +14,7 @@ import AWS.RDS.Types.DBSubnetGroup (DBSubnetGroup)
 data DBInstance = DBInstance
     { dbiIops :: Maybe Int
     , dbiBackupRetentionPeriod :: Int
-    , dbiDBInstanceStatus :: Text
+    , dbiDBInstanceStatus :: Maybe Text
     , dbiMultiAZ :: Bool
     , dbiVpcSecurityGroups :: [VpcSecurityGroupMembership]
     , dbiDBInstanceIdentifier :: Text

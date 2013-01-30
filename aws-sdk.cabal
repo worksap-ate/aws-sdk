@@ -120,7 +120,7 @@ library
                    , lifted-base
                    , transformers-base
                    , strptime
-                   , template-haskell
+                   , template-haskell == 2.7.0.0
                    , parallel
                    , iproute >= 1.2.9
 
@@ -145,6 +145,7 @@ test-suite test
                  , HUnit
                  , lifted-base
                  , iproute
+                 , tls
 
 source-repository head
     type:            git

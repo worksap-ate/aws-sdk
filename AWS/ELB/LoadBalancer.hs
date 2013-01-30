@@ -81,8 +81,8 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
         <*> members "OtherPolicies" text
         <*> members "LBCookieStickinessPolicies"
             (LBCookieStickinessPolicy
-            <$> getT "CookieExpirationPeriod"
-            <*> getT "PolicyName"
+            <$> getT "PolicyName"
+            <*> getT "CookieExpirationPeriod"
             )
         )
     <*> members "AvailabilityZones" text

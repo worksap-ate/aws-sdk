@@ -28,6 +28,7 @@ import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
 import Data.Monoid ((<>))
 import Control.Monad.Trans.Class (lift)
+import Data.Maybe (fromMaybe)
 
 import AWS.Class
 import AWS.Lib.FromText
@@ -151,4 +152,5 @@ members :: MonadThrow m
     => Text
     -> GLSink Event m a
     -> GLSink Event m [a]
-members name f = element name $ listConsumer "member" f
+members name f = 
+    fromMaybe [] <$> elementM name (listConsumer "member" f)
