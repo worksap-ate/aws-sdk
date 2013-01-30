@@ -4,6 +4,7 @@ module AWS.CloudWatch
     ( -- * CloudWatch Environment
       CloudWatch
     , runCloudWatch
+    , runCloudWatch'
     , setRegion
     , apiVersion
       -- * Metric
@@ -33,6 +34,10 @@ initialCloudWatchContext mgr = AWSContext
 
 runCloudWatch :: MonadIO m => Credential -> CloudWatch m a -> m a
 runCloudWatch = runAWS initialCloudWatchContext
+
+runCloudWatch' :: Monad m
+    => HTTP.Manager -> Credential -> CloudWatch m a -> m a
+runCloudWatch' mgr = runAWS' mgr initialCloudWatchContext
 
 setRegion
     :: (MonadBaseControl IO m, MonadResource m)

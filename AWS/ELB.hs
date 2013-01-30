@@ -4,6 +4,7 @@ module AWS.ELB
     ( -- * ELB Environment
       ELB
     , runELB
+    , runELB'
     , setRegion
     , apiVersion
       -- * LoadBalancer
@@ -33,6 +34,10 @@ initialELBContext mgr = AWSContext
 
 runELB :: MonadIO m => Credential -> ELB m a -> m a
 runELB = runAWS initialELBContext
+
+runELB' :: Monad m
+    => HTTP.Manager -> Credential -> ELB m a -> m a
+runELB' mgr = runAWS' mgr initialELBContext
 
 setRegion
     :: (MonadBaseControl IO m, MonadResource m)

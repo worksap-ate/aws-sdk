@@ -6,6 +6,7 @@ module AWS.EC2.Internal
     , EC2
     , initialEC2Context
     , runEC2
+    , runEC2'
     , itemConduit
     , itemsSet
     , resourceTagSink
@@ -43,6 +44,10 @@ type EC2 m a = AWS AWSContext m a
 
 runEC2 :: MonadIO m => Credential -> AWS AWSContext m a -> m a
 runEC2 = runAWS initialEC2Context
+
+runEC2' :: Monad m
+    => HTTP.Manager -> Credential -> AWS AWSContext m a -> m a
+runEC2' mgr = runAWS' mgr initialEC2Context
 
 itemConduit :: MonadThrow m
     => Text
