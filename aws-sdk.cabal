@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.9.4
+version:             0.10.0
 synopsis:            AWS SDK for Haskell
 description: AWS (Amazon Web Services) sdk for Haskell.
              .
@@ -125,7 +125,7 @@ library
                    , lifted-base
                    , transformers-base
                    , strptime
-                   , template-haskell == 2.7.0.0
+                   , template-haskell
                    , parallel
                    , iproute >= 1.2.9
 
