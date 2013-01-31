@@ -32,12 +32,11 @@ routeTest = do
     describe "{create,replace,delete}Route doesn't fail" $ do
         it "{create,replace,delete}Route doesn't throw any exception" $ do
             testEC2' region (do
-                vpcSrc <- describeVpcs [] []
-                Just Vpc{vpcId = vpc} <- lift $ vpcSrc $$+- CL.head
-                withRouteTable vpc $ \RouteTable{routeTableId = tableId} ->
-                    withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = gatewayId} ->
-                        withInternetGatewayAttached gatewayId vpc $ do
-                            createRoute $ CreateRouteToGateway tableId cidr gatewayId
-                            replaceRoute $ CreateRouteToGateway tableId cidr gatewayId
-                            deleteRoute tableId cidr
+                withVpc (read "10.0.0.0/24") $ \Vpc{vpcId = vpc} ->
+                    withRouteTable vpc $ \RouteTable{routeTableId = tableId} ->
+                        withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = gatewayId} ->
+                            withInternetGatewayAttached gatewayId vpc $ do
+                                createRoute $ CreateRouteToGateway tableId cidr gatewayId
+                                replaceRoute $ CreateRouteToGateway tableId cidr gatewayId
+                                deleteRoute tableId cidr
                 ) `miss` anyHttpException
