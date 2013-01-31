@@ -75,7 +75,7 @@ data AppCookieStickinessPolicy = AppCookieStickinessPolicy
 
 data LBCookieStickinessPolicy = LBCookieStickinessPolicy
     { lbCookieStickinessPolicyPolicyName :: Text
-    , lbCookieStickinessPolicyCookieExpirationPeriod :: Integer
+    , lbCookieStickinessPolicyCookieExpirationPeriod :: Maybe Integer
     }
   deriving (Show, Eq)
 
