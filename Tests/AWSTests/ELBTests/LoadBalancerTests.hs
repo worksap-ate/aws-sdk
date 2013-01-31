@@ -70,8 +70,7 @@ describeLoadBalancersTest = do
                 let policy = "setLoadBalancerPoliciesOfListener"
                 createLBCookieStickinessPolicy Nothing name policy
                 setLoadBalancerPoliciesOfListener name (listenerLoadBalancerPort listener) [policy]
-                -- FIXME: How to send an empty list?
-                -- setLoadBalancerPoliciesOfListener name (listenerLoadBalancerPort listener) []
+                setLoadBalancerPoliciesOfListener name (listenerLoadBalancerPort listener) []
                 ) `miss` anyHttpException
   where
     listener = Listener "http" 80 "http" Nothing 80

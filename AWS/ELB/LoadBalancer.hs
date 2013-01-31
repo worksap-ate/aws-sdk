@@ -472,7 +472,7 @@ setLoadBalancerPoliciesOfListener lb port policies =
     params =
         [ "LoadBalancerName" |= lb
         , "LoadBalancerPort" |= toText port
-        , "PolicyNames.member" |.#= policies
+        , if null policies then "PolicyNames" |= "" else "PolicyNames.member" |.#= policies
         ]
 
 setLoadBalancerPoliciesForBackendServer
