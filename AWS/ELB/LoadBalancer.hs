@@ -22,6 +22,7 @@ module AWS.ELB.LoadBalancer
     , disableAvailabilityZonesForLoadBalancer
     , createLBCookieStickinessPolicy
     , createAppCookieStickinessPolicy
+    , setLoadBalancerPoliciesOfListener
     ) where
 
 import Data.Text (Text)
@@ -456,4 +457,19 @@ createAppCookieStickinessPolicy cookieName lb policy =
         [ "CookieName" |= cookieName
         , "LoadBalancerName" |= lb
         , "PolicyName" |= policy
+        ]
+
+setLoadBalancerPoliciesOfListener
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^  The name associated with the LoadBalancer.
+    -> Int -- ^ The external port of the LoadBalancer with which this policy applies to.
+    -> [Text] -- ^ List of policies to be associated with the listener.
+    -> ELB m ()
+setLoadBalancerPoliciesOfListener lb port policies =
+    elbQuery "SetLoadBalancerPoliciesOfListener" params $ getT_ "SetLoadBalancerPoliciesOfListenerResult"
+  where
+    params =
+        [ "LoadBalancerName" |= lb
+        , "LoadBalancerPort" |= toText port
+        , "PolicyNames.member" |.#= policies
         ]
