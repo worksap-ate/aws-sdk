@@ -23,6 +23,7 @@ module AWS.ELB.LoadBalancer
     , createLBCookieStickinessPolicy
     , createAppCookieStickinessPolicy
     , setLoadBalancerPoliciesOfListener
+    , setLoadBalancerPoliciesForBackendServer
     ) where
 
 import Data.Text (Text)
@@ -471,5 +472,20 @@ setLoadBalancerPoliciesOfListener lb port policies =
     params =
         [ "LoadBalancerName" |= lb
         , "LoadBalancerPort" |= toText port
+        , "PolicyNames.member" |.#= policies
+        ]
+
+setLoadBalancerPoliciesForBackendServer
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Int -- ^ The port number associated with the back-end server.
+    -> Text -- ^ The mnemonic name associated with the LoadBalancer.
+    -> [Text] -- ^ List of policy names to be set.
+    -> ELB m ()
+setLoadBalancerPoliciesForBackendServer port lb policies =
+    elbQuery "SetLoadBalancerPoliciesForBackendServer" params $ getT_ "SetLoadBalancerPoliciesForBackendServerResult"
+  where
+    params =
+        [ "InstancePort" |= toText port
+        , "LoadBalancerName" |= lb
         , "PolicyNames.member" |.#= policies
         ]
