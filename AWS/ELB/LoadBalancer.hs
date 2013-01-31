@@ -21,6 +21,7 @@ module AWS.ELB.LoadBalancer
     , enableAvailabilityZonesForLoadBalancer
     , disableAvailabilityZonesForLoadBalancer
     , createLBCookieStickinessPolicy
+    , createAppCookieStickinessPolicy
     ) where
 
 import Data.Text (Text)
@@ -438,6 +439,21 @@ createLBCookieStickinessPolicy period lb policy =
   where
     params =
         [ "CookieExpirationPeriod" |=? toText <$> period
+        , "LoadBalancerName" |= lb
+        , "PolicyName" |= policy
+        ]
+
+createAppCookieStickinessPolicy
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ Name of the application cookie used for stickiness.
+    -> Text -- ^ The name associated with the LoadBalancer.
+    -> Text -- ^ The name of the policy being created.
+    -> ELB m ()
+createAppCookieStickinessPolicy cookieName lb policy =
+    elbQuery "CreateAppCookieStickinessPolicy" params $ getT_ "CreateAppCookieStickinessPolicyResult"
+  where
+    params =
+        [ "CookieName" |= cookieName
         , "LoadBalancerName" |= lb
         , "PolicyName" |= policy
         ]

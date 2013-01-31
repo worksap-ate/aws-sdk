@@ -61,6 +61,10 @@ describeLoadBalancersTest = do
                 createLBCookieStickinessPolicy Nothing name "testCreateLBCookieStickinessPolicy1"
                 createLBCookieStickinessPolicy (Just 1000) name "testCreateLBCookieStickinessPolicy2"
                 ) `miss` anyHttpException
+        it "createAppCookieStickinessPolicy doesn't throw any exception" $ do
+            testELB region (withLoadBalancer name [listener] zones $ do
+                createAppCookieStickinessPolicy "testCookieName" name "testCreateAppCookieStickinessPolicy"
+                ) `miss` anyHttpException
   where
     listener = Listener "http" 80 "http" Nothing 80
     name = "sdkhspectest"
