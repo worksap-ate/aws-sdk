@@ -20,6 +20,7 @@ module AWS.ELB.LoadBalancer
     , configureHealthCheck
     , enableAvailabilityZonesForLoadBalancer
     , disableAvailabilityZonesForLoadBalancer
+    , createLBCookieStickinessPolicy
     ) where
 
 import Data.Text (Text)
@@ -424,4 +425,19 @@ disableAvailabilityZonesForLoadBalancer zones lb =
     params =
         [ "AvailabilityZones.member" |.#= zones
         , "LoadBalancerName" |= lb
+        ]
+
+createLBCookieStickinessPolicy
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Int -- ^ The time period in seconds after which the cookie should be considered stale. Not specifying this parameter indicates that the sticky session will last for the duration of the browser session. 
+    -> Text -- ^ The name associated with the LoadBalancer.
+    -> Text -- ^ The name of the policy being created.
+    -> ELB m ()
+createLBCookieStickinessPolicy period lb policy =
+    elbQuery "CreateLBCookieStickinessPolicy" params $ getT_ "CreateLBCookieStickinessPolicyResult"
+  where
+    params =
+        [ "CookieExpirationPeriod" |=? toText <$> period
+        , "LoadBalancerName" |= lb
+        , "PolicyName" |= policy
         ]
