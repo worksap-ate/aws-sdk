@@ -83,14 +83,14 @@ count ers = do
 --
 -- > import AWS.EC2
 -- > import AWS.EC2.Types
--- > import AWS.EC2.Util (asList, wait)
+-- > import AWS.EC2.Util (list, wait)
 -- > 
 -- > waitForAvailable :: (MonadIO m, Functor m)
 -- >     => Text -- ^ ImageId
 -- >     -> EC2 m a
 -- > waitForAvailable = wait
 -- >     (\img -> imageImageState img == ImageAvailable)
--- >     (\imgId -> asList (describeImages [imgId] [] [] []))
+-- >     (\imgId -> list (describeImages [imgId] [] [] []))
 wait
     :: (MonadIO m, Functor m)
     => (a -> Bool) -- ^ condition
