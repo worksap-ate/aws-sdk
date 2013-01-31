@@ -271,6 +271,7 @@ data InstanceStatusTypeStatus
     | InstanceStatusTypeStatusImpaired
     | InstanceStatusTypeStatusInsufficientData
     | InstanceStatusTypeStatusNotApplicable
+    | InstanceStatusTypeStatusInitializing
   deriving (Show, Read, Eq)
 
 data ModifyInstanceAttributeRequest
@@ -363,4 +364,4 @@ deriveFromText "InstanceStatusEventCode"
     , "instance-retirement"
     ]
 deriveFromText "InstanceStatusTypeStatus"
-    ["ok", "impaired", "insufficient-data", "not-applicable"]
+    ["ok", "impaired", "insufficient-data", "not-applicable", "initializing"]
