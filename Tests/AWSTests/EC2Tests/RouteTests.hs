@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 
 module AWSTests.EC2Tests.RouteTests
     ( runRouteTests
@@ -7,9 +7,6 @@ module AWSTests.EC2Tests.RouteTests
 
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
-import Data.Conduit (($$+-))
-import qualified Data.Conduit.List as CL
-import Control.Monad.Trans.Class (lift)
 import Test.Hspec
 
 import AWS.EC2
@@ -32,7 +29,7 @@ routeTest = do
     describe "{create,replace,delete}Route doesn't fail" $ do
         it "{create,replace,delete}Route doesn't throw any exception" $ do
             testEC2' region (do
-                withVpc (read "10.0.0.0/24") $ \Vpc{vpcId = vpc} ->
+                withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
                     withRouteTable vpc $ \RouteTable{routeTableId = tableId} ->
                         withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = gatewayId} ->
                             withInternetGatewayAttached gatewayId vpc $ do
