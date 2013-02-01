@@ -27,6 +27,7 @@ module AWS.EC2
       -- * Placements
     , module AWS.EC2.Region
     , module AWS.EC2.AvailabilityZone
+    , module AWS.EC2.PlacementGroup
       -- * Tags
     , module AWS.EC2.Tag
       -- * VPC
@@ -35,7 +36,6 @@ module AWS.EC2
     , module AWS.EC2.Acl
     , module AWS.EC2.RouteTable
     , module AWS.EC2.Route
-    , module AWS.EC2.PlacementGroup
       -- * Tasks
     , module AWS.EC2.ConversionTask
     ) where

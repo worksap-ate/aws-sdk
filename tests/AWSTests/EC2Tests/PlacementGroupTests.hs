@@ -5,6 +5,7 @@ module AWSTests.EC2Tests.PlacementGroupTests
 
 import Data.Text (Text)
 import Test.Hspec
+import qualified Control.Exception.Lifted as E
 
 import AWS.EC2
 import AWS.EC2.Types (PlacementGroupStrategy(..))
@@ -29,9 +30,9 @@ createAndDeletePlacementGroupTest :: Spec
 createAndDeletePlacementGroupTest = do
     describe "{create,delete}PlacementGroup doesn't fail" $ do
         it "{create,delete}PlacementGroup doesn't throw any exception" $ do
-            testEC2' region (do
-                createPlacementGroup groupName PlacementGroupStrategyCluster
-                deletePlacementGroup groupName
-                ) `miss` anyHttpException
+            testEC2' region (E.finally
+                (createPlacementGroup groupName PlacementGroupStrategyCluster)
+                (deletePlacementGroup groupName)
+              ) `miss` anyHttpException
   where
     groupName = "createAndDeletePlacementGroupTest"
