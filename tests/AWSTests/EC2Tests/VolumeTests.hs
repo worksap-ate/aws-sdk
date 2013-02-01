@@ -10,6 +10,7 @@ import Test.Hspec
 
 import AWS.EC2
 import AWS.EC2.Types
+import qualified AWS.EC2.Util as U
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -38,6 +39,8 @@ describeVolumeAttributeTest :: Spec
 describeVolumeAttributeTest = do
     describe "describeVolumeAttribute doesn't fail" $ do
         it "describeVolumeAttribute doesn't throw any exception" $ do
-            volumes <- testEC2 region (describeVolumes [] [])
-            let vid = volumeId $ head volumes
-            testEC2' region (describeVolumeAttribute vid VolumeAttributeRequestAutoEnableIO) `miss` anyHttpException
+            testEC2' region (do
+                volumes <- U.list $ describeVolumes [] []
+                let vid = volumeId $ head volumes
+                describeVolumeAttribute vid VolumeAttributeRequestAutoEnableIO
+              ) `miss` anyHttpException
