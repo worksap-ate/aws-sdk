@@ -100,6 +100,7 @@ sinkPendingModifiedValues = element "PendingModifiedValues" $
         , f PMVMultiAZ "MultiAZ"
         , f PMVAllocatedStorage "AllocatedStorage"
         , f PMVEngineVersion "EngineVersion"
+        , f PMVDBInstanceIdentifier "DBInstanceIdentifier"
         , f PMVDBInstanceClass "DBInstanceClass"
         , f PMVBackupRetentionPeriod "BackupRetentionPeriod"
         , f PMVPort "Port"

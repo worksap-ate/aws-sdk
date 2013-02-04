@@ -91,6 +91,7 @@ data PendingModifiedValue
     | PMVMasterUserPassword Text
     | PMVMultiAZ Bool
     | PMVPort Int
+    | PMVDBInstanceIdentifier Text
   deriving (Show, Eq)
 
 data CreateDBInstanceRequest = CreateDBInstanceRequest
