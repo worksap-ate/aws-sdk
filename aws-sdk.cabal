@@ -99,6 +99,7 @@ library
                    , AWS.ELB.LoadBalancer
                    , AWS.CloudWatch.Internal
                    , AWS.CloudWatch.Metric
+                   , AWS.CloudWatch.Alarm
   ghc-options:       -Wall
                      -fno-warn-unused-do-bind
   extensions: OverloadedStrings

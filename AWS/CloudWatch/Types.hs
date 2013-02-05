@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module AWS.CloudWatch.Types
     where
 
@@ -35,7 +36,8 @@ data Statistic
     | StatisticSampleCount
     | StatisticMaximum
     | StatisticMinimum
-  deriving (Show, Eq)
+  deriving (Show, Eq, Read)
+deriveFromText "Statistic" ["Average", "Sum", "SampleCount", "Maximum", "Minimum"]
 
 allStatistics :: [Statistic]
 allStatistics =
@@ -45,3 +47,53 @@ allStatistics =
     , StatisticMaximum
     , StatisticMinimum
     ]
+
+data AlarmNameSpec
+    = AlarmSpecNothing
+    | AlarmSpecNamePrefix Text
+    | AlarmSpecNames [Text]
+  deriving (Show, Eq)
+
+data StateValue
+    = StateValueOk
+    | StateValueAlarm
+    | StateValueInsufficientData
+  deriving (Show, Eq, Read)
+deriveFromText "StateValue" ["OK", "ALARM", "INSUFFICIENT_DATA"]
+
+data ComparisonOperator
+    = GreaterThanOrEqualToThreshold
+    | GreaterThanThreshold
+    | LessThanThreshold
+    | LessThanOrEqualToThreshold
+  deriving (Show, Eq, Read)
+deriveFromText "ComparisonOperator"
+    [ "GreaterThanOrEqualToThreshold"
+    , "GreaterThanThreshold"
+    , "LessThanThreshold"
+    , "LessThanOrEqualToThreshold"
+    ]
+
+data MetricAlarm = MetricAlarm
+    { metricAlarmAlarmDescription :: Maybe Text
+    , metricAlarmStateUpdatedTimestamp :: UTCTime
+    , metricAlarmInsufficientDataActions :: [Text]
+    , metricAlarmStateReasonData :: Maybe Text
+    , metricAlarmAlarmArn :: Text
+    , metricAlarmConfigurationUpdatedTimestamp :: UTCTime
+    , metricAlarmAlarmName :: Text
+    , metricAlarmStateValue :: StateValue
+    , metricAlarmPeriod :: Int
+    , metricAlarmOKActions :: [Text]
+    , metricAlarmActionsEnabled :: Bool
+    , metricAlarmNamespace :: Text
+    , metricAlarmThreshold :: Double
+    , metricAlarmEvaluationPeriods :: Int
+    , metricAlarmStatistic :: Statistic
+    , metricAlarmAlarmActions :: [Text]
+    , metricAlarmStateReason :: Maybe Text
+    , metricAlarmDimensions :: [Dimension]
+    , metricAlarmComparisonOperator :: ComparisonOperator
+    , metricAlarmMetricName :: Text
+    }
+  deriving (Show, Eq)

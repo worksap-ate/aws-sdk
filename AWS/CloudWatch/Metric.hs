@@ -34,10 +34,7 @@ listMetrics
     -> CloudWatch m [Metric]
 listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
     members "Metrics" $ Metric
-        <$> members "Dimensions" (Dimension
-            <$> getT "Name"
-            <*> getT "Value"
-            )
+        <$> members "Dimensions" sinkDimension
         <*> getT "MetricName"
         <*> getT "Namespace"
   where
