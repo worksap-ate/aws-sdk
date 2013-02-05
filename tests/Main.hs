@@ -45,3 +45,4 @@ main = do
 
     -- CloudWatch Tests
     runAlarmTests
+    runMetricTests

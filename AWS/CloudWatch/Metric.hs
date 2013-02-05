@@ -8,6 +8,7 @@ module AWS.CloudWatch.Metric
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Conduit
+import Data.XML.Types (Event)
 import Control.Applicative
 
 import AWS.Util
@@ -31,12 +32,9 @@ listMetrics
     -> Maybe Text -- ^ MetricName
     -> Maybe Text -- ^ Namespace
     -> Maybe Text -- ^ NextToken
-    -> CloudWatch m [Metric]
+    -> CloudWatch m ([Metric], Maybe Text)
 listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
-    members "Metrics" $ Metric
-        <$> members "Dimensions" sinkDimension
-        <*> getT "MetricName"
-        <*> getT "Namespace"
+    (,) <$> members "Metrics" sinkMetric <*> getT "NextToken"
   where
     params =
         [ dimensionFiltersParam ds
@@ -44,6 +42,13 @@ listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
         , "Namespace" |=? ns
         , "NextToken" |=? nt
         ]
+
+sinkMetric :: MonadThrow m => GLSink Event m Metric
+sinkMetric =
+    Metric
+    <$> members "Dimensions" sinkDimension
+    <*> getT "MetricName"
+    <*> getT "Namespace"
 
 getMetricStatistics
     :: (MonadBaseControl IO m, MonadResource m)
