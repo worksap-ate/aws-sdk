@@ -3,6 +3,7 @@
 module AWS.RDS.DBInstance
     ( describeDBInstances
     , createDBInstance
+    , deleteDBInstance
     ) where
 
 import Data.Text (Text)
@@ -153,4 +154,23 @@ createDBInstance CreateDBInstanceRequest{..} =
             boolToText <$> createDBInstancePubliclyAccessible
         , "VpcSecurityGroupIds" |.#=
             createDBInstanceVpcSecurityGroupIds
+        ]
+
+deleteDBInstance
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBInstanceIdentifier
+    -> FinalSnapshot -- ^ FinalSnapshot
+    -> RDS m DBInstance
+deleteDBInstance dbiid final =
+    rdsQuery "DeleteDBInstance" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "DBInstanceIdentifier" |= dbiid
+        ] ++ finalSnapshotParams final
+    finalSnapshotParams SkipFinalSnapshot =
+        [ "SkipFinalSnapshot" |= boolToText True ]
+    finalSnapshotParams (FinalSnapshotIdentifier sid) =
+        [ "SkipFinalSnapshot" |= boolToText False
+        , "FinalSnapshotIdentifier" |= sid
         ]

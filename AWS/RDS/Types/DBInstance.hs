@@ -12,6 +12,7 @@ module AWS.RDS.Types.DBInstance
     , DBInstanceClass(..)
     , Engine(..)
     , LicenseModel(..)
+    , FinalSnapshot(..)
     ) where
 
 import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
@@ -171,6 +172,10 @@ instance Show LicenseModel where
     show LicenseIncluded = "license-included"
     show BringYourOwnLicense = "bring-your-own-license"
     show GeneralPublicLicense = "general-public-license"
+
+data FinalSnapshot
+    = FinalSnapshotIdentifier Text
+    | SkipFinalSnapshot
 
 deriveFromText "DBInstanceClass"
     [ "db.t1.micro", "db.m1.small", "db.m1.medium"
