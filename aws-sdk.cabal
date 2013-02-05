@@ -152,6 +152,7 @@ test-suite test
                  , lifted-base
                  , iproute
                  , tls
+                 , time
 
 source-repository head
     type:            git
