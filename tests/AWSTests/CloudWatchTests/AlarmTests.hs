@@ -37,8 +37,8 @@ describeAlarmsTest = do
 
 putMetricAlarmTest :: Spec
 putMetricAlarmTest =
-    describe "putMetricAlarm doesn't fail" $ do
-        it "putMetricAlarm doesn't throw any exception" $ do
+    describe "putMetricAlarm/deleteAlarms doesn't fail" $ do
+        it "putMetricAlarm/deleteAlarms doesn't throw any exception" $ do
             testCloudWatch region (do
                 (metric:_, _) <- listMetrics [] Nothing Nothing Nothing
                 let req = PutMetricAlarmRequest
@@ -59,4 +59,5 @@ putMetricAlarmTest =
                             , putMetricAlarmUnit = Just "Count"
                             }
                 putMetricAlarm req
+                deleteAlarms [putMetricAlarmAlarmName req]
                 ) `miss` anyHttpException

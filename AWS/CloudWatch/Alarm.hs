@@ -3,6 +3,7 @@ module AWS.CloudWatch.Alarm
     ( describeAlarms
     , describeAlarmsForMetric
     , putMetricAlarm
+    , deleteAlarms
     ) where
 
 import Control.Applicative
@@ -120,3 +121,9 @@ putMetricAlarm PutMetricAlarmRequest{..} =
         , "Threshold" |= toText putMetricAlarmThreshold
         , "Unit" |=? putMetricAlarmUnit
         ]
+
+deleteAlarms
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ A list of alarms to be deleted.
+    -> CloudWatch m ()
+deleteAlarms names = cloudWatchQuery "DeleteAlarms" ["AlarmNames.member" |.#= names] $ return ()
