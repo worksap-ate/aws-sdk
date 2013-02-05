@@ -91,6 +91,7 @@ data MetricAlarm = MetricAlarm
     , metricAlarmEvaluationPeriods :: Int
     , metricAlarmStatistic :: Statistic
     , metricAlarmAlarmActions :: [Text]
+    , metricAlarmUnit :: Maybe Text
     , metricAlarmStateReason :: Maybe Text
     , metricAlarmDimensions :: [Dimension]
     , metricAlarmComparisonOperator :: ComparisonOperator

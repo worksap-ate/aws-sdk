@@ -62,6 +62,7 @@ sinkMetricAlarm =
     <*> getT "EvaluationPeriods"
     <*> getT "Statistic"
     <*> members "AlarmActions" text
+    <*> getT "Unit"
     <*> getT "StateReason"
     <*> members "Dimensions" sinkDimension
     <*> getT "ComparisonOperator"
