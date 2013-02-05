@@ -13,6 +13,7 @@ module AWS.RDS.Types.DBInstance
     , Engine(..)
     , LicenseModel(..)
     , FinalSnapshot(..)
+    , CreateReadReplicaRequest(..)
     ) where
 
 import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
@@ -176,6 +177,19 @@ instance Show LicenseModel where
 data FinalSnapshot
     = FinalSnapshotIdentifier Text
     | SkipFinalSnapshot
+
+data CreateReadReplicaRequest = CreateReadReplicaRequest
+    { createReadReplicaAutoMinorVersionUpgrade :: Maybe Bool
+    , createReadReplicaAvailabilityZone :: Maybe Text
+    , createReadReplicaDBInstanceClass :: DBInstanceClass
+    , createReadReplicaDBInstanceIdentifier :: Text
+    , createReadReplicaIops :: Maybe Int
+    , createReadReplicaOptionGroupName :: Maybe Text
+    , createReadReplicaPort :: Maybe Int
+    , createReadReplicaPubliclyAccessible :: Maybe Bool
+    , createReadReplicaSourceDBInstanceIdentifier :: Text
+    }
+  deriving (Show, Eq)
 
 deriveFromText "DBInstanceClass"
     [ "db.t1.micro", "db.m1.small", "db.m1.medium"

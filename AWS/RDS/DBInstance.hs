@@ -4,6 +4,7 @@ module AWS.RDS.DBInstance
     ( describeDBInstances
     , createDBInstance
     , deleteDBInstance
+    , createDBInstanceReadReplica
     ) where
 
 import Data.Text (Text)
@@ -173,4 +174,30 @@ deleteDBInstance dbiid final =
     finalSnapshotParams (FinalSnapshotIdentifier sid) =
         [ "SkipFinalSnapshot" |= boolToText False
         , "FinalSnapshotIdentifier" |= sid
+        ]
+
+createDBInstanceReadReplica
+    :: (MonadBaseControl IO m, MonadResource m)
+    => CreateReadReplicaRequest
+    -> RDS m DBInstance
+createDBInstanceReadReplica CreateReadReplicaRequest{..} =
+    rdsQuery "CreateDBInstanceReadReplica" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "AutoMinorVersionUpgrade" |=?
+            boolToText <$> createReadReplicaAutoMinorVersionUpgrade
+        , "AvailabilityZone" |=?
+            createReadReplicaAvailabilityZone
+        , "DBInstanceClass" |=
+            toText createReadReplicaDBInstanceClass
+        , "DBInstanceIdentifier" |=
+            createReadReplicaDBInstanceIdentifier
+        , "Iops" |=? toText <$> createReadReplicaIops
+        , "OptionGroupName" |=? createReadReplicaOptionGroupName
+        , "Port" |=? toText <$> createReadReplicaPort
+        , "PubliclyAccessible" |=?
+            boolToText <$> createReadReplicaPubliclyAccessible
+        , "SourceDBInstanceIdentifier" |=
+            createReadReplicaSourceDBInstanceIdentifier
         ]
