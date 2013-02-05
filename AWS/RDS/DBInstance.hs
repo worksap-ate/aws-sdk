@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
 
 module AWS.RDS.DBInstance
     ( describeDBInstances
+    , createDBInstance
     ) where
 
 import Data.Text (Text)
@@ -24,7 +25,8 @@ describeDBInstances
     -> Maybe Text -- ^ Marker
     -> RDS m [DBInstance]
 describeDBInstances dbid maxRecords marker =
-    rdsQuery "DescribeDBInstances" params sinkDBInstances
+    rdsQuery "DescribeDBInstances" params $
+        elements "DBInstance" sinkDBInstance
   where
     params =
         [ "DBInstanceIdentifier" |=? dbid
@@ -32,11 +34,10 @@ describeDBInstances dbid maxRecords marker =
         , "Marker" |=? marker
         ]
 
-sinkDBInstances
+sinkDBInstance
     :: MonadThrow m
-    => GLSink Event m [DBInstance]
-sinkDBInstances = elements "DBInstance" $
-    DBInstance
+    => GLSink Event m DBInstance
+sinkDBInstance = DBInstance
     <$> getT "Iops"
     <*> getT "BackupRetentionPeriod"
     <*> getT "DBInstanceStatus"
@@ -103,3 +104,53 @@ sinkPendingModifiedValues = element "PendingModifiedValues" $
         ]
   where
     f c name = fmap c <$> getT name
+
+createDBInstance
+    :: (MonadBaseControl IO m, MonadResource m)
+    => CreateDBInstanceRequest -- ^ data type of CreateDBInstance
+    -> RDS m DBInstance
+createDBInstance CreateDBInstanceRequest{..} =
+    rdsQuery "CreateDBInstance" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "AllocatedStorage" |=
+            toText createDBInstanceAllocatedStorage
+        , "AutoMinorVersionUpgrade" |=?
+            boolToText <$> createDBInstanceAutoMinorVersionUpgrade
+        , "AvailabilityZone" |=?
+            createDBInstanceAvailabilityZone
+        , "BackupRetentionPeriod" |=?
+            toText <$> createDBInstanceBackupRetentionPeriod
+        , "CharacterSetName" |=?
+            createDBInstanceCharacterSetName
+        , "DBInstanceClass" |=
+            toText createDBInstanceDBInstanceClass
+        , "DBInstanceIdentifier" |=
+            createDBInstanceDBInstanceIdentifier
+        , "DBName" |=? createDBInstanceDBName
+        , "DBParameterGroupName" |=?
+            createDBInstanceDBParameterGroupName
+        , "DBSecurityGroups.member" |.#=
+            createDBInstanceDBSecurityGroups
+        , "DBSubnetGroupName" |=?
+            createDBInstanceDBSubnetGroupName
+        , "Engine" |= toText createDBInstanceEngine
+        , "EngineVersion" |=? createDBInstanceEngineVersion
+        , "Iops" |=? toText <$> createDBInstanceIops
+        , "LicenseModel" |=?
+            toText <$> createDBInstanceLicenseModel
+        , "MasterUserPassword" |= createDBInstanceMasterUserPassword
+        , "MasterUsername" |= createDBInstanceMasterUsername
+        , "MultiAZ" |=? boolToText <$> createDBInstanceMultiAZ
+        , "OptionGroupName" |=? createDBInstanceOptionGroupName
+        , "Port" |=? toText <$> createDBInstancePort
+        , "PreferredBackupWindow" |=?
+            createDBInstancePreferredBackupWindow
+        , "PreferredMaintenanceWindow" |=?
+            createDBInstancePreferredMaintenanceWindow
+        , "PubliclyAccessible" |=?
+            boolToText <$> createDBInstancePubliclyAccessible
+        , "VpcSecurityGroupIds" |.#=
+            createDBInstanceVpcSecurityGroupIds
+        ]
