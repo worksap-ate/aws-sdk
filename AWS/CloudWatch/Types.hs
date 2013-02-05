@@ -98,3 +98,22 @@ data MetricAlarm = MetricAlarm
     , metricAlarmMetricName :: Text
     }
   deriving (Show, Eq)
+
+data PutMetricAlarmRequest = PutMetricAlarmRequest
+    { putMetricAlarmActionsEnabled :: Maybe Bool
+    , putMetricAlarmAlarmActions :: [Text]
+    , putMetricAlarmAlarmDescription :: Maybe Text
+    , putMetricAlarmAlarmName :: Text
+    , putMetricAlarmComparisonOperator :: ComparisonOperator
+    , putMetricAlarmDimensions :: [Dimension]
+    , putMetricAlarmEvaluationPeriods :: Int
+    , putMetricAlarmInsufficientDataActions :: [Text]
+    , putMetricAlarmMetricName :: Text
+    , putMetricAlarmNamespace :: Text
+    , putMetricAlarmOKActions :: [Text]
+    , putMetricAlarmPeriod :: Int
+    , putMetricAlarmStatistic :: Statistic
+    , putMetricAlarmThreshold :: Double
+    , putMetricAlarmUnit :: Maybe Text
+    }
+  deriving (Show, Eq)

@@ -2,6 +2,7 @@
 module AWS.CloudWatch.Alarm
     ( describeAlarms
     , describeAlarmsForMetric
+    , putMetricAlarm
     ) where
 
 import Control.Applicative
@@ -11,9 +12,9 @@ import Data.XML.Types (Event)
 
 import AWS.CloudWatch.Internal
 import AWS.CloudWatch.Types
-import AWS.Lib.Parser (getT, members, text)
+import AWS.Lib.Parser (getT, getT_, members, text)
 import AWS.Lib.Query
-import AWS.Util (toText)
+import AWS.Util (toText, boolToText)
 
 describeAlarms
     :: (MonadBaseControl IO m, MonadResource m)
@@ -94,3 +95,28 @@ fromDimension Dimension{..} =
     [ "Name" |= dimensionName
     , "Value" |= dimensionValue
     ]
+
+putMetricAlarm
+    :: (MonadBaseControl IO m, MonadResource m)
+    => PutMetricAlarmRequest
+    -> CloudWatch m ()
+putMetricAlarm PutMetricAlarmRequest{..} =
+    cloudWatchQuery "PutMetricAlarm" params $ getT_ "PutMetricAlarmResult"
+  where
+    params =
+        [ "ActionsEnabled" |=? boolToText <$> putMetricAlarmActionsEnabled
+        , "AlarmActions.member" |.#= putMetricAlarmAlarmActions
+        , "AlarmDescription" |=? putMetricAlarmAlarmDescription
+        , "AlarmName" |= putMetricAlarmAlarmName
+        , "ComparisonOperator" |= toText putMetricAlarmComparisonOperator
+        , "Dimensions.member" |.#. map fromDimension putMetricAlarmDimensions
+        , "EvaluationPeriods" |= toText putMetricAlarmEvaluationPeriods
+        , "InsufficientDataActions.member" |.#= putMetricAlarmInsufficientDataActions
+        , "MetricName" |= putMetricAlarmMetricName
+        , "Namespace" |= putMetricAlarmNamespace
+        , "OKActions.member" |.#= putMetricAlarmOKActions
+        , "Period" |= toText putMetricAlarmPeriod
+        , "Statistic" |= stringifyStatistic putMetricAlarmStatistic
+        , "Threshold" |= toText putMetricAlarmThreshold
+        , "Unit" |=? putMetricAlarmUnit
+        ]

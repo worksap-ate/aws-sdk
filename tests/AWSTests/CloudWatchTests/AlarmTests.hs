@@ -18,6 +18,7 @@ region = "ap-northeast-1"
 runAlarmTests :: IO ()
 runAlarmTests = do
     hspec describeAlarmsTest
+    hspec putMetricAlarmTest
 
 describeAlarmsTest :: Spec
 describeAlarmsTest = do
@@ -32,4 +33,30 @@ describeAlarmsTest = do
             testCloudWatch region (do
                 (MetricAlarm{..}:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
                 describeAlarmsForMetric metricAlarmDimensions metricAlarmMetricName metricAlarmNamespace metricAlarmPeriod metricAlarmStatistic Nothing
+                ) `miss` anyHttpException
+
+putMetricAlarmTest :: Spec
+putMetricAlarmTest =
+    describe "putMetricAlarm doesn't fail" $ do
+        it "putMetricAlarm doesn't throw any exception" $ do
+            testCloudWatch region (do
+                (metric:_, _) <- listMetrics [] Nothing Nothing Nothing
+                let req = PutMetricAlarmRequest
+                            { putMetricAlarmActionsEnabled = Just False
+                            , putMetricAlarmAlarmActions = []
+                            , putMetricAlarmAlarmDescription = Just "putMetricAlarmTest Description"
+                            , putMetricAlarmAlarmName = "putMetricAlarmTest"
+                            , putMetricAlarmComparisonOperator = GreaterThanThreshold
+                            , putMetricAlarmDimensions = []
+                            , putMetricAlarmEvaluationPeriods = 5
+                            , putMetricAlarmInsufficientDataActions = []
+                            , putMetricAlarmMetricName = metricName metric
+                            , putMetricAlarmNamespace = metricNameSpace metric
+                            , putMetricAlarmOKActions = []
+                            , putMetricAlarmPeriod = 5 * 60
+                            , putMetricAlarmStatistic = StatisticSampleCount
+                            , putMetricAlarmThreshold = 42.0
+                            , putMetricAlarmUnit = Just "Count"
+                            }
+                putMetricAlarm req
                 ) `miss` anyHttpException
