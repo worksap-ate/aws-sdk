@@ -120,8 +120,12 @@ sinkResponse
 sinkResponse action sink = do
     sinkEventBeginDocument
     element (action <> "Response") $ (,)
-        <$> element (action <> "Result") sink -- XXX: parse Marker
+        <$> sinkResult
         <*> sinkResponseMetadata
+  where
+    sinkResult =
+        elementM (action <> "Result") sink -- XXX: parse Marker. This marker may not occur (e.g., PutMetricAlarm).
+        >>= maybe sink return
 
 sinkResponseMetadata
     :: MonadThrow m
