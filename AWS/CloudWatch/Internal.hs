@@ -36,3 +36,10 @@ elements name f = element (name <> "s") $ listConsumer name f
 
 sinkDimension :: MonadThrow m => GLSink Event m Dimension
 sinkDimension = Dimension <$> getT "Name" <*> getT "Value"
+
+stringifyStatistic :: Statistic -> Text
+stringifyStatistic StatisticAverage     = "Average"
+stringifyStatistic StatisticSum         = "Sum"
+stringifyStatistic StatisticSampleCount = "SampleCount"
+stringifyStatistic StatisticMaximum     = "Maximum"
+stringifyStatistic StatisticMinimum     = "Minimum"

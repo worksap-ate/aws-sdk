@@ -81,11 +81,6 @@ getMetricStatistics ds start end mn ns pe sts unit =
         , "MetricName" |= mn
         , "Namespace" |= ns
         , "Period" |= toText pe
-        , "Statistics" |.+ "member" |.#= map s sts
+        , "Statistics" |.+ "member" |.#= map stringifyStatistic sts
         , "Unit" |=? unit
         ]
-    s StatisticAverage     = "Average"
-    s StatisticSum         = "Sum"
-    s StatisticSampleCount = "SampleCount"
-    s StatisticMaximum     = "Maximum"
-    s StatisticMinimum     = "Minimum"

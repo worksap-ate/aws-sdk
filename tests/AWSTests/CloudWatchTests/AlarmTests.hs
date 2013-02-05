@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
 module AWSTests.CloudWatchTests.AlarmTests
     ( runAlarmTests
     )
@@ -27,3 +27,9 @@ describeAlarmsTest = do
 
             -- Expect NextToken is returned
             testCloudWatch region (describeAlarms Nothing AlarmSpecNothing (Just 1) Nothing Nothing) `miss` anyHttpException
+
+        it "describeAlarmsForMetric doesn't throw any exception" $ do
+            testCloudWatch region (do
+                (MetricAlarm{..}:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
+                describeAlarmsForMetric metricAlarmDimensions metricAlarmMetricName metricAlarmNamespace metricAlarmPeriod metricAlarmStatistic Nothing
+                ) `miss` anyHttpException

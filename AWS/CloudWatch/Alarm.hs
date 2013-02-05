@@ -1,6 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
 module AWS.CloudWatch.Alarm
     ( describeAlarms
+    , describeAlarmsForMetric
     ) where
 
 import Control.Applicative
@@ -65,3 +66,30 @@ sinkMetricAlarm =
     <*> members "Dimensions" sinkDimension
     <*> getT "ComparisonOperator"
     <*> getT "MetricName"
+
+describeAlarmsForMetric
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Dimension] -- ^ The list of dimensions associated with the metric.
+    -> Text -- ^ The name of the metric.
+    -> Text -- ^ The namespace of the metric.
+    -> Int -- ^ The period in seconds over which the statistic is applied.
+    -> Statistic -- ^ The statistic for the metric.
+    -> Maybe Text -- ^  The unit for the metric.
+    -> CloudWatch m [MetricAlarm]
+describeAlarmsForMetric dims name ns period stat unit =
+    cloudWatchQuery "DescribeAlarmsForMetric" params $ members "MetricAlarms" sinkMetricAlarm
+  where
+    params =
+        [ "Dimensions.member" |.#. map fromDimension dims
+        , "MetricName" |= name
+        , "Namespace" |= ns
+        , "Period" |= toText period
+        , "Statistic" |= stringifyStatistic stat
+        , "Unit" |=? unit
+        ]
+
+fromDimension :: Dimension -> [QueryParam]
+fromDimension Dimension{..} =
+    [ "Name" |= dimensionName
+    , "Value" |= dimensionValue
+    ]
