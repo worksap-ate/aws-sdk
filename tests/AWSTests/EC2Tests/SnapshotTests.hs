@@ -5,11 +5,13 @@ module AWSTests.EC2Tests.SnapshotTests
     )
     where
 
+import qualified Control.Exception.Lifted as E
 import Data.Text (Text)
 import Test.Hspec
 
 import AWS.EC2
 import AWS.EC2.Types
+import AWS.EC2.Util (list)
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -32,13 +34,11 @@ createSnapshotTest :: Spec
 createSnapshotTest = do
     describe "createSnapshot doesn't fail" $ do
         it "createSnapshot, deleteSnapshot and copySnapshot doesn't any exception" $ do
-            volumes <- testEC2 region (describeVolumes [] [])
-            let vid = volumeId $ head volumes
-            snapshot <- testEC2' region (createSnapshot vid Nothing)
-            let sid = snapshotId snapshot
-            copyId <- testEC2' region (copySnapshot region sid Nothing)
-            testEC2' region (deleteSnapshot sid) `shouldReturn` True
-            testEC2' region (deleteSnapshot copyId) `shouldReturn` True
+            testEC2' region (do
+                Volume{volumeId = vid}:_ <- list $ describeVolumes [] []
+                E.bracket (createSnapshot vid Nothing) (deleteSnapshot . snapshotId) $ \Snapshot{snapshotId = sid} ->
+                    E.bracket (copySnapshot region sid Nothing) deleteSnapshot $ const (return ())
+                ) `miss` anyHttpException
 
 describeSnapshotAttributeTest :: Spec
 describeSnapshotAttributeTest = do
