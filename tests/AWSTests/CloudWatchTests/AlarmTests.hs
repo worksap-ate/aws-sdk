@@ -21,6 +21,7 @@ runAlarmTests = do
     hspec putMetricAlarmTest
     hspec describeAlarmHistoryTest
     hspec alarmActionsTest
+    hspec setAlarmStateTest
 
 describeAlarmsTest :: Spec
 describeAlarmsTest = do
@@ -83,4 +84,14 @@ alarmActionsTest =
                 let name = metricAlarmAlarmName alarm
                 disableAlarmActions [name]
                 enableAlarmActions [name]
+                ) `miss` anyHttpException
+
+setAlarmStateTest :: Spec
+setAlarmStateTest =
+    describe "setAlarmState doesn't fail" $ do
+        it "setAlarmState doesn't throw any exception" $ do
+            testCloudWatch region (do
+                (alarm:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
+                let name = metricAlarmAlarmName alarm
+                setAlarmState name "test" "[]" StateValueInsufficientData
                 ) `miss` anyHttpException

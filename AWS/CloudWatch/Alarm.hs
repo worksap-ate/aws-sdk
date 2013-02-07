@@ -7,6 +7,7 @@ module AWS.CloudWatch.Alarm
     , describeAlarmHistory
     , enableAlarmActions
     , disableAlarmActions
+    , setAlarmState
     ) where
 
 import Control.Applicative
@@ -38,16 +39,16 @@ describeAlarms prefix spec maxRecords nextToken state =
         , specParam spec
         , "MaxRecords" |=? toText <$> maxRecords
         , "NextToken" |=? nextToken
-        , "StateValue" |=? s <$> state
+        , "StateValue" |=? stringifyStateValue <$> state
         ]
     specParam AlarmSpecNothing = nothingParam
     specParam (AlarmSpecNamePrefix p) = "AlarmNamePrefix" |= p
     specParam (AlarmSpecNames ns) = "AlarmNames.member" |.#= ns
 
-    s :: StateValue -> Text
-    s StateValueOk = "OK"
-    s StateValueAlarm = "ALARM"
-    s StateValueInsufficientData = "INSUFFICIENT_DATA"
+stringifyStateValue :: StateValue -> Text
+stringifyStateValue StateValueOk = "OK"
+stringifyStateValue StateValueAlarm = "ALARM"
+stringifyStateValue StateValueInsufficientData = "INSUFFICIENT_DATA"
 
 sinkMetricAlarm :: MonadThrow m => GLSink Event m MetricAlarm
 sinkMetricAlarm =
@@ -181,3 +182,20 @@ disableAlarmActions
     -> CloudWatch m ()
 disableAlarmActions alarms =
     cloudWatchQuery "DisableAlarmActions" ["AlarmNames.member" |.#= alarms] $ return ()
+
+setAlarmState
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The name for the alarm.
+    -> Text -- ^ The reason that this alarm is set to this specific state (in human-readable text format) 
+    -> Text -- ^ The reason that this alarm is set to this specific state (in machine-readable JSON format)
+    -> StateValue -- ^ The value of the state.
+    -> CloudWatch m ()
+setAlarmState alarm reason dat state =
+    cloudWatchQuery "SetAlarmState" params $ return ()
+  where
+    params =
+        [ "AlarmName" |= alarm
+        , "StateReason" |= reason
+        , "StateReasonData" |= dat
+        , "StateValue" |= stringifyStateValue state
+        ]
