@@ -5,6 +5,7 @@ module AWS.CloudWatch.Alarm
     , putMetricAlarm
     , deleteAlarms
     , describeAlarmHistory
+    , enableAlarmActions
     ) where
 
 import Control.Applicative
@@ -165,3 +166,10 @@ sinkAlarmHistory =
     <*> getT "AlarmName"
     <*> getT "HistoryData"
     <*> getT "HistorySummary"
+
+enableAlarmActions
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ The names of the alarms to enable actions for.
+    -> CloudWatch m ()
+enableAlarmActions alarms =
+    cloudWatchQuery "EnableAlarmActions" ["AlarmNames.member" |.#= alarms] $ return ()

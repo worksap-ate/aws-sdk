@@ -20,6 +20,7 @@ runAlarmTests = do
     hspec describeAlarmsTest
     hspec putMetricAlarmTest
     hspec describeAlarmHistoryTest
+    hspec alarmActionsTest
 
 describeAlarmsTest :: Spec
 describeAlarmsTest = do
@@ -71,4 +72,13 @@ describeAlarmHistoryTest =
                 describeAlarmHistory Nothing Nothing Nothing Nothing Nothing Nothing
                 -- Expect NextToken is returned
                 describeAlarmHistory Nothing Nothing Nothing (Just 1) Nothing Nothing
+                ) `miss` anyHttpException
+
+alarmActionsTest :: Spec
+alarmActionsTest =
+    describe "enableAlarmActions doesn't fail" $ do
+        it "enableAlarmActions doesn't throw any exception" $ do
+            testCloudWatch region (do
+                (alarm:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
+                enableAlarmActions [metricAlarmAlarmName alarm]
                 ) `miss` anyHttpException
