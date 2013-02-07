@@ -117,3 +117,19 @@ data PutMetricAlarmRequest = PutMetricAlarmRequest
     , putMetricAlarmUnit :: Maybe Text
     }
   deriving (Show, Eq)
+
+data AlarmHistory = AlarmHistory
+    { alarmHistoryTimestamp :: UTCTime
+    , alarmHistoryHistoryItemType :: HistoryType
+    , alarmHistoryAlarmName :: Text
+    , alarmHistoryHistoryData :: Text
+    , alarmHistoryHistorySummary :: Text
+    }
+  deriving (Show, Eq)
+
+data HistoryType
+    = HistoryTypeConfigurationUpdate
+    | HistoryTypeStateUpdate
+    | HistoryTypeAction
+  deriving (Show, Eq, Read)
+deriveFromText "HistoryType" ["ConfigurationUpdate", "StateUpdate", "Action"]

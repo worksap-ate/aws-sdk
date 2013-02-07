@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
+#define DEBUG
 module AWS.Lib.Query
     ( QueryParam
     , Filter

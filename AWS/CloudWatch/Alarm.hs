@@ -4,18 +4,20 @@ module AWS.CloudWatch.Alarm
     , describeAlarmsForMetric
     , putMetricAlarm
     , deleteAlarms
+    , describeAlarmHistory
     ) where
 
 import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
+import Data.Time (UTCTime)
 import Data.XML.Types (Event)
 
 import AWS.CloudWatch.Internal
 import AWS.CloudWatch.Types
 import AWS.Lib.Parser (getT, getT_, members, text)
 import AWS.Lib.Query
-import AWS.Util (toText, boolToText)
+import AWS.Util (toText, boolToText, timeToText)
 
 describeAlarms
     :: (MonadBaseControl IO m, MonadResource m)
@@ -127,3 +129,39 @@ deleteAlarms
     => [Text] -- ^ A list of alarms to be deleted.
     -> CloudWatch m ()
 deleteAlarms names = cloudWatchQuery "DeleteAlarms" ["AlarmNames.member" |.#= names] $ return ()
+
+describeAlarmHistory
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Text -- ^ The name of the alarm.
+    -> Maybe UTCTime -- ^ The ending date to retrieve alarm history.
+    -> Maybe HistoryType -- ^ The type of alarm histories to retrieve.
+    -> Maybe Int -- ^ The maximum number of alarm history records to retrieve.
+    -> Maybe Text -- ^ The token returned by a previous call to indicate that there is more data available.
+    -> Maybe UTCTime -- ^ The starting date to retrieve alarm history.
+    -> CloudWatch m ([AlarmHistory], Maybe Text)
+describeAlarmHistory alarm endDate type_ maxRecords nextToken startDate =
+    cloudWatchQuery "DescribeAlarmHistory" params $
+        (,) <$> members "AlarmHistoryItems" sinkAlarmHistory <*> getT "NextToken"
+  where
+    params =
+        [ "AlarmName" |=? alarm
+        , "EndDate" |=? timeToText <$> endDate
+        , "HistoryItemType" |=? stringifyHistoryType <$> type_
+        , "MaxRecords" |=? toText <$> maxRecords
+        , "NextToken" |=? nextToken
+        , "StartDate" |=? timeToText <$> startDate
+        ]
+
+stringifyHistoryType :: HistoryType -> Text
+stringifyHistoryType HistoryTypeConfigurationUpdate = "ConfigurationUpdate"
+stringifyHistoryType HistoryTypeStateUpdate = "StateUpdate"
+stringifyHistoryType HistoryTypeAction = "Action"
+
+sinkAlarmHistory :: MonadThrow m => GLSink Event m AlarmHistory
+sinkAlarmHistory =
+    AlarmHistory
+    <$> getT "Timestamp"
+    <*> getT "HistoryItemType"
+    <*> getT "AlarmName"
+    <*> getT "HistoryData"
+    <*> getT "HistorySummary"

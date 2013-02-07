@@ -19,6 +19,7 @@ runAlarmTests :: IO ()
 runAlarmTests = do
     hspec describeAlarmsTest
     hspec putMetricAlarmTest
+    hspec describeAlarmHistoryTest
 
 describeAlarmsTest :: Spec
 describeAlarmsTest = do
@@ -60,4 +61,14 @@ putMetricAlarmTest =
                             }
                 putMetricAlarm req
                 deleteAlarms [putMetricAlarmAlarmName req]
+                ) `miss` anyHttpException
+
+describeAlarmHistoryTest :: Spec
+describeAlarmHistoryTest =
+    describe "describeAlarmHistory doesn't fail" $ do
+        it "describeAlarmHistory doesn't throw any exception" $ do
+            testCloudWatch region (do
+                describeAlarmHistory Nothing Nothing Nothing Nothing Nothing Nothing
+                -- Expect NextToken is returned
+                describeAlarmHistory Nothing Nothing Nothing (Just 1) Nothing Nothing
                 ) `miss` anyHttpException
