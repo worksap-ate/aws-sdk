@@ -6,6 +6,7 @@ module AWS.CloudWatch.Alarm
     , deleteAlarms
     , describeAlarmHistory
     , enableAlarmActions
+    , disableAlarmActions
     ) where
 
 import Control.Applicative
@@ -173,3 +174,10 @@ enableAlarmActions
     -> CloudWatch m ()
 enableAlarmActions alarms =
     cloudWatchQuery "EnableAlarmActions" ["AlarmNames.member" |.#= alarms] $ return ()
+
+disableAlarmActions
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [Text] -- ^ The names of the alarms to enable actions for.
+    -> CloudWatch m ()
+disableAlarmActions alarms =
+    cloudWatchQuery "DisableAlarmActions" ["AlarmNames.member" |.#= alarms] $ return ()

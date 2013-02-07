@@ -76,9 +76,11 @@ describeAlarmHistoryTest =
 
 alarmActionsTest :: Spec
 alarmActionsTest =
-    describe "enableAlarmActions doesn't fail" $ do
-        it "enableAlarmActions doesn't throw any exception" $ do
+    describe "{disable,enable}AlarmActions doesn't fail" $ do
+        it "{disable,enable}AlarmActions doesn't throw any exception" $ do
             testCloudWatch region (do
                 (alarm:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
-                enableAlarmActions [metricAlarmAlarmName alarm]
+                let name = metricAlarmAlarmName alarm
+                disableAlarmActions [name]
+                enableAlarmActions [name]
                 ) `miss` anyHttpException
