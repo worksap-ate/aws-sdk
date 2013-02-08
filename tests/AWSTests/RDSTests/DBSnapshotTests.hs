@@ -5,6 +5,7 @@ module AWSTests.RDSTests.DBSnapshotTests
 
 import Data.Text (Text)
 import Test.Hspec
+import qualified Control.Exception.Lifted as E
 
 import AWS.RDS
 import AWS.RDS.Types
@@ -43,4 +44,4 @@ createDBSnapshotTest = do
             (\dbs' -> dbsStatus dbs' == "available")
             (\dbsid' -> describeDBSnapshots Nothing (Just dbsid') Nothing Nothing Nothing) $
             dbsDBSnapshotIdentifier dbs
-        deleteDBSnapshot dbsid
+      `E.finally` deleteDBSnapshot dbsid
