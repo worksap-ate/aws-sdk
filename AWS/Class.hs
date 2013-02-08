@@ -9,7 +9,7 @@
 module AWS.Class
     ( AWS
     , runAWS
-    , runAWS'
+    , runAWSwithManager
     , AWSException(..)
     , AWSContext(..)
     , getLastRequestId
@@ -105,15 +105,15 @@ runAWS :: MonadIO m
     -> m a
 runAWS ctx cred app = do
     mgr <- liftIO $ HTTP.newManager HTTP.def
-    runAWS' mgr ctx cred app
+    runAWSwithManager mgr ctx cred app
 
-runAWS' :: Monad m
+runAWSwithManager :: Monad m
     => HTTP.Manager
     -> (HTTP.Manager -> c)
     -> Credential
     -> AWS c m a
     -> m a
-runAWS' mgr ctx cred app =
+runAWSwithManager mgr ctx cred app =
     R.runReaderT
         (S.evalStateT (runAWST app) $ ctx mgr)
         cred

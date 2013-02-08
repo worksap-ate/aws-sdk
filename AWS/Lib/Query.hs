@@ -221,7 +221,10 @@ requestQuery cred ctx action params ver errSink = do
     time <- liftIO getCurrentTime
     let url = mkUrl ep cred time action params ver
     request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
-    let req = request { HTTP.checkStatus = checkStatus' }
+    let req = request
+            { HTTP.checkStatus = checkStatus'
+            , HTTP.responseTimeout = Just 30000000
+            }
     response <- HTTP.http req mgr
     let body = HTTP.responseBody response
     let st = H.statusCode $ HTTP.responseStatus response

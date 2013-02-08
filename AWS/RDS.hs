@@ -4,7 +4,7 @@ module AWS.RDS
     ( -- * RDS Environment
       RDS
     , runRDS
-    , runRDS'
+    , runRDSwithManager
     , setRegion
       -- * DBInstance
     , module AWS.RDS.DBInstance
@@ -49,9 +49,9 @@ initialRDSContext mgr = AWSContext
 runRDS :: MonadIO m => Credential -> RDS m a -> m a
 runRDS = runAWS initialRDSContext
 
-runRDS' :: Monad m
+runRDSwithManager :: Monad m
     => HTTP.Manager -> Credential -> RDS m a -> m a
-runRDS' mgr = runAWS' mgr initialRDSContext
+runRDSwithManager mgr = runAWSwithManager mgr initialRDSContext
 
 setRegion
     :: (MonadBaseControl IO m, MonadResource m)
