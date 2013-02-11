@@ -23,4 +23,4 @@ describeTagsTest :: Spec
 describeTagsTest = do
     describe "describeTags doesn't fail" $ do
         it "describeTags doesn't throw any exception" $ do
-            testEC2 region (describeTags []) `miss` anyHttpException
+            testEC2 region (describeTags []) `miss` anyConnectionException

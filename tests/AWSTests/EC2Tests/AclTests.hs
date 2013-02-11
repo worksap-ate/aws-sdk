@@ -15,14 +15,14 @@ runAclTests :: IO ()
 runAclTests = hspec $ do
     describe "describeNetworkAcls" $ do
         it "doesn't throw any exception" $ do
-            testEC2 region (describeNetworkAcls [] []) `miss` anyHttpException
+            testEC2 region (describeNetworkAcls [] []) `miss` anyConnectionException
 
     describe "{create,delete}NetworkAcl" $ do
         it "doesn't throw any exception" $ do
             testEC2' region (do
                 withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
                     withNetworkAcl vpc $ const (return ())
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
     describe "{create,replace,delete}NetworkAclEntry" $ do
         it "doesn't throw any exception" $ do
@@ -36,7 +36,7 @@ runAclTests = hspec $ do
                                 { networkAclEntryRequestProtocol = 17
                                 , networkAclEntryRequestPortRange = Just (PortRange 1000 2000)
                                 }
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 testEntry :: Text -> NetworkAclEntryRequest
 testEntry acl = NetworkAclEntryRequest

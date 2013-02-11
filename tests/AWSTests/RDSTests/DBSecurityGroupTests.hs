@@ -23,7 +23,7 @@ describeDBSecurityGroupsTest = do
     describe "describeDBSecurityGroups doesn't fail" $ do
         it "describeDBSecurityGroups doesn't throw any exception" $ do
             testRDS region (describeDBSecurityGroups Nothing Nothing Nothing)
-                `miss` anyHttpException
+                `miss` anyConnectionException
 
 createAndDeleteDBSecurityGroupTest :: Spec
 createAndDeleteDBSecurityGroupTest = do
@@ -32,6 +32,6 @@ createAndDeleteDBSecurityGroupTest = do
             testRDS region (do
                 createDBSecurityGroup name "test"
                 deleteDBSecurityGroup name
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
   where
     name = "hspec-test-security-group"

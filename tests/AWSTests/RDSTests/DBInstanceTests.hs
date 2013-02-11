@@ -24,13 +24,13 @@ describeDBInstancesTest :: Spec
 describeDBInstancesTest = do
     describe "describeDBInstances doesn't fail" $ do
         it "describeDBInstances doesn't throw any exception" $ do
-            testRDS region (describeDBInstances Nothing Nothing Nothing) `miss` anyHttpException
+            testRDS region (describeDBInstances Nothing Nothing Nothing) `miss` anyConnectionException
 
 createAndDeleteDBInstanceTest :: Spec
 createAndDeleteDBInstanceTest = do
     describe "{create,delete}DBInstance doesn't fail" $ do
         it "{create,delete}DBInstance doesn't any exception" $ do
-            testRDS region test `miss` anyHttpException
+            testRDS region test `miss` anyConnectionException
   where
     test = do
         createDBInstance req

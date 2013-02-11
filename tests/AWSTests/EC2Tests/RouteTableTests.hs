@@ -23,4 +23,4 @@ describeRouteTablesTest :: Spec
 describeRouteTablesTest = do
     describe "describeRouteTables doesn't fail" $ do
         it "describeRouteTables doesn't throw any exception" $ do
-            testEC2 region (describeRouteTables [] []) `miss` anyHttpException
+            testEC2 region (describeRouteTables [] []) `miss` anyConnectionException

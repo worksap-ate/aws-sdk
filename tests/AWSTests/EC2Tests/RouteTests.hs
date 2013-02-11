@@ -36,4 +36,4 @@ routeTest = do
                                 createRoute $ CreateRouteToGateway tableId cidr gatewayId
                                 replaceRoute $ CreateRouteToGateway tableId cidr gatewayId
                                 deleteRoute tableId cidr
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException

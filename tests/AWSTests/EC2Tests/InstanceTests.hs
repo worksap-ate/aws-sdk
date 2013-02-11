@@ -30,7 +30,7 @@ describeInstancesTest :: Spec
 describeInstancesTest = do
     describe "describeInstances doesn't fail" $ do
         it "describeInstances doesn't throw any exception" $ do
-            testEC2 region (describeInstances [] []) `miss` anyHttpException
+            testEC2 region (describeInstances [] []) `miss` anyConnectionException
 
 describeInstanceStatusTest :: Spec
 describeInstanceStatusTest = do
@@ -40,7 +40,7 @@ describeInstanceStatusTest = do
                 reservations <- Util.list $ describeInstances [] []
                 let instances = nub $ concat $ map reservationInstanceSet reservations
                 describeInstanceStatus (map instanceId instances) True [] Nothing
-              ) `miss` anyHttpException
+              ) `miss` anyConnectionException
 
 describeInstanceAttributeTest :: Spec
 describeInstanceAttributeTest = do
@@ -50,7 +50,7 @@ describeInstanceAttributeTest = do
                 reservations <- Util.list $ describeInstances [] []
                 let iid = instanceId $ head $ reservationInstanceSet $ head reservations
                 describeInstanceAttribute iid InstanceAttributeRequestInstanceType 
-              ) `miss` anyHttpException
+              ) `miss` anyConnectionException
 
 monitorAndUnmonitorInstancesTest :: Spec
 monitorAndUnmonitorInstancesTest = do
@@ -60,7 +60,7 @@ monitorAndUnmonitorInstancesTest = do
             let iid = instanceId $ head $ reservationInstanceSet $ head reservations
             testState (monitorInstances [iid]) >>= (`shouldSatisfy` (`elem` [MonitoringPending, MonitoringEnabled]))
             testState (unmonitorInstances [iid]) >>= (`shouldSatisfy` (`elem` [MonitoringDisabling, MonitoringDisabled]))
-            ) `miss` anyHttpException
+            ) `miss` anyConnectionException
   where
     testState ec2 =
         monitorInstancesResponseInstanceMonitoringState . head

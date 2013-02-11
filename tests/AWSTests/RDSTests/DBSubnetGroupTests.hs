@@ -24,7 +24,7 @@ describeDBSubnetGroupsTest = do
     describe "describeDBSubnetGroups doesn't fail" $ do
         it "describeDBSubnetGroups doesn't throw any exception" $ do
             testRDS region (describeDBSubnetGroups Nothing Nothing Nothing)
-                `miss` anyHttpException
+                `miss` anyConnectionException
 
 createAndDeleteDBSubnetGroupTest :: Spec
 createAndDeleteDBSubnetGroupTest = do
@@ -34,7 +34,7 @@ createAndDeleteDBSubnetGroupTest = do
                 sgs <- describeDBSubnetGroups Nothing Nothing Nothing
                 createDBSubnetGroup name (subnets sgs) "test"
                 deleteDBSubnetGroup name
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
   where
     name = "hspec-test-subnet-group"
     subnets = map subnetIdentifier . dbsngSubnets . head

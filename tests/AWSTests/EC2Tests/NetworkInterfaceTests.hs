@@ -25,13 +25,13 @@ describeNetworkInterfacesTest :: Spec
 describeNetworkInterfacesTest = do
     describe "describeNetworkInterfaces doesn't fail" $ do
         it "describeNetworkInterfaces doesn't throw any exception" $ do
-            testEC2 region (describeNetworkInterfaces [] []) `miss` anyHttpException
+            testEC2 region (describeNetworkInterfaces [] []) `miss` anyConnectionException
 
 runInstanceTest :: Spec
 runInstanceTest = do
     describe "runInstances with NetworkInterfaces doesn't fail" $ do
         it "runInstances with NetworkInterfaces doesn't throw any exception" $ do
-            testEC2' region test `miss` anyHttpException
+            testEC2' region test `miss` anyConnectionException
   where
     test = withSubnet "10.11.12.0/24" $ \subnet -> do
         i <- withInstance (req $ subnetId subnet) $ \i ->

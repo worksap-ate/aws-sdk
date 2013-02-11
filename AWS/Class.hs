@@ -4,6 +4,7 @@
  , MultiParamTypeClasses
  , UndecidableInstances
  , DeriveDataTypeable
+ , ExistentialQuantification
  #-}
 
 module AWS.Class
@@ -13,6 +14,7 @@ module AWS.Class
     , AWSException(..)
     , AWSContext(..)
     , getLastRequestId
+      -- * re-export
     , monadThrow
     ) where
 
@@ -35,6 +37,7 @@ import Control.Monad.Trans.Control
 import Control.Exception (Exception)
 import Data.Typeable (Typeable)
 import Data.Conduit (MonadThrow, monadThrow)
+import Text.XML.Stream.Parse (XmlException)
 
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Text (Text)
@@ -51,11 +54,20 @@ data AWSException
         , errorMessage :: Maybe Text
         , errorRequestId :: Text
         } -- ^ This error is caused by client requests.
+    | ServerError -- ^ XXX: Not implimented. Internal error of AWS.
     | ResponseParseError Text
-    | TextConversionException Text
+    | FromTextError Text
         -- ^ parse error: cannot convert Text to oher data type.
+    | XmlParserError XmlException
+    | forall e . Exception e => ConnectionException e
+    | forall e . Exception e => OtherInternalException e -- ^ bug
     | NextToken Text -- ^ This response has next token.
-  deriving (Show, Typeable)
+  deriving (Typeable)
+
+instance Show AWSException where
+    showsPrec p (ConnectionException e) = showsPrec p e
+    showsPrec p (OtherInternalException e) = showsPrec p e
+    showsPrec p e = showsPrec p e
 
 instance Exception AWSException
 

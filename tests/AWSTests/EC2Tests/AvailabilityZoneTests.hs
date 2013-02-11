@@ -23,4 +23,4 @@ describeAvailabilityZonesTest :: Spec
 describeAvailabilityZonesTest = do
     describe "describeAvailabilityZones doesn't fail" $ do
         it "describeAvailabilityZones doesn't throw any exception" $ do
-            testEC2 region (describeAvailabilityZones [] []) `miss` anyHttpException
+            testEC2 region (describeAvailabilityZones [] []) `miss` anyConnectionException

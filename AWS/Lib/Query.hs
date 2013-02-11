@@ -15,6 +15,7 @@ module AWS.Lib.Query
     , ($=+)
     , requestQuery
     , commonQuery
+    , exceptionTransform
     , textToBS
     ) where
 
@@ -26,17 +27,21 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 import Data.List (transpose)
+import Data.Maybe
 import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Conduit
 import qualified Data.Conduit.Internal as CI
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
+import Text.XML.Stream.Parse (XmlException)
 import Data.Time (UTCTime, formatTime, getCurrentTime)
 import System.Locale (defaultTimeLocale, iso8601DateFormat)
 import qualified Data.Map as Map
 import Data.Map (Map)
+import Network.HTTP.Conduit (HttpException)
 import qualified Network.HTTP.Types as H
+import Network.TLS (HandshakeFailed)
 import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -278,8 +283,24 @@ commonQuery
 commonQuery apiVersion action params sink = do
     ctx <- State.get
     cred <- Reader.ask
-    rs <- lift $ requestQuery cred ctx action params apiVersion sinkError
-    (res, rid) <- lift $ rs $$+-
-        XmlP.parseBytes XmlP.def =$ sinkResponse (bsToText action) sink
+    (res, rid) <- lift $ E.handle exceptionTransform $ do
+        rs <- requestQuery cred ctx action params apiVersion sinkError
+        rs $$+- XmlP.parseBytes XmlP.def
+           =$   sinkResponse (bsToText action) sink
     State.put ctx { lastRequestId = Just rid }
     return res
+
+exceptionTransform
+    :: (MonadBaseControl IO m, MonadResource m)
+    => SomeException -> m a
+exceptionTransform e
+    | isJust xmle  = throw $ XmlParserError $ fromJust xmle
+    | isJust httpe = throw $ ConnectionException $ fromJust httpe
+    | isJust tlse  = throw $ ConnectionException $ fromJust tlse
+    | isJust ioe   = throw $ ConnectionException $ fromJust ioe
+    | otherwise    = throw $ OtherInternalException e
+  where
+    xmle = fromException e :: Maybe XmlException
+    httpe = fromException e :: Maybe HttpException
+    tlse  = fromException e :: Maybe HandshakeFailed
+    ioe   = fromException e :: Maybe IOException

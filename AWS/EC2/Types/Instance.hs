@@ -149,7 +149,7 @@ instance FromText InstanceLifecycle
     fromMaybeText _name Nothing  = return LifecycleNone
     fromMaybeText _name (Just t)
         | t == "spot" = return LifecycleSpot
-        | otherwise   = monadThrow $ TextConversionException t
+        | otherwise   = monadThrow $ FromTextError t
 
 data InstanceMonitoringState
     = MonitoringDisabled

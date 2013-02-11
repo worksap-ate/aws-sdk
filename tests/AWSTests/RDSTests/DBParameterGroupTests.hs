@@ -23,7 +23,7 @@ describeDBParameterGroupsTest = do
     describe "describeDBParameterGroups doesn't fail" $ do
         it "describeDBParameterGroups doesn't throw any exception" $ do
             testRDS region (describeDBParameterGroups Nothing Nothing Nothing)
-                `miss` anyHttpException
+                `miss` anyConnectionException
 
 createAndDeleteDBParameterGroupTest :: Spec
 createAndDeleteDBParameterGroupTest = do
@@ -32,6 +32,6 @@ createAndDeleteDBParameterGroupTest = do
             testRDS region (do
                 createDBParameterGroup "MySQL5.5" name "test"
                 deleteDBParameterGroup name
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
   where
     name = "hspec-test-parameter-group"

@@ -35,31 +35,31 @@ describeVpcsTest :: Spec
 describeVpcsTest = do
     describe "describeVpcs doesn't fail" $ do
         it "describeVpcs doesn't throw any exception" $ do
-            testEC2 region (describeVpcs [] []) `miss` anyHttpException
+            testEC2 region (describeVpcs [] []) `miss` anyConnectionException
 
 describeVpnGatewaysTest :: Spec
 describeVpnGatewaysTest = do
     describe "describeVpnGateways doesn't fail" $ do
         it "describeVpnGateways doesn't throw any exception" $ do
-            testEC2 region (describeVpnGateways [] []) `miss` anyHttpException
+            testEC2 region (describeVpnGateways [] []) `miss` anyConnectionException
 
 describeVpnConnectionsTest :: Spec
 describeVpnConnectionsTest = do
     describe "describeVpnConnections doesn't fail" $ do
         it "describeVpnConnections doesn't throw any exception" $ do
-            testEC2 region (describeVpnConnections [] []) `miss` anyHttpException
+            testEC2 region (describeVpnConnections [] []) `miss` anyConnectionException
 
 describeCustomerGatewayTest :: Spec
 describeCustomerGatewayTest = do
     describe "describeCustomerGateway doesn't fail" $ do
         it "describeCustomerGateway doesn't throw any exception" $ do
-            testEC2 region (describeCustomerGateway [] []) `miss` anyHttpException
+            testEC2 region (describeCustomerGateway [] []) `miss` anyConnectionException
 
 describeInternetGatewaysTest :: Spec
 describeInternetGatewaysTest = do
     describe "describeInternetGateways doesn't fail" $ do
         it "describeInternetGateways doesn't throw any exception" $ do
-            testEC2 region (describeInternetGateways [] []) `miss` anyHttpException
+            testEC2 region (describeInternetGateways [] []) `miss` anyConnectionException
 
 createVpcTest :: Spec
 createVpcTest = do
@@ -72,7 +72,7 @@ describeDhcpOptionsTest :: Spec
 describeDhcpOptionsTest = do
     describe "describeDhcpOptions doesn't fail" $ do
         it "describeDhcpOptions doesn't throw any exception" $ do
-            testEC2 region (describeDhcpOptions [] []) `miss` anyHttpException
+            testEC2 region (describeDhcpOptions [] []) `miss` anyConnectionException
 
 createDhcpOptionsTest :: Spec
 createDhcpOptionsTest = do
@@ -87,7 +87,7 @@ vpnConnectionTest :: Spec
 vpnConnectionTest = do
     describe "{create,delete}CustomerGateway, {create,delete}VpnGateway and {create,delete}VpnConnection don't fail" $ do
         it "{create,delete}CustomerGateway, {create,delete}VpnGateway and {create,delete}VpnConnection don't throw any exception" $ do
-            testEC2' region test `miss` anyHttpException
+            testEC2' region test `miss` anyConnectionException
   where
     test = do
         cgid <- customerGatewayId <$> createCustomerGateway "ipsec.1" "202.202.202.20" 65000

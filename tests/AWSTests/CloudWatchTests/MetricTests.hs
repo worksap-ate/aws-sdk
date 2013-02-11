@@ -25,7 +25,7 @@ listMetricsTest :: Spec
 listMetricsTest = do
     describe "Metric operations doesn't fail" $ do
         it "listMetrics doesn't throw any exception" $ do
-            testCloudWatch region (listMetrics [] Nothing Nothing Nothing) `miss` anyHttpException
+            testCloudWatch region (listMetrics [] Nothing Nothing Nothing) `miss` anyConnectionException
 
         it "getMetricStatistics doesn't throw any exception" $ do
             testCloudWatch region (do
@@ -33,7 +33,7 @@ listMetricsTest = do
                 end <- liftIO getCurrentTime
                 let start = end { utctDayTime = utctDayTime end - 5*60 }
                 getMetricStatistics [] start end (metricName metric) (metricNameSpace metric) 60 allStatistics Nothing
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 putMetricDataTest :: Spec
 putMetricDataTest = do
@@ -42,12 +42,12 @@ putMetricDataTest = do
             it "putMetricData doesn't throw any exception" $ do
                 testCloudWatch region (
                     putMetricData [dat {metricDatumValue = MetricDatumValue 42}] nameSpace
-                    ) `miss` anyHttpException
+                    ) `miss` anyConnectionException
         context "with StatisticSet" $ do
             it "putMetricData doesn't throw any exception" $ do
                 testCloudWatch region (
                     putMetricData [dat {metricDatumValue = MetricDatumStatisticValues stat}] nameSpace
-                    ) `miss` anyHttpException
+                    ) `miss` anyConnectionException
   where
     dat = MetricDatum
         { metricDatumDimensions = [Dimension "dimTestName" "dimTestValue"]

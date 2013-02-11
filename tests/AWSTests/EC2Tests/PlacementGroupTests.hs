@@ -24,7 +24,7 @@ describePlacementGroupsTest :: Spec
 describePlacementGroupsTest = do
     describe "describePlacementGroups doesn't fail" $ do
         it "describeInstances doesn't throw any exception" $ do
-            testEC2 region (describePlacementGroups [] []) `miss` anyHttpException
+            testEC2 region (describePlacementGroups [] []) `miss` anyConnectionException
 
 createAndDeletePlacementGroupTest :: Spec
 createAndDeletePlacementGroupTest = do
@@ -33,6 +33,6 @@ createAndDeletePlacementGroupTest = do
             testEC2' region (E.finally
                 (createPlacementGroup groupName PlacementGroupStrategyCluster)
                 (deletePlacementGroup groupName)
-              ) `miss` anyHttpException
+              ) `miss` anyConnectionException
   where
     groupName = "createAndDeletePlacementGroupTest"

@@ -77,7 +77,7 @@ ec2QuerySource'
 ec2QuerySource' action params token cond = do
     cred <- Reader.ask
     ctx <- State.get
-    (src1, rid) <- lift $ do
+    (src1, rid) <- lift $ E.handle exceptionTransform $ do
         response <- requestQuery cred ctx action params' apiVersion sinkError
         res <- response $=+ XmlP.parseBytes XmlP.def
         res $$++ sinkRequestId

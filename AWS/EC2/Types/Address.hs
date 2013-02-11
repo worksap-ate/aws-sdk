@@ -33,7 +33,7 @@ instance FromText AddressDomain
     fromMaybeText _name (Just t)
         | t == "standard" = return AddressDomainStandard
         | t == "vpc"      = return AddressDomainVPC
-        | otherwise       = monadThrow $ TextConversionException t
+        | otherwise       = monadThrow $ FromTextError t
 
 data AllocateAddress = AllocateAddress
     { allocateAddressPublicIp :: IPv4

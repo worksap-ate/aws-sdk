@@ -137,6 +137,7 @@ library
                    , template-haskell
                    , parallel
                    , iproute >= 1.2.9
+                   , tls
 
 test-suite test
     type:              exitcode-stdio-1.0

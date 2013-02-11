@@ -23,4 +23,4 @@ describeSubnetsTest :: Spec
 describeSubnetsTest = do
     describe "describeSubnets doesn't fail" $ do
         it "describeSubnets doesn't throw any exception" $ do
-            testEC2 region (describeSubnets [] []) `miss` anyHttpException
+            testEC2 region (describeSubnets [] []) `miss` anyConnectionException

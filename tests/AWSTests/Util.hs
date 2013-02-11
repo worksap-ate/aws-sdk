@@ -5,9 +5,7 @@ import Test.HUnit
 import Test.Hspec
 import Control.Exception
 import Data.Typeable
-import Network.HTTP.Conduit hiding (path)
-import Network.TLS (HandshakeFailed)
-import Data.Maybe (isJust)
+import AWS (AWSException(..))
 
 miss :: Exception e => IO a -> Selector e -> Expectation
 action `miss` p = do
@@ -26,7 +24,6 @@ action `miss` p = do
         instanceOf :: Selector a -> a
         instanceOf _ = error "brocken Typeable instance"
 
-anyHttpException :: Selector SomeException
-anyHttpException e
-    =  isJust (fromException e :: Maybe HttpException)
-    || isJust (fromException e :: Maybe HandshakeFailed)
+anyConnectionException :: Selector AWSException
+anyConnectionException (ConnectionException _) = True
+anyConnectionException _ = False

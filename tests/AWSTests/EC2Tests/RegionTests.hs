@@ -23,4 +23,4 @@ describeRegionsTest :: Spec
 describeRegionsTest = do
     describe "describeRegions doesn't fail" $ do
         it "describeRegions doesn't throw any exception" $ do
-            testEC2 region (describeRegions [] []) `miss` anyHttpException
+            testEC2 region (describeRegions [] []) `miss` anyConnectionException

@@ -23,4 +23,4 @@ describeSecurityGroupsTest :: Spec
 describeSecurityGroupsTest = do
     describe "describeSecurityGroups doesn't fail" $ do
         it "describeSecurityGroups doesn't throw any exception" $ do
-            testEC2 region (describeSecurityGroups [] [] []) `miss` anyHttpException
+            testEC2 region (describeSecurityGroups [] [] []) `miss` anyConnectionException

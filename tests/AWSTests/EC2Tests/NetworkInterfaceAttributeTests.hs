@@ -27,23 +27,23 @@ describeNetworkInterfaceAttributeTest = do
     describe "DescribeNetworkInterfaceAttribute doesn't fail" $ do
         it "describeNetworkInterfaceDescription doesn't throw any exception" $ do
             testEC2' region (getNetworkInterfaceId >>= describeNetworkInterfaceDescription)
-                `miss` anyHttpException
+                `miss` anyConnectionException
         it "describeNetworkInterfaceGroupSet doesn't throw any exception" $ do
             testEC2' region (getNetworkInterfaceId >>= describeNetworkInterfaceGroupSet)
-                `miss` anyHttpException
+                `miss` anyConnectionException
         it "describeNetworkInterfaceSourceDestCheck doesn't throw any exception" $ do
             testEC2' region (getNetworkInterfaceId >>= describeNetworkInterfaceSourceDestCheck)
-                `miss` anyHttpException
+                `miss` anyConnectionException
         it "describeNetworkInterfaceAttachment doesn't throw any exception" $ do
             testEC2' region (getNetworkInterfaceId >>= describeNetworkInterfaceAttachment)
-                `miss` anyHttpException
+                `miss` anyConnectionException
 
 resetNetworkInterfaceAttributeTest :: Spec
 resetNetworkInterfaceAttributeTest = do
     describe "ResetNetworkInterfaceAttribute doesn't fail" $ do
         it "resetNetworkInterfaceSourceDestCheck doesn't throw any exception" $ do
             testEC2' region (getNetworkInterfaceId >>= resetNetworkInterfaceSourceDestCheck)
-                `miss` anyHttpException
+                `miss` anyConnectionException
 
 getNetworkInterfaceId :: (MonadBaseControl IO m, MonadResource m) => EC2 m Text
 getNetworkInterfaceId = do

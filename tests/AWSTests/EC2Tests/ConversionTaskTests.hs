@@ -27,7 +27,7 @@ describeConversionTasksTest = do
     describe "describeConversionTasks doesn't fail" $ do
         it "describeConversionTasks doesn't throw any exception" $ do
             testEC2 region (describeConversionTasks [])
-                `miss` anyHttpException
+                `miss` anyConnectionException
 
 importVolumeTest :: Spec
 importVolumeTest = do
@@ -37,7 +37,7 @@ importVolumeTest = do
             let taskId = conversionTaskId task
             testEC2' region (cancelConversionTask taskId)
                 `shouldReturn` True
-            `miss` anyHttpException
+            `miss` anyConnectionException
   where
     test = importVolume
         "ap-northeast-1a"
@@ -53,7 +53,7 @@ importInstanceTest = do
             let taskId = conversionTaskId task
             testEC2' region (cancelConversionTask taskId)
                 `shouldReturn` True
-            `miss` anyHttpException
+            `miss` anyConnectionException
   where
     test = importInstance
         Nothing

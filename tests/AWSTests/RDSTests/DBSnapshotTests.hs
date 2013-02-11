@@ -27,13 +27,13 @@ describeDBSnapshotsTest = do
         it "describeDBSnapshots doesn't throw any exception" $ do
             testRDS region (
                 describeDBSnapshots Nothing Nothing Nothing Nothing Nothing
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 createDBSnapshotTest :: Spec
 createDBSnapshotTest = do
     describe "{create,delete}DBSnapshot doesn't fail" $ do
         it "{create,delete}DBSnapshot doesn't throw any exception" $ do
-            testRDS region test `miss` anyHttpException
+            testRDS region test `miss` anyConnectionException
   where
     dbsid = "hspec-test-snapshot"
     test = do

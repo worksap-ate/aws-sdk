@@ -87,7 +87,7 @@ stateReasonSink = elementM "stateReason" $
 volumeType :: MonadThrow m => Text -> Maybe Int -> m VolumeType
 volumeType t Nothing  | t == "standard" = return $ VolumeTypeStandard
 volumeType t (Just i) | t == "io1"      = return $ VolumeTypeIO1 i
-volumeType t _ = monadThrow $ TextConversionException t
+volumeType t _ = monadThrow $ FromTextError t
 
 volumeTypeSink :: MonadThrow m
     => Pipe Event Event o u m VolumeType

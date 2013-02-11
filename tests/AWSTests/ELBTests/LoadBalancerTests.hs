@@ -25,13 +25,13 @@ describeLoadBalancersTest :: Spec
 describeLoadBalancersTest = do
     describe "LoadBalancer operations doesn't fail" $ do
         it "describeLoadBalancers doesn't throw any exception" $ do
-            testELB region (describeLoadBalancers [] Nothing) `miss` anyHttpException
+            testELB region (describeLoadBalancers [] Nothing) `miss` anyConnectionException
         it "createLoadBalancer and deleteLoadBalancer" $ do
-            testELB region (withLoadBalancer name [listener] zones $ return ()) `miss` anyHttpException
+            testELB region (withLoadBalancer name [listener] zones $ return ()) `miss` anyConnectionException
         it "describeLoadBalancerPolicies doesn't throw any exception" $ do
-            testELB region (describeLoadBalancerPolicies Nothing []) `miss` anyHttpException
+            testELB region (describeLoadBalancerPolicies Nothing []) `miss` anyConnectionException
         it "describeLoadBalancerPolicyTypes doesn't throw any exception" $ do
-            testELB region (describeLoadBalancerPolicyTypes []) `miss` anyHttpException
+            testELB region (describeLoadBalancerPolicyTypes []) `miss` anyConnectionException
         it "{create,delete}LoadBalancerPolicy doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 let pName = "testPolicyName"
@@ -40,38 +40,38 @@ describeLoadBalancersTest = do
                     attr = PolicyAttribute attrName "testAttrValue"
                 createLoadBalancerPolicy name [attr] pName pTypeName
                 deleteLoadBalancerPolicy name pName
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
         it "describeInstanceHealth doesn't throw any exception" $ do
             testELB region (do
                 lb:_ <- describeLoadBalancers [] Nothing
                 describeInstanceHealth [] $ loadBalancerLoadBalancerName lb
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
         it "configureHealthCheck doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $
                 configureHealthCheck hc name
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
         it "{enable,disable}AvailabilityZonesForLoadBalancer doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 let zone = "ap-northeast-1b"
                 enableAvailabilityZonesForLoadBalancer [zone] name
                 disableAvailabilityZonesForLoadBalancer [zone] name
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
         it "createLBCookieStickinessPolicy doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 createLBCookieStickinessPolicy Nothing name "testCreateLBCookieStickinessPolicy1"
                 createLBCookieStickinessPolicy (Just 1000) name "testCreateLBCookieStickinessPolicy2"
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
         it "createAppCookieStickinessPolicy doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 createAppCookieStickinessPolicy "testCookieName" name "testCreateAppCookieStickinessPolicy"
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
         it "setLoadBalancerPoliciesOfListener doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 let policy = "setLoadBalancerPoliciesOfListener"
                 createLBCookieStickinessPolicy Nothing name policy
                 setLoadBalancerPoliciesOfListener name (listenerLoadBalancerPort listener) [policy]
                 setLoadBalancerPoliciesOfListener name (listenerLoadBalancerPort listener) []
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
   where
     listener = Listener "http" 80 "http" Nothing 80
     name = "sdkhspectest"

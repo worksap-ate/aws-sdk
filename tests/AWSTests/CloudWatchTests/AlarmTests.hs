@@ -27,16 +27,16 @@ describeAlarmsTest :: Spec
 describeAlarmsTest = do
     describe "Alarm operations doesn't fail" $ do
         it "describeAlarms doesn't throw any exception" $ do
-            testCloudWatch region (describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing) `miss` anyHttpException
+            testCloudWatch region (describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing) `miss` anyConnectionException
 
             -- Expect NextToken is returned
-            testCloudWatch region (describeAlarms Nothing AlarmSpecNothing (Just 1) Nothing Nothing) `miss` anyHttpException
+            testCloudWatch region (describeAlarms Nothing AlarmSpecNothing (Just 1) Nothing Nothing) `miss` anyConnectionException
 
         it "describeAlarmsForMetric doesn't throw any exception" $ do
             testCloudWatch region (do
                 (MetricAlarm{..}:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
                 describeAlarmsForMetric metricAlarmDimensions metricAlarmMetricName metricAlarmNamespace metricAlarmPeriod metricAlarmStatistic Nothing
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 putMetricAlarmTest :: Spec
 putMetricAlarmTest =
@@ -63,7 +63,7 @@ putMetricAlarmTest =
                             }
                 putMetricAlarm req
                 deleteAlarms [putMetricAlarmAlarmName req]
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 describeAlarmHistoryTest :: Spec
 describeAlarmHistoryTest =
@@ -73,7 +73,7 @@ describeAlarmHistoryTest =
                 describeAlarmHistory Nothing Nothing Nothing Nothing Nothing Nothing
                 -- Expect NextToken is returned
                 describeAlarmHistory Nothing Nothing Nothing (Just 1) Nothing Nothing
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 alarmActionsTest :: Spec
 alarmActionsTest =
@@ -84,7 +84,7 @@ alarmActionsTest =
                 let name = metricAlarmAlarmName alarm
                 disableAlarmActions [name]
                 enableAlarmActions [name]
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 setAlarmStateTest :: Spec
 setAlarmStateTest =
@@ -94,4 +94,4 @@ setAlarmStateTest =
                 (alarm:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
                 let name = metricAlarmAlarmName alarm
                 setAlarmState name "test" "[]" StateValueInsufficientData
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException

@@ -28,7 +28,7 @@ describeSnapshotsTest :: Spec
 describeSnapshotsTest = do
     describe "describeSnapshots doesn't fail" $ do
         it "describeSnapshots doesn't throw any exception" $ do
-            testEC2 region (describeSnapshots [] [] [] []) `miss` anyHttpException
+            testEC2 region (describeSnapshots [] [] [] []) `miss` anyConnectionException
 
 createSnapshotTest :: Spec
 createSnapshotTest = do
@@ -38,7 +38,7 @@ createSnapshotTest = do
                 Volume{volumeId = vid}:_ <- list $ describeVolumes [] []
                 E.bracket (createSnapshot vid Nothing) (deleteSnapshot . snapshotId) $ \Snapshot{snapshotId = sid} ->
                     E.bracket (copySnapshot region sid Nothing) deleteSnapshot $ const (return ())
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException
 
 describeSnapshotAttributeTest :: Spec
 describeSnapshotAttributeTest = do
@@ -46,4 +46,4 @@ describeSnapshotAttributeTest = do
         it "describeSnapshotAttribute doesn't throw any exception" $ do
             snapshots <- testEC2 region (describeSnapshots [] [] [] [])
             let sid = snapshotId $ head snapshots
-            testEC2' region (describeSnapshotAttribute sid SnapshotAttributeRequestCreateVolumePermission) `miss` anyHttpException
+            testEC2' region (describeSnapshotAttribute sid SnapshotAttributeRequestCreateVolumePermission) `miss` anyConnectionException

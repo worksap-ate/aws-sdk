@@ -23,4 +23,4 @@ describeEventsTest = do
         it "describeEvents doesn't throw any exception" $ do
             testRDS region (
                 describeEvents Nothing Nothing Nothing Nothing Nothing [] Nothing Nothing
-                ) `miss` anyHttpException
+                ) `miss` anyConnectionException

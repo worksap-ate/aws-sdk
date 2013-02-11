@@ -31,7 +31,7 @@ class Read a => FromText a
   where
     fromText :: MonadThrow m => Text -> m a
     fromText t
-        = maybe (monadThrow $ TextConversionException t) return
+        = maybe (monadThrow $ FromTextError t) return
         . fromTextMay
         $ t
 
@@ -41,7 +41,7 @@ class Read a => FromText a
     fromMaybeText :: MonadThrow m => Text -> Maybe Text -> m a
     fromMaybeText name
         = maybe
-            (monadThrow $ TextConversionException $ "no text: " <> name)
+            (monadThrow $ FromTextError $ "no text: " <> name)
             fromText
 
 instance FromText a => FromText (Maybe a)
