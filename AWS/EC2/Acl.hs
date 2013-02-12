@@ -111,7 +111,7 @@ reqToParams req =
         , "RuleAction" |=
             ruleToText (networkAclEntryRequestRuleAction req)
         , "CidrBlock" |=
-            networkAclEntryRequestCidrBlock req
+            toText (networkAclEntryRequestCidrBlock req)
         , "Egress" |=
             boolToText (networkAclEntryRequestEgress req)
         , "Icmp" |.? icmpParams <$> networkAclEntryRequestIcmp req

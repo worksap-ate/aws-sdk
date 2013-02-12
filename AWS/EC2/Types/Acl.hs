@@ -41,7 +41,7 @@ data NetworkAclEntry = NetworkAclEntry
     , networkAclEntryProtocol :: Int
     , networkAclEntryRuleAction :: NetworkAclRuleAction
     , networkAclEntryEgress :: Bool
-    , networkAclEntryCidrBlock :: Text
+    , networkAclEntryCidrBlock :: AddrRange IPv4
     , networkAclEntryIcmpTypeCode :: Maybe IcmpTypeCode
     , networkAclEntryPortRange :: Maybe PortRange
     }
@@ -54,7 +54,7 @@ data NetworkAclEntryRequest = NetworkAclEntryRequest
       -- ^ Protocol Number <http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml>
     , networkAclEntryRequestRuleAction :: NetworkAclRuleAction
     , networkAclEntryRequestEgress :: Bool
-    , networkAclEntryRequestCidrBlock :: Text
+    , networkAclEntryRequestCidrBlock :: AddrRange IPv4
     , networkAclEntryRequestIcmp :: Maybe IcmpTypeCode
     , networkAclEntryRequestPortRange :: Maybe PortRange
     }
