@@ -4,9 +4,6 @@ module AWS.EC2.Query
     ( ec2Query
     , ec2QuerySource
     , ec2QuerySource'
-#ifdef DEBUG
-    , ec2QueryDebug
-#endif
     , ec2Delete
     , module AWS.Lib.Query
     , apiVersion
@@ -20,24 +17,16 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XmlP
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.IO.Class (MonadIO)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E
 import Data.Text (Text)
 import Control.Applicative
-import Data.Conduit.Internal as CI
 
 import AWS.Class
 import AWS.EC2.Internal
 import AWS.Lib.Parser hiding (sinkError)
 import AWS.Lib.Query
-
-#ifdef DEBUG
-import Debug.Trace
-import Control.Monad.IO.Class (liftIO)
-import qualified Data.Conduit.Binary as CB
-#endif
 
 apiVersion :: ByteString
 apiVersion = "2012-12-01"
@@ -77,14 +66,6 @@ ec2QuerySource
 ec2QuerySource action params cond = do
     ec2QuerySource' action params Nothing cond
 
-($=+) :: MonadIO m
-    => ResumableSource m a
-    -> Conduit a m b
-    -> m (ResumableSource m b)
-a $=+ b = do
-    (sa, fa) <- unwrapResumable a
-    return $ CI.ResumableSource (sa $= b) fa
-
 ec2QuerySource'
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
@@ -106,15 +87,6 @@ ec2QuerySource' action params token cond = do
 
 nextToken :: MonadThrow m => Conduit Event m o
 nextToken = getT "nextToken" >>= maybe (return ()) (E.throw . NextToken)
-
-#ifdef DEBUG
-ec2QueryDebug
-    :: (MonadResource m, MonadBaseControl IO m)
-    => ByteString
-    -> [QueryParam]
-    -> EC2 m a
-ec2QueryDebug = debugQuery apiVersion
-#endif
 
 ec2Delete
     :: (MonadResource m, MonadBaseControl IO m)

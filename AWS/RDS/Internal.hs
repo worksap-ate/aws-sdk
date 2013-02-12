@@ -7,9 +7,6 @@ module AWS.RDS.Internal
     , rdsQueryOnlyMetadata
     , elements
     , elements'
-#ifdef DEBUG
-    , rdsQueryDebug
-#endif
     , dbSubnetGroupSink
     ) where
 
@@ -80,15 +77,6 @@ elements' :: forall m a . MonadThrow m
     -> GLSink Event m [a]
 elements' setName itemName inner =
     fromMaybe [] <$> elementM setName (listConsumer itemName inner)
-
-#ifdef DEBUG
-rdsQueryDebug
-    :: (MonadResource m, MonadBaseControl IO m)
-    => ByteString
-    -> [QueryParam]
-    -> RDS m a
-rdsQueryDebug = debugQuery apiVersion
-#endif
 
 dbSubnetGroupSink
     :: MonadThrow m
