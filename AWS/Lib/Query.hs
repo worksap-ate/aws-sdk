@@ -251,15 +251,21 @@ requestQuery cred ctx action params ver errSink = do
 
 #ifdef DEBUG
 conduitLog :: MonadResource m => FilePath -> ByteString -> GInfConduit ByteString m ByteString
-conduitLog path url = bracketP (IO.openBinaryFile path IO.AppendMode) release $ \h -> do
-    liftIO $ do
-        time <- getCurrentTime
-        BSC.hPutStrLn h $ "[" <> awsTimeFormat time <> "] " <> url
-    awaitForever $ \bs -> liftIO (BS.hPut h bs) >> yield bs
+conduitLog path url = bracketP (E.try $ IO.openBinaryFile path IO.AppendMode) release go
   where
-    release h = do
+    release :: Either SomeException IO.Handle -> IO ()
+    release (Left _) = return ()
+    release (Right h) = do
         liftIO $ BSC.hPutStrLn h ""
         IO.hClose h
+
+    go :: MonadResource m => Either SomeException IO.Handle -> GInfConduit ByteString m ByteString
+    go (Left _) = awaitForever yield
+    go (Right h) = do
+        liftIO $ do
+            time <- getCurrentTime
+            BSC.hPutStrLn h $ "[" <> awsTimeFormat time <> "] " <> url
+        awaitForever $ \bs -> liftIO (BS.hPut h bs) >> yield bs
 #endif
 
 commonQuery
