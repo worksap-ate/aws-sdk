@@ -3,6 +3,7 @@
 module AWS.RDS.DBSecurityGroup
     ( describeDBSecurityGroups
     , createDBSecurityGroup
+    , deleteDBSecurityGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -12,7 +13,7 @@ import Data.XML.Types (Event)
 
 import AWS.Lib.Parser (getT, element)
 import AWS.Lib.Query ((|=), (|=?))
-import AWS.RDS.Internal (RDS, rdsQuery, elements)
+import AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements)
 import AWS.RDS.Types hiding (Event)
 import AWS.Util (toText)
 
@@ -66,3 +67,11 @@ createDBSecurityGroup name desc =
         [ "DBSecurityGroupName" |= name
         , "DBSecurityGroupDescription" |= desc
         ]
+
+deleteDBSecurityGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBSecurityGroupName
+    -> RDS m ()
+deleteDBSecurityGroup name =
+    rdsQueryOnlyMetadata "DeleteDBSecurityGroup"
+        ["DBSecurityGroupName" |= name]
