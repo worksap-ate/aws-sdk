@@ -4,9 +4,6 @@ module AWS.EC2.Query
     ( ec2Query
     , ec2QuerySource
     , ec2QuerySource'
-#ifdef DEBUG
-    , ec2QueryDebug
-#endif
     , ec2Delete
     , module AWS.Lib.Query
     , apiVersion
@@ -30,12 +27,6 @@ import AWS.Class
 import AWS.EC2.Internal
 import AWS.Lib.Parser hiding (sinkError)
 import AWS.Lib.Query
-
-#ifdef DEBUG
-import Debug.Trace
-import Control.Monad.IO.Class (liftIO)
-import qualified Data.Conduit.Binary as CB
-#endif
 
 apiVersion :: ByteString
 apiVersion = "2012-12-01"
@@ -96,15 +87,6 @@ ec2QuerySource' action params token cond = do
 
 nextToken :: MonadThrow m => Conduit Event m o
 nextToken = getT "nextToken" >>= maybe (return ()) (E.throw . NextToken)
-
-#ifdef DEBUG
-ec2QueryDebug
-    :: (MonadResource m, MonadBaseControl IO m)
-    => ByteString
-    -> [QueryParam]
-    -> EC2 m a
-ec2QueryDebug = debugQuery apiVersion
-#endif
 
 ec2Delete
     :: (MonadResource m, MonadBaseControl IO m)

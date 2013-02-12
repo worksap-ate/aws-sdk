@@ -15,9 +15,6 @@ module AWS.Lib.Query
     , ($=+)
     , requestQuery
     , commonQuery
-#ifdef DEBUG
-    , debugQuery
-#endif
     , textToBS
     ) where
 
@@ -55,7 +52,7 @@ import AWS.Lib.Parser
 import AWS.EC2.Types (Filter)
 
 #ifdef DEBUG
-import qualified Data.Conduit.Binary as CB
+import qualified System.IO as IO
 #endif
 
 data QueryParam
@@ -239,10 +236,31 @@ requestQuery cred ctx action params ver errSink = do
     let body = HTTP.responseBody response
     let st = H.statusCode $ HTTP.responseStatus response
     if st < 400
+#ifdef DEBUG
+        then body $=+ conduitLog "aws-sdk.log" url
+        else do
+            body' <- body $=+ conduitLog "aws-sdk-error.log" url
+            clientError st body' $ errSink action
+            fail "not reached"
+#else
         then return body
         else do
             clientError st body $ errSink action
             fail "not reached"
+#endif
+
+#ifdef DEBUG
+conduitLog :: MonadResource m => FilePath -> ByteString -> GInfConduit ByteString m ByteString
+conduitLog path url = bracketP (IO.openBinaryFile path IO.AppendMode) release $ \h -> do
+    liftIO $ do
+        time <- getCurrentTime
+        BSC.hPutStrLn h $ "[" <> awsTimeFormat time <> "] " <> url
+    awaitForever $ \bs -> liftIO (BS.hPut h bs) >> yield bs
+  where
+    release h = do
+        liftIO $ BSC.hPutStrLn h ""
+        IO.hClose h
+#endif
 
 commonQuery
     :: (MonadBaseControl IO m, MonadResource m)
@@ -259,25 +277,3 @@ commonQuery apiVersion action params sink = do
         XmlP.parseBytes XmlP.def =$ sinkResponse (bsToText action) sink
     State.put ctx { lastRequestId = Just rid }
     return res
-
-#ifdef DEBUG
-debugQuery
-    :: (MonadBaseControl IO m, MonadResource m)
-    => ByteString -- ^ apiVersion
-    -> ByteString -- ^ Action
-    -> [QueryParam]
-    -> AWS AWSContext m a
-debugQuery ver action params = do
-    ctx <- State.get
-    cred <- Reader.ask
-    let mgr = manager ctx
-    let ep = endpoint ctx
-    time <- liftIO getCurrentTime
-    let url = mkUrl ep cred time action params ver
-    liftIO $ print url
-    request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
-    let req = request { HTTP.checkStatus = checkStatus' }
-    response <- lift $ HTTP.http req mgr
-    lift $ HTTP.responseBody response $$+- CB.sinkFile "debug.txt"
-    fail "debug"
-#endif
