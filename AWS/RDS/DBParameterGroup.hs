@@ -3,6 +3,7 @@
 module AWS.RDS.DBParameterGroup
     ( describeDBParameterGroups
     , createDBParameterGroup
+    , deleteDBParameterGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -12,7 +13,7 @@ import Data.XML.Types (Event)
 
 import AWS.Lib.Parser (getT, element)
 import AWS.Lib.Query ((|=), (|=?))
-import AWS.RDS.Internal (RDS, rdsQuery, elements)
+import AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements)
 import AWS.RDS.Types hiding (Event)
 import AWS.Util (toText)
 
@@ -55,3 +56,11 @@ createDBParameterGroup family name desc =
         , "DBParameterGroupName" |= name
         , "Description" |= desc
         ]
+
+deleteDBParameterGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBParameterGroupName
+    -> RDS m ()
+deleteDBParameterGroup name =
+    rdsQueryOnlyMetadata "DeleteDBParameterGroup"
+        ["DBParameterGroupName" |= name]

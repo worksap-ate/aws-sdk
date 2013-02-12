@@ -4,6 +4,7 @@ module AWS.RDS.Internal
     ( apiVersion
     , RDS
     , rdsQuery
+    , rdsQueryOnlyMetadata
     , elements
     , elements'
 #ifdef DEBUG
@@ -13,17 +14,22 @@ module AWS.RDS.Internal
     ) where
 
 import Control.Applicative ((<$>), (<*>))
+import qualified Control.Monad.Reader as Reader
+import qualified Control.Monad.State as State
+import Control.Monad.Trans.Class (lift)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit
 import Data.Monoid ((<>))
 import Data.XML.Types (Event(..))
 import Data.Maybe (fromMaybe)
+import qualified Text.XML.Stream.Parse as XmlP
 
 import AWS.Class
 import AWS.Lib.Query
 import AWS.Lib.Parser
 import AWS.RDS.Types (DBSubnetGroup(..), Subnet(..), AvailabilityZone(..))
+import AWS.Util
 
 apiVersion :: ByteString
 apiVersion = "2013-01-10"
@@ -37,6 +43,29 @@ rdsQuery
     -> GLSink Event m a
     -> RDS m a
 rdsQuery = commonQuery apiVersion
+
+rdsQueryOnlyMetadata
+    :: (MonadBaseControl IO m, MonadResource m)
+    => ByteString
+    -> [QueryParam]
+    -> RDS m ()
+rdsQueryOnlyMetadata action params = do
+    ctx <- State.get
+    cred <- Reader.ask
+    rs <- lift $ requestQuery cred ctx action params apiVersion sinkError
+    rid <- lift $ rs $$+-
+        XmlP.parseBytes XmlP.def =$
+            sinkResponseOnlyMetadata (bsToText action)
+    State.put ctx { lastRequestId = Just rid }
+    return ()
+
+sinkResponseOnlyMetadata
+    :: MonadThrow m
+    => Text
+    -> GLSink Event m RequestId
+sinkResponseOnlyMetadata action = do
+    sinkEventBeginDocument
+    element (action <> "Response") $ sinkResponseMetadata
 
 elements :: MonadThrow m
     => Text
