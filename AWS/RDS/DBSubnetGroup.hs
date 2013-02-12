@@ -3,6 +3,7 @@
 module AWS.RDS.DBSubnetGroup
     ( describeDBSubnetGroups
     , createDBSubnetGroup
+    , deleteDBSubnetGroup
     ) where
 
 import Control.Applicative ((<$>))
@@ -46,3 +47,11 @@ createDBSubnetGroup name ids desc =
         , "SubnetIds.member" |.#= ids
         , "DBSubnetGroupDescription" |= desc
         ]
+
+deleteDBSubnetGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBSubnetGroupName
+    -> RDS m ()
+deleteDBSubnetGroup name =
+    rdsQueryOnlyMetadata "DeleteDBSubnetGroup"
+        ["DBSubnetGroupName" |= name]
