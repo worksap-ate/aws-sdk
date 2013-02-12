@@ -2,6 +2,7 @@
 
 module AWS.RDS.DBSecurityGroup
     ( describeDBSecurityGroups
+    , createDBSecurityGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -9,8 +10,8 @@ import Data.Conduit (GLSink, MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
 import Data.XML.Types (Event)
 
-import AWS.Lib.Parser (getT)
-import AWS.Lib.Query ((|=?))
+import AWS.Lib.Parser (getT, element)
+import AWS.Lib.Query ((|=), (|=?))
 import AWS.RDS.Internal (RDS, rdsQuery, elements)
 import AWS.RDS.Types hiding (Event)
 import AWS.Util (toText)
@@ -51,3 +52,17 @@ dbSecurityGroupSink = DBSecurityGroup
     <*> getT "VpcId"
     <*> getT "OwnerId"
     <*> getT "DBSecurityGroupName"
+
+createDBSecurityGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBSecurityGroupName
+    -> Text -- ^ DBSecurityGroupDescription
+    -> RDS m DBSecurityGroup
+createDBSecurityGroup name desc =
+    rdsQuery "CreateDBSecurityGroup" params $
+        element "DBSecurityGroup" dbSecurityGroupSink
+  where
+    params =
+        [ "DBSecurityGroupName" |= name
+        , "DBSecurityGroupDescription" |= desc
+        ]
