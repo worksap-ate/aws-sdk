@@ -20,13 +20,11 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XmlP
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.IO.Class (MonadIO)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E
 import Data.Text (Text)
 import Control.Applicative
-import Data.Conduit.Internal as CI
 
 import AWS.Class
 import AWS.EC2.Internal
@@ -76,14 +74,6 @@ ec2QuerySource
     -> EC2 m (ResumableSource m o)
 ec2QuerySource action params cond = do
     ec2QuerySource' action params Nothing cond
-
-($=+) :: MonadIO m
-    => ResumableSource m a
-    -> Conduit a m b
-    -> m (ResumableSource m b)
-a $=+ b = do
-    (sa, fa) <- unwrapResumable a
-    return $ CI.ResumableSource (sa $= b) fa
 
 ec2QuerySource'
     :: (MonadResource m, MonadBaseControl IO m)

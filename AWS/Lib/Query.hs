@@ -12,6 +12,7 @@ module AWS.Lib.Query
     , (|=), (|.)
     , (|=?), (|.?)
     , (|.#=), (|.#.)
+    , ($=+)
     , requestQuery
     , commonQuery
 #ifdef DEBUG
@@ -31,6 +32,7 @@ import Data.List (transpose)
 import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Conduit
+import qualified Data.Conduit.Internal as CI
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
 import Data.Time (UTCTime, formatTime, getCurrentTime)
@@ -205,6 +207,14 @@ clientError
     -> m a
 clientError status rsrc errSink =
     rsrc $$+- XmlP.parseBytes XmlP.def =$ errSink status
+
+($=+) :: MonadIO m
+    => ResumableSource m a
+    -> Conduit a m b
+    -> m (ResumableSource m b)
+a $=+ b = do
+    (sa, fa) <- unwrapResumable a
+    return $ CI.ResumableSource (sa $= b) fa
 
 requestQuery
     :: (MonadResource m, MonadBaseControl IO m)
