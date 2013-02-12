@@ -96,12 +96,6 @@ describeAlarmsForMetric dims name ns period stat unit =
         , "Unit" |=? unit
         ]
 
-fromDimension :: Dimension -> [QueryParam]
-fromDimension Dimension{..} =
-    [ "Name" |= dimensionName
-    , "Value" |= dimensionValue
-    ]
-
 putMetricAlarm
     :: (MonadBaseControl IO m, MonadResource m)
     => PutMetricAlarmRequest

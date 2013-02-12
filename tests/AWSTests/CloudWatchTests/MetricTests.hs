@@ -19,6 +19,7 @@ region = "ap-northeast-1"
 runMetricTests :: IO ()
 runMetricTests = do
     hspec listMetricsTest
+    hspec putMetricDataTest
 
 listMetricsTest :: Spec
 listMetricsTest = do
@@ -33,3 +34,32 @@ listMetricsTest = do
                 let start = end { utctDayTime = utctDayTime end - 5*60 }
                 getMetricStatistics [] start end (metricName metric) (metricNameSpace metric) 60 allStatistics Nothing
                 ) `miss` anyHttpException
+
+putMetricDataTest :: Spec
+putMetricDataTest = do
+    describe "putMetricData doesn't fail" $ do
+        context "with Value" $ do
+            it "putMetricData doesn't throw any exception" $ do
+                testCloudWatch region (
+                    putMetricData [dat {metricDatumValue = MetricDatumValue 42}] nameSpace
+                    ) `miss` anyHttpException
+        context "with StatisticSet" $ do
+            it "putMetricData doesn't throw any exception" $ do
+                testCloudWatch region (
+                    putMetricData [dat {metricDatumValue = MetricDatumStatisticValues stat}] nameSpace
+                    ) `miss` anyHttpException
+  where
+    dat = MetricDatum
+        { metricDatumDimensions = [Dimension "dimTestName" "dimTestValue"]
+        , metricDatumMetricName = "TestMetric"
+        , metricDatumValue = error "Replace me!"
+        , metricDatumTimestamp = Nothing
+        , metricDatumUnit = Just "Bytes"
+        }
+    nameSpace = "TestNamespace"
+    stat = StatisticSet
+        { statisticSetMaximum = 100
+        , statisticSetMinimum = 0
+        , statisticSetSampleCount = 3.5
+        , statisticSetSum = 50
+        }

@@ -133,3 +133,25 @@ data HistoryType
     | HistoryTypeAction
   deriving (Show, Eq, Read)
 deriveFromText "HistoryType" ["ConfigurationUpdate", "StateUpdate", "Action"]
+
+data MetricDatum = MetricDatum
+    { metricDatumDimensions :: [Dimension]
+    , metricDatumMetricName :: Text
+    , metricDatumTimestamp :: Maybe UTCTime
+    , metricDatumUnit :: Maybe Text
+    , metricDatumValue :: MetricDatumValue
+    }
+  deriving (Show, Eq)
+
+data MetricDatumValue
+    = MetricDatumValue Double
+    | MetricDatumStatisticValues StatisticSet
+  deriving (Show, Eq)
+
+data StatisticSet = StatisticSet
+    { statisticSetMaximum :: Double
+    , statisticSetMinimum :: Double
+    , statisticSetSampleCount :: Double
+    , statisticSetSum :: Double
+    }
+  deriving (Show, Eq)

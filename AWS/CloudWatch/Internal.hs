@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
 
 module AWS.CloudWatch.Internal
     where
@@ -36,6 +36,12 @@ elements name f = element (name <> "s") $ listConsumer name f
 
 sinkDimension :: MonadThrow m => GLSink Event m Dimension
 sinkDimension = Dimension <$> getT "Name" <*> getT "Value"
+
+fromDimension :: Dimension -> [QueryParam]
+fromDimension Dimension{..} =
+    [ "Name" |= dimensionName
+    , "Value" |= dimensionValue
+    ]
 
 stringifyStatistic :: Statistic -> Text
 stringifyStatistic StatisticAverage     = "Average"

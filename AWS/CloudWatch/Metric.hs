@@ -1,8 +1,9 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
 
 module AWS.CloudWatch.Metric
     ( listMetrics
     , getMetricStatistics
+    , putMetricData
     ) where
 
 import Data.Text (Text)
@@ -84,3 +85,37 @@ getMetricStatistics ds start end mn ns pe sts unit =
         , "Statistics" |.+ "member" |.#= map stringifyStatistic sts
         , "Unit" |=? unit
         ]
+
+putMetricData
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [MetricDatum] -- ^ A list of data describing the metric.
+    -> Text -- ^ The namespace for the metric data.
+    -> CloudWatch m ()
+putMetricData dats ns =
+    cloudWatchQuery "PutMetricData" params $ return ()
+  where
+    params =
+        [ "MetricData.member" |.#. map fromMetricDatum dats
+        , "Namespace" |= ns
+        ]
+
+fromMetricDatum :: MetricDatum -> [QueryParam]
+fromMetricDatum MetricDatum{..} =
+    [ "Dimensions.member" |.#. map fromDimension metricDatumDimensions
+    , "MetricName" |= metricDatumMetricName
+    , metricDatumValueParam metricDatumValue
+    , "Timestamp" |=? timeToText <$> metricDatumTimestamp
+    , "Unit" |=? metricDatumUnit
+    ]
+
+metricDatumValueParam :: MetricDatumValue -> QueryParam
+metricDatumValueParam (MetricDatumValue v) = "Value" |= toText v
+metricDatumValueParam (MetricDatumStatisticValues s) = "StatisticValues" |. fromStatisticSet s
+
+fromStatisticSet :: StatisticSet -> [QueryParam]
+fromStatisticSet StatisticSet{..} =
+    [ "Maximum" |= toText statisticSetMaximum
+    , "Minimum" |= toText statisticSetMinimum
+    , "SampleCount" |= toText statisticSetSampleCount
+    , "Sum" |= toText statisticSetSum
+    ]
