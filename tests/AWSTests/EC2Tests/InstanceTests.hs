@@ -58,8 +58,8 @@ monitorAndUnmonitorInstancesTest = do
         it "{monitor,unmonitor}Instances doesn't throw any exception" $ (do
             reservations <- testEC2 region $ describeInstances [] [("monitoring-state", ["disabled"])]
             let iid = instanceId $ head $ reservationInstanceSet $ head reservations
-            testState (monitorInstances [iid]) `shouldReturn` MonitoringPending
-            testState (unmonitorInstances [iid]) `shouldReturn` MonitoringDisabling
+            testState (monitorInstances [iid]) >>= (`shouldSatisfy` (`elem` [MonitoringPending, MonitoringEnabled]))
+            testState (unmonitorInstances [iid]) >>= (`shouldSatisfy` (`elem` [MonitoringDisabling, MonitoringDisabled]))
             ) `miss` anyHttpException
   where
     testState ec2 =
