@@ -17,6 +17,7 @@ module AWSTests.EC2Tests
     , module AWSTests.EC2Tests.NetworkInterfaceAttributeTests
     , module AWSTests.EC2Tests.PlacementGroupTests
     , module AWSTests.EC2Tests.ConversionTaskTests
+    , module AWSTests.EC2Tests.AclTests
     )
     where
 
@@ -38,3 +39,4 @@ import AWSTests.EC2Tests.NetworkInterfaceTests
 import AWSTests.EC2Tests.NetworkInterfaceAttributeTests
 import AWSTests.EC2Tests.PlacementGroupTests
 import AWSTests.EC2Tests.ConversionTaskTests
+import AWSTests.EC2Tests.AclTests

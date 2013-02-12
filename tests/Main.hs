@@ -31,6 +31,7 @@ main = do
     runNetworkInterfaceAttributeTests
     runPlacementGroupTests
     runConversionTaskTests
+    runAclTests
 
     -- RDS Tests
     runDBInstanceTests
