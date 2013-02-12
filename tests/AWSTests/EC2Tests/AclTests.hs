@@ -23,3 +23,29 @@ runAclTests = hspec $ do
                 withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
                     withNetworkAcl vpc $ const (return ())
                 ) `miss` anyHttpException
+
+    describe "{create,replace,delete}NetworkAclEntry" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (do
+                withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
+                    withNetworkAcl vpc $ \NetworkAcl{networkAclId = acl} -> do
+                        let e = testEntry acl
+                        withNetworkAclEntry e $ do
+                            return ()
+                            replaceNetworkAclEntry $ e
+                                { networkAclEntryRequestProtocol = 17
+                                , networkAclEntryRequestPortRange = Just (PortRange 1000 2000)
+                                }
+                ) `miss` anyHttpException
+
+testEntry :: Text -> NetworkAclEntryRequest
+testEntry acl = NetworkAclEntryRequest
+    { networkAclEntryRequestNetworkAclId = acl
+    , networkAclEntryRequestRuleNumber = 110
+    , networkAclEntryRequestProtocol = -1
+    , networkAclEntryRequestRuleAction = NetworkAclRuleActionDeny
+    , networkAclEntryRequestEgress = False
+    , networkAclEntryRequestCidrBlock = "10.0.0.0/24"
+    , networkAclEntryRequestIcmp = Nothing
+    , networkAclEntryRequestPortRange = Nothing
+    }

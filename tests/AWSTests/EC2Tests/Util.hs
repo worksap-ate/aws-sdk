@@ -9,6 +9,7 @@ module AWSTests.EC2Tests.Util
     , withInternetGateway
     , withInternetGatewayAttached
     , withNetworkAcl
+    , withNetworkAclEntry
     )
     where
 
@@ -94,3 +95,9 @@ withInternetGatewayAttached gateway vpc f = E.bracket
 
 withNetworkAcl :: (MonadBaseControl IO m, MonadResource m) => Text -> (NetworkAcl -> EC2 m a) -> EC2 m a
 withNetworkAcl vpc = E.bracket (createNetworkAcl vpc) (deleteNetworkAcl . networkAclId)
+
+withNetworkAclEntry :: (MonadBaseControl IO m, MonadResource m) => NetworkAclEntryRequest -> EC2 m a -> EC2 m a
+withNetworkAclEntry req f = E.bracket
+    (createNetworkAclEntry req)
+    (const $ deleteNetworkAclEntry (networkAclEntryRequestNetworkAclId req) (networkAclEntryRequestRuleNumber req) (networkAclEntryRequestEgress req))
+    (const f)
