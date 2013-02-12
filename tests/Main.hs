@@ -7,6 +7,7 @@ module Main where
 import AWSTests.EC2Tests
 import AWSTests.RDSTests
 import AWSTests.ELBTests
+import AWSTests.CloudWatchTests
 
 main :: IO ()
 main = do
@@ -41,3 +42,7 @@ main = do
 
     -- ELB Tests
     runLoadBalancerTests
+
+    -- CloudWatch Tests
+    runAlarmTests
+    runMetricTests

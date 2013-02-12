@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module AWS.CloudWatch.Types
     where
 
@@ -35,7 +36,8 @@ data Statistic
     | StatisticSampleCount
     | StatisticMaximum
     | StatisticMinimum
-  deriving (Show, Eq)
+  deriving (Show, Eq, Read)
+deriveFromText "Statistic" ["Average", "Sum", "SampleCount", "Maximum", "Minimum"]
 
 allStatistics :: [Statistic]
 allStatistics =
@@ -45,3 +47,111 @@ allStatistics =
     , StatisticMaximum
     , StatisticMinimum
     ]
+
+data AlarmNameSpec
+    = AlarmSpecNothing
+    | AlarmSpecNamePrefix Text
+    | AlarmSpecNames [Text]
+  deriving (Show, Eq)
+
+data StateValue
+    = StateValueOk
+    | StateValueAlarm
+    | StateValueInsufficientData
+  deriving (Show, Eq, Read)
+deriveFromText "StateValue" ["OK", "ALARM", "INSUFFICIENT_DATA"]
+
+data ComparisonOperator
+    = GreaterThanOrEqualToThreshold
+    | GreaterThanThreshold
+    | LessThanThreshold
+    | LessThanOrEqualToThreshold
+  deriving (Show, Eq, Read)
+deriveFromText "ComparisonOperator"
+    [ "GreaterThanOrEqualToThreshold"
+    , "GreaterThanThreshold"
+    , "LessThanThreshold"
+    , "LessThanOrEqualToThreshold"
+    ]
+
+data MetricAlarm = MetricAlarm
+    { metricAlarmAlarmDescription :: Maybe Text
+    , metricAlarmStateUpdatedTimestamp :: UTCTime
+    , metricAlarmInsufficientDataActions :: [Text]
+    , metricAlarmStateReasonData :: Maybe Text
+    , metricAlarmAlarmArn :: Text
+    , metricAlarmConfigurationUpdatedTimestamp :: UTCTime
+    , metricAlarmAlarmName :: Text
+    , metricAlarmStateValue :: StateValue
+    , metricAlarmPeriod :: Int
+    , metricAlarmOKActions :: [Text]
+    , metricAlarmActionsEnabled :: Bool
+    , metricAlarmNamespace :: Text
+    , metricAlarmThreshold :: Double
+    , metricAlarmEvaluationPeriods :: Int
+    , metricAlarmStatistic :: Statistic
+    , metricAlarmAlarmActions :: [Text]
+    , metricAlarmUnit :: Maybe Text
+    , metricAlarmStateReason :: Maybe Text
+    , metricAlarmDimensions :: [Dimension]
+    , metricAlarmComparisonOperator :: ComparisonOperator
+    , metricAlarmMetricName :: Text
+    }
+  deriving (Show, Eq)
+
+data PutMetricAlarmRequest = PutMetricAlarmRequest
+    { putMetricAlarmActionsEnabled :: Maybe Bool
+    , putMetricAlarmAlarmActions :: [Text]
+    , putMetricAlarmAlarmDescription :: Maybe Text
+    , putMetricAlarmAlarmName :: Text
+    , putMetricAlarmComparisonOperator :: ComparisonOperator
+    , putMetricAlarmDimensions :: [Dimension]
+    , putMetricAlarmEvaluationPeriods :: Int
+    , putMetricAlarmInsufficientDataActions :: [Text]
+    , putMetricAlarmMetricName :: Text
+    , putMetricAlarmNamespace :: Text
+    , putMetricAlarmOKActions :: [Text]
+    , putMetricAlarmPeriod :: Int
+    , putMetricAlarmStatistic :: Statistic
+    , putMetricAlarmThreshold :: Double
+    , putMetricAlarmUnit :: Maybe Text
+    }
+  deriving (Show, Eq)
+
+data AlarmHistory = AlarmHistory
+    { alarmHistoryTimestamp :: UTCTime
+    , alarmHistoryHistoryItemType :: HistoryType
+    , alarmHistoryAlarmName :: Text
+    , alarmHistoryHistoryData :: Text
+    , alarmHistoryHistorySummary :: Text
+    }
+  deriving (Show, Eq)
+
+data HistoryType
+    = HistoryTypeConfigurationUpdate
+    | HistoryTypeStateUpdate
+    | HistoryTypeAction
+  deriving (Show, Eq, Read)
+deriveFromText "HistoryType" ["ConfigurationUpdate", "StateUpdate", "Action"]
+
+data MetricDatum = MetricDatum
+    { metricDatumDimensions :: [Dimension]
+    , metricDatumMetricName :: Text
+    , metricDatumTimestamp :: Maybe UTCTime
+    , metricDatumUnit :: Maybe Text
+    , metricDatumValue :: MetricDatumValue
+    }
+  deriving (Show, Eq)
+
+data MetricDatumValue
+    = MetricDatumValue Double
+    | MetricDatumStatisticValues StatisticSet
+  deriving (Show, Eq)
+
+data StatisticSet = StatisticSet
+    { statisticSetMaximum :: Double
+    , statisticSetMinimum :: Double
+    , statisticSetSampleCount :: Double
+    , statisticSetSum :: Double
+    }
+  deriving (Show, Eq)

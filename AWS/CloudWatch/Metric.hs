@@ -1,13 +1,15 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
 
 module AWS.CloudWatch.Metric
     ( listMetrics
     , getMetricStatistics
+    , putMetricData
     ) where
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Conduit
+import Data.XML.Types (Event)
 import Control.Applicative
 
 import AWS.Util
@@ -31,15 +33,9 @@ listMetrics
     -> Maybe Text -- ^ MetricName
     -> Maybe Text -- ^ Namespace
     -> Maybe Text -- ^ NextToken
-    -> CloudWatch m [Metric]
+    -> CloudWatch m ([Metric], Maybe Text)
 listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
-    members "Metrics" $ Metric
-        <$> members "Dimensions" (Dimension
-            <$> getT "Name"
-            <*> getT "Value"
-            )
-        <*> getT "MetricName"
-        <*> getT "Namespace"
+    (,) <$> members "Metrics" sinkMetric <*> getT "NextToken"
   where
     params =
         [ dimensionFiltersParam ds
@@ -47,6 +43,13 @@ listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
         , "Namespace" |=? ns
         , "NextToken" |=? nt
         ]
+
+sinkMetric :: MonadThrow m => GLSink Event m Metric
+sinkMetric =
+    Metric
+    <$> members "Dimensions" sinkDimension
+    <*> getT "MetricName"
+    <*> getT "Namespace"
 
 getMetricStatistics
     :: (MonadBaseControl IO m, MonadResource m)
@@ -79,11 +82,40 @@ getMetricStatistics ds start end mn ns pe sts unit =
         , "MetricName" |= mn
         , "Namespace" |= ns
         , "Period" |= toText pe
-        , "Statistics" |.+ "member" |.#= map s sts
+        , "Statistics" |.+ "member" |.#= map stringifyStatistic sts
         , "Unit" |=? unit
         ]
-    s StatisticAverage     = "Average"
-    s StatisticSum         = "Sum"
-    s StatisticSampleCount = "SampleCount"
-    s StatisticMaximum     = "Maximum"
-    s StatisticMinimum     = "Minimum"
+
+putMetricData
+    :: (MonadBaseControl IO m, MonadResource m)
+    => [MetricDatum] -- ^ A list of data describing the metric.
+    -> Text -- ^ The namespace for the metric data.
+    -> CloudWatch m ()
+putMetricData dats ns =
+    cloudWatchQuery "PutMetricData" params $ return ()
+  where
+    params =
+        [ "MetricData.member" |.#. map fromMetricDatum dats
+        , "Namespace" |= ns
+        ]
+
+fromMetricDatum :: MetricDatum -> [QueryParam]
+fromMetricDatum MetricDatum{..} =
+    [ "Dimensions.member" |.#. map fromDimension metricDatumDimensions
+    , "MetricName" |= metricDatumMetricName
+    , metricDatumValueParam metricDatumValue
+    , "Timestamp" |=? timeToText <$> metricDatumTimestamp
+    , "Unit" |=? metricDatumUnit
+    ]
+
+metricDatumValueParam :: MetricDatumValue -> QueryParam
+metricDatumValueParam (MetricDatumValue v) = "Value" |= toText v
+metricDatumValueParam (MetricDatumStatisticValues s) = "StatisticValues" |. fromStatisticSet s
+
+fromStatisticSet :: StatisticSet -> [QueryParam]
+fromStatisticSet StatisticSet{..} =
+    [ "Maximum" |= toText statisticSetMaximum
+    , "Minimum" |= toText statisticSetMinimum
+    , "SampleCount" |= toText statisticSetSampleCount
+    , "Sum" |= toText statisticSetSum
+    ]

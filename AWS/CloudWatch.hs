@@ -9,6 +9,7 @@ module AWS.CloudWatch
     , apiVersion
       -- * Metric
     , module AWS.CloudWatch.Metric
+    , module AWS.CloudWatch.Alarm
     ) where
 
 import Data.Text (Text)
@@ -24,6 +25,7 @@ import AWS.Lib.Query (textToBS)
 import AWS
 import AWS.CloudWatch.Internal
 import AWS.CloudWatch.Metric
+import AWS.CloudWatch.Alarm
 
 initialCloudWatchContext :: HTTP.Manager -> AWSContext
 initialCloudWatchContext mgr = AWSContext
