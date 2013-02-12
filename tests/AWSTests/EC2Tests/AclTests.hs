@@ -16,3 +16,10 @@ runAclTests = hspec $ do
     describe "describeNetworkAcls" $ do
         it "doesn't throw any exception" $ do
             testEC2 region (describeNetworkAcls [] []) `miss` anyHttpException
+
+    describe "{create,delete}NetworkAcl" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (do
+                withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
+                    withNetworkAcl vpc $ const (return ())
+                ) `miss` anyHttpException
