@@ -8,6 +8,7 @@ module AWS.EC2
     , runEC2withManager
     , setRegion
     , setEndpoint
+    , apiVersion
       -- * Instances
     , module AWS.EC2.Instance
       -- * Images
@@ -51,6 +52,7 @@ import AWS.Lib.Query (textToBS)
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import qualified AWS.EC2.Util as Util
+import AWS.EC2.Query (apiVersion)
 
 import AWS.EC2.Image
 import AWS.EC2.Region

@@ -28,6 +28,7 @@ import AWS.Lib.Parser
 import AWS.RDS.Types (DBSubnetGroup(..), Subnet(..), AvailabilityZone(..))
 import AWS.Util
 
+-- | Ver.2013-01-10
 apiVersion :: ByteString
 apiVersion = "2013-01-10"
 

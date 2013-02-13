@@ -28,6 +28,7 @@ import AWS.EC2.Internal
 import AWS.Lib.Parser hiding (sinkError)
 import AWS.Lib.Query
 
+-- | Ver.2012-12-01
 apiVersion :: ByteString
 apiVersion = "2012-12-01"
 

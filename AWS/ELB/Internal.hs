@@ -10,6 +10,7 @@ import Data.XML.Types (Event(..))
 import AWS.Class
 import AWS.Lib.Query
 
+-- | Ver.2012-06-01
 apiVersion :: ByteString
 apiVersion = "2012-06-01"
 

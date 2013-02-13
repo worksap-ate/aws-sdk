@@ -15,6 +15,7 @@ import AWS.Lib.Query
 import AWS.Lib.Parser
 import AWS.CloudWatch.Types
 
+-- | Ver.2010-08-01
 apiVersion :: ByteString
 apiVersion = "2010-08-01"
 

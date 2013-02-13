@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.10.0
+version:             0.11.0
 synopsis:            AWS SDK for Haskell
 description: AWS (Amazon Web Services) sdk for Haskell.
              .
@@ -28,7 +28,6 @@ flag debug
 
 library
   exposed-modules:   AWS
-                   , AWS.Types
                    , AWS.EC2
                    , AWS.EC2.Types
                    , AWS.EC2.Util
@@ -40,7 +39,9 @@ library
                    , AWS.ELB.Types
                    , AWS.CloudWatch
                    , AWS.CloudWatch.Types
-  other-modules:     AWS.Util , AWS.Credential
+  other-modules:     AWS.Util
+                   , AWS.Credential
+                   , AWS.Types
                    , AWS.Class
                    , AWS.EC2.Internal
                    , AWS.EC2.Address
