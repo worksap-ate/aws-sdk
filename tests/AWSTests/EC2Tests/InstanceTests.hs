@@ -38,7 +38,7 @@ describeInstanceStatusTest = do
         it "describeInstanceStatus doesn't throw any exception" $ do
             testEC2 region (do
                 reservations <- Util.list $ describeInstances [] []
-                let instances = nub $ concat $ map reservationInstanceSet reservations
+                let instances = take 100 $ nub $ concat $ map reservationInstanceSet reservations
                 describeInstanceStatus (map instanceId instances) True [] Nothing
               ) `miss` anyConnectionException
 
