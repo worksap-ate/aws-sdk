@@ -5,6 +5,7 @@
  , UndecidableInstances
  , DeriveDataTypeable
  , ExistentialQuantification
+ , StandaloneDeriving
  #-}
 
 module AWS.Class
@@ -63,11 +64,7 @@ data AWSException
     | forall e . Exception e => OtherInternalException e -- ^ bug
     | NextToken Text -- ^ This response has next token.
   deriving (Typeable)
-
-instance Show AWSException where
-    showsPrec p (ConnectionException e) = showsPrec p e
-    showsPrec p (OtherInternalException e) = showsPrec p e
-    showsPrec p e = showsPrec p e
+deriving instance Show AWSException
 
 instance Exception AWSException
 
