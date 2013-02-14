@@ -294,12 +294,14 @@ exceptionTransform
     :: (MonadBaseControl IO m, MonadResource m)
     => SomeException -> m a
 exceptionTransform e
+    | isJust awse  = throw $ fromJust awse
     | isJust xmle  = throw $ XmlParserError $ fromJust xmle
     | isJust httpe = throw $ ConnectionException $ fromJust httpe
     | isJust tlse  = throw $ ConnectionException $ fromJust tlse
     | isJust ioe   = throw $ ConnectionException $ fromJust ioe
     | otherwise    = throw $ OtherInternalException e
   where
+    awse = fromException e :: Maybe AWSException
     xmle = fromException e :: Maybe XmlException
     httpe = fromException e :: Maybe HttpException
     tlse  = fromException e :: Maybe HandshakeFailed
