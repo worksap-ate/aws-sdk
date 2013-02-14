@@ -22,6 +22,8 @@ runNetworkInterfaceTests = hspec $ do
     describeNetworkInterfacesTest
     createAndDeleteNetworkInterfaceTest
     attachAndDetachNetworkInterfaceTest
+    assignPrivateIpAddressesTest
+    unassignPrivateIpAddressesTest
     runInstanceTest
 
 describeNetworkInterfacesTest :: Spec
@@ -73,6 +75,36 @@ attachAndDetachNetworkInterfaceTest = do
     req subnet = request
         { runInstancesRequestSubnetId = Just subnet
         }
+
+assignPrivateIpAddressesTest :: Spec
+assignPrivateIpAddressesTest = do
+    describe "assignPrivateIpAddresses" $ do
+        context "with SecondaryPrivateIpAddressCount" $ do
+            it "doesn't throw any exception" $ do
+                testEC2' region (
+                    withSubnet "10.0.0.0/24" $ \Subnet{subnetId = subnet} ->
+                        withNetworkInterface subnet $ \NetworkInterface{networkInterfaceId = nic} ->
+                            assignPrivateIpAddresses nic (Right 5) Nothing
+                    ) `miss` anyConnectionException
+        context "with PrivateIpAddress" $ do
+            it "doesn't throw any exception" $ do
+                testEC2' region (
+                    withSubnet "10.0.0.0/24" $ \Subnet{subnetId = subnet} ->
+                        withNetworkInterface subnet $ \NetworkInterface{networkInterfaceId = nic} ->
+                            assignPrivateIpAddresses nic (Left ["10.0.0.10"]) Nothing
+                    ) `miss` anyConnectionException
+
+unassignPrivateIpAddressesTest :: Spec
+unassignPrivateIpAddressesTest = do
+    describe "unassignPrivateIpAddresses" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withSubnet "10.0.0.0/24" $ \Subnet{subnetId = subnet} ->
+                    withNetworkInterface subnet $ \NetworkInterface{networkInterfaceId = nic} -> do
+                        let addr = "10.0.0.11"
+                        assignPrivateIpAddresses nic (Left [addr]) Nothing
+                        unassignPrivateIpAddresses nic [addr]
+                ) `miss` anyConnectionException
 
 runInstanceTest :: Spec
 runInstanceTest = do

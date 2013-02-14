@@ -18,7 +18,6 @@ import Control.Applicative
 
 import AWS.EC2.Internal
 import AWS.EC2.Types
-import AWS.EC2.Params
 import AWS.EC2.Query
 import AWS.Lib.Parser
 import AWS.Util
@@ -37,7 +36,7 @@ assignPrivateIpAddresses niid epip ar =
         , either f g epip
         , "AllowReassignment" |=? boolToText <$> ar
         ]
-    f = privateIpAddressesParam "PrivateIpAddress"
+    f = ("PrivateIpAddress" |.#=) . map toText
     g = ("SecondaryPrivateIpAddressCount" |=) . toText
 
 unassignPrivateIpAddresses
@@ -50,7 +49,7 @@ unassignPrivateIpAddresses niid addrs =
   where
     params =
         [ "NetworkInterfaceId" |= niid
-        , privateIpAddressesParam "PrivateIpAddress" addrs
+        , "PrivateIpAddress" |.#= map toText addrs
         ]
 
 describeNetworkInterfaces
