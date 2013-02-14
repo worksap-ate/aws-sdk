@@ -17,15 +17,25 @@ region :: Text
 region = "ap-northeast-1"
 
 runNetworkInterfaceTests :: IO ()
-runNetworkInterfaceTests = do
-    hspec describeNetworkInterfacesTest
-    hspec runInstanceTest
+runNetworkInterfaceTests = hspec $ do
+    describeNetworkInterfacesTest
+    createAndDeleteNetworkInterfaceTest
+    runInstanceTest
 
 describeNetworkInterfacesTest :: Spec
 describeNetworkInterfacesTest = do
     describe "describeNetworkInterfaces doesn't fail" $ do
         it "describeNetworkInterfaces doesn't throw any exception" $ do
             testEC2 region (describeNetworkInterfaces [] []) `miss` anyConnectionException
+
+createAndDeleteNetworkInterfaceTest :: Spec
+createAndDeleteNetworkInterfaceTest = do
+    describe "{create,delete}NetworkInterface" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withSubnet "10.0.0.0/24" $ \Subnet{subnetId = subnet} ->
+                    withNetworkInterface subnet $ \_ -> return ()
+                ) `miss` anyConnectionException
 
 runInstanceTest :: Spec
 runInstanceTest = do

@@ -10,6 +10,7 @@ module AWSTests.EC2Tests.Util
     , withInternetGatewayAttached
     , withNetworkAcl
     , withNetworkAclEntry
+    , withNetworkInterface
     )
     where
 
@@ -101,3 +102,8 @@ withNetworkAclEntry req f = E.bracket
     (createNetworkAclEntry req)
     (const $ deleteNetworkAclEntry (networkAclEntryRequestNetworkAclId req) (networkAclEntryRequestRuleNumber req) (networkAclEntryRequestEgress req))
     (const f)
+
+withNetworkInterface :: (MonadBaseControl IO m, MonadResource m) => Text -> (NetworkInterface -> EC2 m a) -> EC2 m a
+withNetworkInterface subnet = E.bracket
+    (createNetworkInterface subnet SecondaryPrivateIpAddressParamNothing Nothing [])
+    (deleteNetworkInterface . networkInterfaceId)
