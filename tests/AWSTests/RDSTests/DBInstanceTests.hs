@@ -43,7 +43,7 @@ createAndDeleteDBInstanceTest = do
     req = CreateDBInstanceRequest
         5
         Nothing Nothing Nothing Nothing
-        "t1.micro"
+        "db.t1.micro"
         dbiid
         Nothing Nothing [] Nothing
         "MySQL"

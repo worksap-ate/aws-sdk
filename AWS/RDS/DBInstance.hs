@@ -127,8 +127,7 @@ createDBInstance CreateDBInstanceRequest{..} =
             toText <$> createDBInstanceBackupRetentionPeriod
         , "CharacterSetName" |=?
             createDBInstanceCharacterSetName
-        , "DBInstanceClass" |=
-            toText createDBInstanceClass
+        , "DBInstanceClass" |= createDBInstanceClass
         , "DBInstanceIdentifier" |=
             createDBInstanceIdentifier
         , "DBName" |=? createDBInstanceDBName
@@ -138,7 +137,7 @@ createDBInstance CreateDBInstanceRequest{..} =
             createDBInstanceDBSecurityGroups
         , "DBSubnetGroupName" |=?
             createDBInstanceDBSubnetGroupName
-        , "Engine" |= toText createDBInstanceEngine
+        , "Engine" |= createDBInstanceEngine
         , "EngineVersion" |=? createDBInstanceEngineVersion
         , "Iops" |=? toText <$> createDBInstanceIops
         , "LicenseModel" |=?
