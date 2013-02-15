@@ -10,7 +10,7 @@ import AWS.Lib.FromText (deriveFromText, Text, UTCTime)
 data Event = Event
     { eventMessage :: Text
     , eventSourceType :: SourceType
-    , eventEventCategories :: [Text]
+    , eventCategories :: [Text]
     , eventDate :: UTCTime
     , eventSourceIdentifier :: Text
     }
@@ -23,4 +23,5 @@ data SourceType
     | SourceTypeDBSnapshot
   deriving (Show, Read, Eq)
 
-deriveFromText "SourceType" ["db-instance", "db-parameter-group", "db-security-group", "db-snapshot"]
+deriveFromText "SourceType"
+    ["db-instance", "db-parameter-group", "db-security-group", "db-snapshot"]

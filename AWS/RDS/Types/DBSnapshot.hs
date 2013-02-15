@@ -5,20 +5,20 @@ module AWS.RDS.Types.DBSnapshot
 import AWS.Lib.FromText (Text, UTCTime)
 
 data DBSnapshot = DBSnapshot
-    { dbsPort :: Int
-    , dbsIops :: Maybe Int
-    , dbsEngine :: Text
-    , dbsStatus :: Text
-    , dbsSnapshotType :: Text
-    , dbsLicenseModel :: Text
-    , dbsDBInstanceIdentifier :: Text
-    , dbsEngineVersion :: Text
-    , dbsDBSnapshotIdentifier :: Text
-    , dbsSnapshotCreateTime :: Maybe UTCTime
-    , dbsVpcId :: Maybe Text
-    , dbsAvailabilityZone :: Text
-    , dbsInstanceCreateTime :: UTCTime
-    , dbsAllocatedStorage :: Int
-    , dbsMasterUsername :: Text
+    { dbSnapshotPort :: Int
+    , dbSnapshotIops :: Maybe Int
+    , dbSnapshotEngine :: Text
+    , dbSnapshotStatus :: Text
+    , dbSnapshotType :: Text
+    , dbSnapshotLicenseModel :: Text
+    , dbSnapshotDBInstanceIdentifier :: Text
+    , dbSnapshotEngineVersion :: Text
+    , dbSnapshotIdentifier :: Text
+    , dbSnapshotCreateTime :: Maybe UTCTime
+    , dbSnapshotVpcId :: Maybe Text
+    , dbSnapshotAvailabilityZone :: Text
+    , dbSnapshotInstanceCreateTime :: UTCTime
+    , dbSnapshotAllocatedStorage :: Int
+    , dbSnapshotMasterUsername :: Text
     }
   deriving (Show, Eq)

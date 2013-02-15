@@ -1,5 +1,6 @@
 module AWS.RDS.Util
     ( wait
+    , createDBInstanceRequest
     ) where
 
 import Control.Applicative ((<$>))
@@ -10,6 +11,7 @@ import qualified Data.Text as T
 import Safe
 
 import AWS.RDS
+import AWS.RDS.Types
 
 wait
     :: (MonadIO m, Functor m)
@@ -26,3 +28,35 @@ wait f g rid = do
             else do
                 liftIO $ CC.threadDelay 10000000
                 wait f g rid
+
+-- | copy from DBInstance
+createDBInstanceRequest
+    :: DBInstance
+    -> Text -- ^ New DBIdentifier
+    -> Text -- ^ MasterUserPassword
+    -> CreateDBInstanceRequest
+createDBInstanceRequest db newid passwd = CreateDBInstanceRequest
+    (dbInstanceAllocatedStorage db)
+    (Just $ dbInstanceAutoMinorVersionUpgrade db)
+    (dbInstanceAvailabilityZone db)
+    (Just $ dbInstanceBackupRetentionPeriod db)
+    (dbInstanceCharacterSetName db)
+    (dbInstanceDBInstanceClass db)
+    newid
+    (dbInstanceDBName db)
+    (fmap dbParameterGroupStatusName $ headMay $ dbInstanceDBParameterGroups db)
+    (map dbSecurityGroupMembershipName $ dbInstanceSecurityGroups db)
+    (dbSubnetGroupName <$> dbInstanceSubnetGroup db)
+    (dbInstanceEngine db)
+    (Just $ dbInstanceEngineVersion db)
+    (dbInstanceIops db)
+    (Just $ dbInstanceLicenseModel db)
+    passwd
+    (dbInstanceMasterUsername db)
+    (Just $ dbInstanceMultiAZ db)
+    (optionGroupName <$> dbInstanceOptionGroupMembership db)
+    (endpointPort <$> dbInstanceEndpoint db)
+    (Just $ dbInstancePreferredBackupWindow db)
+    (Just $ dbInstancePreferredMaintenanceWindow db)
+    (Just $ dbInstancePubliclyAccessible db)
+    (map vpcSecurityGroupId $ dbInstanceVpcSecurityGroups db)

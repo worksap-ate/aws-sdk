@@ -11,12 +11,12 @@ module AWS.RDS.Types.DBSecurityGroup
 import AWS.Lib.FromText (deriveFromText, AddrRange, IPv4, Text)
 
 data DBSecurityGroup = DBSecurityGroup
-    { dbsgEC2SecurityGroups :: [EC2SecurityGroup]
-    , dbsgDBSecurityGroupDescription :: Text
-    , dbsgIPRanges :: [IPRange]
-    , dbsgVpcId :: Maybe Text
-    , dbsgOwnerId :: Text
-    , dbsgDBSecurityGroupName :: Text
+    { dbSecurityGroupEC2SecurityGroups :: [EC2SecurityGroup]
+    , dbSecurityGroupDescription :: Text
+    , dbSecurityGroupIPRanges :: [IPRange]
+    , dbSecurityGroupVpcId :: Maybe Text
+    , dbSecurityGroupOwnerId :: Text
+    , dbSecurityGroupName :: Text
     }
   deriving (Show, Eq)
 

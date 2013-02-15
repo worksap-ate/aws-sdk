@@ -9,8 +9,8 @@ module AWS.RDS.Types.DBInstance
     , OptionGroupMembership(..)
     , PendingModifiedValue(..)
     , CreateDBInstanceRequest(..)
-    , DBInstanceClass(..)
-    , Engine(..)
+    , DBInstanceClass
+    , Engine
     , LicenseModel(..)
     , FinalSnapshot(..)
     , CreateReadReplicaRequest(..)
@@ -20,78 +20,78 @@ import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
 import AWS.RDS.Types.DBSubnetGroup (DBSubnetGroup)
 
 data DBInstance = DBInstance
-    { dbiIops :: Maybe Int
-    , dbiBackupRetentionPeriod :: Int
-    , dbiDBInstanceStatus :: Maybe Text
-    , dbiMultiAZ :: Bool
-    , dbiVpcSecurityGroups :: [VpcSecurityGroupMembership]
-    , dbiDBInstanceIdentifier :: Text
-    , dbiPreferredBackupWindow :: Text
-    , dbiPreferredMaintenanceWindow :: Text
-    , dbiOptionGroupMembership :: Maybe OptionGroupMembership
-    , dbiAvailabilityZone :: Maybe Text
-    , dbiLatestRestorableTime :: Maybe UTCTime
-    , dbiReadReplicaDBInstanceIdentifiers :: [Text]
-    , dbiEngine :: Engine
-    , dbiPendingModifiedValues :: [PendingModifiedValue]
-    , dbiCharacterSetName :: Maybe Text
-    , dbiLicenseModel :: LicenseModel
-    , dbiSubnetGroup :: Maybe DBSubnetGroup
-    , dbiDBParameterGroups :: [DBParameterGroupStatus]
-    , dbiEndpoint :: Maybe Endpoint
-    , dbiEngineVersion :: Text
-    , dbiReadReplicaSourceDBInstanceIdentifier :: Maybe Text
-    , dbiPubliclyAccessible :: Bool
-    , dbiSecurityGroups :: [DBSecurityGroupMembership]
-    , dbiAutoMinorVersionUpgrade :: Bool
-    , dbiDBName :: Maybe Text
-    , dbiInstanceCreateTime :: Maybe UTCTime
-    , dbiAllocatedStorage :: Int -- ^ storage size in gigabytes
-    , dbiDBInstanceClass :: DBInstanceClass
-    , dbiMasterUsername :: Text
+    { dbInstanceIops :: Maybe Int
+    , dbInstanceBackupRetentionPeriod :: Int
+    , dbInstanceDBInstanceStatus :: Maybe Text
+    , dbInstanceMultiAZ :: Bool
+    , dbInstanceVpcSecurityGroups :: [VpcSecurityGroupMembership]
+    , dbInstanceDBInstanceIdentifier :: Text
+    , dbInstancePreferredBackupWindow :: Text
+    , dbInstancePreferredMaintenanceWindow :: Text
+    , dbInstanceOptionGroupMembership :: Maybe OptionGroupMembership
+    , dbInstanceAvailabilityZone :: Maybe Text
+    , dbInstanceLatestRestorableTime :: Maybe UTCTime
+    , dbInstanceReadReplicaDBInstanceIdentifiers :: [Text]
+    , dbInstanceEngine :: Engine
+    , dbInstancePendingModifiedValues :: [PendingModifiedValue]
+    , dbInstanceCharacterSetName :: Maybe Text
+    , dbInstanceLicenseModel :: LicenseModel
+    , dbInstanceSubnetGroup :: Maybe DBSubnetGroup
+    , dbInstanceDBParameterGroups :: [DBParameterGroupStatus]
+    , dbInstanceEndpoint :: Maybe Endpoint
+    , dbInstanceEngineVersion :: Text
+    , dbInstanceReadReplicaSourceDBInstanceIdentifier :: Maybe Text
+    , dbInstancePubliclyAccessible :: Bool
+    , dbInstanceSecurityGroups :: [DBSecurityGroupMembership]
+    , dbInstanceAutoMinorVersionUpgrade :: Bool
+    , dbInstanceDBName :: Maybe Text
+    , dbInstanceInstanceCreateTime :: Maybe UTCTime
+    , dbInstanceAllocatedStorage :: Int -- ^ storage size in gigabytes
+    , dbInstanceDBInstanceClass :: DBInstanceClass
+    , dbInstanceMasterUsername :: Text
     }
   deriving (Show, Eq)
 
 data VpcSecurityGroupMembership = VpcSecurityGroupMembership
-    { vpcSecurityGroupMembershipStatus :: Text
-    , vpcSecurityGroupMembershipVpcSecurityGroupId :: Text
+    { vpcSecurityGroupStatus :: Text
+    , vpcSecurityGroupId :: Text
     }
   deriving (Show, Eq)
 
 data DBParameterGroupStatus = DBParameterGroupStatus
-    { dbpgsParameterApplyStatus :: Text
-    , dbpgsDBParameterGroupName :: Text
+    { dbParameterGroupStatusStatus :: Text
+    , dbParameterGroupStatusName :: Text
     }
   deriving (Show, Eq)
 
 data DBSecurityGroupMembership = DBSecurityGroupMembership
-    { dbsgmStatus :: Text
-    , dbsgmDBSecurityGroupName :: Text
+    { dbSecurityGroupMembershipStatus :: Text
+    , dbSecurityGroupMembershipName :: Text
     }
   deriving (Show, Eq)
 
 data Endpoint = Endpoint
-    { epPort :: Int
-    , epAddress :: Text
+    { endpointPort :: Int
+    , endpointAddress :: Text
     }
   deriving (Show, Eq)
 
 data OptionGroupMembership = OptionGroupMembership
-    { ogmOptionGroupName :: Text
-    , ogmStatus :: Text
+    { optionGroupName :: Text
+    , optionGroupStatus :: Text
     }
   deriving (Show, Eq)
 
 data PendingModifiedValue
-    = PMVAllocatedStorage Int
-    | PMVBackupRetentionPeriod Int
-    | PMVDBInstanceClass Text
-    | PMVEngineVersion Text
-    | PMVIops Int
-    | PMVMasterUserPassword Text
-    | PMVMultiAZ Bool
-    | PMVPort Int
-    | PMVDBInstanceIdentifier Text
+    = PendingModifiedValueAllocatedStorage Int
+    | PendingModifiedValueBackupRetentionPeriod Int
+    | PendingModifiedValueDBInstanceClass Text
+    | PendingModifiedValueEngineVersion Text
+    | PendingModifiedValueIops Int
+    | PendingModifiedValueMasterUserPassword Text
+    | PendingModifiedValueMultiAZ Bool
+    | PendingModifiedValuePort Int
+    | PendingModifiedValueDBInstanceIdentifier Text
   deriving (Show, Eq)
 
 data CreateDBInstanceRequest = CreateDBInstanceRequest
@@ -122,47 +122,13 @@ data CreateDBInstanceRequest = CreateDBInstanceRequest
     }
   deriving (Show, Eq)
 
-data DBInstanceClass
-    = DBt1micro
-    | DBm1small
-    | DBm1medium
-    | DBm1large
-    | DBm1xlarge
-    | DBm2xlarge
-    | DBm22xlarge
-    | DBm24xlarge
-  deriving (Read, Eq)
+-- | db.t1.micro, db.m1.small, db.m1.medium, db.m1.large,
+--   db.m1.xlarge, db.m2.xlarge, db.m2.2xlarge, db.m2.4xlarge
+type DBInstanceClass = Text
 
-instance Show DBInstanceClass where
-    show DBt1micro = "db.t1.micro"
-    show DBm1small = "db.m1.small"
-    show DBm1medium = "db.m1.medium"
-    show DBm1large = "db.m1.large"
-    show DBm1xlarge = "db.m1.xlarge"
-    show DBm2xlarge = "db.m2.xlarge"
-    show DBm22xlarge = "db.m2.2xlarge"
-    show DBm24xlarge = "db.m2.4xlarge"
-
-data Engine
-    = EngineMySQL
-    | EngineOracleSE1
-    | EngineOracleSE
-    | EngineOracleEE
-    | EngineSqlServerEE
-    | EngineSqlServerSE
-    | EngineSqlServerEX
-    | EngineSqlServerWeb
-  deriving (Read, Eq)
-
-instance Show Engine where
-    show EngineMySQL = "MySQL"
-    show EngineOracleSE1 = "oracle-se1"
-    show EngineOracleSE = "oracle-se"
-    show EngineOracleEE = "oracle-ee"
-    show EngineSqlServerEE = "sqlserver-ee"
-    show EngineSqlServerSE = "sqlserver-se"
-    show EngineSqlServerEX = "sqlserver-ex"
-    show EngineSqlServerWeb = "sqlserver-web"
+-- | mysql, oracle-se1, oracle-se, oracle-ee, sqlserver-ee,
+--   sqlserver-se, sqlserver-ex, sqlserver-web
+type Engine = Text
 
 data LicenseModel
     = LicenseIncluded
@@ -192,16 +158,6 @@ data CreateReadReplicaRequest = CreateReadReplicaRequest
     }
   deriving (Show, Eq)
 
-deriveFromText "DBInstanceClass"
-    [ "db.t1.micro", "db.m1.small", "db.m1.medium"
-    , "db.m1.large", "db.m1.xlarge", "db.m2.xlarge"
-    , "db.m2.2xlarge", "db.m2.4xlarge"
-    ]
-deriveFromText "Engine"
-    [ "mysql", "oracle-se1", "oracle-se"
-    , "oracle-ee", "sqlserver-ee", "sqlserver-se"
-    , "sqlserver-ex", "sqlserver-web"
-    ]
 deriveFromText "LicenseModel"
     [ "license-included", "bring-your-own-license", "general-public-license"
     ]
