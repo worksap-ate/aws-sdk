@@ -7,11 +7,11 @@ module AWS.RDS.Types.DBSubnetGroup
 import AWS.Lib.FromText (Text)
 
 data DBSubnetGroup = DBSubnetGroup
-    { dbsngVpcId :: Text
-    , dbsngSubnetGroupStatus :: Text
-    , dbsngDBSubnetGroupDescription :: Text
-    , dbsngDBSubnetGroupName :: Text
-    , dbsngSubnets :: [Subnet]
+    { dbSubnetGroupVpcId :: Text
+    , dbSubnetGroupStatus :: Text
+    , dbSubnetGroupDescription :: Text
+    , dbSubnetGroupName :: Text
+    , dbSubnets :: [Subnet]
     }
   deriving (Show, Eq)
 
@@ -23,7 +23,7 @@ data Subnet = Subnet
   deriving (Show, Eq)
 
 data AvailabilityZone = AvailabilityZone
-    { azName :: Text
-    , azProvisionedIopsCapable :: Bool
+    { availabilityZoneName :: Text
+    , availabilityZoneProvisionedIopsCapable :: Bool
     }
   deriving (Show, Eq)

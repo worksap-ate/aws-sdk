@@ -37,4 +37,4 @@ createAndDeleteDBSubnetGroupTest = do
                 ) `miss` anyConnectionException
   where
     name = "hspec-test-subnet-group"
-    subnets = map subnetIdentifier . dbsngSubnets . head
+    subnets = map subnetIdentifier . dbSubnets . head

@@ -95,15 +95,15 @@ sinkPendingModifiedValues
     => GLSink Event m [PendingModifiedValue]
 sinkPendingModifiedValues = element "PendingModifiedValues" $
     catMaybes <$> sequence
-        [ f PMVMasterUserPassword "MasterUserPassword"
-        , f PMVIops "Iops"
-        , f PMVMultiAZ "MultiAZ"
-        , f PMVAllocatedStorage "AllocatedStorage"
-        , f PMVEngineVersion "EngineVersion"
-        , f PMVDBInstanceIdentifier "DBInstanceIdentifier"
-        , f PMVDBInstanceClass "DBInstanceClass"
-        , f PMVBackupRetentionPeriod "BackupRetentionPeriod"
-        , f PMVPort "Port"
+        [ f PendingModifiedValueMasterUserPassword "MasterUserPassword"
+        , f PendingModifiedValueIops "Iops"
+        , f PendingModifiedValueMultiAZ "MultiAZ"
+        , f PendingModifiedValueAllocatedStorage "AllocatedStorage"
+        , f PendingModifiedValueEngineVersion "EngineVersion"
+        , f PendingModifiedValueDBInstanceIdentifier "DBInstanceIdentifier"
+        , f PendingModifiedValueDBInstanceClass "DBInstanceClass"
+        , f PendingModifiedValueBackupRetentionPeriod "BackupRetentionPeriod"
+        , f PendingModifiedValuePort "Port"
         ]
   where
     f c name = fmap c <$> getT name
@@ -128,9 +128,9 @@ createDBInstance CreateDBInstanceRequest{..} =
         , "CharacterSetName" |=?
             createDBInstanceCharacterSetName
         , "DBInstanceClass" |=
-            toText createDBInstanceDBInstanceClass
+            toText createDBInstanceClass
         , "DBInstanceIdentifier" |=
-            createDBInstanceDBInstanceIdentifier
+            createDBInstanceIdentifier
         , "DBName" |=? createDBInstanceDBName
         , "DBParameterGroupName" |=?
             createDBInstanceDBParameterGroupName

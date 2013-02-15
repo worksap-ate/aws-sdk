@@ -35,7 +35,7 @@ createAndDeleteDBInstanceTest = do
     test = do
         createDBInstance req
         wait
-            (\dbi' -> dbiDBInstanceStatus dbi' == Just "available")
+            (\dbi' -> dbInstanceStatus dbi' == Just "available")
             (\dbiid' -> describeDBInstances (Just dbiid) Nothing Nothing)
             dbiid
         deleteDBInstance dbiid SkipFinalSnapshot
@@ -43,10 +43,10 @@ createAndDeleteDBInstanceTest = do
     req = CreateDBInstanceRequest
         5
         Nothing Nothing Nothing Nothing
-        DBt1micro
+        "t1.micro"
         dbiid
         Nothing Nothing [] Nothing
-        EngineMySQL
+        "MySQL"
         Nothing
         Nothing
         Nothing

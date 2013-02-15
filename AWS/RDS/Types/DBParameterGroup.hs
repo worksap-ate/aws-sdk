@@ -5,8 +5,8 @@ module AWS.RDS.Types.DBParameterGroup
 import AWS.Lib.FromText (Text)
 
 data DBParameterGroup = DBParameterGroup
-    { dbpgDBParameterGroupFamily :: Text
-    , dbpgDescription :: Text
-    , dbpgDBParameterGroupName :: Text
+    { dbParameterGroupFamily :: Text
+    , dbParameterGroupDescription :: Text
+    , dbParameterGroupName :: Text
     }
   deriving (Show, Eq)

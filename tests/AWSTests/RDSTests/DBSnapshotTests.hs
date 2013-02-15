@@ -38,10 +38,10 @@ createDBSnapshotTest = do
     dbsid = "hspec-test-snapshot"
     test = do
         dbis <- describeDBInstances Nothing Nothing Nothing
-        let dbiid = dbiDBInstanceIdentifier $ head dbis
+        let dbiid = dbInstanceIdentifier $ head dbis
         dbs <- createDBSnapshot dbiid dbsid
         wait
-            (\dbs' -> dbsStatus dbs' == "available")
+            (\dbs' -> dbSnapshotStatus dbs' == "available")
             (\dbsid' -> describeDBSnapshots Nothing (Just dbsid') Nothing Nothing Nothing) $
-            dbsDBSnapshotIdentifier dbs
+            dbSnapshotIdentifier dbs
       `E.finally` deleteDBSnapshot dbsid
