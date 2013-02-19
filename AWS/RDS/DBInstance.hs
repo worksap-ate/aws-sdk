@@ -5,6 +5,7 @@ module AWS.RDS.DBInstance
     , createDBInstance
     , deleteDBInstance
     , createDBInstanceReadReplica
+    , rebootDBInstance
     ) where
 
 import Data.Text (Text)
@@ -200,4 +201,18 @@ createDBInstanceReadReplica CreateReadReplicaRequest{..} =
             boolToText <$> createReadReplicaPubliclyAccessible
         , "SourceDBInstanceIdentifier" |=
             createReadReplicaSourceDBInstanceIdentifier
+        ]
+
+rebootDBInstance
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBInstanceIdentifier
+    -> Maybe Bool -- ^ ForceFailover
+    -> RDS m DBInstance
+rebootDBInstance dbiid force =
+    rdsQuery "RebootDBInstance" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "DBInstanceIdentifier" |= dbiid
+        , "ForceFailover" |=? boolToText <$> force
         ]
