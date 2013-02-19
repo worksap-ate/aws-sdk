@@ -1,8 +1,11 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module AWSTests.RDSTests.DBInstanceTests
     ( runDBInstanceTests
     )
     where
 
+import Data.Conduit
 import Data.Text (Text)
 import Test.Hspec
 
@@ -30,26 +33,25 @@ createAndDeleteDBInstanceTest :: Spec
 createAndDeleteDBInstanceTest = do
     describe "{create,delete}DBInstance doesn't fail" $ do
         it "{create,delete}DBInstance doesn't any exception" $ do
-            testRDS region test `miss` anyConnectionException
-  where
-    test = do
-        createDBInstance req
-        wait
-            (\dbi' -> dbInstanceStatus dbi' == Just "available")
-            (\dbiid' -> describeDBInstances (Just dbiid) Nothing Nothing)
-            dbiid
-        deleteDBInstance dbiid SkipFinalSnapshot
-    dbiid = "hspec-test-instance"
-    req = CreateDBInstanceRequest
-        5
-        Nothing Nothing Nothing Nothing
-        "db.t1.micro"
-        dbiid
-        Nothing Nothing [] Nothing
-        "MySQL"
-        Nothing
-        Nothing
-        Nothing
-        "test"
-        "test"
-        Nothing Nothing Nothing Nothing Nothing Nothing []
+            testRDS region (
+                withDBInstance createTestDBInstanceRequest $
+                    waitUntilAvailable . dbInstanceIdentifier
+                ) `miss` anyConnectionException
+
+waitUntilAvailable :: (MonadBaseControl IO m, MonadResource m) => Text -> RDS m DBInstance
+waitUntilAvailable = wait
+    (\dbi -> dbInstanceStatus dbi == Just "available")
+    (\dbiid -> describeDBInstances (Just dbiid) Nothing Nothing)
+
+createTestDBInstanceRequest :: CreateDBInstanceRequest
+createTestDBInstanceRequest = CreateDBInstanceRequest
+    5
+    Nothing Nothing Nothing Nothing
+    "db.t1.micro"
+    "hspec-test-instance"
+    Nothing Nothing [] Nothing
+    "MySQL"
+    Nothing Nothing Nothing
+    "test"
+    "test"
+    Nothing Nothing Nothing Nothing Nothing Nothing []
