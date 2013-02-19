@@ -26,6 +26,7 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
+import Control.Monad (when, void)
 import Data.Monoid ((<>))
 import Control.Monad.Trans.Class (lift)
 import Data.Maybe (fromMaybe)
@@ -38,19 +39,23 @@ type RequestId = Text
 text :: MonadThrow m => GLSink Event m Text
 text = XML.content
 
+whenM :: Monad m => m (Maybe a) -> (a -> m ()) -> m ()
+whenM mma f = mma >>= maybe (return ()) f
+
+fromMaybeM :: Monad m => m a -> Maybe a -> m a
+fromMaybeM a Nothing  = a
+fromMaybeM _ (Just a) = return a
+
 listConduit :: MonadThrow m
     => Text
     -> GLSink Event m o
     -> GLConduit Event m o
-listConduit name p =
-    awaitWhile isTag >>= maybe (return ()) (\e -> do
-        leftover e
-        if isBeginTagName name e
-            then do
-                element name $ p >>= yield
-                listConduit name p
-            else return ()
-        )
+listConduit name p = whenM (awaitWhile isTag) $ \e -> do
+    leftover e
+    when (isBeginTagName name e) $
+        whenM (elementM name p) $ \a -> do
+            yield a
+            listConduit name p
 
 listConsumer :: MonadThrow m
     => Text
@@ -64,10 +69,10 @@ isTag (EventEndElement _) =True
 isTag _ = False
 
 sinkDropWhile :: Monad m => (i -> Bool) -> GLSink i m ()
-sinkDropWhile f = await >>= maybe (return ()) g
+sinkDropWhile f = whenM await g
   where
-      g i | f i       = sinkDropWhile f
-              | otherwise = leftover i >> return ()
+    g i | f i       = sinkDropWhile f
+        | otherwise = void $ leftover i
 
 isBeginTagName :: Text -> Event -> Bool
 isBeginTagName name (EventBeginElement n _)
@@ -110,7 +115,7 @@ element :: forall o u m a . MonadThrow m
     -> Pipe Event Event o u m a
     -> Pipe Event Event o u m a
 element name inner = elementM name inner >>=
-    maybe (lift $ monadThrow $ ResponseParseError name) return
+    fromMaybeM (lift $ monadThrow $ ResponseParseError name)
 
 sinkResponse
     :: MonadThrow m
@@ -125,7 +130,7 @@ sinkResponse action sink = do
   where
     sinkResult =
         elementM (action <> "Result") sink -- XXX: parse Marker. This marker may not occur (e.g., PutMetricAlarm).
-        >>= maybe sink return
+        >>= fromMaybeM sink
 
 sinkResponseMetadata
     :: MonadThrow m
