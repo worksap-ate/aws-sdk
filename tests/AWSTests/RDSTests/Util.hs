@@ -35,21 +35,30 @@ withDBInstance
     -> (DBInstance -> RDS m a)
     -> RDS m a
 withDBInstance req = E.bracket
-    (waitUntilNotFound f describe >> createDBInstance req)
+    (deleted >> createDBInstance req)
     (\dbi -> deleteDBInstance (dbInstanceIdentifier dbi) SkipFinalSnapshot)
   where
-    f dbi = dbInstanceIdentifier dbi == createDBInstanceIdentifier req
     describe = describeDBInstances Nothing Nothing Nothing
+    f dbi = dbInstanceIdentifier dbi == createDBInstanceIdentifier req
+    g dbi = dbInstanceStatus dbi == Just "available"
+    delete dbi = deleteDBInstance (dbInstanceIdentifier dbi) SkipFinalSnapshot
+    deleted = waitUntilNotFound describe f g delete
 
 waitUntilNotFound
-    :: (MonadIO m, Functor m)
-    => (a -> Bool)
-    -> RDS m [a]
+    :: (MonadIO m, Functor m, MonadBaseControl IO m, MonadResource m)
+    => RDS m [a] -- describe resources
+    -> (a -> Bool) -- is target resource
+    -> (a -> Bool) -- is deletable resource
+    -> (a -> RDS m b) -- delete resource
     -> RDS m ()
-waitUntilNotFound f describe = do
+waitUntilNotFound describe match deletable delete = do
     rs <- describe
-    case find f rs of
+    case find match rs of
         Nothing -> return ()
-        Just _ -> do
-            liftIO $ CC.threadDelay 10000000
-            waitUntilNotFound f describe
+        Just r
+            | deletable r -> do
+                delete r
+                waitUntilNotFound describe match deletable delete
+            | otherwise -> do
+                liftIO $ CC.threadDelay 10000000
+                waitUntilNotFound describe match deletable delete
