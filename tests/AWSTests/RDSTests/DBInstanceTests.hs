@@ -23,6 +23,7 @@ runDBInstanceTests = do
     hspec describeDBInstancesTest
     hspec createAndDeleteDBInstanceTest
     hspec createDBInstanceReadReplicaTest
+    hspec rebootDBInstanceTest
 
 describeDBInstancesTest :: Spec
 describeDBInstancesTest = do
@@ -35,7 +36,7 @@ describeDBInstancesTest = do
 createAndDeleteDBInstanceTest :: Spec
 createAndDeleteDBInstanceTest = do
     describe "{create,delete}DBInstance doesn't fail" $ do
-        it "{create,delete}DBInstance doesn't any exception" $ do
+        it "{create,delete}DBInstance doesn't throw any exception" $ do
             testRDS region (
                 withDBInstance createTestDBInstanceRequest $
                     waitUntilAvailable . dbInstanceIdentifier
@@ -62,7 +63,7 @@ createTestDBInstanceRequest = CreateDBInstanceRequest
 createDBInstanceReadReplicaTest :: Spec
 createDBInstanceReadReplicaTest = do
     describe "createDBInstanceReadReplica doesn't fail" $ do
-        it "createDBInstanceReadReplica doesn't any exception" $ do
+        it "createDBInstanceReadReplica doesn't throw any exception" $ do
             testRDS region (do
                 withDBInstance createTestDBInstanceRequest $ \dbi -> do
                     waitUntilAvailable $ dbInstanceIdentifier dbi
@@ -76,4 +77,16 @@ createDBInstanceReadReplicaTest = do
                     waitUntilAvailable $ dbInstanceIdentifier dbi
                     waitUntilAvailable $ dbInstanceIdentifier replica
                     deleteDBInstance (dbInstanceIdentifier replica) SkipFinalSnapshot
+                ) `miss` anyConnectionException
+
+rebootDBInstanceTest :: Spec
+rebootDBInstanceTest = do
+    describe "rebootDBInstance doesn't fail" $ do
+        it "rebootDBInstance doesn't throw any exception" $ do
+            testRDS region (do
+                withDBInstance createTestDBInstanceRequest $ \dbi -> do
+                    let dbiid = dbInstanceIdentifier dbi
+                    waitUntilAvailable dbiid
+                    rebootDBInstance dbiid Nothing
+                    waitUntilAvailable dbiid
                 ) `miss` anyConnectionException
