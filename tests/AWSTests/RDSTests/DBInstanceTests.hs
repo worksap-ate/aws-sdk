@@ -22,12 +22,15 @@ runDBInstanceTests :: IO ()
 runDBInstanceTests = do
     hspec describeDBInstancesTest
     hspec createAndDeleteDBInstanceTest
+    hspec createDBInstanceReadReplicaTest
 
 describeDBInstancesTest :: Spec
 describeDBInstancesTest = do
     describe "describeDBInstances doesn't fail" $ do
         it "describeDBInstances doesn't throw any exception" $ do
-            testRDS region (describeDBInstances Nothing Nothing Nothing) `miss` anyConnectionException
+            testRDS region (
+                describeDBInstances Nothing Nothing Nothing
+                ) `miss` anyConnectionException
 
 createAndDeleteDBInstanceTest :: Spec
 createAndDeleteDBInstanceTest = do
@@ -55,3 +58,22 @@ createTestDBInstanceRequest = CreateDBInstanceRequest
     "test"
     "test"
     Nothing Nothing Nothing Nothing Nothing Nothing []
+
+createDBInstanceReadReplicaTest :: Spec
+createDBInstanceReadReplicaTest = do
+    describe "createDBInstanceReadReplica doesn't fail" $ do
+        it "createDBInstanceReadReplica doesn't any exception" $ do
+            testRDS region (do
+                withDBInstance createTestDBInstanceRequest $ \dbi -> do
+                    waitUntilAvailable $ dbInstanceIdentifier dbi
+                    let replicaReq = CreateReadReplicaRequest
+                            Nothing Nothing
+                            "db.t1.micro"
+                            "hspec-test-replica"
+                            Nothing Nothing Nothing Nothing
+                            "hspec-test-instance"
+                    replica <- createDBInstanceReadReplica replicaReq
+                    waitUntilAvailable $ dbInstanceIdentifier dbi
+                    waitUntilAvailable $ dbInstanceIdentifier replica
+                    deleteDBInstance (dbInstanceIdentifier replica) SkipFinalSnapshot
+                ) `miss` anyConnectionException

@@ -6,8 +6,11 @@ module AWSTests.RDSTests.Util
     )
     where
 
+import qualified Control.Concurrent as CC
 import qualified Control.Exception.Lifted as E
-import Data.Conduit
+import Control.Monad.IO.Class (liftIO, MonadIO)
+import Data.Conduit (MonadBaseControl, MonadResource)
+import Data.List (find)
 import Data.Text (Text)
 import Data.Conduit (ResourceT, runResourceT)
 
@@ -32,5 +35,21 @@ withDBInstance
     -> (DBInstance -> RDS m a)
     -> RDS m a
 withDBInstance req = E.bracket
-    (createDBInstance req)
+    (waitUntilNotFound f describe >> createDBInstance req)
     (\dbi -> deleteDBInstance (dbInstanceIdentifier dbi) SkipFinalSnapshot)
+  where
+    f dbi = dbInstanceIdentifier dbi == createDBInstanceIdentifier req
+    describe = describeDBInstances Nothing Nothing Nothing
+
+waitUntilNotFound
+    :: (MonadIO m, Functor m)
+    => (a -> Bool)
+    -> RDS m [a]
+    -> RDS m ()
+waitUntilNotFound f describe = do
+    rs <- describe
+    case find f rs of
+        Nothing -> return ()
+        Just _ -> do
+            liftIO $ CC.threadDelay 10000000
+            waitUntilNotFound f describe
