@@ -72,7 +72,7 @@ data DBSecurityGroupMembership = DBSecurityGroupMembership
 
 data Endpoint = Endpoint
     { endpointPort :: Int
-    , endpointAddress :: Text
+    , endpointAddress :: Maybe Text
     }
   deriving (Show, Eq)
 
