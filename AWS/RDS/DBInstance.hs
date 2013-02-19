@@ -191,7 +191,7 @@ createDBInstanceReadReplica CreateReadReplicaRequest{..} =
         , "AvailabilityZone" |=?
             createReadReplicaAvailabilityZone
         , "DBInstanceClass" |=
-            toText createReadReplicaDBInstanceClass
+            createReadReplicaDBInstanceClass
         , "DBInstanceIdentifier" |=
             createReadReplicaDBInstanceIdentifier
         , "Iops" |=? toText <$> createReadReplicaIops
