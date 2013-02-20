@@ -24,6 +24,7 @@ runVolumeTests :: IO ()
 runVolumeTests = hspec $ do
     describeVolumesTest
     createAndDeleteVolumeTest
+    attachAndDetachVolumeTest
     describeVolumeStatusTest
     describeVolumeAttributeTest
 
@@ -59,6 +60,22 @@ reqSnap snapshot = CreateFromSnapshot
     , createFromSnapshotSize = Nothing
     , createFromSnapshotVolumeType = Nothing
     }
+
+attachAndDetachVolumeTest :: Spec
+attachAndDetachVolumeTest = do
+    describe "{attach,detach}Volume" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (do
+                withInstance (testRunInstancesRequest{runInstancesRequestAvailabilityZone = Just zone}) $ \Instance{instanceId = inst} -> do
+                    withVolume reqNew $ \Volume{volumeId = vol} -> do
+                        waitForInstanceState InstanceStateRunning inst
+                        attachVolume vol inst "/dev/sdh"
+                        detachVolume vol Nothing Nothing Nothing
+                        U.wait p desc vol
+                ) `miss` anyConnectionException
+  where
+    p Volume{volumeAttachmentSet = set} = null set
+    desc inst = U.list $ describeVolumes [inst] []
 
 describeVolumeStatusTest :: Spec
 describeVolumeStatusTest = do
