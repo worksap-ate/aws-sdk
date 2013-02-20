@@ -19,7 +19,7 @@ data CreateSubnetRequest = CreateSubnetRequest
 data Subnet = Subnet
     { subnetId :: Text
     , subnetState :: SubnetState
-    , subnetVpicId :: Text
+    , subnetVpcId :: Text
     , subnetCidrBlock :: AddrRange IPv4
     , subnetAvailableIpAddressCount :: Int
     , subnetAvailabilityZone :: Text
