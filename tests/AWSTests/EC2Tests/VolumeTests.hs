@@ -27,6 +27,7 @@ runVolumeTests = hspec $ do
     attachAndDetachVolumeTest
     describeVolumeStatusTest
     describeVolumeAttributeTest
+    modifyVolumeAttributeTest
 
 describeVolumesTest :: Spec
 describeVolumesTest = do
@@ -92,3 +93,12 @@ describeVolumeAttributeTest = do
                 let vid = volumeId $ head volumes
                 describeVolumeAttribute vid VolumeAttributeRequestAutoEnableIO
               ) `miss` anyConnectionException
+
+modifyVolumeAttributeTest :: Spec
+modifyVolumeAttributeTest = do
+    describe "modifyVolumeAttribute" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withVolume reqNew $ \Volume{volumeId = vol} ->
+                    modifyVolumeAttribute vol True
+                ) `miss` anyConnectionException
