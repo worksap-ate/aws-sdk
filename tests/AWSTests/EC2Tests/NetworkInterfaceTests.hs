@@ -41,15 +41,6 @@ createAndDeleteNetworkInterfaceTest = do
                     withNetworkInterface subnet $ \_ -> return ()
                 ) `miss` anyConnectionException
 
-request :: RunInstancesRequest
-request = defaultRunInstancesRequest "ami-087acb09" 1 1
-
-waitForInstanceState :: (MonadBaseControl IO m, MonadResource m) => InstanceState -> Text -> EC2 m Reservation
-waitForInstanceState s = Util.wait p desc
-  where
-    p r = (instanceState . head . reservationInstanceSet) r == s
-    desc inst = Util.list $ describeInstances [inst] []
-
 waitForNetworkInterfaceStatus :: (MonadBaseControl IO m, MonadResource m) => NetworkInterfaceStatus -> Text -> EC2 m NetworkInterface
 waitForNetworkInterfaceStatus s = Util.wait p desc
   where
@@ -72,7 +63,7 @@ attachAndDetachNetworkInterfaceTest = do
                     waitForInstanceState InstanceStateTerminated i
                 ) `miss` anyConnectionException
   where
-    req subnet = request
+    req subnet = testRunInstancesRequest
         { runInstancesRequestSubnetId = Just subnet
         }
 
@@ -117,7 +108,7 @@ runInstanceTest = do
             return $ instanceId i
         waitForInstanceState InstanceStateTerminated i
 --        sleep 10
-    req sn = request
+    req sn = testRunInstancesRequest
         { runInstancesRequestSubnetId = Nothing
         , runInstancesRequestPrivateIpAddress = Nothing
         , runInstancesRequestNetworkInterfaces =

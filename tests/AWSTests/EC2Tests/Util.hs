@@ -5,6 +5,8 @@ module AWSTests.EC2Tests.Util
     , withVpc
     , withSubnet
     , withInstance
+    , testRunInstancesRequest
+    , waitForInstanceState
     , withRouteTable
     , withInternetGateway
     , withInternetGatewayAttached
@@ -28,7 +30,7 @@ import Data.IP (IPv4, AddrRange)
 import AWS
 import AWS.EC2
 import AWS.EC2.Types
-import AWS.EC2.Util (retry, sleep)
+import AWS.EC2.Util (retry, sleep, wait, list)
 
 testEC2
     :: Text
@@ -80,6 +82,15 @@ withInstance
 withInstance req = E.bracket
     (head . reservationInstanceSet <$> runInstances req <* sleep 2)
     (\i -> terminateInstances [instanceId i])
+
+testRunInstancesRequest :: RunInstancesRequest
+testRunInstancesRequest = defaultRunInstancesRequest "ami-087acb09" 1 1
+
+waitForInstanceState :: (MonadBaseControl IO m, MonadResource m) => InstanceState -> Text -> EC2 m Reservation
+waitForInstanceState s = wait p desc
+  where
+    p r = (instanceState . head . reservationInstanceSet) r == s
+    desc inst = list $ describeInstances [inst] []
 
 withRouteTable :: (MonadBaseControl IO m, MonadResource m) => Text -> (RouteTable -> EC2 m a) -> EC2 m a
 withRouteTable vpc = E.bracket
