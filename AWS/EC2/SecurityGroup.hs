@@ -93,7 +93,6 @@ securityGroupRequestParam (SecurityGroupRequestGroupId t) =
 securityGroupRequestParam (SecurityGroupRequestGroupName t) =
     "GroupName" |= t
 
--- | not tested
 authorizeSecurityGroupIngress
     :: (MonadResource m, MonadBaseControl IO m)
     => SecurityGroupRequest
