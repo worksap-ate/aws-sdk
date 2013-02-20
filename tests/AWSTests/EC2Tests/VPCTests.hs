@@ -5,7 +5,6 @@ module AWSTests.EC2Tests.VPCTests
     )
     where
 
-import Control.Applicative ((<$>))
 import Data.Text (Text)
 import Test.Hspec
 
@@ -19,17 +18,17 @@ region :: Text
 region = "ap-southeast-1"
 
 runVpcTests :: IO ()
-runVpcTests = do
-    hspec describeVpcsTest
-    hspec describeVpnGatewaysTest
-    hspec describeInternetGatewaysTest
-    hspec describeVpnConnectionsTest
-    hspec describeCustomerGatewayTest
-    hspec describeInternetGatewaysTest
-    hspec describeDhcpOptionsTest
-    -- hspec createVpcTest
-    hspec createDhcpOptionsTest
-    hspec vpnConnectionTest
+runVpcTests = hspec $ do
+    describeVpcsTest
+    describeVpnGatewaysTest
+    describeInternetGatewaysTest
+    describeVpnConnectionsTest
+    describeCustomerGatewayTest
+    describeInternetGatewaysTest
+    describeDhcpOptionsTest
+    createVpcTest
+    createDhcpOptionsTest
+    vpnConnectionTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -89,14 +88,11 @@ vpnConnectionTest = do
         it "{create,delete}CustomerGateway, {create,delete}VpnGateway and {create,delete}VpnConnection don't throw any exception" $ do
             testEC2' region test `miss` anyConnectionException
   where
-    test = do
-        cgid <- customerGatewayId <$> createCustomerGateway "ipsec.1" "202.202.202.20" 65000
-        vpnid <- vpnGatewayId <$> createVpnGateway CreateVpnGatewayTypeIpsec1 Nothing
-        cid <- vpnConnectionId <$> createVpnConnection "ipsec.1" cgid vpnid Nothing Nothing
-        deleteVpnConnection cid
-        wait
-            (\connection -> vpnConnectionState connection == VpnConnectionStateDeleted)
-            (\cid' -> list $ describeVpnConnections [cid'] [])
-            cid
-        deleteCustomerGateway cgid
-        deleteVpnGateway vpnid
+    test =
+        withCustomerGateway "ipsec.1" "202.202.202.20" 65000 $ \CustomerGateway{customerGatewayId = cgid} ->
+            withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vpnid} -> do
+                VpnConnection{vpnConnectionId = cid} <- withVpnConnection "ipsec.1" cgid vpnid Nothing Nothing return
+                wait
+                    (\connection -> vpnConnectionState connection == VpnConnectionStateDeleted)
+                    (\cid' -> list $ describeVpnConnections [cid'] [])
+                    cid

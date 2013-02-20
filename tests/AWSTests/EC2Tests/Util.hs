@@ -16,6 +16,9 @@ module AWSTests.EC2Tests.Util
     , withSecurityGroup
     , withSnapshot
     , withVolume
+    , withCustomerGateway
+    , withVpnGateway
+    , withVpnConnection
     )
     where
 
@@ -141,3 +144,18 @@ withVolume :: (MonadBaseControl IO m, MonadResource m) => CreateVolumeRequest ->
 withVolume req = E.bracket
     (createVolume req)
     (deleteVolume . volumeId)
+
+withCustomerGateway :: (MonadBaseControl IO m, MonadResource m) => Text -> IPv4 -> Int -> (CustomerGateway -> EC2 m a) -> EC2 m a
+withCustomerGateway typ addr bgpasn = E.bracket
+    (createCustomerGateway typ addr bgpasn)
+    (deleteCustomerGateway . customerGatewayId)
+
+withVpnGateway :: (MonadBaseControl IO m, MonadResource m) => CreateVpnGatewayType -> Maybe Text -> (VpnGateway -> EC2 m a) -> EC2 m a
+withVpnGateway typ zone = E.bracket
+    (createVpnGateway typ zone)
+    (deleteVpnGateway . vpnGatewayId)
+
+withVpnConnection :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> Text -> Maybe Text -> Maybe Bool -> (VpnConnection -> EC2 m a) -> EC2 m a
+withVpnConnection typ cgid vgid zone option = E.bracket
+    (createVpnConnection typ cgid vgid zone option)
+    (deleteVpnConnection . vpnConnectionId)
