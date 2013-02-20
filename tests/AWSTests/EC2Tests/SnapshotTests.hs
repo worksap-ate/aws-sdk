@@ -19,10 +19,10 @@ region :: Text
 region = "ap-northeast-1"
 
 runSnapshotTests :: IO ()
-runSnapshotTests = do
-    hspec describeSnapshotsTest
-    hspec createSnapshotTest
-    hspec describeSnapshotAttributeTest
+runSnapshotTests = hspec $ do
+    describeSnapshotsTest
+    createSnapshotTest
+    describeSnapshotAttributeTest
 
 describeSnapshotsTest :: Spec
 describeSnapshotsTest = do
@@ -37,8 +37,19 @@ createSnapshotTest = do
             testEC2' region (do
                 Volume{volumeId = vid}:_ <- list $ describeVolumes [] []
                 withSnapshot vid Nothing $ \Snapshot{snapshotId = sid} ->
-                    E.bracket (copySnapshot region sid Nothing) deleteSnapshot $ const (return ())
+                    E.bracket (copySnapshot region sid Nothing) deleteSnapshot $ \copied -> do
+                        modifySnapshotAttribute copied perm
+                        resetSnapshotAttribute copied ResetSnapshotAttributeRequestCreateVolumePermission
                 ) `miss` anyConnectionException
+  where
+    perm = CreateVolumePermission
+        { createVolumePermissionAdd = [item]
+        , createVolumePermissionRemove = []
+        }
+    item = CreateVolumePermissionItem
+        { createVolumePermissionItemUserId = Nothing
+        , createVolumePermissionItemGroup = Just "all"
+        }
 
 describeSnapshotAttributeTest :: Spec
 describeSnapshotAttributeTest = do
