@@ -14,6 +14,7 @@ module AWS.RDS.Types.DBInstance
     , LicenseModel(..)
     , FinalSnapshot(..)
     , CreateReadReplicaRequest(..)
+    , RestoreDBInstanceFromDBSnapshotRequest(..)
     ) where
 
 import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
@@ -156,6 +157,39 @@ data CreateReadReplicaRequest = CreateReadReplicaRequest
     , createReadReplicaPubliclyAccessible :: Maybe Bool
     , createReadReplicaSourceDBInstanceIdentifier :: Text
     }
+  deriving (Show, Eq)
+
+data RestoreDBInstanceFromDBSnapshotRequest
+    = RestoreDBInstanceFromDBSnapshotRequest
+        { restoreDBInstanceFromDBSnapshotRequestAutoMinorVersionUpgrade
+            :: Maybe Bool
+        , restoreDBInstanceFromDBSnapshotRequestAvailabilityZone
+            :: Maybe Text
+        , restoreDBInstanceFromDBSnapshotRequestDBInstanceClass
+            :: Maybe DBInstanceClass
+        , restoreDBInstanceFromDBSnapshotRequestDBInstanceIdentifier
+            :: Text
+        , restoreDBInstanceFromDBSnapshotRequestDBName
+            :: Maybe Text
+        , restoreDBInstanceFromDBSnapshotRequestDBSnapshotIdentifier
+            :: Text
+        , restoreDBInstanceFromDBSnapshotRequestDBSubnetGroupName
+            :: Maybe Text
+        , restoreDBInstanceFromDBSnapshotRequestEngine
+            :: Maybe Engine
+        , restoreDBInstanceFromDBSnapshotRequestIops
+            :: Maybe Int
+        , restoreDBInstanceFromDBSnapshotRequestLicenseModel
+            :: Maybe LicenseModel
+        , restoreDBInstanceFromDBSnapshotRequestMultiAZ
+            :: Maybe Bool
+        , restoreDBInstanceFromDBSnapshotRequestOptionGroupName
+            :: Maybe Text
+        , restoreDBInstanceFromDBSnapshotRequestPort
+            :: Maybe Int
+        , restoreDBInstanceFromDBSnapshotRequestPubliclyAccessible
+            :: Maybe Bool
+        }
   deriving (Show, Eq)
 
 deriveFromText "LicenseModel"

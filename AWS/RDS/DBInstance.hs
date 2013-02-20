@@ -6,6 +6,7 @@ module AWS.RDS.DBInstance
     , deleteDBInstance
     , createDBInstanceReadReplica
     , rebootDBInstance
+    , restoreDBInstanceFromDBSnapshot
     ) where
 
 import Data.Text (Text)
@@ -215,4 +216,41 @@ rebootDBInstance dbiid force =
     params =
         [ "DBInstanceIdentifier" |= dbiid
         , "ForceFailover" |=? boolToText <$> force
+        ]
+
+restoreDBInstanceFromDBSnapshot
+    :: (MonadBaseControl IO m, MonadResource m)
+    => RestoreDBInstanceFromDBSnapshotRequest
+    -> RDS m DBInstance
+restoreDBInstanceFromDBSnapshot RestoreDBInstanceFromDBSnapshotRequest{..} =
+    rdsQuery "RestoreDBInstanceFromDBSnapshot" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "AutoMinorVersionUpgrade" |=? boolToText <$>
+            restoreDBInstanceFromDBSnapshotRequestAutoMinorVersionUpgrade
+        , "AvailabilityZone" |=?
+            restoreDBInstanceFromDBSnapshotRequestAvailabilityZone
+        , "DBInstanceClass" |=?
+            restoreDBInstanceFromDBSnapshotRequestDBInstanceClass
+        , "DBInstanceIdentifier" |=
+            restoreDBInstanceFromDBSnapshotRequestDBInstanceIdentifier
+        , "DBName" |=? restoreDBInstanceFromDBSnapshotRequestDBName
+        , "DBSnapshotIdentifier" |=
+            restoreDBInstanceFromDBSnapshotRequestDBSnapshotIdentifier
+        , "DBSubnetGroupName" |=?
+            restoreDBInstanceFromDBSnapshotRequestDBSubnetGroupName
+        , "Engine" |=? restoreDBInstanceFromDBSnapshotRequestEngine
+        , "Iops" |=? toText <$>
+            restoreDBInstanceFromDBSnapshotRequestIops
+        , "LicenseModel" |=? toText <$>
+            restoreDBInstanceFromDBSnapshotRequestLicenseModel
+        , "MultiAZ" |=? boolToText <$>
+            restoreDBInstanceFromDBSnapshotRequestMultiAZ
+        , "OptionGroupName" |=?
+            restoreDBInstanceFromDBSnapshotRequestOptionGroupName
+        , "Port" |=? toText <$>
+            restoreDBInstanceFromDBSnapshotRequestPort
+        , "PubliclyAccessible" |=? boolToText <$>
+            restoreDBInstanceFromDBSnapshotRequestPubliclyAccessible
         ]
