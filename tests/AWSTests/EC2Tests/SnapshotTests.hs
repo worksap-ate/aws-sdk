@@ -36,7 +36,7 @@ createSnapshotTest = do
         it "createSnapshot, deleteSnapshot and copySnapshot doesn't any exception" $ do
             testEC2' region (do
                 Volume{volumeId = vid}:_ <- list $ describeVolumes [] []
-                E.bracket (createSnapshot vid Nothing) (deleteSnapshot . snapshotId) $ \Snapshot{snapshotId = sid} ->
+                withSnapshot vid Nothing $ \Snapshot{snapshotId = sid} ->
                     E.bracket (copySnapshot region sid Nothing) deleteSnapshot $ const (return ())
                 ) `miss` anyConnectionException
 

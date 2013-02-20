@@ -12,6 +12,7 @@ module AWSTests.EC2Tests.Util
     , withNetworkAclEntry
     , withNetworkInterface
     , withSecurityGroup
+    , withSnapshot
     )
     where
 
@@ -116,3 +117,8 @@ withSecurityGroup name desc mvpc = E.bracket
   where
     delete Nothing = deleteSecurityGroup $ SecurityGroupRequestGroupName name
     delete (Just sg) = deleteSecurityGroup $ SecurityGroupRequestGroupId sg
+
+withSnapshot :: (MonadBaseControl IO m, MonadResource m) => Text -> Maybe Text -> (Snapshot -> EC2 m a) -> EC2 m a
+withSnapshot vol desc = E.bracket
+    (createSnapshot vol desc)
+    (deleteSnapshot . snapshotId)
