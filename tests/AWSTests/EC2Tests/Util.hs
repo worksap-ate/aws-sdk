@@ -13,6 +13,7 @@ module AWSTests.EC2Tests.Util
     , withNetworkAcl
     , withNetworkAclEntry
     , withNetworkInterface
+    , waitForNetworkInterfaceStatus
     , withSecurityGroup
     , withSnapshot
     , withVolume
@@ -126,6 +127,12 @@ withNetworkInterface :: (MonadBaseControl IO m, MonadResource m) => Text -> (Net
 withNetworkInterface subnet = E.bracket
     (createNetworkInterface subnet SecondaryPrivateIpAddressParamNothing Nothing [])
     (deleteNetworkInterface . networkInterfaceId)
+
+waitForNetworkInterfaceStatus :: (MonadBaseControl IO m, MonadResource m) => NetworkInterfaceStatus -> Text -> EC2 m NetworkInterface
+waitForNetworkInterfaceStatus s = wait p desc
+  where
+    p r = networkInterfaceStatus r == s
+    desc nic = list $ describeNetworkInterfaces [nic] []
 
 withSecurityGroup :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> Maybe Text -> (Maybe Text -> EC2 m a) -> EC2 m a
 withSecurityGroup name desc mvpc = E.bracket

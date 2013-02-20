@@ -5,12 +5,10 @@ module AWSTests.EC2Tests.NetworkInterfaceTests
     ) where
 
 import Data.Text (Text)
-import Data.Conduit (MonadBaseControl, MonadResource)
 import Test.Hspec
 
 import AWS.EC2
 import AWS.EC2.Types
-import qualified AWS.EC2.Util as Util
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -40,12 +38,6 @@ createAndDeleteNetworkInterfaceTest = do
                 withSubnet "10.0.0.0/24" $ \Subnet{subnetId = subnet} ->
                     withNetworkInterface subnet $ \_ -> return ()
                 ) `miss` anyConnectionException
-
-waitForNetworkInterfaceStatus :: (MonadBaseControl IO m, MonadResource m) => NetworkInterfaceStatus -> Text -> EC2 m NetworkInterface
-waitForNetworkInterfaceStatus s = Util.wait p desc
-  where
-    p r = networkInterfaceStatus r == s
-    desc nic = Util.list $ describeNetworkInterfaces [nic] []
 
 attachAndDetachNetworkInterfaceTest :: Spec
 attachAndDetachNetworkInterfaceTest = do
