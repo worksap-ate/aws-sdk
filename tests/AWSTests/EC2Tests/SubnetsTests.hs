@@ -16,11 +16,20 @@ region :: Text
 region = "ap-northeast-1"
 
 runSubnetsTests :: IO ()
-runSubnetsTests = do
-    hspec describeSubnetsTest
+runSubnetsTests = hspec $ do
+    describeSubnetsTest
+    createAndDeleteSubnetTest
 
 describeSubnetsTest :: Spec
 describeSubnetsTest = do
-    describe "describeSubnets doesn't fail" $ do
-        it "describeSubnets doesn't throw any exception" $ do
+    describe "describeSubnets" $ do
+        it "doesn't throw any exception" $ do
             testEC2 region (describeSubnets [] []) `miss` anyConnectionException
+
+createAndDeleteSubnetTest :: Spec
+createAndDeleteSubnetTest = do
+    describe "{create,delete}Subnet" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withSubnet "10.0.0.0/24" $ const (return ())
+                ) `miss` anyConnectionException
