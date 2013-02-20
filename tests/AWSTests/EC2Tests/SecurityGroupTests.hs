@@ -16,11 +16,20 @@ region :: Text
 region = "ap-northeast-1"
 
 runSecurityGroupTests :: IO ()
-runSecurityGroupTests = do
-    hspec describeSecurityGroupsTest
+runSecurityGroupTests = hspec $ do
+    describeSecurityGroupsTest
+    createAndDeleteSecurityGroupTest
 
 describeSecurityGroupsTest :: Spec
 describeSecurityGroupsTest = do
-    describe "describeSecurityGroups doesn't fail" $ do
-        it "describeSecurityGroups doesn't throw any exception" $ do
+    describe "describeSecurityGroups" $ do
+        it "doesn't throw any exception" $ do
             testEC2 region (describeSecurityGroups [] [] []) `miss` anyConnectionException
+
+createAndDeleteSecurityGroupTest :: Spec
+createAndDeleteSecurityGroupTest = do
+    describe "{create,delete}SecurityGroup" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withSecurityGroup "createAndDeleteSecurityGroupTest" "For testing" Nothing $ const (return ())
+                ) `miss` anyConnectionException

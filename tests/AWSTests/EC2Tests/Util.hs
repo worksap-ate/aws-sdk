@@ -11,6 +11,7 @@ module AWSTests.EC2Tests.Util
     , withNetworkAcl
     , withNetworkAclEntry
     , withNetworkInterface
+    , withSecurityGroup
     )
     where
 
@@ -107,3 +108,11 @@ withNetworkInterface :: (MonadBaseControl IO m, MonadResource m) => Text -> (Net
 withNetworkInterface subnet = E.bracket
     (createNetworkInterface subnet SecondaryPrivateIpAddressParamNothing Nothing [])
     (deleteNetworkInterface . networkInterfaceId)
+
+withSecurityGroup :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> Maybe Text -> (Maybe Text -> EC2 m a) -> EC2 m a
+withSecurityGroup name desc mvpc = E.bracket
+    (createSecurityGroup name desc mvpc)
+    delete
+  where
+    delete Nothing = deleteSecurityGroup $ SecurityGroupRequestGroupName name
+    delete (Just sg) = deleteSecurityGroup $ SecurityGroupRequestGroupId sg
