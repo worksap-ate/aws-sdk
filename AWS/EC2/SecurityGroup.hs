@@ -101,7 +101,6 @@ authorizeSecurityGroupIngress
 authorizeSecurityGroupIngress =
     securityGroupQuery "AuthorizeSecurityGroupIngress"
 
--- | not tested
 authorizeSecurityGroupEgress
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ GroupId
