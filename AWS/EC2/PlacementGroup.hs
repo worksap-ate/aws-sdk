@@ -30,7 +30,7 @@ describePlacementGroups groupNames filters =
         , filtersParam filters
         ]
 
-placementGroupSink :: MonadThrow m => GLSink Event m PlacementGroup
+placementGroupSink :: MonadThrow m => Consumer Event m PlacementGroup
 placementGroupSink =
     PlacementGroup
     <$> getT "groupName"

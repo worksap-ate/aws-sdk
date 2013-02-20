@@ -32,7 +32,7 @@ describeKeyPairs names filters =
         , filtersParam filters
         ]
 
-keyPairSink :: MonadThrow m => GLSink Event m KeyPair
+keyPairSink :: MonadThrow m => Consumer Event m KeyPair
 keyPairSink = KeyPair
     <$> getT "keyName"
     <*> getT "keyFingerprint"

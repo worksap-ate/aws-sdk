@@ -44,7 +44,7 @@ listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
         , "NextToken" |=? nt
         ]
 
-sinkMetric :: MonadThrow m => GLSink Event m Metric
+sinkMetric :: MonadThrow m => Consumer Event m Metric
 sinkMetric =
     Metric
     <$> members "Dimensions" sinkDimension

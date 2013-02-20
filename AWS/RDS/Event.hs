@@ -49,7 +49,7 @@ sourceTypeToText SourceTypeDBSnapshot = "db-snapshot"
 
 eventSink
     :: MonadThrow m
-    => GLSink XML.Event m Event
+    => Consumer XML.Event m Event
 eventSink = Event
     <$> getT "Message"
     <*> getT "SourceType"

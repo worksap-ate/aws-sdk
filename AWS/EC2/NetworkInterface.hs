@@ -68,7 +68,7 @@ describeNetworkInterfaces niid filters =
 
 networkInterfaceSink
     :: MonadThrow m
-    => GLSink Event m NetworkInterface
+    => Consumer Event m NetworkInterface
 networkInterfaceSink = NetworkInterface
     <$> getT "networkInterfaceId"
     <*> getT "subnetId"
@@ -97,7 +97,7 @@ networkInterfaceSink = NetworkInterface
 
 networkInterfaceAssociationSink
     :: MonadThrow m
-    => GLSink Event m (Maybe NetworkInterfaceAssociation)
+    => Consumer Event m (Maybe NetworkInterfaceAssociation)
 networkInterfaceAssociationSink =
     elementM "association" $ NetworkInterfaceAssociation
         <$> getT "attachmentId"

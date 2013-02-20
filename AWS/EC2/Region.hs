@@ -28,7 +28,7 @@ describeRegions regions filters =
         , filtersParam filters
         ]
     regionInfoConduit :: MonadThrow m
-        => GLConduit Event m Region
+        => Conduit Event m Region
     regionInfoConduit = itemConduit "regionInfo" $
         Region
         <$> getT "regionName"

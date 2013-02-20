@@ -20,6 +20,6 @@ elbQuery
     :: (MonadBaseControl IO m, MonadResource m)
     => ByteString -- ^ Action
     -> [QueryParam]
-    -> GLSink Event m a
+    -> Consumer Event m a
     -> AWS AWSContext m a
 elbQuery = commonQuery apiVersion

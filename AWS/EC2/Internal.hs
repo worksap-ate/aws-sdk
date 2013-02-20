@@ -26,7 +26,6 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Data.XML.Types (Event)
 import Data.Text (Text)
-import Data.Maybe (fromMaybe)
 
 import AWS.Class
 import AWS.Credential
@@ -52,33 +51,34 @@ runEC2withManager mgr =
 
 itemConduit :: MonadThrow m
     => Text
-    -> GLSink Event m o
-    -> GLConduit Event m o
+    -> Consumer Event m o
+    -> Conduit Event m o
 itemConduit tag inner =
-    fromMaybe (()) <$> elementM tag (listConduit "item" inner)
+    whenM (elementM tag (listConsumer "item" inner)) $ \e -> do
+        mapM_ yield e
 
 itemsSet :: MonadThrow m
     => Text
-    -> GLSink Event m o
-    -> GLSink Event m [o]
-itemsSet tag inner = itemConduit tag inner >+> CL.consume
+    -> Consumer Event m o
+    -> Consumer Event m [o]
+itemsSet tag inner = itemConduit tag inner =$= CL.consume
 
 resourceTagSink :: MonadThrow m
-    => GLSink Event m [ResourceTag]
+    => Consumer Event m [ResourceTag]
 resourceTagSink = itemsSet "tagSet" $
     ResourceTag
     <$> getT "key"
     <*> getT "value"
 
 productCodeSink :: MonadThrow m
-    => GLSink Event m [ProductCode]
+    => Consumer Event m [ProductCode]
 productCodeSink = itemsSet "productCodes" $
     ProductCode
     <$> getT "productCode"
     <*> getT "type"
 
 stateReasonSink :: MonadThrow m
-    => GLSink Event m (Maybe StateReason)
+    => Consumer Event m (Maybe StateReason)
 stateReasonSink = elementM "stateReason" $
     StateReason
     <$> getT "code"
@@ -90,17 +90,17 @@ volumeType t (Just i) | t == "io1"      = return $ VolumeTypeIO1 i
 volumeType t _ = monadThrow $ FromTextError t
 
 volumeTypeSink :: MonadThrow m
-    => Pipe Event Event o u m VolumeType
+    => Consumer Event m VolumeType
 volumeTypeSink = volumeType <$> getT "volumeType" <*> getT "iops" >>= lift
 
-groupSetSink :: MonadThrow m => GLSink Event m [Group]
+groupSetSink :: MonadThrow m => Consumer Event m [Group]
 groupSetSink = itemsSet "groupSet" $ Group
     <$> getT "groupId"
     <*> getT "groupName"
 
 networkInterfaceAttachmentSink
     :: MonadThrow m
-    => GLSink Event m (Maybe NetworkInterfaceAttachment)
+    => Consumer Event m (Maybe NetworkInterfaceAttachment)
 networkInterfaceAttachmentSink = elementM "attachment" $
     NetworkInterfaceAttachment
     <$> getT "attachmentId"

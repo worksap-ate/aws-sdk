@@ -31,7 +31,7 @@ describeConversionTasks ctids =
 
 conversionTaskSink
     :: MonadThrow m
-    => GLSink Event m ConversionTask
+    => Consumer Event m ConversionTask
 conversionTaskSink = ConversionTask
     <$> getT "conversionTaskId"
     <*> getT "expirationTime"
@@ -64,7 +64,7 @@ conversionTaskSink = ConversionTask
 
 diskImageDescriptionSink
     :: MonadThrow m
-    => GLSink Event m DiskImageDescription
+    => Consumer Event m DiskImageDescription
 diskImageDescriptionSink = DiskImageDescription
     <$> getT "format"
     <*> getT "size"
@@ -73,7 +73,7 @@ diskImageDescriptionSink = DiskImageDescription
 
 diskImageVolumeDescriptionSink
     :: MonadThrow m
-    => GLSink Event m DiskImageVolumeDescription
+    => Consumer Event m DiskImageVolumeDescription
 diskImageVolumeDescriptionSink = DiskImageVolumeDescription
     <$> getT "size"
     <*> getT "id"

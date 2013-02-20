@@ -35,7 +35,7 @@ describeSubnets subnets filters = do
         ]
 
 subnetSink :: MonadThrow m
-    => GLSink Event m Subnet
+    => Consumer Event m Subnet
 subnetSink = Subnet
     <$> getT "subnetId"
     <*> getT "state"

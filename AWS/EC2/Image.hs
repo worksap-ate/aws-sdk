@@ -40,7 +40,7 @@ describeImages imageIds owners execby filters =
         ]
 
 imageItem :: MonadThrow m
-    => GLSink Event m Image
+    => Consumer Event m Image
 imageItem = Image
     <$> getT "imageId"
     <*> getT "imageLocation"
@@ -66,7 +66,7 @@ imageItem = Image
     <*> resourceTagSink
     <*> getT "hypervisor"
 
-blockDeviceMappingSink :: MonadThrow m => GLSink Event m [BlockDeviceMapping]
+blockDeviceMappingSink :: MonadThrow m => Consumer Event m [BlockDeviceMapping]
 blockDeviceMappingSink = itemsSet "blockDeviceMapping" (
     BlockDeviceMapping
     <$> getT "deviceName"

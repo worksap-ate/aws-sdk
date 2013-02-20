@@ -39,7 +39,7 @@ describeSnapshots ssids owners restby filters =
         ]
 
 snapshotSink :: MonadThrow m
-    => GLSink Event m Snapshot
+    => Consumer Event m Snapshot
 snapshotSink = Snapshot
         <$> getT "snapshotId"
         <*> getT "volumeId"
@@ -107,7 +107,7 @@ describeSnapshotAttribute ssid attr =
 
 snapshotAttributeSink
     :: MonadThrow m
-    => GLSink Event m SnapshotAttribute
+    => Consumer Event m SnapshotAttribute
 snapshotAttributeSink = SnapshotAttribute
     <$> getT "snapshotId"
     <*> itemsSet "createVolumePermission" (

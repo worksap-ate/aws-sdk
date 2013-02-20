@@ -25,17 +25,17 @@ cloudWatchQuery
     :: (MonadBaseControl IO m, MonadResource m)
     => ByteString -- ^ Action
     -> [QueryParam]
-    -> GLSink Event m a
+    -> Consumer Event m a
     -> CloudWatch m a
 cloudWatchQuery = commonQuery apiVersion
 
 elements :: MonadThrow m
     => Text
-    -> GLSink Event m a
-    -> GLSink Event m [a]
+    -> Consumer Event m a
+    -> Consumer Event m [a]
 elements name f = element (name <> "s") $ listConsumer name f
 
-sinkDimension :: MonadThrow m => GLSink Event m Dimension
+sinkDimension :: MonadThrow m => Consumer Event m Dimension
 sinkDimension = Dimension <$> getT "Name" <*> getT "Value"
 
 fromDimension :: Dimension -> [QueryParam]

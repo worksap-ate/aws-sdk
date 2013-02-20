@@ -12,7 +12,7 @@ module AWS.EC2.NetworkInterfaceAttribute
    ) where
 
 import Data.Text (Text)
-import Data.Conduit (GLSink, MonadBaseControl, MonadResource)
+import Data.Conduit (Consumer, MonadBaseControl, MonadResource)
 import Data.XML.Types (Event)
 
 import AWS.EC2.Internal (EC2, groupSetSink, networkInterfaceAttachmentSink)
@@ -50,7 +50,7 @@ describeNetworkInterfaceAttachment = describeNetworkInterfaceAttribute "attachme
 describeNetworkInterfaceAttribute
     :: (MonadBaseControl IO m, MonadResource m)
     => Text
-    -> GLSink Event m a
+    -> Consumer Event m a
     -> Text
     -> EC2 m a
 describeNetworkInterfaceAttribute action sink networkInterface =

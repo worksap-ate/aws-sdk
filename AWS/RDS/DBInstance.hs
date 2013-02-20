@@ -39,7 +39,7 @@ describeDBInstances dbid maxRecords marker =
 
 sinkDBInstance
     :: MonadThrow m
-    => GLSink Event m DBInstance
+    => Consumer Event m DBInstance
 sinkDBInstance = DBInstance
     <$> getT "Iops"
     <*> getT "BackupRetentionPeriod"
@@ -93,7 +93,7 @@ sinkDBInstance = DBInstance
 
 sinkPendingModifiedValues
     :: MonadThrow m
-    => GLSink Event m [PendingModifiedValue]
+    => Consumer Event m [PendingModifiedValue]
 sinkPendingModifiedValues = element "PendingModifiedValues" $
     catMaybes <$> sequence
         [ f PendingModifiedValueMasterUserPassword "MasterUserPassword"

@@ -33,13 +33,13 @@ apiVersion :: ByteString
 apiVersion = "2012-12-01"
 
 sinkRequestId :: MonadThrow m
-    => GLSink Event m (Maybe Text)
+    => Consumer Event m (Maybe Text)
 sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
     getT "requestId"
 
-sinkError :: MonadThrow m => ByteString -> Int -> GLSink Event m a
+sinkError :: MonadThrow m => ByteString -> Int -> Consumer Event m a
 sinkError a s = do
     await
     element "Response" $ do
@@ -52,7 +52,7 @@ ec2Query
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParam]
-    -> GLSink Event m o
+    -> Consumer Event m o
     -> EC2 m o
 ec2Query action params sink = do
     src <- ec2QuerySource action params $ sink >>= yield

@@ -103,14 +103,14 @@ describeInternetGateways internetGatewayIds filters = do
         ]
 
 internetGatewaySink :: MonadThrow m
-    => GLSink Event m InternetGateway
+    => Consumer Event m InternetGateway
 internetGatewaySink = InternetGateway
     <$> getT "internetGatewayId"
     <*> itemsSet "attachmentSet" internetGatewayAttachmentSink
     <*> resourceTagSink
 
 internetGatewayAttachmentSink :: MonadThrow m
-    => GLSink Event m InternetGatewayAttachment
+    => Consumer Event m InternetGatewayAttachment
 internetGatewayAttachmentSink = InternetGatewayAttachment
     <$> getT "vpcId"
     <*> getT "state"
@@ -134,7 +134,7 @@ describeVpnConnections ids filters =
 
 vpnConnectionSink
     :: MonadThrow m
-    => GLSink Event m VpnConnection
+    => Consumer Event m VpnConnection
 vpnConnectionSink = VpnConnection
     <$> getT "vpnConnectionId"
     <*> getT "state"
@@ -212,7 +212,7 @@ describeVpcs vpcIds filters = do
         ]
 
 vpcSink :: MonadThrow m
-    => GLSink Event m Vpc
+    => Consumer Event m Vpc
 vpcSink = Vpc
     <$> getT "vpcId"
     <*> getT "state"
@@ -266,7 +266,7 @@ describeVpnGateways ids filters = do
         ]
 
 vpnGatewaySink :: MonadThrow m
-    => GLSink Event m VpnGateway
+    => Consumer Event m VpnGateway
 vpnGatewaySink = VpnGateway
     <$> getT "vpnGatewayId"
     <*> getT "state"
@@ -276,7 +276,7 @@ vpnGatewaySink = VpnGateway
     <*> resourceTagSink
 
 attachmentSink :: MonadThrow m
-    => GLSink Event m Attachment
+    => Consumer Event m Attachment
 attachmentSink = Attachment
     <$> getT "vpcId"
     <*> getT "state"
@@ -326,7 +326,7 @@ describeCustomerGateway ids filters = do
         ]
 
 customerGatewaySink :: MonadThrow m
-    => GLSink Event m CustomerGateway
+    => Consumer Event m CustomerGateway
 customerGatewaySink = CustomerGateway
     <$> getT "customerGatewayId"
     <*> getT "state"
@@ -381,14 +381,14 @@ describeDhcpOptions ids filters =
         ]
 
 dhcpOptionsSink :: MonadThrow m
-    => GLSink Event m DhcpOptions
+    => Consumer Event m DhcpOptions
 dhcpOptionsSink = DhcpOptions
     <$> getT "dhcpOptionsId"
     <*> itemsSet "dhcpConfigurationSet" dhcpConfigurationSink
     <*> resourceTagSink
 
 dhcpConfigurationSink :: MonadThrow m
-    => GLSink Event m DhcpConfiguration
+    => Consumer Event m DhcpConfiguration
 dhcpConfigurationSink = DhcpConfiguration
     <$> getT "key"
     <*> itemsSet "valueSet"

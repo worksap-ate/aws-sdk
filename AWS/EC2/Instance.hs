@@ -52,7 +52,7 @@ describeInstances instances filters = do
         ]
 
 reservationSink :: MonadThrow m
-    => GLSink Event m Reservation
+    => Consumer Event m Reservation
 reservationSink =
     Reservation
     <$> getT "reservationId"
@@ -62,7 +62,7 @@ reservationSink =
     <*> getT "requesterId"
 
 instanceSetSink :: MonadThrow m
-    => GLSink Event m [Instance]
+    => Consumer Event m [Instance]
 instanceSetSink = itemsSet "instancesSet" $
     Instance
     <$> getT "instanceId"
@@ -112,7 +112,7 @@ instanceSetSink = itemsSet "instancesSet" $
     <*> getT "ebsOptimized"
 
 instanceBlockDeviceMappingsSink :: MonadThrow m
-    => GLSink Event m [InstanceBlockDeviceMapping]
+    => Consumer Event m [InstanceBlockDeviceMapping]
 instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
     InstanceBlockDeviceMapping
     <$> getT "deviceName"
@@ -141,13 +141,13 @@ codeToState code _name = fromMaybe
     (lookup code instanceStateCodes)
 
 instanceStateSink :: MonadThrow m
-    => Text -> GLSink Event m InstanceState
+    => Text -> Consumer Event m InstanceState
 instanceStateSink label = element label $ codeToState
     <$> getT "code"
     <*> getT "name"
 
 networkInterfaceSink :: MonadThrow m
-    => GLSink Event m [InstanceNetworkInterface]
+    => Consumer Event m [InstanceNetworkInterface]
 networkInterfaceSink = itemsSet "networkInterfaceSet" $
     InstanceNetworkInterface
     <$> getT "networkInterfaceId"
@@ -179,7 +179,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
         )
 
 instanceNetworkInterfaceAssociationSink :: MonadThrow m
-    => GLSink Event m (Maybe InstanceNetworkInterfaceAssociation)
+    => Consumer Event m (Maybe InstanceNetworkInterfaceAssociation)
 instanceNetworkInterfaceAssociationSink = elementM "association" $
     InstanceNetworkInterfaceAssociation
     <$> getT "publicIp"
@@ -207,7 +207,7 @@ describeInstanceStatus instanceIds isAll filters token =
         ]
 
 instanceStatusSet :: MonadThrow m
-    => GLConduit Event m InstanceStatus
+    => Conduit Event m InstanceStatus
 instanceStatusSet = do
     itemConduit "instanceStatusSet" $
         InstanceStatus
@@ -225,7 +225,7 @@ instanceStatusSet = do
         <*> instanceStatusTypeSink "instanceStatus"
 
 instanceStatusTypeSink :: MonadThrow m
-    => Text -> GLSink Event m InstanceStatusType
+    => Text -> Consumer Event m InstanceStatusType
 instanceStatusTypeSink name = element name $
     InstanceStatusType
     <$> getT "status"
