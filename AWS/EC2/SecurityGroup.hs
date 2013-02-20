@@ -110,7 +110,6 @@ authorizeSecurityGroupEgress gid =
     securityGroupQuery "AuthorizeSecurityGroupEgress"
         $ SecurityGroupRequestGroupId gid
 
--- | not tested
 revokeSecurityGroupIngress
     :: (MonadResource m, MonadBaseControl IO m)
     => SecurityGroupRequest
@@ -119,7 +118,6 @@ revokeSecurityGroupIngress
 revokeSecurityGroupIngress =
     securityGroupQuery "RevokeSecurityGroupIngress"
 
--- | not tested
 revokeSecurityGroupEgress
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ GroupId
