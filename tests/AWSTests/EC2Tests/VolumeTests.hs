@@ -17,28 +17,59 @@ import AWSTests.EC2Tests.Util
 region :: Text
 region = "ap-northeast-1"
 
+zone :: Text
+zone = "ap-northeast-1a"
+
 runVolumeTests :: IO ()
-runVolumeTests = do
-    hspec describeVolumesTest
-    hspec describeVolumeStatusTest
-    hspec describeVolumeAttributeTest
+runVolumeTests = hspec $ do
+    describeVolumesTest
+    createAndDeleteVolumeTest
+    describeVolumeStatusTest
+    describeVolumeAttributeTest
 
 describeVolumesTest :: Spec
 describeVolumesTest = do
-    describe "describeVolumes doesn't fail" $ do
-        it "describeVolumes doesn't throw any exception" $ do
+    describe "describeVolumes" $ do
+        it "doesn't throw any exception" $ do
             testEC2 region (describeVolumes [] []) `miss` anyConnectionException
+
+createAndDeleteVolumeTest :: Spec
+createAndDeleteVolumeTest = do
+    describe "{create,delete}Volume" $ do
+        context "with NewVolume" $ do
+            it "doesn't throw any exception" $ do
+                testEC2' region (withVolume reqNew $ const (return ())) `miss` anyConnectionException
+        context "with FromSnapshot" $ do
+            it "doesn't throw any exception" $ do
+                testEC2' region (do
+                    Snapshot{snapshotId = snapshot}:_ <- U.list $ describeSnapshots [] [] [] []
+                    withVolume (reqSnap snapshot) $ const (return ())
+                    ) `miss` anyConnectionException
+
+reqNew :: CreateVolumeRequest
+reqNew = CreateNewVolume
+    { createNewVolumeSize = 2
+    , createNewVolumeAvailabilityZone = zone
+    , createNewVolumeVolumeType = Nothing
+    }
+reqSnap :: Text -> CreateVolumeRequest
+reqSnap snapshot = CreateFromSnapshot
+    { createFromSnapshotSnapshotId = snapshot
+    , createFromSnapshotAvailabilityZone = zone
+    , createFromSnapshotSize = Nothing
+    , createFromSnapshotVolumeType = Nothing
+    }
 
 describeVolumeStatusTest :: Spec
 describeVolumeStatusTest = do
-    describe "describeVolumeStatus doesn't fail" $ do
-        it "describeVolumeStatus doesn't throw any exception" $ do
+    describe "describeVolumeStatus" $ do
+        it "doesn't throw any exception" $ do
             testEC2 region (describeVolumeStatus [] [] Nothing) `miss` anyConnectionException
 
 describeVolumeAttributeTest :: Spec
 describeVolumeAttributeTest = do
-    describe "describeVolumeAttribute doesn't fail" $ do
-        it "describeVolumeAttribute doesn't throw any exception" $ do
+    describe "describeVolumeAttribute" $ do
+        it "doesn't throw any exception" $ do
             testEC2' region (do
                 volumes <- U.list $ describeVolumes [] []
                 let vid = volumeId $ head volumes

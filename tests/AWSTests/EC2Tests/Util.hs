@@ -13,6 +13,7 @@ module AWSTests.EC2Tests.Util
     , withNetworkInterface
     , withSecurityGroup
     , withSnapshot
+    , withVolume
     )
     where
 
@@ -122,3 +123,8 @@ withSnapshot :: (MonadBaseControl IO m, MonadResource m) => Text -> Maybe Text -
 withSnapshot vol desc = E.bracket
     (createSnapshot vol desc)
     (deleteSnapshot . snapshotId)
+
+withVolume :: (MonadBaseControl IO m, MonadResource m) => CreateVolumeRequest -> (Volume -> EC2 m a) -> EC2 m a
+withVolume req = E.bracket
+    (createVolume req)
+    (deleteVolume . volumeId)
