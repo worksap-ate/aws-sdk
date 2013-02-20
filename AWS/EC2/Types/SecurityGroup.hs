@@ -36,7 +36,7 @@ data SecurityGroupRequest
 
 data UserIdGroupPair = UserIdGroupPair
     { userIdGroupPairUserId :: Maybe Text
-    , userIdGroupPairGroupId :: Text
+    , userIdGroupPairGroupId :: Maybe Text
     , userIdGroupPairGroupName :: Maybe Text
     }
   deriving (Show, Read, Eq)

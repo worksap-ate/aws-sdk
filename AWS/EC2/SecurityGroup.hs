@@ -156,6 +156,6 @@ ipPermissionParams ipp =
   where
     groupPairParams gp =
         [ "UserId" |=? userIdGroupPairUserId gp
-        , "GroupId" |= userIdGroupPairGroupId gp
+        , "GroupId" |=? userIdGroupPairGroupId gp
         , "GroupName" |=? userIdGroupPairGroupName gp
         ]
