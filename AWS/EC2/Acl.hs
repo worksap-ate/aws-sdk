@@ -36,7 +36,7 @@ describeNetworkAcls nids filters = do
         ]
 
 networkAclSink :: MonadThrow m
-    => GLSink Event m NetworkAcl
+    => Consumer Event m NetworkAcl
 networkAclSink = NetworkAcl
     <$> getT "networkAclId"
     <*> getT "vpcId"

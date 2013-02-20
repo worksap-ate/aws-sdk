@@ -37,7 +37,7 @@ describeRouteTables routeTables filters = do
         ]
 
 routeTableSink :: MonadThrow m
-    => GLSink Event m RouteTable
+    => Consumer Event m RouteTable
 routeTableSink = RouteTable
     <$> getT "routeTableId"
     <*> getT "vpcId"
@@ -47,7 +47,7 @@ routeTableSink = RouteTable
     <*> resourceTagSink
 
 routeSink :: MonadThrow m
-    => GLSink Event m [Route]
+    => Consumer Event m [Route]
 routeSink = itemsSet "routeSet" $ Route
     <$> getT "destinationCidrBlock"
     <*> getT "gatewayId"
@@ -58,7 +58,7 @@ routeSink = itemsSet "routeSet" $ Route
     <*> getT "origin"
 
 routeTableAssociationSink :: MonadThrow m
-    => GLSink Event m [RouteTableAssociation]
+    => Consumer Event m [RouteTableAssociation]
 routeTableAssociationSink = itemsSet "associationSet" $ RouteTableAssociation
     <$> getT "routeTableAssociationId"
     <*> getT "routeTableId"

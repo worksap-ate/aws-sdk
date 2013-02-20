@@ -7,7 +7,7 @@ module AWS.RDS.DBSecurityGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
-import Data.Conduit (GLSink, MonadBaseControl, MonadResource, MonadThrow)
+import Data.Conduit (Consumer, MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
 import Data.XML.Types (Event)
 
@@ -35,7 +35,7 @@ describeDBSecurityGroups name marker maxRecords =
 
 dbSecurityGroupSink
     :: MonadThrow m
-    => GLSink Event m DBSecurityGroup
+    => Consumer Event m DBSecurityGroup
 dbSecurityGroupSink = DBSecurityGroup
     <$> elements "EC2SecurityGroup" (
         EC2SecurityGroup

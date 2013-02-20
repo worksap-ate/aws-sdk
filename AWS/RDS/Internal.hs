@@ -38,7 +38,7 @@ rdsQuery
     :: (MonadBaseControl IO m, MonadResource m)
     => ByteString -- ^ Action
     -> [QueryParam]
-    -> GLSink Event m a
+    -> Consumer Event m a
     -> RDS m a
 rdsQuery = commonQuery apiVersion
 
@@ -60,28 +60,28 @@ rdsQueryOnlyMetadata action params = do
 sinkResponseOnlyMetadata
     :: MonadThrow m
     => Text
-    -> GLSink Event m RequestId
+    -> Consumer Event m RequestId
 sinkResponseOnlyMetadata action = do
     sinkEventBeginDocument
     element (action <> "Response") $ sinkResponseMetadata
 
 elements :: MonadThrow m
     => Text
-    -> GLSink Event m a
-    -> GLSink Event m [a]
+    -> Consumer Event m a
+    -> Consumer Event m [a]
 elements name = elements' (name <> "s") name
 
 elements' :: forall m a . MonadThrow m
     => Text
     -> Text
-    -> GLSink Event m a
-    -> GLSink Event m [a]
+    -> Consumer Event m a
+    -> Consumer Event m [a]
 elements' setName itemName inner =
     fromMaybe [] <$> elementM setName (listConsumer itemName inner)
 
 dbSubnetGroupSink
     :: MonadThrow m
-    => GLSink Event m DBSubnetGroup
+    => Consumer Event m DBSubnetGroup
 dbSubnetGroupSink = DBSubnetGroup
     <$> getT "VpcId"
     <*> getT "SubnetGroupStatus"

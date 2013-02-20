@@ -7,7 +7,7 @@ module AWS.RDS.DBParameterGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
-import Data.Conduit (GLSink, MonadBaseControl, MonadResource, MonadThrow)
+import Data.Conduit (Consumer, MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
 import Data.XML.Types (Event)
 
@@ -35,7 +35,7 @@ describeDBParameterGroups name marker maxRecords =
 
 dbParameterGroupSink
     :: MonadThrow m
-    => GLSink Event m DBParameterGroup
+    => Consumer Event m DBParameterGroup
 dbParameterGroupSink = DBParameterGroup
     <$> getT "DBParameterGroupFamily"
     <*> getT "Description"

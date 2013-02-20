@@ -205,7 +205,7 @@ clientError
     :: (MonadResource m, MonadBaseControl IO m)
     => Int
     -> ResumableSource m ByteString
-    -> (Int -> GLSink Event m a)
+    -> (Int -> Consumer Event m a)
     -> m a
 clientError status rsrc errSink =
     rsrc $$+- XmlP.parseBytes XmlP.def =$ errSink status
@@ -225,7 +225,7 @@ requestQuery
     -> ByteString
     -> [QueryParam]
     -> ByteString
-    -> (ByteString -> Int -> GLSink Event m a)
+    -> (ByteString -> Int -> Consumer Event m a)
     -> m (ResumableSource m ByteString)
 requestQuery cred ctx action params ver errSink = do
     let mgr = manager ctx
@@ -255,7 +255,7 @@ requestQuery cred ctx action params ver errSink = do
 #endif
 
 #ifdef DEBUG
-conduitLog :: MonadResource m => FilePath -> ByteString -> GInfConduit ByteString m ByteString
+conduitLog :: MonadResource m => FilePath -> ByteString -> Conduit ByteString m ByteString
 conduitLog path url = bracketP (E.try $ IO.openBinaryFile path IO.AppendMode) release go
   where
     release :: Either SomeException IO.Handle -> IO ()
@@ -264,7 +264,7 @@ conduitLog path url = bracketP (E.try $ IO.openBinaryFile path IO.AppendMode) re
         liftIO $ BSC.hPutStrLn h ""
         IO.hClose h
 
-    go :: MonadResource m => Either SomeException IO.Handle -> GInfConduit ByteString m ByteString
+    go :: MonadResource m => Either SomeException IO.Handle -> Conduit ByteString m ByteString
     go (Left _) = awaitForever yield
     go (Right h) = do
         liftIO $ do
@@ -278,7 +278,7 @@ commonQuery
     => ByteString -- ^ apiVersion
     -> ByteString -- ^ Action
     -> [QueryParam]
-    -> GLSink Event m a
+    -> Consumer Event m a
     -> AWS AWSContext m a
 commonQuery apiVersion action params sink = do
     ctx <- State.get

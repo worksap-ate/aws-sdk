@@ -50,7 +50,7 @@ stringifyStateValue StateValueOk = "OK"
 stringifyStateValue StateValueAlarm = "ALARM"
 stringifyStateValue StateValueInsufficientData = "INSUFFICIENT_DATA"
 
-sinkMetricAlarm :: MonadThrow m => GLSink Event m MetricAlarm
+sinkMetricAlarm :: MonadThrow m => Consumer Event m MetricAlarm
 sinkMetricAlarm =
     MetricAlarm
     <$> getT "AlarmDescription"
@@ -154,7 +154,7 @@ stringifyHistoryType HistoryTypeConfigurationUpdate = "ConfigurationUpdate"
 stringifyHistoryType HistoryTypeStateUpdate = "StateUpdate"
 stringifyHistoryType HistoryTypeAction = "Action"
 
-sinkAlarmHistory :: MonadThrow m => GLSink Event m AlarmHistory
+sinkAlarmHistory :: MonadThrow m => Consumer Event m AlarmHistory
 sinkAlarmHistory =
     AlarmHistory
     <$> getT "Timestamp"
@@ -180,7 +180,7 @@ disableAlarmActions alarms =
 setAlarmState
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ The name for the alarm.
-    -> Text -- ^ The reason that this alarm is set to this specific state (in human-readable text format) 
+    -> Text -- ^ The reason that this alarm is set to this specific state (in human-readable text format)
     -> Text -- ^ The reason that this alarm is set to this specific state (in machine-readable JSON format)
     -> StateValue -- ^ The value of the state.
     -> CloudWatch m ()

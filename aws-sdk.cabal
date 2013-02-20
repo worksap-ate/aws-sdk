@@ -117,7 +117,7 @@ library
                    , base64-bytestring >= 1.0.0.0
                    , bytestring
                    , http-types
-                   , conduit >= 0.5.3 && < 1.0.0
+                   , conduit >= 1.0.0
                    , transformers
                    , time
                    , old-locale

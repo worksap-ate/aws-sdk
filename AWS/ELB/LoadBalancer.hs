@@ -54,7 +54,7 @@ describeLoadBalancers lbs marker =
         ]
 
 sinkLoadBalancers :: MonadThrow m
-    => GLSink Event m [LoadBalancer]
+    => Consumer Event m [LoadBalancer]
 sinkLoadBalancers = members "LoadBalancerDescriptions" $
     LoadBalancer
     <$> members "SecurityGroups" text
@@ -106,10 +106,10 @@ sinkLoadBalancers = members "LoadBalancerDescriptions" $
         )
     <*> members "Subnets" text
 
-sinkInstance :: MonadThrow m => GLSink Event m Instance
+sinkInstance :: MonadThrow m => Consumer Event m Instance
 sinkInstance = Instance <$> getT "InstanceId"
 
-sinkHealthCheck :: MonadThrow m => GLSink Event m HealthCheck
+sinkHealthCheck :: MonadThrow m => Consumer Event m HealthCheck
 sinkHealthCheck =
     HealthCheck
     <$> getT "Interval"
@@ -287,14 +287,14 @@ describeLoadBalancerPolicies mlb policies =
         , "PolicyNames.member" |.#= policies
         ]
 
-sinkPolicyDescription :: MonadThrow m => GLSink Event m PolicyDescription
+sinkPolicyDescription :: MonadThrow m => Consumer Event m PolicyDescription
 sinkPolicyDescription =
     PolicyDescription
     <$> getT "PolicyName"
     <*> getT "PolicyTypeName"
     <*> members "PolicyAttributeDescriptions" sinkPolicyAttribute
 
-sinkPolicyAttribute :: MonadThrow m => GLSink Event m PolicyAttribute
+sinkPolicyAttribute :: MonadThrow m => Consumer Event m PolicyAttribute
 sinkPolicyAttribute =
     PolicyAttribute
     <$> getT "AttributeName"
@@ -309,14 +309,14 @@ describeLoadBalancerPolicyTypes typeNames =
   where
     params = ["PolicyTypeNames.member" |.#= typeNames]
 
-sinkPolicyType :: MonadThrow m => GLSink Event m PolicyType
+sinkPolicyType :: MonadThrow m => Consumer Event m PolicyType
 sinkPolicyType =
     PolicyType
     <$> members "PolicyAttributeTypeDescriptions" sinkPolicyAttributeType
     <*> getT "PolicyTypeName"
     <*> getT "Description"
 
-sinkPolicyAttributeType :: MonadThrow m => GLSink Event m PolicyAttributeType
+sinkPolicyAttributeType :: MonadThrow m => Consumer Event m PolicyAttributeType
 sinkPolicyAttributeType =
     PolicyAttributeType
     <$> getT "AttributeName"
@@ -374,7 +374,7 @@ describeInstanceHealth insts lb =
         , "LoadBalancerName" |= lb
         ]
 
-sinkInstanceState :: MonadThrow m => GLSink Event m InstanceState
+sinkInstanceState :: MonadThrow m => Consumer Event m InstanceState
 sinkInstanceState =
     InstanceState
     <$> getT "Description"
@@ -432,7 +432,7 @@ disableAvailabilityZonesForLoadBalancer zones lb =
 
 createLBCookieStickinessPolicy
     :: (MonadBaseControl IO m, MonadResource m)
-    => Maybe Int -- ^ The time period in seconds after which the cookie should be considered stale. Not specifying this parameter indicates that the sticky session will last for the duration of the browser session. 
+    => Maybe Int -- ^ The time period in seconds after which the cookie should be considered stale. Not specifying this parameter indicates that the sticky session will last for the duration of the browser session.
     -> Text -- ^ The name associated with the LoadBalancer.
     -> Text -- ^ The name of the policy being created.
     -> ELB m ()

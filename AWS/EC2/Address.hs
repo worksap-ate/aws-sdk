@@ -39,7 +39,7 @@ describeAddresses pubIps alloIds filters =
         , filtersParam filters
         ]
 
-    addressSet :: MonadThrow m => GLConduit Event m Address
+    addressSet :: MonadThrow m => Conduit Event m Address
     addressSet = itemConduit "addressesSet" $ Address
         <$> getT "publicIp"
         <*> getT "allocationId"

@@ -39,7 +39,7 @@ describeVolumes vids filters =
         ]
 
 volumeSink :: MonadThrow m
-    => GLSink Event m Volume
+    => Consumer Event m Volume
 volumeSink = Volume
     <$> getT "volumeId"
     <*> getT "size"
@@ -51,7 +51,7 @@ volumeSink = Volume
     <*> resourceTagSink
     <*> volumeTypeSink
 
-attachmentSink :: MonadThrow m => GLSink Event m AttachmentSetItemResponse
+attachmentSink :: MonadThrow m => Consumer Event m AttachmentSetItemResponse
 attachmentSink = AttachmentSetItemResponse
     <$> getT "volumeId"
     <*> getT "instanceId"
@@ -134,7 +134,7 @@ describeVolumeStatus vids filters token =
         ]
 
 volumeStatusSink :: MonadThrow m
-    => GLSink Event m VolumeStatus
+    => Consumer Event m VolumeStatus
 volumeStatusSink = VolumeStatus
     <$> getT "volumeId"
     <*> getT "availabilityZone"
@@ -202,7 +202,7 @@ describeVolumeAttribute vid attr =
 volumeAttributeSink
     :: MonadThrow m
     => VolumeAttributeRequest
-    -> GLSink Event m VolumeAttribute
+    -> Consumer Event m VolumeAttribute
 volumeAttributeSink VolumeAttributeRequestAutoEnableIO
     = VolumeAttributeAutoEnableIO
     <$> element "autoEnableIO" (getT "value")

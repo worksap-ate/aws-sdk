@@ -28,7 +28,7 @@ describeAvailabilityZones zones filters =
         , filtersParam filters
         ]
     availabilityZoneInfo :: MonadThrow m
-        => GLConduit Event m AvailabilityZone
+        => Conduit Event m AvailabilityZone
     availabilityZoneInfo = itemConduit "availabilityZoneInfo" $
         AvailabilityZone
         <$> getT "zoneName"

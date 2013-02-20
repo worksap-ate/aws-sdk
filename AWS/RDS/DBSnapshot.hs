@@ -39,12 +39,12 @@ describeDBSnapshots dbiid dbsid marker maxRecords sType =
 
 sinkDBSnapshots
     :: MonadThrow m
-    => GLSink Event m [DBSnapshot]
+    => Consumer Event m [DBSnapshot]
 sinkDBSnapshots = elements "DBSnapshot" sinkDBSnapshot
 
 sinkDBSnapshot
     :: MonadThrow m
-    => GLSink Event m DBSnapshot
+    => Consumer Event m DBSnapshot
 sinkDBSnapshot = DBSnapshot
     <$> getT "Port"
     <*> getT "Iops"

@@ -3,6 +3,7 @@
 
 module AWS.Lib.Parser
     ( RequestId
+    , whenM
     , getT
     , getT_
     , element
@@ -36,7 +37,7 @@ import AWS.Lib.FromText
 
 type RequestId = Text
 
-text :: MonadThrow m => GLSink Event m Text
+text :: MonadThrow m => Consumer Event m Text
 text = XML.content
 
 whenM :: Monad m => m (Maybe a) -> (a -> m ()) -> m ()
@@ -48,8 +49,8 @@ fromMaybeM _ (Just a) = return a
 
 listConduit :: MonadThrow m
     => Text
-    -> GLSink Event m o
-    -> GLConduit Event m o
+    -> Consumer Event m o
+    -> Conduit Event m o
 listConduit name p = whenM (awaitWhile isTag) $ \e -> do
     leftover e
     when (isBeginTagName name e) $
@@ -59,16 +60,16 @@ listConduit name p = whenM (awaitWhile isTag) $ \e -> do
 
 listConsumer :: MonadThrow m
     => Text
-    -> GLSink Event m o
-    -> GLSink Event m [o]
-listConsumer name p = listConduit name p >+> CL.consume
+    -> Consumer Event m o
+    -> Consumer Event m [o]
+listConsumer name p = listConduit name p =$= CL.consume
 
 isTag :: Event -> Bool
 isTag (EventBeginElement _ _) =True
 isTag (EventEndElement _) =True
 isTag _ = False
 
-sinkDropWhile :: Monad m => (i -> Bool) -> GLSink i m ()
+sinkDropWhile :: Monad m => (i -> Bool) -> Consumer i m ()
 sinkDropWhile f = whenM await g
   where
     g i | f i       = sinkDropWhile f
@@ -82,7 +83,7 @@ isBeginTagName _ _ = False
 
 awaitWhile :: Monad m
     => (i -> Bool)
-    -> Pipe l i o u m (Maybe i)
+    -> Consumer i m (Maybe i)
 awaitWhile f = await >>= g
   where
     g Nothing       = return Nothing
@@ -92,36 +93,36 @@ awaitWhile f = await >>= g
 
 getT :: (MonadThrow m, FromText a)
     => Text
-    -> Pipe Event Event o u m a
+    -> Consumer Event m a
 getT name = elementM name text >>= lift . fromMaybeText name
 
-getT_ :: forall m o u . MonadThrow m
+getT_ :: forall m . MonadThrow m
     => Text
-    -> Pipe Event Event o u m ()
-getT_ name = () <$ (getT name :: Pipe Event Event o u m (Maybe Text))
+    -> Consumer Event m ()
+getT_ name = () <$ (getT name :: Consumer Event m (Maybe Text))
 
-elementM :: forall o u m a . MonadThrow m
+elementM :: forall m a . MonadThrow m
     => Text
-    -> Pipe Event Event o u m a
-    -> Pipe Event Event o u m (Maybe a)
+    -> Consumer Event m a
+    -> Consumer Event m (Maybe a)
 elementM name inner = do
     sinkDropWhile $ not . isTag
     XML.tagPredicate g (return ()) $ const inner
   where
     g n = (nameLocalName n == name)
 
-element :: forall o u m a . MonadThrow m
+element :: forall m a . MonadThrow m
     => Text
-    -> Pipe Event Event o u m a
-    -> Pipe Event Event o u m a
+    -> Consumer Event m a
+    -> Consumer Event m a
 element name inner = elementM name inner >>=
     fromMaybeM (lift $ monadThrow $ ResponseParseError name)
 
 sinkResponse
     :: MonadThrow m
     => Text -- ^ Action
-    -> GLSink Event m a
-    -> GLSink Event m (a, RequestId)
+    -> Consumer Event m a
+    -> Consumer Event m (a, RequestId)
 sinkResponse action sink = do
     sinkEventBeginDocument
     element (action <> "Response") $ (,)
@@ -134,14 +135,14 @@ sinkResponse action sink = do
 
 sinkResponseMetadata
     :: MonadThrow m
-    => GLSink Event m Text
+    => Consumer Event m Text
 sinkResponseMetadata =
     element "ResponseMetadata" $
         getT "RequestId"
 
 sinkEventBeginDocument
     :: MonadThrow m
-    => GLSink Event m ()
+    => Consumer Event m ()
 sinkEventBeginDocument = do
     me <- await
     case me of
@@ -149,7 +150,7 @@ sinkEventBeginDocument = do
         Just EventBeginDocument -> return ()
         Just _ -> fail $ "unexpected: " <> show me
 
-sinkError :: MonadThrow m => ByteString -> Int -> GLSink Event m a
+sinkError :: MonadThrow m => ByteString -> Int -> Consumer Event m a
 sinkError action status = element "ErrorResponse" $ do
     (c,m) <- element "Error" $ (,)
         <$> (getT_ "Type" *> getT "Code")
@@ -159,7 +160,7 @@ sinkError action status = element "ErrorResponse" $ do
 
 members :: MonadThrow m
     => Text
-    -> GLSink Event m a
-    -> GLSink Event m [a]
-members name f = 
+    -> Consumer Event m a
+    -> Consumer Event m [a]
+members name f =
     fromMaybe [] <$> elementM name (listConsumer "member" f)

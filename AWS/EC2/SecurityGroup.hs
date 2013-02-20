@@ -49,7 +49,7 @@ describeSecurityGroups names ids filters =
         ]
 
 ipPermissionsSink :: MonadThrow m
-    => Text -> GLSink Event m [IpPermission]
+    => Text -> Consumer Event m [IpPermission]
 ipPermissionsSink name = itemsSet name $ IpPermission
     <$> getT "ipProtocol"
     <*> getT "fromPort"
