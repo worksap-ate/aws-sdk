@@ -84,7 +84,9 @@ withInstance req = E.bracket
     (\i -> terminateInstances [instanceId i])
 
 testRunInstancesRequest :: RunInstancesRequest
-testRunInstancesRequest = defaultRunInstancesRequest "ami-087acb09" 1 1
+testRunInstancesRequest = (defaultRunInstancesRequest "ami-087acb09" 1 1)
+    { runInstancesRequestInstanceType = Just "t1.micro"
+    }
 
 waitForInstanceState :: (MonadBaseControl IO m, MonadResource m) => InstanceState -> Text -> EC2 m Reservation
 waitForInstanceState s = wait p desc

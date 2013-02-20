@@ -111,6 +111,7 @@ runInstanceTest = do
     req sn = testRunInstancesRequest
         { runInstancesRequestSubnetId = Nothing
         , runInstancesRequestPrivateIpAddress = Nothing
+        , runInstancesRequestInstanceType = Nothing -- t1.micro causes an error "InvalidInterface.IpAddressLimitExceeded"
         , runInstancesRequestNetworkInterfaces =
             [ NetworkInterfaceParamCreate
                 0
