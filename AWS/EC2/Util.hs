@@ -104,7 +104,7 @@ wait f g rid = do
         Just r  -> if f r
             then return r
             else do
-                liftIO $ CC.threadDelay 5
+                sleep 5
                 wait f g rid
 
 findTag
