@@ -49,13 +49,19 @@ import AWS.Credential
 
 data AWSException
     = ClientError
-        { errorAction :: ByteString
-        , errorStatus :: Int
-        , errorCode :: Text
-        , errorMessage :: Maybe Text
-        , errorRequestId :: Text
+        { clientErrorAction :: ByteString
+        , clientErrorStatus :: Int
+        , clientErrorCode :: Text
+        , clientErrorMessage :: Maybe Text
+        , clientErrorRequestId :: Text
         } -- ^ This error is caused by client requests.
-    | ServerError -- ^ XXX: Not implimented. Internal error of AWS.
+    | ServerError
+        { serverErrorAction :: ByteString
+        , serverErrorStatus :: Int
+        , serverErrorCode :: Text
+        , serverErrorMessage :: Maybe Text
+        , serverErrorRequestId :: Text
+        } -- ^ This error is caused by server error in AWS.
     | ResponseParseError Text
     | FromTextError Text
         -- ^ parse error: cannot convert Text to oher data type.

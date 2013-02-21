@@ -156,7 +156,9 @@ sinkError action status = element "ErrorResponse" $ do
         <$> (getT_ "Type" *> getT "Code")
         <*> getT "Message"
     rid <- getT "RequestId"
-    lift $ monadThrow $ ClientError action status c m rid
+    lift $ monadThrow $ errorData action status c m rid
+  where
+    errorData = if status < 500 then ClientError else ServerError
 
 members :: MonadThrow m
     => Text
