@@ -179,7 +179,7 @@ data VpnTunnelTelemetry = VpnTunnelTelemetry
     { vpnTunnelTelemetryOutsideIpAddress :: IPv4
     , vpnTunnelTelemetryStatus :: VpnTunnelTelemetryStatus
     , vpnTunnelTelemetryLastStatusChange :: UTCTime
-    , vpnTunnelTelemetryStatusMessage :: Text
+    , vpnTunnelTelemetryStatusMessage :: Maybe Text
     , vpnTunnelTelemetryAcceptRouteCount :: Int
     }
   deriving (Show, Read, Eq)
