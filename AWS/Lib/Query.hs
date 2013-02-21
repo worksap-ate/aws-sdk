@@ -195,11 +195,11 @@ signature ep secret query = urlstr
     urlstr = H.urlEncode True . BASE.encode $ signedStr
 
 checkStatus' ::
-    H.Status -> H.ResponseHeaders -> Maybe SomeException
-checkStatus' = \s@(H.Status sci _) hs ->
+    H.Status -> H.ResponseHeaders -> HTTP.CookieJar -> Maybe SomeException
+checkStatus' = \s@(H.Status sci _) hs cookie ->
     if 200 <= sci && sci < 300 || 400 <= sci
         then Nothing
-        else Just $ toException $ HTTP.StatusCodeException s hs
+        else Just $ toException $ HTTP.StatusCodeException s hs cookie
 
 clientError
     :: (MonadResource m, MonadBaseControl IO m)

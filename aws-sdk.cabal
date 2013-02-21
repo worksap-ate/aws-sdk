@@ -121,7 +121,7 @@ library
                    , transformers
                    , time
                    , old-locale
-                   , http-conduit
+                   , http-conduit >= 1.9.0
                    , data-default
                    , xml-conduit >= 1.0.3.3
                    , xml-types
@@ -153,10 +153,9 @@ test-suite test
                  , text
                  , monad-control
                  , transformers
-                 , http-conduit
+                 , http-conduit >= 1.9.0
                  , hspec
                  , QuickCheck
-                 , hspec
                  , HUnit
                  , lifted-base
                  , iproute

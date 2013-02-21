@@ -56,8 +56,8 @@ query :: String -> IO [ByteString]
 query path = runResourceT $ do
     req <- liftIO $ parseUrl (base <> path)
     mgr <- liftIO $ newManager def
-    Response _ _ _ res <- http req mgr
-    res $$+- CB.lines =$ CL.consume
+    res <- http req mgr
+    responseBody res $$+- CB.lines =$ CL.consume
 
 latestVersion :: IO Text
 latestVersion = bsToText . last . init <$> query ""
@@ -156,8 +156,8 @@ queryRaw :: String -> IO ByteString
 queryRaw path = runResourceT $ do
     req <- liftIO $ parseUrl (base <> path)
     mgr <- liftIO $ newManager def
-    Response _ _ _ res <- http req mgr
-    mconcat <$> (res $$+- CL.consume)
+    res <- http req mgr
+    mconcat <$> (responseBody res $$+- CL.consume)
 
 identity :: String -> IO Text
 identity name =
