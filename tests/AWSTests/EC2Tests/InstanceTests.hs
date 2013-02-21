@@ -20,11 +20,12 @@ region :: Text
 region = "ap-northeast-1"
 
 runInstanceTests :: IO ()
-runInstanceTests = do
-    hspec describeInstancesTest
-    hspec describeInstanceStatusTest
-    hspec describeInstanceAttributeTest
-    hspec monitorAndUnmonitorInstancesTest
+runInstanceTests = hspec $ do
+    describeInstancesTest
+    describeInstanceStatusTest
+    describeInstanceAttributeTest
+    monitorAndUnmonitorInstancesTest
+    runRebootTerminateInstanceTest
 
 describeInstancesTest :: Spec
 describeInstancesTest = do
@@ -65,3 +66,12 @@ monitorAndUnmonitorInstancesTest = do
     testState ec2 =
         monitorInstancesResponseInstanceMonitoringState . head
         <$> testEC2 region ec2
+
+runRebootTerminateInstanceTest :: Spec
+runRebootTerminateInstanceTest = do
+    describe "{run,reboot,terminate}Instances" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withInstance testRunInstancesRequest $ \Instance{instanceId = inst} ->
+                    rebootInstances [inst]
+                ) `miss` anyConnectionException
