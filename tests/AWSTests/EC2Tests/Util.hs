@@ -20,6 +20,7 @@ module AWSTests.EC2Tests.Util
     , withCustomerGateway
     , withVpnGateway
     , withVpnConnection
+    , withAddress
     )
     where
 
@@ -166,3 +167,11 @@ withVpnConnection :: (MonadBaseControl IO m, MonadResource m) => Text -> Text ->
 withVpnConnection typ cgid vgid zone option = E.bracket
     (createVpnConnection typ cgid vgid zone option)
     (deleteVpnConnection . vpnConnectionId)
+
+withAddress :: (MonadBaseControl IO m, MonadResource m) => Bool -> (AllocateAddress -> EC2 m a) -> EC2 m a
+withAddress isVpc = E.bracket
+    (allocateAddress isVpc)
+    release
+  where
+    release AllocateAddress{allocateAddressAllocationId = Just alloc} = releaseAddress Nothing (Just alloc)
+    release AllocateAddress{allocateAddressPublicIp = ip} = releaseAddress (Just ip) Nothing
