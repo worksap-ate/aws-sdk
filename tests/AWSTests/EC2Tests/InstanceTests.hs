@@ -27,6 +27,7 @@ runInstanceTests = hspec $ do
     monitorAndUnmonitorInstancesTest
     runRebootTerminateInstanceTest
     startStopInstanceTest
+    getConsoleOutputTest
 
 describeInstancesTest :: Spec
 describeInstancesTest = do
@@ -88,4 +89,14 @@ startStopInstanceTest = do
                     waitForInstanceState InstanceStateStopped inst
                     startInstances [inst]
                     waitForInstanceState InstanceStateRunning inst
+                ) `miss` anyConnectionException
+
+getConsoleOutputTest :: Spec
+getConsoleOutputTest = do
+    describe "getConsoleOutput" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (do
+                Just Reservation{reservationInstanceSet = Instance{instanceId = inst}:_}
+                    <- Util.head $ describeInstances [] []
+                getConsoleOutput inst
                 ) `miss` anyConnectionException
