@@ -6,12 +6,14 @@ module AWS.EC2.VPC
     , attachVpnGateway
     , createVpc
     , createVpnConnection
+    , createVpnConnectionRoute
     , createVpnGateway
     , createCustomerGateway
     , createInternetGateway
     , createDhcpOptions
     , deleteVpc
     , deleteVpnConnection
+    , deleteVpnConnectionRoute
     , deleteVpnGateway
     , deleteCustomerGateway
     , deleteInternetGateway
@@ -213,6 +215,19 @@ createVpnConnection type' cgid vgid zone option =
         , "Options" |.+ "StaticRoutesOnly" |=? boolToText <$> option
         ]
 
+createVpnConnectionRoute
+    :: (MonadBaseControl IO m, MonadResource m)
+    => AddrRange IPv4 -- ^ The CIDR block associated with the local subnet of the customer data center.
+    -> Text -- ^ The ID of the VPN connection.
+    -> EC2 m Bool
+createVpnConnectionRoute cidr vpnConn =
+    ec2Query "CreateVpnConnectionRoute" params $ getT "return"
+  where
+    params =
+        [ "DestinationCidrBlock" |= toText cidr
+        , "VpnConnectionId" |= vpnConn
+        ]
+
 ------------------------------------------------------------
 -- deleteVpnConnection
 ------------------------------------------------------------
@@ -221,6 +236,19 @@ deleteVpnConnection
     => Text -- ^ VpnConnectionId
     -> EC2 m Bool
 deleteVpnConnection = ec2Delete "DeleteVpnConnection" "VpnConnectionId"
+
+deleteVpnConnectionRoute
+    :: (MonadBaseControl IO m, MonadResource m)
+    => AddrRange IPv4 -- ^ The CIDR block associated with the local subnet of the customer data center.
+    -> Text -- ^ The ID of the VPN connection.
+    -> EC2 m Bool
+deleteVpnConnectionRoute cidr vpnConn =
+    ec2Query "DeleteVpnConnectionRoute" params $ getT "return"
+  where
+    params =
+        [ "DestinationCidrBlock" |= toText cidr
+        , "VpnConnectionId" |= vpnConn
+        ]
 
 ------------------------------------------------------------
 -- describeVpcs

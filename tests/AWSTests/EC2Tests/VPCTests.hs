@@ -1,10 +1,12 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, PatternGuards #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, PatternGuards, TupleSections #-}
 
 module AWSTests.EC2Tests.VPCTests
     ( runVpcTests
     )
     where
 
+import Control.Applicative ((<$>))
+import Data.Conduit (MonadBaseControl, MonadResource)
 import Data.Text (Text)
 import Data.List (find)
 import Test.Hspec
@@ -33,6 +35,7 @@ runVpcTests = hspec $ do
     attachAndDetachVpnGatewayTest
     internetGatewayTest
     associateDhcpOptionsTest
+    createAndDeleteVpnConnectionRouteTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -90,16 +93,7 @@ vpnConnectionTest :: Spec
 vpnConnectionTest = do
     describe "{create,delete}CustomerGateway, {create,delete}VpnGateway and {create,delete}VpnConnection don't fail" $ do
         it "{create,delete}CustomerGateway, {create,delete}VpnGateway and {create,delete}VpnConnection don't throw any exception" $ do
-            testEC2' region test `miss` anyConnectionException
-  where
-    test =
-        withCustomerGateway "ipsec.1" "202.202.202.20" 65000 $ \CustomerGateway{customerGatewayId = cgid} ->
-            withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vpnid} -> do
-                VpnConnection{vpnConnectionId = cid} <- withVpnConnection "ipsec.1" cgid vpnid Nothing Nothing return
-                wait
-                    (\connection -> vpnConnectionState connection == VpnConnectionStateDeleted)
-                    (\cid' -> list $ describeVpnConnections [cid'] [])
-                    cid
+            testEC2' region (withVpn Nothing $ const (return ())) `miss` anyConnectionException
 
 attachAndDetachVpnGatewayTest :: Spec
 attachAndDetachVpnGatewayTest = do
@@ -142,3 +136,30 @@ associateDhcpOptionsTest = do
         [ DhcpConfiguration "domain-name" [DhcpValue "example.com"]
         , DhcpConfiguration "domain-name-servers" [DhcpValue "10.2.5.1", DhcpValue "10.2.5.2"]
         ]
+
+createAndDeleteVpnConnectionRouteTest :: Spec
+createAndDeleteVpnConnectionRouteTest = do
+    describe "{create,delete}VpnConnectionRoute" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withVpn (Just True) $ \cid -> do
+                    wait
+                        (\conn -> vpnConnectionState conn == VpnConnectionStateAvailable)
+                        (\c -> list $ describeVpnConnections [c] [])
+                        cid
+                    let cidr = "11.12.0.0/16"
+                    createVpnConnectionRoute cidr cid
+                    deleteVpnConnectionRoute cidr cid
+                ) `miss` anyConnectionException
+
+withVpn :: (MonadBaseControl IO m, MonadResource m) => Maybe Bool -> (Text -> EC2 m a) -> EC2 m a
+withVpn static f =
+    withCustomerGateway "ipsec.1" "202.202.202.20" 65000 $ \CustomerGateway{customerGatewayId = cgid} ->
+        withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vpnid} -> do
+            (c,ret) <- withVpnConnection "ipsec.1" cgid vpnid Nothing static $ \VpnConnection{vpnConnectionId = cid} ->
+                (cid,) <$> f cid
+            wait
+                (\connection -> vpnConnectionState connection == VpnConnectionStateDeleted)
+                (\cid -> list $ describeVpnConnections [cid] [])
+                c
+            return ret
