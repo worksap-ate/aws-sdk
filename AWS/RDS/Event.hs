@@ -14,6 +14,7 @@ import AWS.Lib.Query
 import AWS.RDS.Internal
 import AWS.RDS.Types
 import AWS.Util (toText)
+import Debug.Trace
 
 describeEvents
     :: (MonadBaseControl IO m, MonadResource m)
@@ -51,8 +52,10 @@ eventSink
     :: MonadThrow m
     => Consumer XML.Event m Event
 eventSink = Event
-    <$> getT "Message"
+    <$> do
+        a <- getT "Message"
+        traceShow a $ return a
     <*> getT "SourceType"
-    <*> listConsumer "EventCategories" (getT "EventCategory")
+    <*> elements' "EventCategories" "EventCategory" text
     <*> getT "Date"
     <*> getT "SourceIdentifier"
