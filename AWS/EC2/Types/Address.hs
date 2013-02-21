@@ -60,6 +60,6 @@ data AssociateAddressRequest
 
 data DisassociateAddressRequest
     = DisassociateAddressRequestEc2 IPv4 -- ^ PublicIp for EC2
-    | DisassociateAddressRequestVpc IPv4
+    | DisassociateAddressRequestVpc Text -- ^ AssociationId for VPC
       -- ^ AssociationId for VPC
   deriving (Show, Read, Eq)

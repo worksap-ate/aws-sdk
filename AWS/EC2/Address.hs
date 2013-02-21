@@ -120,4 +120,4 @@ disassociateAddress param =
     p (DisassociateAddressRequestEc2 pip)
         = ["PublicIp" |= toText pip]
     p (DisassociateAddressRequestVpc aid)
-        = ["AssociationId" |= toText aid]
+        = ["AssociationId" |= aid]
