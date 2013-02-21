@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, PatternGuards #-}
 
 module AWSTests.EC2Tests.VPCTests
     ( runVpcTests
@@ -6,6 +6,7 @@ module AWSTests.EC2Tests.VPCTests
     where
 
 import Data.Text (Text)
+import Data.List (find)
 import Test.Hspec
 
 import AWS.EC2
@@ -29,6 +30,7 @@ runVpcTests = hspec $ do
     createVpcTest
     createDhcpOptionsTest
     vpnConnectionTest
+    attachAndDetachVpnGatewayTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -96,3 +98,21 @@ vpnConnectionTest = do
                     (\connection -> vpnConnectionState connection == VpnConnectionStateDeleted)
                     (\cid' -> list $ describeVpnConnections [cid'] [])
                     cid
+
+attachAndDetachVpnGatewayTest :: Spec
+attachAndDetachVpnGatewayTest = do
+    describe "{attach,detach}VpnGateway" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (do
+                withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vgw} -> do
+                    v <- withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} -> do
+                        attachVpnGateway vgw vpc
+                        detachVpnGateway vgw vpc
+                        return vpc
+                    wait (p v) desc vgw
+                ) `miss` anyConnectionException
+  where
+    p vpc VpnGateway{vpnGatewayAttachments = as}
+        | Just a <- find ((== vpc) . attachmentVpcId) as = attachmentState a == AttachmentStateDetached
+        | otherwise = True
+    desc vgw = list $ describeVpnGateways [vgw] []

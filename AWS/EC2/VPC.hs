@@ -3,6 +3,7 @@
 module AWS.EC2.VPC
     ( associateDhcpOptions
     , attachInternetGateway
+    , attachVpnGateway
     , createVpc
     , createVpnConnection
     , createVpnGateway
@@ -22,6 +23,7 @@ module AWS.EC2.VPC
     , describeInternetGateways
     , describeDhcpOptions
     , detachInternetGateway
+    , detachVpnGateway
     ) where
 
 import Data.Text (Text)
@@ -51,6 +53,19 @@ attachInternetGateway internetGatewayId vid =
         [ "InternetGatewayId" |= internetGatewayId
         , "VpcId" |= vid ]
 
+attachVpnGateway
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the virtual private gateway.
+    -> Text -- ^ The ID of the VPC.
+    -> EC2 m Attachment
+attachVpnGateway vgw vpc =
+    ec2Query "AttachVpnGateway" params $ element "attachment" attachmentSink
+  where
+    params =
+        [ "VpnGatewayId" |= vgw
+        , "VpcId" |= vpc
+        ]
+
 ------------------------------------------------------------
 -- detachInternetGateway
 ------------------------------------------------------------
@@ -65,6 +80,19 @@ detachInternetGateway internetGatewayId vid =
     params =
         [ "InternetGatewayId" |= internetGatewayId
         , "VpcId" |= vid ]
+
+detachVpnGateway
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the virtual private gateway.
+    -> Text -- ^ The ID of the VPC.
+    -> EC2 m Bool
+detachVpnGateway vgw vpc =
+    ec2Query "DetachVpnGateway" params $ getT "return"
+  where
+    params =
+        [ "VpnGatewayId" |= vgw
+        , "VpcId" |= vpc
+        ]
 
 ------------------------------------------------------------
 -- deleteInternetGateway
