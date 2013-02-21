@@ -31,6 +31,7 @@ runVpcTests = hspec $ do
     createDhcpOptionsTest
     vpnConnectionTest
     attachAndDetachVpnGatewayTest
+    internetGatewayTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -115,3 +116,13 @@ attachAndDetachVpnGatewayTest = do
         | Just a <- find ((== vpc) . attachmentVpcId) as = attachmentState a == AttachmentStateDetached
         | otherwise = True
     desc vgw = list $ describeVpnGateways [vgw] []
+
+internetGatewayTest :: Spec
+internetGatewayTest = do
+    describe "{create,delete,attach,detach}InternetGateway" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
+                    withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = igw} ->
+                        withInternetGatewayAttached igw vpc $ return ()
+                ) `miss` anyConnectionException
