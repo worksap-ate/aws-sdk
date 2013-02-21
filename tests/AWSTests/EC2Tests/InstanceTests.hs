@@ -26,6 +26,7 @@ runInstanceTests = hspec $ do
     describeInstanceAttributeTest
     monitorAndUnmonitorInstancesTest
     runRebootTerminateInstanceTest
+    startStopInstanceTest
 
 describeInstancesTest :: Spec
 describeInstancesTest = do
@@ -74,4 +75,17 @@ runRebootTerminateInstanceTest = do
             testEC2' region (
                 withInstance testRunInstancesRequest $ \Instance{instanceId = inst} ->
                     rebootInstances [inst]
+                ) `miss` anyConnectionException
+
+startStopInstanceTest :: Spec
+startStopInstanceTest = do
+    describe "{start,stop}Instances" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withInstance testRunInstancesRequest $ \Instance{instanceId = inst} -> do
+                    waitForInstanceState InstanceStateRunning inst
+                    stopInstances [inst] True
+                    waitForInstanceState InstanceStateStopped inst
+                    startInstances [inst]
+                    waitForInstanceState InstanceStateRunning inst
                 ) `miss` anyConnectionException
