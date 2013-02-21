@@ -21,6 +21,7 @@ module AWSTests.EC2Tests.Util
     , withVpnGateway
     , withVpnConnection
     , withAddress
+    , withDhcpOptions
     )
     where
 
@@ -175,3 +176,8 @@ withAddress isVpc = E.bracket
   where
     release AllocateAddress{allocateAddressAllocationId = Just alloc} = releaseAddress Nothing (Just alloc)
     release AllocateAddress{allocateAddressPublicIp = ip} = releaseAddress (Just ip) Nothing
+
+withDhcpOptions :: (MonadBaseControl IO m, MonadResource m) => [DhcpConfiguration] -> (DhcpOptions -> EC2 m a) -> EC2 m a
+withDhcpOptions confs = E.bracket
+    (createDhcpOptions confs)
+    (deleteDhcpOptions . dhcpOptionsId)

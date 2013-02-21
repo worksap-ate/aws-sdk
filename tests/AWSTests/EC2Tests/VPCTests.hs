@@ -32,6 +32,7 @@ runVpcTests = hspec $ do
     vpnConnectionTest
     attachAndDetachVpnGatewayTest
     internetGatewayTest
+    associateDhcpOptionsTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -126,3 +127,18 @@ internetGatewayTest = do
                     withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = igw} ->
                         withInternetGatewayAttached igw vpc $ return ()
                 ) `miss` anyConnectionException
+
+associateDhcpOptionsTest :: Spec
+associateDhcpOptionsTest = do
+    describe "associateDhcpOptions" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withDhcpOptions opts $ \DhcpOptions{dhcpOptionsId = dhcpOpt} ->
+                    withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
+                        associateDhcpOptions dhcpOpt vpc
+                ) `miss` anyConnectionException
+  where
+    opts =
+        [ DhcpConfiguration "domain-name" [DhcpValue "example.com"]
+        , DhcpConfiguration "domain-name-servers" [DhcpValue "10.2.5.1", DhcpValue "10.2.5.2"]
+        ]
