@@ -105,11 +105,10 @@ attachAndDetachVpnGatewayTest = do
         it "doesn't throw any exception" $ do
             testEC2' region (do
                 withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vgw} -> do
-                    v <- withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} -> do
+                    withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} -> do
                         attachVpnGateway vgw vpc
                         detachVpnGateway vgw vpc
-                        return vpc
-                    wait (p v) desc vgw
+                        wait (p vpc) desc vgw
                 ) `miss` anyConnectionException
   where
     p vpc VpnGateway{vpnGatewayAttachments = as}
