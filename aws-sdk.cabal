@@ -161,6 +161,7 @@ test-suite test
                  , iproute
                  , tls
                  , time
+                 , random
 
 source-repository head
     type:            git
