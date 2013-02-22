@@ -3,6 +3,7 @@
 module AWSTests.RDSTests.Util
     ( testRDS
     , withDBInstance
+    , waitUntilNotFound
     , withDBSnapshot
     )
     where

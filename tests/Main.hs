@@ -34,10 +34,10 @@ main = do
     runAclTests
 
     -- RDS Tests
+    runDBSnapshotTests
     runDBInstanceTests
     runDBParameterGroupTests
     runDBSecurityGroupTests
-    runDBSnapshotTests
     runDBSubnetGroupTests
     runEventTests
 
