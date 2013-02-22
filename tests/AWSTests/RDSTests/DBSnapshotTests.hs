@@ -1,11 +1,14 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module AWSTests.RDSTests.DBSnapshotTests
     ( runDBSnapshotTests
     )
     where
 
+import Control.Applicative ((<$>))
+import Data.Conduit
 import Data.Text (Text)
 import Test.Hspec
-import qualified Control.Exception.Lifted as E
 
 import AWS.RDS
 import AWS.RDS.Types
@@ -33,15 +36,15 @@ createDBSnapshotTest :: Spec
 createDBSnapshotTest = do
     describe "{create,delete}DBSnapshot doesn't fail" $ do
         it "{create,delete}DBSnapshot doesn't throw any exception" $ do
-            testRDS region test `miss` anyConnectionException
-  where
-    dbsid = "hspec-test-snapshot"
-    test = do
-        dbis <- describeDBInstances Nothing Nothing Nothing
-        let dbiid = dbInstanceIdentifier $ head dbis
-        dbs <- createDBSnapshot dbiid dbsid
-        wait
-            (\dbs' -> dbSnapshotStatus dbs' == "available")
-            (\dbsid' -> describeDBSnapshots Nothing (Just dbsid') Nothing Nothing Nothing) $
-            dbSnapshotIdentifier dbs
-      `E.finally` deleteDBSnapshot dbsid
+            dbsid <- getRandomText "hspec-create-delete-"
+            testRDS region (do
+                dbiid <- dbInstanceIdentifier . head <$>
+                    describeDBInstances Nothing Nothing Nothing
+                withDBSnapshot dbiid dbsid $
+                    waitUntilAvailable . dbSnapshotIdentifier
+                ) `miss` anyConnectionException
+
+waitUntilAvailable :: (MonadBaseControl IO m, MonadResource m) => Text -> RDS m DBSnapshot
+waitUntilAvailable = wait
+    (\dbs -> dbSnapshotStatus dbs == "available")
+    (\dbsid -> describeDBSnapshots Nothing (Just dbsid) Nothing Nothing Nothing)

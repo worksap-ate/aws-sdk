@@ -3,6 +3,7 @@
 module AWSTests.RDSTests.Util
     ( testRDS
     , withDBInstance
+    , withDBSnapshot
     )
     where
 
@@ -62,3 +63,13 @@ waitUntilNotFound describe match deletable delete = do
             | otherwise -> do
                 liftIO $ CC.threadDelay 10000000
                 waitUntilNotFound describe match deletable delete
+
+withDBSnapshot
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> Text
+    -> (DBSnapshot -> RDS m a)
+    -> RDS m a
+withDBSnapshot dbiid dbsid = E.bracket
+    (createDBSnapshot dbiid dbsid)
+    (deleteDBSnapshot . dbSnapshotIdentifier)
