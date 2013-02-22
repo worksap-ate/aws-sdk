@@ -175,7 +175,7 @@ deleteDBInstance dbiid final =
         [ "SkipFinalSnapshot" |= boolToText True ]
     finalSnapshotParams (FinalSnapshotIdentifier sid) =
         [ "SkipFinalSnapshot" |= boolToText False
-        , "FinalSnapshotIdentifier" |= sid
+        , "FinalDBSnapshotIdentifier" |= sid
         ]
 
 createDBInstanceReadReplica
