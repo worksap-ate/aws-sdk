@@ -37,8 +37,9 @@ createAndDeleteDBInstanceTest :: Spec
 createAndDeleteDBInstanceTest = do
     describe "{create,delete}DBInstance doesn't fail" $ do
         it "{create,delete}DBInstance doesn't throw any exception" $ do
+            dbiid <- getRandomText "hspec-create-delete-"
             testRDS region (
-                withDBInstance createTestDBInstanceRequest $
+                withDBInstance (createTestDBInstanceRequest dbiid) $
                     waitUntilAvailable . dbInstanceIdentifier
                 ) `miss` anyConnectionException
 
@@ -47,12 +48,12 @@ waitUntilAvailable = wait
     (\dbi -> dbInstanceStatus dbi == Just "available")
     (\dbiid -> describeDBInstances (Just dbiid) Nothing Nothing)
 
-createTestDBInstanceRequest :: CreateDBInstanceRequest
-createTestDBInstanceRequest = CreateDBInstanceRequest
+createTestDBInstanceRequest :: Text -> CreateDBInstanceRequest
+createTestDBInstanceRequest dbiid = CreateDBInstanceRequest
     5
     Nothing Nothing Nothing Nothing
     "db.t1.micro"
-    "hspec-test-instance"
+    dbiid
     Nothing Nothing [] Nothing
     "MySQL"
     Nothing Nothing Nothing
@@ -64,28 +65,30 @@ createDBInstanceReadReplicaTest :: Spec
 createDBInstanceReadReplicaTest = do
     describe "createDBInstanceReadReplica doesn't fail" $ do
         it "createDBInstanceReadReplica doesn't throw any exception" $ do
+            originId <- getRandomText "hspec-replica-origin-"
+            replicaId <- getRandomText "hspec-replica-replica-"
             testRDS region (do
-                withDBInstance createTestDBInstanceRequest $ \dbi -> do
-                    waitUntilAvailable $ dbInstanceIdentifier dbi
+                withDBInstance (createTestDBInstanceRequest originId) $ \_ -> do
+                    waitUntilAvailable originId
                     let replicaReq = CreateReadReplicaRequest
                             Nothing Nothing
                             "db.t1.micro"
-                            "hspec-test-replica"
+                            replicaId
                             Nothing Nothing Nothing Nothing
-                            "hspec-test-instance"
-                    replica <- createDBInstanceReadReplica replicaReq
-                    waitUntilAvailable $ dbInstanceIdentifier dbi
-                    waitUntilAvailable $ dbInstanceIdentifier replica
-                    deleteDBInstance (dbInstanceIdentifier replica) SkipFinalSnapshot
+                            originId
+                    createDBInstanceReadReplica replicaReq
+                    waitUntilAvailable originId
+                    waitUntilAvailable replicaId
+                    deleteDBInstance replicaId SkipFinalSnapshot
                 ) `miss` anyConnectionException
 
 rebootDBInstanceTest :: Spec
 rebootDBInstanceTest = do
     describe "rebootDBInstance doesn't fail" $ do
         it "rebootDBInstance doesn't throw any exception" $ do
+            dbiid <- getRandomText "hspec-reboot-"
             testRDS region (do
-                withDBInstance createTestDBInstanceRequest $ \dbi -> do
-                    let dbiid = dbInstanceIdentifier dbi
+                withDBInstance (createTestDBInstanceRequest dbiid) $ \_ -> do
                     waitUntilAvailable dbiid
                     rebootDBInstance dbiid Nothing
                     waitUntilAvailable dbiid

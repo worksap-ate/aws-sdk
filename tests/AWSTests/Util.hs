@@ -1,9 +1,13 @@
 module AWSTests.Util where
 
 import System.IO
+import System.Random
 import Test.HUnit
 import Test.Hspec
 import Control.Exception
+import Data.Monoid ((<>))
+import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Typeable
 import AWS (AWSException(..))
 
@@ -27,3 +31,8 @@ action `miss` p = do
 anyConnectionException :: Selector AWSException
 anyConnectionException (ConnectionException _) = True
 anyConnectionException _ = False
+
+getRandomText :: Text -> IO Text
+getRandomText t = do
+    str <- sequence $ replicate 10 $ randomRIO ('a', 'z')
+    return $ t <> T.pack str
