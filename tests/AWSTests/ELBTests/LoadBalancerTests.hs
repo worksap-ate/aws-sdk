@@ -18,21 +18,25 @@ region :: Text
 region = "ap-northeast-1"
 
 runLoadBalancerTests :: IO ()
-runLoadBalancerTests = do
-    hspec describeLoadBalancersTest
-
-describeLoadBalancersTest :: Spec
-describeLoadBalancersTest = do
-    describe "LoadBalancer operations doesn't fail" $ do
-        it "describeLoadBalancers doesn't throw any exception" $ do
+runLoadBalancerTests = hspec $ do
+    describe "describeLoadBalancers" $ do
+        it "doesn't throw any exception" $ do
             testELB region (describeLoadBalancers [] Nothing) `miss` anyConnectionException
-        it "createLoadBalancer and deleteLoadBalancer" $ do
+
+    describe "{create,delete}LoadBalancer" $ do
+        it "doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ return ()) `miss` anyConnectionException
-        it "describeLoadBalancerPolicies doesn't throw any exception" $ do
+
+    describe "describeLoadBalancerPolicies" $ do
+        it "doesn't throw any exception" $ do
             testELB region (describeLoadBalancerPolicies Nothing []) `miss` anyConnectionException
-        it "describeLoadBalancerPolicyTypes doesn't throw any exception" $ do
+
+    describe "describeLoadBalancerPolicyTypes" $ do
+        it "doesn't throw any exception" $ do
             testELB region (describeLoadBalancerPolicyTypes []) `miss` anyConnectionException
-        it "{create,delete}LoadBalancerPolicy doesn't throw any exception" $ do
+
+    describe "{create,delete}LoadBalancerPolicy" $ do
+        it "doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 let pName = "testPolicyName"
                     pTypeName = "AppCookieStickinessPolicyType"
@@ -41,31 +45,43 @@ describeLoadBalancersTest = do
                 createLoadBalancerPolicy name [attr] pName pTypeName
                 deleteLoadBalancerPolicy name pName
                 ) `miss` anyConnectionException
-        it "describeInstanceHealth doesn't throw any exception" $ do
+
+    describe "describeInstanceHealth" $ do
+        it "doesn't throw any exception" $ do
             testELB region (do
                 lb:_ <- describeLoadBalancers [] Nothing
                 describeInstanceHealth [] $ loadBalancerLoadBalancerName lb
                 ) `miss` anyConnectionException
-        it "configureHealthCheck doesn't throw any exception" $ do
+
+    describe "configureHealthCheck" $ do
+        it "doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $
                 configureHealthCheck hc name
                 ) `miss` anyConnectionException
-        it "{enable,disable}AvailabilityZonesForLoadBalancer doesn't throw any exception" $ do
+
+    describe "{enable,disable}AvailabilityZonesForLoadBalancer" $ do
+        it "doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 let zone = "ap-northeast-1b"
                 enableAvailabilityZonesForLoadBalancer [zone] name
                 disableAvailabilityZonesForLoadBalancer [zone] name
                 ) `miss` anyConnectionException
-        it "createLBCookieStickinessPolicy doesn't throw any exception" $ do
+
+    describe "createLBCookieStickinessPolicy" $ do
+        it "doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 createLBCookieStickinessPolicy Nothing name "testCreateLBCookieStickinessPolicy1"
                 createLBCookieStickinessPolicy (Just 1000) name "testCreateLBCookieStickinessPolicy2"
                 ) `miss` anyConnectionException
-        it "createAppCookieStickinessPolicy doesn't throw any exception" $ do
+
+    describe "createAppCookieStickinessPolicy" $ do
+        it "doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 createAppCookieStickinessPolicy "testCookieName" name "testCreateAppCookieStickinessPolicy"
                 ) `miss` anyConnectionException
-        it "setLoadBalancerPoliciesOfListener doesn't throw any exception" $ do
+
+    describe "setLoadBalancerPoliciesOfListener" $ do
+        it "doesn't throw any exception" $ do
             testELB region (withLoadBalancer name [listener] zones $ do
                 let policy = "setLoadBalancerPoliciesOfListener"
                 createLBCookieStickinessPolicy Nothing name policy
