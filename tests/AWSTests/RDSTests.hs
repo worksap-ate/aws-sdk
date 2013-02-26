@@ -6,6 +6,7 @@ module AWSTests.RDSTests
     , module AWSTests.RDSTests.DBSubnetGroupTests
     , module AWSTests.RDSTests.EventTests
     , module AWSTests.RDSTests.EventSubscriptionTests
+    , module AWSTests.RDSTests.OptionGroupTests
     )
     where
 
@@ -16,3 +17,4 @@ import AWSTests.RDSTests.DBSnapshotTests
 import AWSTests.RDSTests.DBSubnetGroupTests
 import AWSTests.RDSTests.EventTests
 import AWSTests.RDSTests.EventSubscriptionTests
+import AWSTests.RDSTests.OptionGroupTests

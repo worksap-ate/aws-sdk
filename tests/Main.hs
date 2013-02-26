@@ -40,6 +40,7 @@ main = do
     runDBSubnetGroupTests
     runEventTests
     runEventSubscriptionTests
+    runOptionGroupTests
 
     -- ELB Tests
     runLoadBalancerTests
