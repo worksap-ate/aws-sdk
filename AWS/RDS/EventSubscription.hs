@@ -4,6 +4,7 @@ module AWS.RDS.EventSubscription
     ( describeEventSubscriptions
     , createEventSubscription
     , deleteEventSubscription
+    , modifyEventSubscription
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -76,3 +77,23 @@ deleteEventSubscription
 deleteEventSubscription name =
     rdsQuery "DeleteEventSubscription" ["SubscriptionName" |= name] $
         element "EventSubscription" eventSubscriptionSink
+
+modifyEventSubscription
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Bool -- ^ Enabled
+    -> [Text] -- ^ EventCategories
+    -> Maybe Text -- ^ SnsTopicArn
+    -> Maybe SourceType -- ^ SourceType
+    -> Text -- ^ SubscriptionName
+    -> RDS m EventSubscription
+modifyEventSubscription enabled ecs topic stype name =
+    rdsQuery "ModifyEventSubscription" params $
+        element "EventSubscription" eventSubscriptionSink
+  where
+    params =
+        [ "Enabled" |=? boolToText <$> enabled
+        , "EventCategories.member" |.#= ecs
+        , "SnsTopicArn" |=? topic
+        , "SourceType" |=? sourceTypeToText <$> stype
+        , "SubscriptionName" |= name
+        ]
