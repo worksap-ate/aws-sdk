@@ -3,7 +3,6 @@
 
 module AWS.Lib.Parser
     ( RequestId
-    , whenM
     , getT
     , getT_
     , element
@@ -23,9 +22,13 @@ module AWS.Lib.Parser
 
 import Data.XML.Types (Event(..), Name(..))
 import Data.ByteString (ByteString)
+import Data.Char (isSpace)
 import Data.Conduit
+import Data.Conduit.Internal (ConduitM)
 import qualified Data.Conduit.List as CL
+import qualified Data.Text as T
 import qualified Text.XML.Stream.Parse as XML
+import Data.XML.Types (Content(..))
 import Control.Applicative
 import Control.Monad (when, void)
 import Data.Monoid ((<>))
@@ -101,17 +104,17 @@ getT_ :: forall m . MonadThrow m
     -> Consumer Event m ()
 getT_ name = () <$ (getT name :: Consumer Event m (Maybe Text))
 
-elementM :: forall m a . MonadThrow m
+elementM :: MonadThrow m
     => Text
-    -> Consumer Event m a
-    -> Consumer Event m (Maybe a)
+    -> ConduitM Event o m a
+    -> ConduitM Event o m (Maybe a)
 elementM name inner = do
     sinkDropWhile $ not . isTag
-    XML.tagPredicate g (return ()) $ const inner
+    tagConduitM g inner
   where
-    g n = (nameLocalName n == name)
+    g n = nameLocalName n == name
 
-element :: forall m a . MonadThrow m
+element :: MonadThrow m
     => Text
     -> Consumer Event m a
     -> Consumer Event m a
@@ -166,3 +169,44 @@ members :: MonadThrow m
     -> Consumer Event m [a]
 members name f =
     fromMaybe [] <$> elementM name (listConsumer "member" f)
+
+-- | Text.XML.Stream.Parse.tag using ConduitM
+tagConduitM :: MonadThrow m
+    => (Name -> Bool)
+    -> ConduitM Event o m c
+    -> ConduitM Event o m (Maybe c)
+tagConduitM checkName inner = do
+    x <- dropWS
+    case x of
+        Just (EventBeginElement name _) ->
+            if checkName name
+                then do
+                    CL.drop 1
+                    z' <- inner
+                    a <- dropWS
+                    case a of
+                        Just (EventEndElement name')
+                            | name == name' -> CL.drop 1 >> return (Just z')
+                        _ -> lift $ monadThrow $ XML.XmlException ("Expected end tag for: " ++ show name) a
+                else return Nothing
+        _ -> return Nothing
+  where
+    dropWS = do
+        x <- CL.peek
+        let isWS =
+                case x of
+                    Just EventBeginDocument -> True
+                    Just EventEndDocument -> True
+                    Just EventBeginDoctype{} -> True
+                    Just EventEndDoctype -> True
+                    Just EventInstruction{} -> True
+                    Just EventBeginElement{} -> False
+                    Just EventEndElement{} -> False
+                    Just (EventContent (ContentText t))
+                        | T.all isSpace t -> True
+                        | otherwise -> False
+                    Just (EventContent ContentEntity{}) -> False
+                    Just EventComment{} -> True
+                    Just EventCDATA{} -> False
+                    Nothing -> False
+        if isWS then CL.drop 1 >> dropWS else return x
