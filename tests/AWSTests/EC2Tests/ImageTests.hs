@@ -5,6 +5,8 @@ module AWSTests.EC2Tests.ImageTests
     )
     where
 
+import Control.Monad ((>=>))
+import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import Test.Hspec
 
@@ -29,8 +31,8 @@ runImageTests = hspec $ do
                     waitForInstanceState InstanceStateRunning inst
                     let name = "createImageTest"
                         desc = "For HSpec testing"
-                    withImage inst name (Just desc) False [] $ \ami -> do
-                        waitForImageState ImageStateAvailable ami
+                    snaps <- withImage inst name (Just desc) False [] $ \ami -> do
+                        Image{imageBlockDeviceMappings = bdms} <- waitForImageState ImageStateAvailable ami
                         mapM_ (describeImageAttribute ami) allAttributes
                         let params =
                                 [ LaunchPermissionItemGroup "all"
@@ -40,6 +42,10 @@ runImageTests = hspec $ do
                         modifyImageAttribute ami (Just $ LaunchPermission params []) [] Nothing
                         mapM_ (describeImageAttribute ami) allAttributes
                         modifyImageAttribute ami (Just $ LaunchPermission [] params) [] Nothing
+
+                        return $ catMaybes $ map (blockDeviceMappingEbs >=> ebsSnapshotId) bdms
+                    -- Cleanup snapshots created by createImage
+                    mapM_ deleteSnapshot snaps
                 ) `miss` anyConnectionException
 
 allAttributes :: [AMIAttribute]
