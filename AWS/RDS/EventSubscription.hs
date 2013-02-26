@@ -5,6 +5,7 @@ module AWS.RDS.EventSubscription
     , createEventSubscription
     , deleteEventSubscription
     , modifyEventSubscription
+    , addSourceIdentifierToSubscription
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -95,5 +96,19 @@ modifyEventSubscription enabled ecs topic stype name =
         , "EventCategories.member" |.#= ecs
         , "SnsTopicArn" |=? topic
         , "SourceType" |=? sourceTypeToText <$> stype
+        , "SubscriptionName" |= name
+        ]
+
+addSourceIdentifierToSubscription
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ SourceIdentifier
+    -> Text -- ^ SubscriptionName
+    -> RDS m EventSubscription
+addSourceIdentifierToSubscription src name =
+    rdsQuery "AddSourceIdentifierToSubscription" params $
+        element "EventSubscription" eventSubscriptionSink
+  where
+    params =
+        [ "SourceIdentifier" |= src
         , "SubscriptionName" |= name
         ]
