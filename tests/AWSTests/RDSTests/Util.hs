@@ -5,6 +5,7 @@ module AWSTests.RDSTests.Util
     , withDBInstance
     , waitUntilNotFound
     , withDBSnapshot
+    , withEventSubscription
     )
     where
 
@@ -74,3 +75,13 @@ withDBSnapshot
 withDBSnapshot dbiid dbsid = E.bracket
     (createDBSnapshot dbiid dbsid)
     (deleteDBSnapshot . dbSnapshotIdentifier)
+
+withEventSubscription
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> Text
+    -> (EventSubscription -> RDS m a)
+    -> RDS m a
+withEventSubscription name arn = E.bracket
+    (createEventSubscription Nothing [] arn [] Nothing name)
+    (deleteEventSubscription . eventSubscriptionCustSubscriptionId)

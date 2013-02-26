@@ -18,7 +18,8 @@ region = "ap-northeast-1"
 runEventSubscriptionTests :: IO ()
 runEventSubscriptionTests = hspec $ do
     describeEventSubscriptionsTest
-    createDeleteModifySubscriptionTest
+    createAndDeleteSubscriptionTest
+    modifySubscriptionTest
 
 describeEventSubscriptionsTest :: Spec
 describeEventSubscriptionsTest = do
@@ -28,20 +29,30 @@ describeEventSubscriptionsTest = do
                 describeEventSubscriptions Nothing Nothing Nothing
                 ) `miss` anyConnectionException
 
-createDeleteModifySubscriptionTest :: Spec
-createDeleteModifySubscriptionTest = do
-    describe "{create,delete,modify}EventSubscription doesn't fail" $ do
-        it "{create,delete,modify}EventSubscription doesn't throw any excpetion" $ do
+createAndDeleteSubscriptionTest :: Spec
+createAndDeleteSubscriptionTest = do
+    describe "{create,delete}EventSubscription doesn't fail" $ do
+        it "{create,delete}EventSubscription doesn't throw any excpetion" $ do
             testRDS region (do
                 name <- liftIO $ getRandomText "hspec-test-subscription-"
-                createEventSubscription Nothing [] arn [] Nothing name
-                modifyEventSubscription
-                    (Just False)
-                    ["creation","deletion"]
-                    (Just arn)
-                    (Just SourceTypeDBInstance)
-                    name
-                deleteEventSubscription name
+                withEventSubscription name snsTopicArn $
+                    const $ return ()
                 ) `miss` anyConnectionException
-  where
-    arn = "arn:aws:sns:ap-northeast-1:049669284607:hspec-test-topic"
+
+snsTopicArn :: Text
+snsTopicArn = "arn:aws:sns:ap-northeast-1:049669284607:hspec-test-topic"
+
+modifySubscriptionTest :: Spec
+modifySubscriptionTest = do
+    describe "modifyEventSubscription doesn't fail" $ do
+        it "modifyEventSubscription doesn't throw any excpetion" $ do
+            testRDS region (do
+                name <- liftIO $ getRandomText "hspec-test-subscription-"
+                withEventSubscription name snsTopicArn $ \_ -> do
+                    modifyEventSubscription
+                        (Just False)
+                        ["creation","deletion"]
+                        (Just snsTopicArn)
+                        (Just SourceTypeDBInstance)
+                        name
+                ) `miss` anyConnectionException
