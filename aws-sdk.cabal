@@ -94,12 +94,14 @@ library
                    , AWS.RDS.DBSnapshot
                    , AWS.RDS.DBSubnetGroup
                    , AWS.RDS.Event
+                   , AWS.RDS.EventSubscription
                    , AWS.RDS.Types.DBInstance
                    , AWS.RDS.Types.DBParameterGroup
                    , AWS.RDS.Types.DBSecurityGroup
                    , AWS.RDS.Types.DBSnapshot
                    , AWS.RDS.Types.DBSubnetGroup
                    , AWS.RDS.Types.Event
+                   , AWS.RDS.Types.EventSubscription
                    , AWS.ELB.Internal
                    , AWS.ELB.LoadBalancer
                    , AWS.CloudWatch.Internal

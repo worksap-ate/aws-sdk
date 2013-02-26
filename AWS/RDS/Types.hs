@@ -11,6 +11,8 @@ module AWS.RDS.Types
     , module AWS.RDS.Types.DBSubnetGroup
       -- * Event
     , module AWS.RDS.Types.Event
+      -- * EventSubscription
+    , module AWS.RDS.Types.EventSubscription
     ) where
 
 import AWS.RDS.Types.DBInstance
@@ -19,3 +21,4 @@ import AWS.RDS.Types.DBSecurityGroup
 import AWS.RDS.Types.DBSnapshot
 import AWS.RDS.Types.DBSubnetGroup
 import AWS.RDS.Types.Event
+import AWS.RDS.Types.EventSubscription
