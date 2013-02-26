@@ -521,12 +521,12 @@ resetInstanceAttribute iid attr =
 modifyInstanceAttribute
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ InstanceId
-    -> [ModifyInstanceAttributeRequest]
+    -> ModifyInstanceAttributeRequest
     -> EC2 m Bool
-modifyInstanceAttribute iid attrs =
+modifyInstanceAttribute iid attr =
     ec2Query "ModifyInstanceAttribute" params $ getT "return"
   where
-    params = ("InstanceId" |= iid) : map miap attrs
+    params = ["InstanceId" |= iid, miap attr]
 
 miap :: ModifyInstanceAttributeRequest -> QueryParam
 miap (ModifyInstanceAttributeRequestInstanceType a) =
