@@ -47,10 +47,7 @@ sinkDBInstance = DBInstance
     <*> getT "DBInstanceStatus"
     <*> getT "MultiAZ"
     <*> elements' "VpcSecurityGroups" "VpcSecurityGroupMembership"
-        (VpcSecurityGroupMembership
-        <$> getT "Status"
-        <*> getT "VpcSecurityGroupId"
-        )
+        vpcSecurityGroupMembershipSink
     <*> getT "DBInstanceIdentifier"
     <*> getT "PreferredBackupWindow"
     <*> getT "PreferredMaintenanceWindow"
@@ -80,11 +77,7 @@ sinkDBInstance = DBInstance
     <*> getT "EngineVersion"
     <*> getT "ReadReplicaSourceDBInstanceIdentifier"
     <*> getT "PubliclyAccessible"
-    <*> elements "DBSecurityGroup"
-        (DBSecurityGroupMembership
-        <$> getT "Status"
-        <*> getT "DBSecurityGroupName"
-        )
+    <*> elements "DBSecurityGroup" dbSecurityGroupMembershipSink
     <*> getT "AutoMinorVersionUpgrade"
     <*> getT "DBName"
     <*> getT "InstanceCreateTime"

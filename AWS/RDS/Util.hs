@@ -54,7 +54,7 @@ createDBInstanceRequest db newid passwd = CreateDBInstanceRequest
     passwd
     (dbInstanceMasterUsername db)
     (Just $ dbInstanceMultiAZ db)
-    (optionGroupName <$> dbInstanceOptionGroupMembership db)
+    (optionGroupMembershipName <$> dbInstanceOptionGroupMembership db)
     (endpointPort <$> dbInstanceEndpoint db)
     (Just $ dbInstancePreferredBackupWindow db)
     (Just $ dbInstancePreferredMaintenanceWindow db)

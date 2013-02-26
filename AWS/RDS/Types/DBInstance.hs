@@ -78,8 +78,8 @@ data Endpoint = Endpoint
   deriving (Show, Eq)
 
 data OptionGroupMembership = OptionGroupMembership
-    { optionGroupName :: Text
-    , optionGroupStatus :: Text
+    { optionGroupMembershipName :: Text
+    , optionGroupMembershipStatus :: Text
     }
   deriving (Show, Eq)
 

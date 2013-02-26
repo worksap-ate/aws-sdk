@@ -9,6 +9,8 @@ module AWS.RDS.Internal
     , elements'
     , dbSubnetGroupSink
     , sourceTypeToText
+    , dbSecurityGroupMembershipSink
+    , vpcSecurityGroupMembershipSink
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -104,3 +106,17 @@ sourceTypeToText SourceTypeDBInstance = "db-instance"
 sourceTypeToText SourceTypeDBParameterGroup = "db-parameter-group"
 sourceTypeToText SourceTypeDBSecurityGroup = "db-security-group"
 sourceTypeToText SourceTypeDBSnapshot = "db-snapshot"
+
+dbSecurityGroupMembershipSink
+    :: MonadThrow m
+    => Consumer Event m DBSecurityGroupMembership
+dbSecurityGroupMembershipSink = DBSecurityGroupMembership
+    <$> getT "Status"
+    <*> getT "DBSecurityGroupName"
+
+vpcSecurityGroupMembershipSink
+    :: MonadThrow m
+    => Consumer Event m VpcSecurityGroupMembership
+vpcSecurityGroupMembershipSink = VpcSecurityGroupMembership
+    <$> getT "Status"
+    <*> getT "VpcSecurityGroupId"

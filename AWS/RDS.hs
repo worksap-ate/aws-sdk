@@ -20,6 +20,8 @@ module AWS.RDS
     , module AWS.RDS.Event
       -- * EventSubscription
     , module AWS.RDS.EventSubscription
+      -- * OptionGroup
+    , module AWS.RDS.OptionGroup
     ) where
 
 import Data.Text (Text)
@@ -41,6 +43,7 @@ import AWS.RDS.DBSnapshot
 import AWS.RDS.DBSubnetGroup
 import AWS.RDS.Event
 import AWS.RDS.EventSubscription
+import AWS.RDS.OptionGroup
 
 initialRDSContext :: HTTP.Manager -> AWSContext
 initialRDSContext mgr = AWSContext
