@@ -36,6 +36,7 @@ runVpcTests = hspec $ do
     internetGatewayTest
     associateDhcpOptionsTest
     createAndDeleteVpnConnectionRouteTest
+    enableAndDisableVgwRoutePropagationTest
 
 describeVpcsTest :: Spec
 describeVpcsTest = do
@@ -102,15 +103,16 @@ attachAndDetachVpnGatewayTest = do
             testEC2' region (do
                 withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vgw} -> do
                     withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} -> do
-                        attachVpnGateway vgw vpc
-                        detachVpnGateway vgw vpc
-                        wait (p vpc) desc vgw
+                        withVpnGatewayAttached vgw vpc $ return ()
+                        waitForVpnGatewayAttachment vgw vpc AttachmentStateDetached
                 ) `miss` anyConnectionException
+
+waitForVpnGatewayAttachment :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> AttachmentState -> EC2 m VpnGateway
+waitForVpnGatewayAttachment vgw vpc s = wait p (\vgw' -> list $ describeVpnGateways [vgw'] []) vgw
   where
-    p vpc VpnGateway{vpnGatewayAttachments = as}
-        | Just a <- find ((== vpc) . attachmentVpcId) as = attachmentState a == AttachmentStateDetached
+    p VpnGateway{vpnGatewayAttachments = as}
+        | Just a <- find ((== vpc) . attachmentVpcId) as = attachmentState a == s
         | otherwise = True
-    desc vgw = list $ describeVpnGateways [vgw] []
 
 internetGatewayTest :: Spec
 internetGatewayTest = do
@@ -163,3 +165,18 @@ withVpn static f =
                 (\cid -> list $ describeVpnConnections [cid] [])
                 c
             return ret
+
+enableAndDisableVgwRoutePropagationTest :: Spec
+enableAndDisableVgwRoutePropagationTest = do
+    describe "{enable,disable}VgwRoutePropagation" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vgw} ->
+                    withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} -> do
+                        withVpnGatewayAttached vgw vpc $ do
+                            withRouteTable vpc $ \RouteTable{routeTableId = rtb} -> do
+                                waitForVpnGatewayAttachment vgw vpc AttachmentStateAttached
+                                enableVgwRoutePropagation rtb vgw
+                                disableVgwRoutePropagation rtb vgw
+                        waitForVpnGatewayAttachment vgw vpc AttachmentStateDetached
+                ) `miss` anyConnectionException

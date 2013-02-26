@@ -26,6 +26,8 @@ module AWS.EC2.VPC
     , describeDhcpOptions
     , detachInternetGateway
     , detachVpnGateway
+    , disableVgwRoutePropagation
+    , enableVgwRoutePropagation
     ) where
 
 import Data.Text (Text)
@@ -495,4 +497,30 @@ associateDhcpOptions doid vpcid =
     params =
         [ "DhcpOptionsId" |= doid
         , "VpcId" |= vpcid
+        ]
+
+enableVgwRoutePropagation
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the routing table.
+    -> Text -- ^ The ID of the virtual private gateway.
+    -> EC2 m Bool
+enableVgwRoutePropagation rtb vgw =
+    ec2Query "EnableVgwRoutePropagation" params $ getT "return"
+  where
+    params =
+        [ "RouteTableId" |= rtb
+        , "GatewayId" |= vgw
+        ]
+
+disableVgwRoutePropagation
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ The ID of the routing table.
+    -> Text -- ^ The ID of the virtual private gateway.
+    -> EC2 m Bool
+disableVgwRoutePropagation rtb vgw =
+    ec2Query "DisableVgwRoutePropagation" params $ getT "return"
+  where
+    params =
+        [ "RouteTableId" |= rtb
+        , "GatewayId" |= vgw
         ]
