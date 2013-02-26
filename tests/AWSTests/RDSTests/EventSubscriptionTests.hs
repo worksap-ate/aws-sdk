@@ -8,6 +8,7 @@ import Data.Text (Text)
 import Test.Hspec
 
 import AWS.RDS
+import AWS.RDS.Types (SourceType(..))
 import AWSTests.Util
 import AWSTests.RDSTests.Util
 
@@ -17,7 +18,7 @@ region = "ap-northeast-1"
 runEventSubscriptionTests :: IO ()
 runEventSubscriptionTests = hspec $ do
     describeEventSubscriptionsTest
-    createAndDeleteSubscriptionTest
+    createDeleteModifySubscriptionTest
 
 describeEventSubscriptionsTest :: Spec
 describeEventSubscriptionsTest = do
@@ -27,13 +28,19 @@ describeEventSubscriptionsTest = do
                 describeEventSubscriptions Nothing Nothing Nothing
                 ) `miss` anyConnectionException
 
-createAndDeleteSubscriptionTest :: Spec
-createAndDeleteSubscriptionTest = do
-    describe "{create,delete}EventSubscription doesn't fail" $ do
-        it "{create,delete}EventSubscription doesn't throw any excpetion" $ do
+createDeleteModifySubscriptionTest :: Spec
+createDeleteModifySubscriptionTest = do
+    describe "{create,delete,modify}EventSubscription doesn't fail" $ do
+        it "{create,delete,modify}EventSubscription doesn't throw any excpetion" $ do
             testRDS region (do
                 name <- liftIO $ getRandomText "hspec-test-subscription-"
                 createEventSubscription Nothing [] arn [] Nothing name
+                modifyEventSubscription
+                    (Just False)
+                    ["creation","deletion"]
+                    (Just arn)
+                    (Just SourceTypeDBInstance)
+                    name
                 deleteEventSubscription name
                 ) `miss` anyConnectionException
   where
