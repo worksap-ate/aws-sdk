@@ -4,6 +4,7 @@ module AWS.RDS.DBSnapshot
     ( describeDBSnapshots
     , createDBSnapshot
     , deleteDBSnapshot
+    , copyDBSnapshot
     ) where
 
 import Data.Text (Text)
@@ -85,3 +86,17 @@ deleteDBSnapshot dbsid =
         element "DBSnapshot" sinkDBSnapshot
   where
     params = ["DBSnapshotIdentifier" |= dbsid]
+
+copyDBSnapshot
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ SourceDBSnapshotIdentifier
+    -> Text -- ^ TargetDBSnapshotIdentifier
+    -> RDS m DBSnapshot
+copyDBSnapshot source target =
+    rdsQuery "CopyDBSnapshot" params $
+        element "DBSnapshot" sinkDBSnapshot
+  where
+    params =
+        [ "SourceDBSnapshotIdentifier" |= source
+        , "TargetDBSnapshotIdentifier" |= target
+        ]
