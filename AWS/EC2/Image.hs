@@ -135,10 +135,7 @@ describeImageAttribute
 describeImageAttribute iid attr =
     ec2Query "DescribeImageAttribute" params $ AMIAttributeDescription
         <$> getT "imageId"
-        <*> itemsSet "launchPermission"
-            (LaunchPermissionItem
-            <$> getT "group"
-            <*> getT "userId")
+        <*> itemsSet "launchPermission" launchPermissionItemSink
         <*> itemsSet "productCodes"
             (ProductCodeItem
             <$> getT "productCode")
@@ -157,6 +154,13 @@ describeImageAttribute iid attr =
     attrText AMILaunchPermission   = "launchPermission"
     attrText AMIProductCodes       = "productCodes"
     attrText AMIBlockDeviceMapping = "blockDeviceMapping"
+
+launchPermissionItemSink :: MonadThrow m => Consumer Event m LaunchPermissionItem
+launchPermissionItemSink = do
+    mg <- elementM "group" text
+    case mg of
+        Just g -> return $ LaunchPermissionItemGroup g
+        Nothing -> LaunchPermissionItemUserId <$> getT "userId"
 
 modifyImageAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -181,7 +185,5 @@ launchPermissionParams lp =
     , "Remove" |.#. map itemParams (launchPermissionRemove lp)
     ]
   where
-    itemParams item =
-        [ "Group" |= launchPermissionItemGroup item
-        , "UserId" |= launchPermissionUserId item
-        ]
+    itemParams (LaunchPermissionItemGroup g) = ["Group" |= g]
+    itemParams (LaunchPermissionItemUserId u) = ["UserId" |= u]

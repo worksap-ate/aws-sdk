@@ -123,10 +123,9 @@ data LaunchPermission = LaunchPermission
     }
   deriving (Show, Read, Eq)
 
-data LaunchPermissionItem = LaunchPermissionItem
-    { launchPermissionItemGroup :: Text
-    , launchPermissionUserId :: Text
-    }
+data LaunchPermissionItem
+    = LaunchPermissionItemGroup Text
+    | LaunchPermissionItemUserId Text
   deriving (Show, Read, Eq)
 
 data ProductCodeItem = ProductCodeItem

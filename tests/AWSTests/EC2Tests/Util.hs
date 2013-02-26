@@ -23,6 +23,8 @@ module AWSTests.EC2Tests.Util
     , withVpnConnection
     , withAddress
     , withDhcpOptions
+    , withImage
+    , waitForImageState
     )
     where
 
@@ -188,3 +190,14 @@ withDhcpOptions :: (MonadBaseControl IO m, MonadResource m) => [DhcpConfiguratio
 withDhcpOptions confs = E.bracket
     (createDhcpOptions confs)
     (deleteDhcpOptions . dhcpOptionsId)
+
+withImage :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> Maybe Text -> Bool -> [BlockDeviceMappingParam] -> (Text -> EC2 m a) -> EC2 m a
+withImage inst name desc noReboot bdms = E.bracket
+    (createImage inst name desc noReboot bdms)
+    deregisterImage
+
+waitForImageState :: (MonadBaseControl IO m, MonadResource m) => ImageState -> Text -> EC2 m Image
+waitForImageState s = wait p desc
+  where
+    p Image{imageImageState = s'} = s' == s
+    desc ami = list $ describeImages [ami] [] [] []
