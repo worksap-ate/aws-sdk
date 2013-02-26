@@ -2,6 +2,7 @@
 
 module AWS.RDS.OptionGroup
     ( describeOptionGroups
+    , createOptionGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -57,3 +58,21 @@ optionSink = Option
     <*> elements "VpcSecurityGroupMembership" vpcSecurityGroupMembershipSink
     <*> elements' "DBSecurityGroupMemberships" "DBSecurityGroup"
         dbSecurityGroupMembershipSink
+
+createOptionGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ EngineName
+    -> Text -- ^ MajorEngineVersion
+    -> Text -- ^ OptionGroupDescription
+    -> Text -- ^ OptionGroupName
+    -> RDS m OptionGroup
+createOptionGroup engine ver desc name =
+    rdsQuery "CreateOptionGroup" params $
+        element "OptionGroup" optionGroupSink
+  where
+    params =
+        [ "EngineName" |= engine
+        , "MajorEngineVersion" |= ver
+        , "OptionGroupDescription" |= desc
+        , "OptionGroupName" |= name
+        ]
