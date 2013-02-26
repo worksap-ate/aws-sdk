@@ -24,6 +24,7 @@ import Data.ByteString.Char8 ()
 import Control.Applicative
 import Data.Conduit
 import qualified Data.Conduit.List as CL
+import Data.Maybe (fromMaybe)
 import Data.XML.Types (Event)
 import Data.Text (Text)
 
@@ -54,8 +55,7 @@ itemConduit :: MonadThrow m
     -> Consumer Event m o
     -> Conduit Event m o
 itemConduit tag inner =
-    whenM (elementM tag (listConsumer "item" inner)) $ \e -> do
-        mapM_ yield e
+    fromMaybe (()) <$> elementM tag (listConduit "item" inner)
 
 itemsSet :: MonadThrow m
     => Text
