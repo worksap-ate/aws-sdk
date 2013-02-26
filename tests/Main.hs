@@ -23,7 +23,6 @@ main = do
     runRouteTests
     runRouteTableTests
     runRegionTests
-    runInstanceTests
     runAvailabilityZoneTests
     runTagTests
     runKeyPairTests
