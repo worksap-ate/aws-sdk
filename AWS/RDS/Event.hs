@@ -44,12 +44,6 @@ describeEvents sid stype d start end categories marker maxRecords =
         , "MaxRecords" |=? toText <$> maxRecords
         ]
 
-sourceTypeToText :: SourceType -> Text
-sourceTypeToText SourceTypeDBInstance = "db-instance"
-sourceTypeToText SourceTypeDBParameterGroup = "db-parameter-group"
-sourceTypeToText SourceTypeDBSecurityGroup = "db-security-group"
-sourceTypeToText SourceTypeDBSnapshot = "db-snapshot"
-
 eventSink
     :: MonadThrow m
     => Consumer XML.Event m Event

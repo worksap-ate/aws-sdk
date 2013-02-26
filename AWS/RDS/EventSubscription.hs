@@ -2,6 +2,7 @@
 
 module AWS.RDS.EventSubscription
     ( describeEventSubscriptions
+    , createEventSubscription
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -12,8 +13,8 @@ import Data.XML.Types (Event)
 import AWS.Lib.Parser
 import AWS.Lib.Query
 import AWS.RDS.Internal
-import AWS.RDS.Types (EventSubscription(..))
-import AWS.Util (toText)
+import AWS.RDS.Types (EventSubscription(..), SourceType)
+import AWS.Util (toText, boolToText)
 
 describeEventSubscriptions
     :: (MonadBaseControl IO m, MonadResource m)
@@ -44,3 +45,25 @@ eventSubscriptionSink = EventSubscription
     <*> elements' "EventCategoriesList" "EventCategory" text
     <*> getT "CustSubscriptionId"
     <*> getT "SnsTopicArn"
+
+createEventSubscription
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Bool -- ^ Enabled
+    -> [Text] -- ^ EventCategories
+    -> Text -- ^ SnsTopicArn
+    -> [Text] -- ^ SourceIds
+    -> Maybe SourceType -- ^ SourceType
+    -> Text -- ^ SubscriptionName
+    -> RDS m EventSubscription
+createEventSubscription enabled ecs topic sids stype name =
+    rdsQuery "CreateEventSubscription" params $
+        element "EventSubscription" eventSubscriptionSink
+  where
+    params =
+        [ "Enabled" |=? boolToText <$> enabled
+        , "EventCategories.member" |.#= ecs
+        , "SnsTopicArn" |= topic
+        , "SourceIds.member" |.#= sids
+        , "SourceType" |=? sourceTypeToText <$> stype
+        , "SubscriptionName" |= name
+        ]

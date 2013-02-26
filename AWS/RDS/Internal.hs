@@ -8,6 +8,7 @@ module AWS.RDS.Internal
     , elements
     , elements'
     , dbSubnetGroupSink
+    , sourceTypeToText
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -25,7 +26,7 @@ import qualified Text.XML.Stream.Parse as XmlP
 import AWS.Class
 import AWS.Lib.Query
 import AWS.Lib.Parser
-import AWS.RDS.Types (DBSubnetGroup(..), Subnet(..), AvailabilityZone(..))
+import AWS.RDS.Types hiding (Event)
 import AWS.Util
 
 -- | Ver.2013-01-10
@@ -97,3 +98,9 @@ dbSubnetGroupSink = DBSubnetGroup
             <*> getT "ProvisionedIopsCapable"
             )
         )
+
+sourceTypeToText :: SourceType -> Text
+sourceTypeToText SourceTypeDBInstance = "db-instance"
+sourceTypeToText SourceTypeDBParameterGroup = "db-parameter-group"
+sourceTypeToText SourceTypeDBSecurityGroup = "db-security-group"
+sourceTypeToText SourceTypeDBSnapshot = "db-snapshot"
