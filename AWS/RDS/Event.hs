@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
+
 module AWS.RDS.Event
     ( describeEvents
+    , describeEventCategories
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -59,3 +61,20 @@ eventSink = Event
     <*> elements' "EventCategories" "EventCategory" text
     <*> getT "Date"
     <*> getT "SourceIdentifier"
+
+describeEventCategories
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe SourceType -- ^ SourceType
+    -> RDS m [EventCategoriesMap]
+describeEventCategories stype =
+    rdsQuery "DescribeEventCategories" params $
+        elements' "EventCategoriesMapList" "EventCategoriesMap" eventCategoriesMapSink
+  where
+    params = [ "SourceType" |=? sourceTypeToText <$> stype ]
+
+eventCategoriesMapSink
+    :: MonadThrow m
+    => Consumer XML.Event m EventCategoriesMap
+eventCategoriesMapSink = EventCategoriesMap
+    <$> getT "SourceType"
+    <*> elements' "EventCategories" "EventCategory" text
