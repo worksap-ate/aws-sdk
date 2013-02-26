@@ -3,6 +3,7 @@
 module AWS.RDS.OptionGroup
     ( describeOptionGroups
     , createOptionGroup
+    , deleteOptionGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -76,3 +77,11 @@ createOptionGroup engine ver desc name =
         , "OptionGroupDescription" |= desc
         , "OptionGroupName" |= name
         ]
+
+deleteOptionGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ OptionGroupName
+    -> RDS m ()
+deleteOptionGroup name =
+    rdsQueryOnlyMetadata "DeleteOptionGroup"
+        [ "OptionGroupName" |= name ]
