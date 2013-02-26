@@ -161,7 +161,7 @@ describeImageAttribute iid attr =
 modifyImageAttribute
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ ImageId
-    -> LaunchPermission -- ^ LaunchPermission
+    -> Maybe LaunchPermission -- ^ LaunchPermission
     -> [Text] -- ^ ProductCode
     -> Maybe Text -- ^ Description
     -> EC2 m Bool
@@ -171,7 +171,7 @@ modifyImageAttribute iid lp pcs desc =
     params =
         [ "ImageId" |= iid
         , "ProductCode" |.#= pcs
-        , "LaunchPermission" |. launchPermissionParams lp
+        , "LaunchPermission" |.? launchPermissionParams <$> lp
         , "Description" |.+ "Value" |=? desc
         ]
 
