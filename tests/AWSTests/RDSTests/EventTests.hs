@@ -14,8 +14,9 @@ region :: Text
 region = "ap-northeast-1"
 
 runEventTests :: IO ()
-runEventTests = do
-    hspec describeEventsTest
+runEventTests = hspec $ do
+    describeEventsTest
+    describeEventCategoriesTest
 
 describeEventsTest :: Spec
 describeEventsTest = do
@@ -23,4 +24,12 @@ describeEventsTest = do
         it "describeEvents doesn't throw any exception" $ do
             testRDS region (
                 describeEvents Nothing Nothing Nothing Nothing Nothing [] Nothing Nothing
+                ) `miss` anyConnectionException
+
+describeEventCategoriesTest :: Spec
+describeEventCategoriesTest = do
+    describe "describeEventCategories doesn't fail" $ do
+        it "describeEventCategories doesn't throw any exception" $ do
+            testRDS region (
+                describeEventCategories Nothing
                 ) `miss` anyConnectionException
