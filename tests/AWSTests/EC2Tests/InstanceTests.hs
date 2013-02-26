@@ -80,13 +80,26 @@ runRebootTerminateInstanceTest = do
 
 startStopInstanceTest :: Spec
 startStopInstanceTest = do
-    describe "{start,stop}Instances" $ do
+    describe "{start,stop}Instances and {modify,reset}InstanceAttribute" $ do
         it "doesn't throw any exception" $ do
             testEC2' region (
                 withInstance testRunInstancesRequest $ \Instance{instanceId = inst} -> do
                     waitForInstanceState InstanceStateRunning inst
                     stopInstances [inst] True
                     waitForInstanceState InstanceStateStopped inst
+
+                    mapM_ (modifyInstanceAttribute inst)
+                        [ModifyInstanceAttributeRequestInstanceType "m1.small"
+                        , ModifyInstanceAttributeRequestUserData "user data"
+                        , ModifyInstanceAttributeRequestDisableApiTermination False
+                        , ModifyInstanceAttributeRequestShutdownBehavior ShutdownBehaviorTerminate
+                        ]
+
+                    mapM_ (resetInstanceAttribute inst)
+                        [ ResetInstanceAttributeRequestKernel
+                        , ResetInstanceAttributeRequestRamdisk
+                        ]
+
                     startInstances [inst]
                     waitForInstanceState InstanceStateRunning inst
                 ) `miss` anyConnectionException
