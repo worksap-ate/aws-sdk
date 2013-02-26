@@ -110,12 +110,15 @@ snapshotAttributeSink
     => Consumer Event m SnapshotAttribute
 snapshotAttributeSink = SnapshotAttribute
     <$> getT "snapshotId"
-    <*> itemsSet "createVolumePermission" (
-        CreateVolumePermissionItem
-        <$> getT "userId"
-        <*> getT "group"
-        )
+    <*> itemsSet "createVolumePermission" createVolumePermissionItemSink
     <*> productCodeSink
+
+createVolumePermissionItemSink :: MonadThrow m => Consumer Event m CreateVolumePermissionItem
+createVolumePermissionItemSink = do
+    mg <- elementM "group" text
+    case mg of
+        Just g -> return $ CreateVolumePermissionItemGroup g
+        Nothing -> CreateVolumePermissionItemUserId <$> getT "userId"
 
 modifySnapshotAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -138,10 +141,8 @@ createVolumePermissionParams cvp =
     , "Remove" |.#. itemParams <$> createVolumePermissionRemove cvp
     ]
   where
-    itemParams item =
-        [ "UserId" |=? createVolumePermissionItemUserId item
-        , "Group" |=? createVolumePermissionItemGroup item
-        ]
+    itemParams (CreateVolumePermissionItemUserId u) = ["UserId" |= u]
+    itemParams (CreateVolumePermissionItemGroup g) = ["Group" |= g]
 
 resetSnapshotAttribute
     :: (MonadResource m, MonadBaseControl IO m)

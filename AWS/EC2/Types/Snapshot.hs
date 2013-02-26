@@ -19,10 +19,9 @@ data CreateVolumePermission = CreateVolumePermission
     }
   deriving (Show, Read, Eq)
 
-data CreateVolumePermissionItem = CreateVolumePermissionItem
-    { createVolumePermissionItemUserId :: Maybe Text
-    , createVolumePermissionItemGroup :: Maybe Text
-    }
+data CreateVolumePermissionItem
+    = CreateVolumePermissionItemUserId Text
+    | CreateVolumePermissionItemGroup Text
   deriving (Show, Read, Eq)
 
 data ResetSnapshotAttributeRequest

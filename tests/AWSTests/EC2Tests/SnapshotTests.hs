@@ -39,17 +39,17 @@ createSnapshotTest = do
                 withSnapshot vid Nothing $ \Snapshot{snapshotId = sid} ->
                     E.bracket (copySnapshot region sid Nothing) deleteSnapshot $ \copied -> do
                         modifySnapshotAttribute copied perm
+                        describeSnapshotAttribute copied SnapshotAttributeRequestCreateVolumePermission
                         resetSnapshotAttribute copied ResetSnapshotAttributeRequestCreateVolumePermission
                 ) `miss` anyConnectionException
   where
     perm = CreateVolumePermission
-        { createVolumePermissionAdd = [item]
+        { createVolumePermissionAdd = [item1, item2, item3]
         , createVolumePermissionRemove = []
         }
-    item = CreateVolumePermissionItem
-        { createVolumePermissionItemUserId = Nothing
-        , createVolumePermissionItemGroup = Just "all"
-        }
+    item1 = CreateVolumePermissionItemUserId "111122223333"
+    item2 = CreateVolumePermissionItemGroup "all"
+    item3 = CreateVolumePermissionItemUserId "333322221111"
 
 describeSnapshotAttributeTest :: Spec
 describeSnapshotAttributeTest = do
