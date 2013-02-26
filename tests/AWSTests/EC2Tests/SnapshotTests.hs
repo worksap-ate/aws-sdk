@@ -55,6 +55,8 @@ describeSnapshotAttributeTest :: Spec
 describeSnapshotAttributeTest = do
     describe "describeSnapshotAttribute doesn't fail" $ do
         it "describeSnapshotAttribute doesn't throw any exception" $ do
-            snapshots <- testEC2 region (describeSnapshots [] [] [] [])
-            let sid = snapshotId $ head snapshots
-            testEC2' region (describeSnapshotAttribute sid SnapshotAttributeRequestCreateVolumePermission) `miss` anyConnectionException
+            testEC2' region (do
+                snapshots <- list $ describeSnapshots [] [] [] []
+                let sid = snapshotId $ head snapshots
+                describeSnapshotAttribute sid SnapshotAttributeRequestCreateVolumePermission
+                ) `miss` anyConnectionException
