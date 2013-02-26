@@ -183,7 +183,7 @@ vpnConnectionSink = VpnConnection
         (VpnConnectionOptionsRequest
         <$> getT "staticRoutesOnly"
         )
-    <*> elementM "routes"
+    <*> itemsSet "routes"
         (VpnStaticRoute
         <$> getT "destinationCidrBlock"
         <*> getT "source"

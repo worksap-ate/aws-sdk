@@ -125,7 +125,7 @@ data VpnConnection = VpnConnection
     , vpnConnectionTagSet :: [ResourceTag]
     , vpnConnectionVgwTelemetry :: [VpnTunnelTelemetry]
     , vpnConnectionOptions :: Maybe VpnConnectionOptionsRequest
-    , vpnConnectionRoutes :: Maybe VpnStaticRoute
+    , vpnConnectionRoutes :: [VpnStaticRoute]
     }
   deriving (Show, Read, Eq)
 
@@ -200,7 +200,7 @@ deriveFromText "VpnConnectionState"
     ["pending", "available", "deleting", "deleted"]
 deriveFromText "VpnGatewayState"
     ["pending", "available", "deleting", "deleted"]
-deriveFromText "VpnStaticRouteSource" ["Static"]
+deriveFromText "VpnStaticRouteSource" ["static"]
 deriveFromText "VpnStaticRouteState"
     ["pending", "available", "deleting", "deleted"]
 deriveFromText "VpnTunnelTelemetryStatus" ["UP", "DOWN"]
