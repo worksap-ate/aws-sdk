@@ -75,10 +75,10 @@ ec2QuerySource'
     -> Conduit Event m o
     -> EC2 m (ResumableSource m o)
 ec2QuerySource' action params token cond = do
-    cred <- Reader.ask
+    settings <- Reader.ask
     ctx <- State.get
     (src1, rid) <- lift $ E.handle exceptionTransform $ do
-        response <- requestQuery cred ctx action params' apiVersion sinkError
+        response <- requestQuery settings ctx action params' apiVersion sinkError
         res <- response $=+ XmlP.parseBytes XmlP.def
         res $$++ sinkRequestId
     State.put ctx{lastRequestId = rid}

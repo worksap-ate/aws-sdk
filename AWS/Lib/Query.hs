@@ -220,22 +220,23 @@ a $=+ b = do
 
 requestQuery
     :: (MonadResource m, MonadBaseControl IO m)
-    => Credential
+    => AWSSettings
     -> AWSContext
     -> ByteString
     -> [QueryParam]
     -> ByteString
     -> (ByteString -> Int -> Consumer Event m a)
     -> m (ResumableSource m ByteString)
-requestQuery cred ctx action params ver errSink = do
+requestQuery settings ctx action params ver errSink = do
     let mgr = manager ctx
     let ep = endpoint ctx
+    let cred = credential settings
     time <- liftIO getCurrentTime
     let url = mkUrl ep cred time action params ver
     request <- liftIO $ HTTP.parseUrl (BSC.unpack url)
     let req = request
             { HTTP.checkStatus = checkStatus'
-            , HTTP.responseTimeout = Just 30000000
+            , HTTP.responseTimeout = httpTimeout settings
             }
     response <- HTTP.http req mgr
     let body = HTTP.responseBody response
@@ -282,9 +283,9 @@ commonQuery
     -> AWS AWSContext m a
 commonQuery apiVersion action params sink = do
     ctx <- State.get
-    cred <- Reader.ask
+    settings <- Reader.ask
     (res, rid) <- lift $ E.handle exceptionTransform $ do
-        rs <- requestQuery cred ctx action params apiVersion sinkError
+        rs <- requestQuery settings ctx action params apiVersion sinkError
         rs $$+- XmlP.parseBytes XmlP.def
            =$   sinkResponse (bsToText action) sink
     State.put ctx { lastRequestId = Just rid }

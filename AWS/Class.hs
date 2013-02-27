@@ -14,6 +14,7 @@ module AWS.Class
     , runAWSwithManager
     , AWSException(..)
     , AWSContext(..)
+    , AWSSettings(..)
     , getLastRequestId
       -- * re-export
     , monadThrow
@@ -80,15 +81,20 @@ data AWSContext = AWSContext
     , lastRequestId :: Maybe Text
     }
 
+data AWSSettings = AWSSettings
+    { credential :: Credential
+    , httpTimeout :: Maybe Int
+    }
+
 newtype AWS context m a = AWST
-    { runAWST :: StateT context (ReaderT Credential m) a
+    { runAWST :: StateT context (ReaderT AWSSettings m) a
     } deriving
     ( Monad
     , Applicative
     , Functor
     , MonadIO
     , MonadState context
-    , MonadReader Credential
+    , MonadReader AWSSettings
     , MonadBase base
     )
 
@@ -131,7 +137,7 @@ runAWSwithManager :: Monad m
 runAWSwithManager mgr ctx cred app =
     R.runReaderT
         (S.evalStateT (runAWST app) $ ctx mgr)
-        cred
+        $ AWSSettings cred (Just 60000000)
 
 getLastRequestId :: (Monad m, Functor m) => AWS AWSContext m (Maybe Text)
 getLastRequestId = lastRequestId <$> S.get

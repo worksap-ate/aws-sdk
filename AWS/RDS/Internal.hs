@@ -52,8 +52,8 @@ rdsQueryOnlyMetadata
     -> RDS m ()
 rdsQueryOnlyMetadata action params = do
     ctx <- State.get
-    cred <- Reader.ask
-    rs <- lift $ requestQuery cred ctx action params apiVersion sinkError
+    settings <- Reader.ask
+    rs <- lift $ requestQuery settings ctx action params apiVersion sinkError
     rid <- lift $ rs $$+-
         XmlP.parseBytes XmlP.def =$
             sinkResponseOnlyMetadata (bsToText action)
