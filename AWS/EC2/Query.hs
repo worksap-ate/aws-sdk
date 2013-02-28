@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AWS.EC2.Query
     ( ec2Query

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AWS.RDS.Internal
     ( apiVersion
