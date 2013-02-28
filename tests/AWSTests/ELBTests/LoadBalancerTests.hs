@@ -4,14 +4,18 @@ module AWSTests.ELBTests.LoadBalancerTests
     )
     where
 
+import Control.Monad.IO.Class (liftIO)
+import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 import Test.Hspec
 import qualified Control.Exception.Lifted as E
 import Data.Conduit (MonadBaseControl, MonadResource)
 
+import AWS.EC2.Types (Subnet(..), InternetGateway(..))
 import AWS.ELB
 import AWS.ELB.Types
 import AWSTests.Util
+import AWSTests.EC2Tests.Util (testEC2', withSubnet, withInternetGateway, withInternetGatewayAttached)
 import AWSTests.ELBTests.Util
 
 region :: Text
@@ -24,8 +28,13 @@ runLoadBalancerTests = hspec $ do
             testELB region (describeLoadBalancers [] Nothing) `miss` anyConnectionException
 
     describe "{create,delete}LoadBalancer" $ do
-        it "doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $ return ()) `miss` anyConnectionException
+        context "EC2" $ do
+            it "doesn't throw any exception" $ do
+                testELB region (withLoadBalancer name [listener] zones [] [] $ return ()) `miss` anyConnectionException
+        context "with VPC" $ do
+            it "doesn't throw any exception" $ do
+                withSubnet' "10.0.0.0/24" $ \_ subnet _ ->
+                    testELB region (withLoadBalancer name [listener] [] [] [subnet] $ return ()) `miss` anyConnectionException
 
     describe "describeLoadBalancerPolicies" $ do
         it "doesn't throw any exception" $ do
@@ -37,7 +46,7 @@ runLoadBalancerTests = hspec $ do
 
     describe "{create,delete}LoadBalancerPolicy" $ do
         it "doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $ do
+            testELB region (withLoadBalancer name [listener] zones [] [] $ do
                 let pName = "testPolicyName"
                     pTypeName = "AppCookieStickinessPolicyType"
                     attrName = "CookieName"
@@ -55,13 +64,13 @@ runLoadBalancerTests = hspec $ do
 
     describe "configureHealthCheck" $ do
         it "doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $
+            testELB region (withLoadBalancer name [listener] zones [] [] $
                 configureHealthCheck hc name
                 ) `miss` anyConnectionException
 
     describe "{enable,disable}AvailabilityZonesForLoadBalancer" $ do
         it "doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $ do
+            testELB region (withLoadBalancer name [listener] zones [] [] $ do
                 let zone = "ap-northeast-1b"
                 enableAvailabilityZonesForLoadBalancer [zone] name
                 disableAvailabilityZonesForLoadBalancer [zone] name
@@ -69,20 +78,20 @@ runLoadBalancerTests = hspec $ do
 
     describe "createLBCookieStickinessPolicy" $ do
         it "doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $ do
+            testELB region (withLoadBalancer name [listener] zones [] [] $ do
                 createLBCookieStickinessPolicy Nothing name "testCreateLBCookieStickinessPolicy1"
                 createLBCookieStickinessPolicy (Just 1000) name "testCreateLBCookieStickinessPolicy2"
                 ) `miss` anyConnectionException
 
     describe "createAppCookieStickinessPolicy" $ do
         it "doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $ do
+            testELB region (withLoadBalancer name [listener] zones [] [] $ do
                 createAppCookieStickinessPolicy "testCookieName" name "testCreateAppCookieStickinessPolicy"
                 ) `miss` anyConnectionException
 
     describe "setLoadBalancerPoliciesOfListener" $ do
         it "doesn't throw any exception" $ do
-            testELB region (withLoadBalancer name [listener] zones $ do
+            testELB region (withLoadBalancer name [listener] zones [] [] $ do
                 let policy = "setLoadBalancerPoliciesOfListener"
                 createLBCookieStickinessPolicy Nothing name policy
                 setLoadBalancerPoliciesOfListener name (listenerLoadBalancerPort listener) [policy]
@@ -100,8 +109,15 @@ runLoadBalancerTests = hspec $ do
         , healthCheckUnhealthyThreshold = 3
         }
 
-withLoadBalancer :: (MonadBaseControl IO m, MonadResource m) => Text -> [Listener] -> [Text] -> ELB m a -> ELB m a
-withLoadBalancer name listeners zones f = E.bracket
-    (createLoadBalancer name listeners zones Nothing [] [])
+withLoadBalancer :: (MonadBaseControl IO m, MonadResource m) => Text -> [Listener] -> [Text] -> [Text] -> [Text] -> ELB m a -> ELB m a
+withLoadBalancer name listeners zones sgs subnets f = E.bracket
+    (createLoadBalancer name listeners zones Nothing sgs subnets)
     (const $ deleteLoadBalancer name)
     (const f)
+
+withSubnet' :: AddrRange IPv4 -> (Text -> Text -> Text -> IO a) -> IO a
+withSubnet' cidr f = testEC2' region $
+    withSubnet cidr $ \Subnet{subnetId = subnet, subnetVpcId = vpc} ->
+        withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = igw} ->
+            withInternetGatewayAttached igw vpc $
+                liftIO $ f vpc subnet igw

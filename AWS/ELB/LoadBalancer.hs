@@ -27,7 +27,6 @@ module AWS.ELB.LoadBalancer
     ) where
 
 import Data.Text (Text)
-import Data.IP (IPv4, AddrRange)
 import Data.Conduit
 import Control.Applicative
 import Data.XML.Types (Event(..))
@@ -125,7 +124,7 @@ createLoadBalancer
     -> [Text] -- ^ AvailabilityZones
     -> Maybe Text -- ^ Scheme
     -> [Text] -- ^ SecurityGroups
-    -> [AddrRange IPv4] -- ^ Subnets
+    -> [Text] -- ^ Subnets
     -> ELB m Text -- return DNSName
 createLoadBalancer name listeners zones scheme groups subnets =
     elbQuery "CreateLoadBalancer" params $ getT "DNSName"
@@ -136,7 +135,7 @@ createLoadBalancer name listeners zones scheme groups subnets =
         , "AvailabilityZones.member" |.#= zones
         , "Scheme" |=? scheme
         , "SecurityGroups.member" |.#= groups
-        , "Subnets.member" |.#= map toText subnets
+        , "Subnets.member" |.#= subnets
         ]
     listeners' = flip map listeners $
         \(Listener prot lbport iprot cert iport) ->
