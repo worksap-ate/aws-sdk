@@ -58,6 +58,14 @@ runLoadBalancerTests = hspec $ do
                     )
             ) `miss` anyConnectionException
 
+    describe "{create,delete}LoadBalancerListeners" $ do
+        it "doesn't throw any exception" $ do
+            testELB region (withLoadBalancer name [listener] zones [] [] $ do
+                let listener2 = Listener "http" 8080 "http" Nothing 80
+                createLoadBalancerListeners [listener2] name
+                deleteLoadBalancerListeners name [listenerLoadBalancerPort listener2]
+                ) `miss` anyConnectionException
+
     describe "describeLoadBalancerPolicies" $ do
         it "doesn't throw any exception" $ do
             testELB region (describeLoadBalancerPolicies Nothing []) `miss` anyConnectionException
