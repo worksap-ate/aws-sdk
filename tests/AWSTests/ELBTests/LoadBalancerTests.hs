@@ -11,11 +11,11 @@ import Test.Hspec
 import qualified Control.Exception.Lifted as E
 import Data.Conduit (MonadBaseControl, MonadResource)
 
-import AWS.EC2.Types (Subnet(..), InternetGateway(..))
+import AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..))
 import AWS.ELB
 import AWS.ELB.Types
 import AWSTests.Util
-import AWSTests.EC2Tests.Util (testEC2', withSubnet, withInternetGateway, withInternetGatewayAttached)
+import AWSTests.EC2Tests.Util (testEC2', withVpc, withSubnet', withInternetGateway, withInternetGatewayAttached)
 import AWSTests.ELBTests.Util
 
 region :: Text
@@ -33,8 +33,17 @@ runLoadBalancerTests = hspec $ do
                 testELB region (withLoadBalancer name [listener] zones [] [] $ return ()) `miss` anyConnectionException
         context "with VPC" $ do
             it "doesn't throw any exception" $ do
-                withSubnet' "10.0.0.0/24" $ \_ subnet _ ->
-                    testELB region (withLoadBalancer name [listener] [] [] [subnet] $ return ()) `miss` anyConnectionException
+                withSubnets "10.0.0.0/24" [("10.0.0.0/24", Nothing)] $ \_ _ subnets ->
+                    testELB region (withLoadBalancer name [listener] [] [] subnets $ return ()) `miss` anyConnectionException
+
+    describe "attachLoadBalancerToSubnets and detachLoadBalancerFromSubnets" $ do
+        it "doesn't throw any exception" $ (do
+            withSubnets "10.0.0.0/16" [("10.0.0.0/24", Just "ap-northeast-1a"), ("10.0.1.0/24", Just "ap-northeast-1b")] $ \_ _ [sub1, sub2] ->
+                testELB region (withLoadBalancer name [listener] [] [] [sub1] $ do
+                    attachLoadBalancerToSubnets name [sub2]
+                    detachLoadBalancerFromSubnets name [sub1]
+                    )
+            ) `miss` anyConnectionException
 
     describe "describeLoadBalancerPolicies" $ do
         it "doesn't throw any exception" $ do
@@ -115,9 +124,12 @@ withLoadBalancer name listeners zones sgs subnets f = E.bracket
     (const $ deleteLoadBalancer name)
     (const f)
 
-withSubnet' :: AddrRange IPv4 -> (Text -> Text -> Text -> IO a) -> IO a
-withSubnet' cidr f = testEC2' region $
-    withSubnet cidr $ \Subnet{subnetId = subnet, subnetVpcId = vpc} ->
+withSubnets :: AddrRange IPv4 -> [(AddrRange IPv4, Maybe Text)] -> (Text -> Text -> [Text] -> IO a) -> IO a
+withSubnets vpcCidr reqs f = testEC2' region $
+    withVpc vpcCidr $ \Vpc{vpcId = vpc} ->
         withInternetGateway $ \InternetGateway{internetGatewayInternetGatewayId = igw} ->
             withInternetGatewayAttached igw vpc $
-                liftIO $ f vpc subnet igw
+                go vpc igw reqs []
+  where
+    go vpc igw [] ids = liftIO $ f vpc igw ids
+    go vpc igw ((cidr,zone):xs) ids = withSubnet' vpc cidr zone $ \Subnet{subnetId = subnet} -> go vpc igw xs (subnet:ids)

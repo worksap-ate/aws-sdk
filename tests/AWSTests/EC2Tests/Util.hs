@@ -4,6 +4,7 @@ module AWSTests.EC2Tests.Util
     , testEC2'
     , withVpc
     , withSubnet
+    , withSubnet'
     , withInstance
     , testRunInstancesRequest
     , waitForInstanceState
@@ -78,10 +79,18 @@ withSubnet
     => AddrRange IPv4 -- ^ CIDR
     -> (Subnet -> EC2 m a)
     -> EC2 m a
-withSubnet cidr f = withVpc cidr $ \vpc -> E.bracket
-    (createSubnet (CreateSubnetRequest (vpcId vpc) cidr Nothing) <* sleep 2)
-    (\subnet -> retry 5 10 $ deleteSubnet $ subnetId subnet)
-    f
+withSubnet cidr f = withVpc cidr $ \Vpc{vpcId = vpc} -> withSubnet' vpc cidr Nothing f
+
+withSubnet'
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> AddrRange IPv4 -- ^ CIDR
+    -> Maybe Text
+    -> (Subnet -> EC2 m a)
+    -> EC2 m a
+withSubnet' vpc cidr zone = E.bracket
+    (createSubnet (CreateSubnetRequest vpc cidr zone) <* sleep 2)
+    (retry 5 10 . deleteSubnet . subnetId)
 
 withInstance
     :: (MonadBaseControl IO m, MonadResource m)
