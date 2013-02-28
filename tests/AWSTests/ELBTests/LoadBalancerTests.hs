@@ -11,11 +11,20 @@ import Test.Hspec
 import qualified Control.Exception.Lifted as E
 import Data.Conduit (MonadBaseControl, MonadResource)
 
-import AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..))
+import AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..), Instance(..))
 import AWS.ELB
-import AWS.ELB.Types
+import AWS.ELB.Types hiding (Instance(..))
 import AWSTests.Util
-import AWSTests.EC2Tests.Util (testEC2', withVpc, withSubnet', withInternetGateway, withInternetGatewayAttached, withSecurityGroup)
+import AWSTests.EC2Tests.Util
+    ( testEC2'
+    , withVpc
+    , withSubnet'
+    , withInternetGateway
+    , withInternetGatewayAttached
+    , withSecurityGroup
+    , withInstance
+    , testRunInstancesRequest
+    )
 import AWSTests.ELBTests.Util
 
 region :: Text
@@ -57,6 +66,15 @@ runLoadBalancerTests = hspec $ do
                             )
                     )
             ) `miss` anyConnectionException
+
+    describe "registerInstancesWithLoadBalancer and deregisterInstancesFromLoadBalancer" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (withInstance testRunInstancesRequest $ \Instance{instanceId = inst} -> liftIO $
+                testELB region (withLoadBalancer name [listener] zones [] [] $ do
+                    registerInstancesWithLoadBalancer [inst] name
+                    deregisterInstancesFromLoadBalancer [inst] name
+                    )
+                ) `miss` anyConnectionException
 
     describe "{create,delete}LoadBalancerListeners" $ do
         it "doesn't throw any exception" $ do
