@@ -41,7 +41,6 @@ library
                    , AWS.CloudWatch.Types
   other-modules:     AWS.Util
                    , AWS.Credential
-                   , AWS.Types
                    , AWS.Class
                    , AWS.EC2.Internal
                    , AWS.EC2.Address
