@@ -15,7 +15,7 @@ import AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..))
 import AWS.ELB
 import AWS.ELB.Types
 import AWSTests.Util
-import AWSTests.EC2Tests.Util (testEC2', withVpc, withSubnet', withInternetGateway, withInternetGatewayAttached)
+import AWSTests.EC2Tests.Util (testEC2', withVpc, withSubnet', withInternetGateway, withInternetGatewayAttached, withSecurityGroup)
 import AWSTests.ELBTests.Util
 
 region :: Text
@@ -42,6 +42,19 @@ runLoadBalancerTests = hspec $ do
                 testELB region (withLoadBalancer name [listener] [] [] [sub1] $ do
                     attachLoadBalancerToSubnets name [sub2]
                     detachLoadBalancerFromSubnets name [sub1]
+                    )
+            ) `miss` anyConnectionException
+
+    describe "applySecurityGroupsToLoadBalancer" $ do
+        it "doesn't throw any exception" $ (do
+            withSubnets "10.0.0.0/24" [("10.0.0.0/24", Nothing)] $ \vpc _ subnets -> do
+                let sgName1 = "applySecurityGroupsToLoadBalancerTest1"
+                    sgName2 = "applySecurityGroupsToLoadBalancerTest2"
+                testEC2' region (withSecurityGroup sgName1 "For HSpec testing" (Just vpc) $ \(Just sg1) ->
+                    withSecurityGroup sgName2 "For HSpec testing" (Just vpc) $ \(Just sg2) -> liftIO $
+                        testELB region (withLoadBalancer name [listener] [] [sg1] subnets $
+                            applySecurityGroupsToLoadBalancer name [sg2]
+                            )
                     )
             ) `miss` anyConnectionException
 
