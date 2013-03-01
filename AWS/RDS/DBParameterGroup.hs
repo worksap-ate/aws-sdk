@@ -1,10 +1,11 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
 
 module AWS.RDS.DBParameterGroup
     ( describeDBParameterGroups
     , createDBParameterGroup
     , deleteDBParameterGroup
     , describeDBParameters
+    , modifyDBParameterGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -13,10 +14,10 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 
 import AWS.Lib.Parser (getT, element)
-import AWS.Lib.Query ((|=), (|=?))
+import AWS.Lib.Query ((|=), (|=?), (|.#.))
 import AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements)
 import AWS.RDS.Types hiding (Event)
-import AWS.Util (toText)
+import AWS.Util (toText, boolToText)
 
 describeDBParameterGroups
     :: (MonadBaseControl IO m, MonadResource m)
@@ -98,3 +99,28 @@ parameterSink = Parameter
     <*> getT "AllowedValues"
     <*> getT "ParameterName"
     <*> getT "MinimumEngineVersion"
+
+modifyDBParameterGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBParameterGroupName
+    -> [ModifyParameter] -- ^ Parameters
+    -> RDS m Text
+modifyDBParameterGroup name parameters =
+    rdsQuery "ModifyDBParameterGroup" params $
+        getT "DBParameterGroupName"
+  where
+    params =
+        [ "DBParameterGroupName" |= name
+        , "Parameters.member" |.#.
+            map modifyParameterParams parameters
+        ]
+    modifyParameterParams ModifyParameter{..} =
+        [ "ParameterName" |= modifyParameterName
+        , "ParameterValue" |= modifyParameterValue
+        , "ApplyMethod" |=
+            applyMethodToText modifyParameterApplyMethod
+        ]
+
+applyMethodToText :: ApplyMethod -> Text
+applyMethodToText ApplyMethodImmediate = "immediate"
+applyMethodToText ApplyMethodPendingReboot = "pending-reboot"

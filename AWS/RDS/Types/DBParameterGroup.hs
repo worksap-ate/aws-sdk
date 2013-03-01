@@ -1,6 +1,8 @@
 module AWS.RDS.Types.DBParameterGroup
     ( DBParameterGroup(..)
     , Parameter(..)
+    , ModifyParameter(..)
+    , ApplyMethod(..)
     ) where
 
 import AWS.Lib.FromText (Text)
@@ -23,4 +25,16 @@ data Parameter = Parameter
     , parameterName :: Text
     , parameterMinimumEngineVersion :: Maybe Text
     }
+  deriving (Show, Eq)
+
+data ModifyParameter = ModifyParameter
+    { modifyParameterName :: Text
+    , modifyParameterValue :: Text
+    , modifyParameterApplyMethod :: ApplyMethod
+    }
+  deriving (Show, Eq)
+
+data ApplyMethod
+    = ApplyMethodImmediate
+    | ApplyMethodPendingReboot
   deriving (Show, Eq)
