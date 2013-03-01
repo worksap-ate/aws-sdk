@@ -62,7 +62,7 @@ modifyAndResetDBParameterGroupTest = do
                 name <- liftIO $ getRandomText "hspec-test-parameter-group-"
                 withDBParameterGroup name $ \_ -> do
                     modifyDBParameterGroup name modifyParams
-                    liftIO $ CC.threadDelay 10000000
+                    liftIO $ CC.threadDelay 30000000
                     resetDBParameterGroup name resetParams
                     resetDBParameterGroup name ResetAllParameters
                 ) `miss` anyConnectionException
