@@ -11,7 +11,7 @@ main :: IO ()
 main = do
     cred <- loadCredential
     doc <- runResourceT $ do
-        runEC2 cred $ do
+        runEC2 (defaultSettings cred) $ do
             setRegion "ap-northeast-1"
             response <- describeInstances [] []
             lift $ response $$+- CL.consume
