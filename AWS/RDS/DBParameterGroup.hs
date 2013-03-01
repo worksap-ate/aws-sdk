@@ -7,6 +7,7 @@ module AWS.RDS.DBParameterGroup
     , describeDBParameters
     , modifyDBParameterGroup
     , resetDBParameterGroup
+    , describeDBEngineVersions
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -14,9 +15,9 @@ import Data.Conduit (Consumer, MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
 import Data.XML.Types (Event)
 
-import AWS.Lib.Parser (getT, element)
+import AWS.Lib.Parser (getT, element, elementM)
 import AWS.Lib.Query ((|=), (|=?), (|.#.))
-import AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements)
+import AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements, elements')
 import AWS.RDS.Types hiding (Event)
 import AWS.Util (toText, boolToText)
 
@@ -150,3 +151,46 @@ resetDBParameterGroup name req =
         , "ApplyMethod" |=
             applyMethodToText resetParameterApplyMethod
         ]
+
+describeDBEngineVersions
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Text -- ^ DBParameterGroupFamily
+    -> Maybe Bool -- ^ DefaultOnly
+    -> Maybe Text -- ^ Engine
+    -> Maybe Text -- ^ EngineVersion
+    -> Maybe Bool -- ^ ListSupportedCharacterSets
+    -> Maybe Text -- ^ Marker
+    -> Maybe Int -- ^ MaxRecords
+    -> RDS m [DBEngineVersion]
+describeDBEngineVersions family only engine ver list marker maxRec =
+    rdsQuery "DescribeDBEngineVersions" params $
+        elements "DBEngineVersion" dbEngineVersionSink
+  where
+    params =
+        [ "DBParameterGroupFamily" |=? family
+        , "DefaultOnly" |=? boolToText <$> only
+        , "Engine" |=? engine
+        , "EngineVersion" |=? ver
+        , "ListSupportedCharacterSets" |=? boolToText <$> list
+        , "Marker" |=? marker
+        , "MaxRecords" |=? toText <$> maxRec
+        ]
+
+dbEngineVersionSink
+    :: MonadThrow m
+    => Consumer Event m DBEngineVersion
+dbEngineVersionSink = DBEngineVersion
+    <$> getT "DBParameterGroupFamily"
+    <*> getT "Engine"
+    <*> elements' "SupportedCharacterSets" "CharacterSet" characterSetSink
+    <*> getT "DBEngineDescription"
+    <*> elementM "DefaultCharacterSet" characterSetSink
+    <*> getT "EngineVersion"
+    <*> getT "DBEngineVersionDescription"
+
+characterSetSink
+    :: MonadThrow m
+    => Consumer Event m CharacterSet
+characterSetSink = CharacterSet
+    <$> getT "CharacterSetName"
+    <*> getT "CharacterSetDescription"

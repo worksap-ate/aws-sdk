@@ -5,6 +5,8 @@ module AWS.RDS.Types.DBParameterGroup
     , ApplyMethod(..)
     , ResetParameterRequest(..)
     , ResetParameter(..)
+    , DBEngineVersion(..)
+    , CharacterSet(..)
     ) where
 
 import AWS.Lib.FromText (Text)
@@ -49,5 +51,22 @@ data ResetParameterRequest
 data ResetParameter = ResetParameter
     { resetParameterName :: Text
     , resetParameterApplyMethod :: ApplyMethod
+    }
+  deriving (Show, Eq)
+
+data DBEngineVersion = DBEngineVersion
+    { dbEngineversionDBParameterGroupFamily :: Text
+    , dbEngineVersionEngine :: Text
+    , dbEngineVersionSupportedCharacterSets :: [CharacterSet]
+    , dbEngineVersionDBEngineDescription :: Text
+    , dbEngineVersionDefaultCharacterSet :: Maybe CharacterSet
+    , dbEngineVersionEngineVersion :: Text
+    , dbEngineVersionDBEngineVersionDescription :: Text
+    }
+  deriving (Show, Eq)
+
+data CharacterSet = CharacterSet
+    { characterSetName :: Text
+    , characterSetDescription :: Text
     }
   deriving (Show, Eq)
