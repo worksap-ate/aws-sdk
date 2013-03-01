@@ -4,6 +4,7 @@ module AWS.RDS.DBParameterGroup
     ( describeDBParameterGroups
     , createDBParameterGroup
     , deleteDBParameterGroup
+    , describeDBParameters
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -64,3 +65,36 @@ deleteDBParameterGroup
 deleteDBParameterGroup name =
     rdsQueryOnlyMetadata "DeleteDBParameterGroup"
         ["DBParameterGroupName" |= name]
+
+describeDBParameters
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBParameterGroupName
+    -> Maybe Text -- ^ Marker
+    -> Maybe Int -- ^ MaxRecords
+    -> Maybe Text -- ^ Source
+    -> RDS m (Maybe Text, [Parameter]) -- ^ (Marker, Parameters)
+describeDBParameters name marker maxRecords src =
+    rdsQuery "DescribeDBParameters" params $ (,)
+        <$> getT "Marker"
+        <*> elements "Parameter" parameterSink
+  where
+    params =
+        [ "DBParameterGroupName" |= name
+        , "Marker" |=? marker
+        , "MaxRecords" |=? toText  <$> maxRecords
+        , "Source" |=? src
+        ]
+
+parameterSink
+    :: MonadThrow m
+    => Consumer Event m Parameter
+parameterSink = Parameter
+    <$> getT "ParameterValue"
+    <*> getT "DataType"
+    <*> getT "Source"
+    <*> getT "IsModifiable"
+    <*> getT "Description"
+    <*> getT "ApplyType"
+    <*> getT "AllowedValues"
+    <*> getT "ParameterName"
+    <*> getT "MinimumEngineVersion"
