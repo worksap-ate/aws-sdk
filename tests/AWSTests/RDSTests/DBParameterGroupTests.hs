@@ -23,6 +23,7 @@ runDBParameterGroupTests = hspec $ do
     createAndDeleteDBParameterGroupTest
     describeDBParametersTest
     modifyAndResetDBParameterGroupTest
+    describeDBEngineVersionsTest
 
 describeDBParameterGroupsTest :: Spec
 describeDBParameterGroupsTest = do
@@ -73,3 +74,11 @@ modifyAndResetDBParameterGroupTest = do
     resetParams = ResetParameters
         [ ResetParameter "auto_increment_increment" ApplyMethodImmediate
         ]
+
+describeDBEngineVersionsTest :: Spec
+describeDBEngineVersionsTest = do
+    describe "describeDBEngineVersions doesn't fail" $ do
+        it "describeDBEngineVersions doesn't throw any exception" $ do
+            testRDS region (do
+                describeDBEngineVersions Nothing Nothing Nothing Nothing (Just True) Nothing Nothing
+                ) `miss` anyConnectionException
