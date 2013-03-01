@@ -60,8 +60,8 @@ sinkMetricAlarm =
     <*> getT "AlarmArn"
     <*> getT "AlarmConfigurationUpdatedTimestamp"
     <*> getT "AlarmName"
-    <*> getT "StateValue"
     <*> getT "Period"
+    <*> getT "StateValue"
     <*> members "OKActions" text
     <*> getT "ActionsEnabled"
     <*> getT "Namespace"

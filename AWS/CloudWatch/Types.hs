@@ -82,8 +82,8 @@ data MetricAlarm = MetricAlarm
     , metricAlarmAlarmArn :: Text
     , metricAlarmConfigurationUpdatedTimestamp :: UTCTime
     , metricAlarmAlarmName :: Text
-    , metricAlarmStateValue :: StateValue
     , metricAlarmPeriod :: Int
+    , metricAlarmStateValue :: StateValue
     , metricAlarmOKActions :: [Text]
     , metricAlarmActionsEnabled :: Bool
     , metricAlarmNamespace :: Text
