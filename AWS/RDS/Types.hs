@@ -15,6 +15,8 @@ module AWS.RDS.Types
     , module AWS.RDS.Types.EventSubscription
       -- * OptionGroup
     , module AWS.RDS.Types.OptionGroup
+      -- * Tag
+    , module AWS.RDS.Types.Tag
     ) where
 
 import AWS.RDS.Types.DBInstance
@@ -25,3 +27,4 @@ import AWS.RDS.Types.DBSubnetGroup
 import AWS.RDS.Types.Event
 import AWS.RDS.Types.EventSubscription
 import AWS.RDS.Types.OptionGroup
+import AWS.RDS.Types.Tag
