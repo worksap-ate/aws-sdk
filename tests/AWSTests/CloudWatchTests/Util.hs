@@ -16,6 +16,6 @@ testCloudWatch
 testCloudWatch region request = do
     cred <- loadCredential
     runResourceT $ do
-        runCloudWatch cred $ do
+        runCloudWatch (defaultSettings cred) $ do
             setRegion region
             request

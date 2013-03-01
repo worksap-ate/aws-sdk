@@ -22,7 +22,6 @@ import Data.Monoid ((<>))
 import AWS.Class
 import AWS.Lib.Query (textToBS)
 
-import AWS
 import AWS.CloudWatch.Internal
 import AWS.CloudWatch.Metric
 import AWS.CloudWatch.Alarm
@@ -34,11 +33,11 @@ initialCloudWatchContext mgr = AWSContext
     , lastRequestId = Nothing
     }
 
-runCloudWatch :: MonadIO m => Credential -> CloudWatch m a -> m a
+runCloudWatch :: MonadIO m => AWSSettings -> CloudWatch m a -> m a
 runCloudWatch = runAWS initialCloudWatchContext
 
 runCloudWatchwithManager :: Monad m
-    => HTTP.Manager -> Credential -> CloudWatch m a -> m a
+    => HTTP.Manager -> AWSSettings -> CloudWatch m a -> m a
 runCloudWatchwithManager mgr =
     runAWSwithManager mgr initialCloudWatchContext
 

@@ -21,7 +21,6 @@ import Data.Monoid
 import AWS.Class
 import AWS.Lib.Query (textToBS)
 
-import AWS
 import AWS.ELB.Internal
 import AWS.ELB.LoadBalancer
 
@@ -32,11 +31,11 @@ initialELBContext mgr = AWSContext
     , lastRequestId = Nothing
     }
 
-runELB :: MonadIO m => Credential -> ELB m a -> m a
+runELB :: MonadIO m => AWSSettings -> ELB m a -> m a
 runELB = runAWS initialELBContext
 
 runELBwithManager :: Monad m
-    => HTTP.Manager -> Credential -> ELB m a -> m a
+    => HTTP.Manager -> AWSSettings -> ELB m a -> m a
 runELBwithManager mgr = runAWSwithManager mgr initialELBContext
 
 setRegion
