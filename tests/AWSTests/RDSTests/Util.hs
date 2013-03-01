@@ -28,7 +28,7 @@ testRDS
 testRDS region request = do
     cred <- loadCredential
     runResourceT $ do
-        runRDS cred $ do
+        runRDS (defaultSettings cred) $ do
             setRegion region
             request
 

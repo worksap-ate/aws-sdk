@@ -37,6 +37,7 @@ module AWS
     , newCredential
     , loadCredential
     , loadCredentialFromFile
+    , defaultSettings
       -- * Environment
     , AWS
     , AWSException(..)

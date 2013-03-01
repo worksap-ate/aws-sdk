@@ -29,7 +29,6 @@ import Data.XML.Types (Event)
 import Data.Text (Text)
 
 import AWS.Class
-import AWS.Credential
 import AWS.Lib.Parser
 import AWS.EC2.Types
 
@@ -42,11 +41,11 @@ initialEC2Context mgr = AWSContext
 
 type EC2 m a = AWS AWSContext m a
 
-runEC2 :: MonadIO m => Credential -> AWS AWSContext m a -> m a
+runEC2 :: MonadIO m => AWSSettings -> AWS AWSContext m a -> m a
 runEC2 = runAWS initialEC2Context
 
 runEC2withManager :: Monad m
-    => HTTP.Manager -> Credential -> AWS AWSContext m a -> m a
+    => HTTP.Manager -> AWSSettings -> AWS AWSContext m a -> m a
 runEC2withManager mgr =
     runAWSwithManager mgr initialEC2Context
 

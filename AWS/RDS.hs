@@ -34,7 +34,6 @@ import Data.Monoid ((<>))
 import AWS.Class
 import AWS.Lib.Query (textToBS)
 
-import AWS
 import AWS.RDS.Internal
 import AWS.RDS.DBInstance
 import AWS.RDS.DBParameterGroup
@@ -52,11 +51,11 @@ initialRDSContext mgr = AWSContext
     , lastRequestId = Nothing
     }
 
-runRDS :: MonadIO m => Credential -> RDS m a -> m a
+runRDS :: MonadIO m => AWSSettings -> RDS m a -> m a
 runRDS = runAWS initialRDSContext
 
 runRDSwithManager :: Monad m
-    => HTTP.Manager -> Credential -> RDS m a -> m a
+    => HTTP.Manager -> AWSSettings -> RDS m a -> m a
 runRDSwithManager mgr = runAWSwithManager mgr initialRDSContext
 
 setRegion
