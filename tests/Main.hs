@@ -41,6 +41,7 @@ main = do
     runEventTests
     runEventSubscriptionTests
     runOptionGroupTests
+    runRDSTagTests
 
     -- ELB Tests
     runLoadBalancerTests
