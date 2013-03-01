@@ -33,8 +33,7 @@ createAndDeleteDBParameterGroupTest = do
     describe "{create,delete}DBParameterGroup doesn't fail" $ do
         it "{create,delete}DBParameterGroup doesn't throw any exception" $ do
             testRDS region (do
-                createDBParameterGroup "MySQL5.5" name "test"
-                deleteDBParameterGroup name
+                withDBParameterGroup name $ const $ return ()
                 ) `miss` anyConnectionException
   where
     name = "hspec-test-parameter-group"

@@ -6,6 +6,7 @@ module AWSTests.RDSTests.Util
     , waitUntilNotFound
     , withDBSnapshot
     , withEventSubscription
+    , withDBParameterGroup
     )
     where
 
@@ -85,3 +86,12 @@ withEventSubscription
 withEventSubscription name arn = E.bracket
     (createEventSubscription Nothing [] arn [] Nothing name)
     (deleteEventSubscription . eventSubscriptionCustSubscriptionId)
+
+withDBParameterGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> (DBParameterGroup -> RDS m a)
+    -> RDS m a
+withDBParameterGroup name = E.bracket
+    (createDBParameterGroup "MySQL5.5" name "hspec-test")
+    (deleteDBParameterGroup . dbParameterGroupName)
