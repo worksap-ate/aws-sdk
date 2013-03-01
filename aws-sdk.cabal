@@ -143,6 +143,9 @@ library
                    , parallel
                    , iproute >= 1.2.9
                    , tls
+                   , filepath
+                   , directory
+                   , io-choice
 
 test-suite test
     type:              exitcode-stdio-1.0

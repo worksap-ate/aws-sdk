@@ -146,4 +146,4 @@ runAWSwithManager mgr ctx settings app =
         (S.evalStateT (runAWST app) $ ctx mgr) settings
 
 getLastRequestId :: (Monad m, Functor m) => AWS AWSContext m (Maybe Text)
-getLastRequestId = lastRequestId <$> S.get
+getLastRequestId = S.gets lastRequestId
