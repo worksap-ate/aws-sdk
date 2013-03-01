@@ -2,6 +2,7 @@
 
 module AWS.RDS.Tag
     ( listTagsForResource
+    , addTagsToResource
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -32,3 +33,20 @@ tagSink
 tagSink = Tag
     <$> getT "Value"
     <*> getT "Key"
+
+addTagsToResource
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ ResourceName
+    -> [Tag] -- ^ Tags
+    -> RDS m ()
+addTagsToResource name tags =
+    rdsQueryOnlyMetadata "AddTagsToResource" params
+  where
+    params =
+        [ "ResourceName" |= name
+        , "Tags.member" |.#. map tagParams tags
+        ]
+    tagParams tag =
+        [ "Value" |= tagValue tag
+        , "Key" |= tagKey tag
+        ]
