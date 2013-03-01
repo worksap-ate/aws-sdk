@@ -70,7 +70,11 @@ dbInstanceTest = do
                             Nothing Nothing Nothing Nothing
                             dbiid
                     createDBInstanceReadReplica replicaReq
+
+                    -- promoteReadReplica
                     waitUntilAvailable dbiid
+                    waitUntilAvailable replicaId
+                    promoteReadReplica Nothing replicaId Nothing
                     waitUntilAvailable replicaId
                     deleteDBInstance replicaId SkipFinalSnapshot
 
