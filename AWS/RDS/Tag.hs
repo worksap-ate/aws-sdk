@@ -3,6 +3,7 @@
 module AWS.RDS.Tag
     ( listTagsForResource
     , addTagsToResource
+    , removeTagsFromResource
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -49,4 +50,17 @@ addTagsToResource name tags =
     tagParams tag =
         [ "Value" |= tagValue tag
         , "Key" |= tagKey tag
+        ]
+
+removeTagsFromResource
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ ResourceName
+    -> [Text] -- ^ TagKeys
+    -> RDS m ()
+removeTagsFromResource name keys =
+    rdsQueryOnlyMetadata "RemoveTagsFromResource" params
+  where
+    params =
+        [ "ResourceName" |= name
+        , "TagKeys.member" |.#= keys
         ]
