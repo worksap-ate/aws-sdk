@@ -3,6 +3,8 @@ module AWS.RDS.Types.DBParameterGroup
     , Parameter(..)
     , ModifyParameter(..)
     , ApplyMethod(..)
+    , ResetParameterRequest(..)
+    , ResetParameter(..)
     ) where
 
 import AWS.Lib.FromText (Text)
@@ -37,4 +39,15 @@ data ModifyParameter = ModifyParameter
 data ApplyMethod
     = ApplyMethodImmediate
     | ApplyMethodPendingReboot
+  deriving (Show, Eq)
+
+data ResetParameterRequest
+    = ResetAllParameters
+    | ResetParameters [ResetParameter]
+  deriving (Show, Eq)
+
+data ResetParameter = ResetParameter
+    { resetParameterName :: Text
+    , resetParameterApplyMethod :: ApplyMethod
+    }
   deriving (Show, Eq)

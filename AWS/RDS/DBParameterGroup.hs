@@ -6,6 +6,7 @@ module AWS.RDS.DBParameterGroup
     , deleteDBParameterGroup
     , describeDBParameters
     , modifyDBParameterGroup
+    , resetDBParameterGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -124,3 +125,28 @@ modifyDBParameterGroup name parameters =
 applyMethodToText :: ApplyMethod -> Text
 applyMethodToText ApplyMethodImmediate = "immediate"
 applyMethodToText ApplyMethodPendingReboot = "pending-reboot"
+
+resetDBParameterGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> ResetParameterRequest
+    -> RDS m Text
+resetDBParameterGroup name req =
+    rdsQuery "ResetDBParameterGroup" params $
+        getT "DBParameterGroupName"
+  where
+    params =
+        [ "DBParameterGroupName" |= name
+        ] ++ reqParams req
+    reqParams ResetAllParameters =
+        [ "ResetAllParameters" |= boolToText True ]
+    reqParams (ResetParameters parameters) =
+        [ "Parameters.member" |.#.
+            map resetParameterParams parameters
+        , "ResetAllParameters" |= boolToText False
+        ]
+    resetParameterParams ResetParameter{..} =
+        [ "ParameterName" |= resetParameterName
+        , "ApplyMethod" |=
+            applyMethodToText resetParameterApplyMethod
+        ]
