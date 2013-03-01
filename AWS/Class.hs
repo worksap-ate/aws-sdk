@@ -12,6 +12,7 @@ module AWS.Class
     ( AWS
     , runAWS
     , runAWSwithManager
+    , defaultSettings
     , AWSException(..)
     , AWSContext(..)
     , AWSSettings(..)
@@ -86,6 +87,12 @@ data AWSSettings = AWSSettings
     , httpTimeout :: Maybe Int
     }
 
+defaultSettings :: Credential -> AWSSettings
+defaultSettings cred = AWSSettings
+    { credential = cred
+    , httpTimeout = Just 60000000
+    }
+
 newtype AWS context m a = AWST
     { runAWST :: StateT context (ReaderT AWSSettings m) a
     } deriving
@@ -121,23 +128,22 @@ instance MonadBaseControl base m => MonadBaseControl base (AWS c m)
 
 runAWS :: MonadIO m
     => (HTTP.Manager -> c)
-    -> Credential
+    -> AWSSettings
     -> AWS c m a
     -> m a
-runAWS ctx cred app = do
+runAWS ctx settings app = do
     mgr <- liftIO $ HTTP.newManager HTTP.def
-    runAWSwithManager mgr ctx cred app
+    runAWSwithManager mgr ctx settings app
 
 runAWSwithManager :: Monad m
     => HTTP.Manager
     -> (HTTP.Manager -> c)
-    -> Credential
+    -> AWSSettings
     -> AWS c m a
     -> m a
-runAWSwithManager mgr ctx cred app =
+runAWSwithManager mgr ctx settings app =
     R.runReaderT
-        (S.evalStateT (runAWST app) $ ctx mgr)
-        $ AWSSettings cred (Just 60000000)
+        (S.evalStateT (runAWST app) $ ctx mgr) settings
 
 getLastRequestId :: (Monad m, Functor m) => AWS AWSContext m (Maybe Text)
 getLastRequestId = lastRequestId <$> S.get

@@ -49,7 +49,7 @@ testEC2
 testEC2 region request = do
     cred <- loadCredential
     runResourceT $ do
-        runEC2 cred $ do
+        runEC2 (defaultSettings cred) $ do
             setRegion region
             response <- request
             lift $ response $$+- CL.consume
@@ -61,7 +61,7 @@ testEC2'
 testEC2' region request = do
     cred <- loadCredential
     runResourceT $ do
-        runEC2 cred $ do
+        runEC2 (defaultSettings cred) $ do
             setRegion region
             request
 

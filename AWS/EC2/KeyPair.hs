@@ -7,12 +7,15 @@ module AWS.EC2.KeyPair
     , importKeyPair
     ) where
 
+import Data.ByteString (ByteString)
+import qualified Data.ByteString.Base64 as BASE
 import Data.Text (Text)
 
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
+import AWS.Util (bsToText)
 import AWS.EC2.Internal
 import AWS.EC2.Types
 import AWS.EC2.Query
@@ -54,12 +57,12 @@ deleteKeyPair = ec2Delete "DeleteKeyPair" "KeyName"
 importKeyPair
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ KeyName
-    -> Text -- ^ PublicKeyMaterial
+    -> ByteString -- ^ PublicKeyMaterial
     -> EC2 m KeyPair
 importKeyPair name material =
     ec2Query "ImportKeyPair" params keyPairSink
   where
     params =
         [ "KeyName" |= name
-        , "PublicKeyMaterial" |= material
+        , "PublicKeyMaterial" |= bsToText (BASE.encode material)
         ]

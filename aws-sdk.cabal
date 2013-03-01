@@ -41,7 +41,6 @@ library
                    , AWS.CloudWatch.Types
   other-modules:     AWS.Util
                    , AWS.Credential
-                   , AWS.Types
                    , AWS.Class
                    , AWS.EC2.Internal
                    , AWS.EC2.Address
@@ -166,6 +165,11 @@ test-suite test
                  , tls
                  , time
                  , random
+                 , bytestring
+                 , base64-bytestring
+                 , certificate
+                 , crypto-random-api
+                 , crypto-pubkey
 
 source-repository head
     type:            git
