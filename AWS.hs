@@ -23,7 +23,7 @@
 -- > main = do
 -- >     cred <- loadCredential
 -- >     doc <- runResourceT $
--- >         runEC2 cred $
+-- >         runEC2 (defaultSettings cred) $
 -- >             Util.list $ describeInstances [] []
 -- >     print doc
 -- >     putStr "Length: "
