@@ -5,6 +5,7 @@ module AWS.RDS.DBInstance
     , createDBInstance
     , deleteDBInstance
     , createDBInstanceReadReplica
+    , promoteReadReplica
     , rebootDBInstance
     , restoreDBInstanceFromDBSnapshot
     ) where
@@ -195,6 +196,22 @@ createDBInstanceReadReplica CreateReadReplicaRequest{..} =
             boolToText <$> createReadReplicaPubliclyAccessible
         , "SourceDBInstanceIdentifier" |=
             createReadReplicaSourceDBInstanceIdentifier
+        ]
+
+promoteReadReplica
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Int -- ^ BackupRetentionPeriod
+    -> Text -- ^ DBInstanceIdentifier
+    -> Maybe Text -- ^ PreferredBackupWindow
+    -> RDS m DBInstance
+promoteReadReplica period dbiid window =
+    rdsQuery "PromoteReadReplica" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "BackupRetentionPeriod" |=? toText <$> period
+        , "DBInstanceIdentifier" |= dbiid
+        , "PreferredBackupWindow" |=? window
         ]
 
 rebootDBInstance
