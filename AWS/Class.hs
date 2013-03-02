@@ -128,12 +128,12 @@ instance MonadBaseControl base m => MonadBaseControl base (AWS c m)
 
 runAWS :: MonadIO m
     => (HTTP.Manager -> c)
-    -> AWSSettings
     -> AWS c m a
     -> m a
-runAWS ctx settings app = do
+runAWS ctx app = do
     mgr <- liftIO $ HTTP.newManager HTTP.def
-    runAWSwithManager mgr ctx settings app
+    cred <- liftIO $ loadCredential
+    runAWSwithManager mgr ctx (defaultSettings cred) app
 
 runAWSwithManager :: Monad m
     => HTTP.Manager

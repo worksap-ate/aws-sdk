@@ -33,7 +33,7 @@ initialCloudWatchContext mgr = AWSContext
     , lastRequestId = Nothing
     }
 
-runCloudWatch :: MonadIO m => AWSSettings -> CloudWatch m a -> m a
+runCloudWatch :: MonadIO m => CloudWatch m a -> m a
 runCloudWatch = runAWS initialCloudWatchContext
 
 runCloudWatchwithManager :: Monad m

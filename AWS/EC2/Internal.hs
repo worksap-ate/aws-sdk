@@ -41,7 +41,7 @@ initialEC2Context mgr = AWSContext
 
 type EC2 m a = AWS AWSContext m a
 
-runEC2 :: MonadIO m => AWSSettings -> AWS AWSContext m a -> m a
+runEC2 :: MonadIO m => AWS AWSContext m a -> m a
 runEC2 = runAWS initialEC2Context
 
 runEC2withManager :: Monad m

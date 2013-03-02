@@ -31,7 +31,7 @@ initialELBContext mgr = AWSContext
     , lastRequestId = Nothing
     }
 
-runELB :: MonadIO m => AWSSettings -> ELB m a -> m a
+runELB :: MonadIO m => ELB m a -> m a
 runELB = runAWS initialELBContext
 
 runELBwithManager :: Monad m

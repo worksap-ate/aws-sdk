@@ -54,7 +54,7 @@ initialRDSContext mgr = AWSContext
     , lastRequestId = Nothing
     }
 
-runRDS :: MonadIO m => AWSSettings -> RDS m a -> m a
+runRDS :: MonadIO m => RDS m a -> m a
 runRDS = runAWS initialRDSContext
 
 runRDSwithManager :: Monad m

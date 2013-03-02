@@ -21,10 +21,8 @@
 -- > 
 -- > main :: IO ()
 -- > main = do
--- >     cred <- loadCredential
--- >     doc <- runResourceT $
--- >         runEC2 (defaultSettings cred) $
--- >             Util.list $ describeInstances [] []
+-- >     doc <- runResourceT $ runEC2 $
+-- >         Util.list $ describeInstances [] []
 -- >     print doc
 -- >     putStr "Length: "
 -- >     print $ length doc
