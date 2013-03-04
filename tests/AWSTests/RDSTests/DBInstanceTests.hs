@@ -23,6 +23,7 @@ runDBInstanceTests :: IO ()
 runDBInstanceTests = hspec $ do
     describeDBInstancesTest
     dbInstanceTest
+    describeOrderableDBInstanceOptionsTest
 
 describeDBInstancesTest :: Spec
 describeDBInstancesTest = do
@@ -115,3 +116,12 @@ modifyTestDBInstanceRequest dbiid = ModifyDBInstanceRequest
     Nothing dbiid Nothing [] Nothing Nothing
     Nothing Nothing (Just $ dbiid <> "modified")
     Nothing Nothing Nothing []
+
+describeOrderableDBInstanceOptionsTest :: Spec
+describeOrderableDBInstanceOptionsTest = do
+    describe "describeOrderableDBInstanceOptions doesn't fail" $ do
+        it "describeOrderableDBInstanceOptions doesn't throw any exception" $ do
+            testRDS region (do
+                describeOrderableDBInstanceOptions Nothing "mysql"
+                    Nothing Nothing Nothing Nothing Nothing
+                ) `miss` anyConnectionException
