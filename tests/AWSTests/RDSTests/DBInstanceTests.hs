@@ -24,6 +24,7 @@ runDBInstanceTests = hspec $ do
     describeDBInstancesTest
     dbInstanceTest
     describeOrderableDBInstanceOptionsTest
+    describeReservedDBInstancesOfferingsTest
 
 describeDBInstancesTest :: Spec
 describeDBInstancesTest = do
@@ -140,4 +141,14 @@ describeOrderableDBInstanceOptionsTest = do
             testRDS region (do
                 describeOrderableDBInstanceOptions Nothing "mysql"
                     Nothing Nothing Nothing Nothing Nothing
+                ) `miss` anyConnectionException
+
+describeReservedDBInstancesOfferingsTest :: Spec
+describeReservedDBInstancesOfferingsTest = do
+    describe "describeReservedDBInstancesOfferingTest doesn't fail" $ do
+        it "describeReservedDBInstancesOfferingsTest doesn't throw any exception" $ do
+            testRDS region (do
+                describeReservedDBInstancesOfferings
+                    Nothing Nothing Nothing Nothing
+                    Nothing Nothing Nothing Nothing
                 ) `miss` anyConnectionException
