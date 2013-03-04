@@ -14,8 +14,6 @@ testELB
     -> ELB (ResourceT IO) a
     -> IO a
 testELB region request = do
-    cred <- loadCredential
-    runResourceT $ do
-        runELB (defaultSettings cred) $ do
-            setRegion region
-            request
+    runResourceT $ runELB $ do
+        setRegion region
+        request
