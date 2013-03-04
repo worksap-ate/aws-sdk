@@ -5,6 +5,7 @@ module AWS.RDS.DBSecurityGroup
     , createDBSecurityGroup
     , deleteDBSecurityGroup
     , authorizeDBSecurityGroupIngress
+    , revokeDBSecurityGroupIngress
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -88,6 +89,26 @@ authorizeDBSecurityGroupIngress
     -> RDS m DBSecurityGroup
 authorizeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
     rdsQuery "AuthorizeDBSecurityGroupIngress" params $
+        element "DBSecurityGroup" dbSecurityGroupSink
+  where
+    params =
+        [ "DBSecurityGroupName" |= dbsg
+        , "CIDRIP" |=? toText <$> ip
+        , "EC2SecurityGroupId" |=? sgid
+        , "EC2SecurityGroupName" |=? sgname
+        , "EC2SecurityGroupOwnerId" |=? sgoid
+        ]
+
+revokeDBSecurityGroupIngress
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBSecurityGroupName
+    -> Maybe (AddrRange IPv4) -- ^ CIDRIP
+    -> Maybe Text -- ^ EC2SecurityGroupId
+    -> Maybe Text -- ^ EC2SecurityGroupName
+    -> Maybe Text -- ^ EC2SecurityGroupOwnerId
+    -> RDS m DBSecurityGroup
+revokeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
+    rdsQuery "RevokeDBSecurityGroupIngress" params $
         element "DBSecurityGroup" dbSecurityGroupSink
   where
     params =
