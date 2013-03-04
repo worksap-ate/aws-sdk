@@ -16,10 +16,11 @@ module AWS.RDS.Types.DBInstance
     , CreateReadReplicaRequest(..)
     , RestoreDBInstanceFromDBSnapshotRequest(..)
     , ModifyDBInstanceRequest(..)
+    , OrderableDBInstanceOption(..)
     ) where
 
 import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
-import AWS.RDS.Types.DBSubnetGroup (DBSubnetGroup)
+import AWS.RDS.Types.DBSubnetGroup (DBSubnetGroup, AvailabilityZone)
 
 data DBInstance = DBInstance
     { dbInstanceIops :: Maybe Int
@@ -212,6 +213,18 @@ data ModifyDBInstanceRequest = ModifyDBInstanceRequest
     , modifyDBInstanceRequestPrefferedBackupWindow :: Maybe Text
     , modifyDBInstanceRequestPrefferedMaintenanceWindow :: Maybe Text
     , modifyDBInstanceRequestVpcSecurityGroupIds :: [Text]
+    }
+  deriving (Show, Eq)
+
+data OrderableDBInstanceOption = OrderableDBInstanceOption
+    { orderableDBInstanceOptionMultiAZCapable :: Bool
+    , orderableDBInstanceOptionEngine :: Engine
+    , orderableDBInstanceOptionLicenseModel :: LicenseModel
+    , orderableDBInstanceOptionReadReplicaCapable :: Bool
+    , orderableDBInstanceOptionVpc :: Bool
+    , orderableDBInstanceOptionEngineVersion :: Text
+    , orderableDBInstanceOptionAvailabilityZones :: [AvailabilityZone]
+    , orderableDBInstanceOptionDBInstanceClass :: DBInstanceClass
     }
   deriving (Show, Eq)
 

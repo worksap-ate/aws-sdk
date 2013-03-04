@@ -9,6 +9,7 @@ module AWS.RDS.DBInstance
     , rebootDBInstance
     , restoreDBInstanceFromDBSnapshot
     , modifyDBInstance
+    , describeOrderableDBInstanceOptions
     ) where
 
 import Data.Text (Text)
@@ -312,3 +313,45 @@ modifyDBInstance ModifyDBInstanceRequest{..} =
         , "VpcSecurityGroups.member" |.#=
             modifyDBInstanceRequestVpcSecurityGroupIds
         ]
+
+describeOrderableDBInstanceOptions
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe DBInstanceClass -- ^ DBInstanceClass
+    -> Engine -- ^ Engine
+    -> Maybe Text -- ^ EngineVersion
+    -> Maybe LicenseModel -- ^ LicenseModel
+    -> Maybe Bool -- ^ Vpc
+    -> Maybe Text -- ^ Marker
+    -> Maybe Int -- ^ MaxRecords
+    -> RDS m (Maybe Text, [OrderableDBInstanceOption]) -- ^ (Marker, OrderableDBInstanceOptions)
+describeOrderableDBInstanceOptions class' engine ver license vpc marker maxRec =
+    rdsQuery "DescribeOrderableDBInstanceOptions" params $ (,)
+        <$> getT "Marker"
+        <*> elements "OrderableDBInstanceOption" orderableDBInstanceOptionSink
+  where
+    params =
+        [ "DBInstanceClass" |=? class'
+        , "Engine" |= engine
+        , "EngineVersion" |=? ver
+        , "LicenseModel" |=? toText <$> license
+        , "Vpc" |=? boolToText <$> vpc
+        , "Marker" |=? marker
+        , "MaxRecords" |=? toText <$> maxRec
+        ]
+
+orderableDBInstanceOptionSink
+    :: MonadThrow m
+    => Consumer Event m OrderableDBInstanceOption
+orderableDBInstanceOptionSink = OrderableDBInstanceOption
+    <$> getT "MultiAZCapable"
+    <*> getT "Engine"
+    <*> getT "LicenseModel"
+    <*> getT "ReadReplicaCapable"
+    <*> getT "Vpc"
+    <*> getT "EngineVersion"
+    <*> elements "AvailabilityZone" (
+        AvailabilityZone
+        <$> getT "Name"
+        <*> getT "ProvisionedIopsCapable"
+        )
+    <*> getT "DBInstanceClass"
