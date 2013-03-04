@@ -17,7 +17,7 @@ region = "ap-northeast-1"
 runDBSubnetGroupTests :: IO ()
 runDBSubnetGroupTests = do
     hspec describeDBSubnetGroupsTest
-    hspec createAndDeleteDBSubnetGroupTest
+    hspec createDeleteModifyDBSubnetGroupTest
 
 describeDBSubnetGroupsTest :: Spec
 describeDBSubnetGroupsTest = do
@@ -26,13 +26,14 @@ describeDBSubnetGroupsTest = do
             testRDS region (describeDBSubnetGroups Nothing Nothing Nothing)
                 `miss` anyConnectionException
 
-createAndDeleteDBSubnetGroupTest :: Spec
-createAndDeleteDBSubnetGroupTest = do
-    describe "{create,delete}DBSubnetGroup doesn't fail" $ do
-        it "{create,delete}DBSubnetGroup doesn't throw any exception" $ do
+createDeleteModifyDBSubnetGroupTest :: Spec
+createDeleteModifyDBSubnetGroupTest = do
+    describe "{create,delete,modify}DBSubnetGroup doesn't fail" $ do
+        it "{create,delete,modify}DBSubnetGroup doesn't throw any exception" $ do
             testRDS region (do
                 sgs <- describeDBSubnetGroups Nothing Nothing Nothing
                 createDBSubnetGroup name (subnets sgs) "test"
+                modifyDBSubnetGroup name (Just "test-modified") (subnets sgs)
                 deleteDBSubnetGroup name
                 ) `miss` anyConnectionException
   where
