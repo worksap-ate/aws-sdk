@@ -4,6 +4,7 @@ module AWS.RDS.DBSecurityGroup
     ( describeDBSecurityGroups
     , createDBSecurityGroup
     , deleteDBSecurityGroup
+    , authorizeDBSecurityGroupIngress
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -11,6 +12,7 @@ import Data.Conduit (Consumer, MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
 import Data.XML.Types (Event)
 
+import AWS.Lib.FromText (AddrRange, IPv4)
 import AWS.Lib.Parser (getT, element)
 import AWS.Lib.Query ((|=), (|=?))
 import AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements)
@@ -40,8 +42,8 @@ dbSecurityGroupSink = DBSecurityGroup
     <$> elements "EC2SecurityGroup" (
         EC2SecurityGroup
         <$> getT "Status"
-        <*> getT "EC2SecurityGroupOwnerId"
         <*> getT "EC2SecurityGroupName"
+        <*> getT "EC2SecurityGroupOwnerId"
         <*> getT "EC2SecurityGroupId"
         )
     <*> getT "DBSecurityGroupDescription"
@@ -75,3 +77,23 @@ deleteDBSecurityGroup
 deleteDBSecurityGroup name =
     rdsQueryOnlyMetadata "DeleteDBSecurityGroup"
         ["DBSecurityGroupName" |= name]
+
+authorizeDBSecurityGroupIngress
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBSecurityGroupName
+    -> Maybe (AddrRange IPv4) -- ^ CIDRIP
+    -> Maybe Text -- ^ EC2SecurityGroupId
+    -> Maybe Text -- ^ EC2SecurityGroupName
+    -> Maybe Text -- ^ EC2SecurityGroupOwnerId
+    -> RDS m DBSecurityGroup
+authorizeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
+    rdsQuery "AuthorizeDBSecurityGroupIngress" params $
+        element "DBSecurityGroup" dbSecurityGroupSink
+  where
+    params =
+        [ "DBSecurityGroupName" |= dbsg
+        , "CIDRIP" |=? toText <$> ip
+        , "EC2SecurityGroupId" |=? sgid
+        , "EC2SecurityGroupName" |=? sgname
+        , "EC2SecurityGroupOwnerId" |=? sgoid
+        ]
