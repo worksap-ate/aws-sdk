@@ -40,6 +40,7 @@ dbInstanceTest = do
             dbiid <- getRandomText "hspec-dbinstance-"
             replicaId <- getRandomText "hspec-replica-"
             finalSnapshot <- getRandomText "hspec-final-snapshot-"
+            restoreId <- getRandomText "hspec-restore-point-in-time-"
             testRDS region (do
                 withDBInstance (createTestDBInstanceRequest dbiid) $ \_ -> do
                     -- deleteDBInstance with FinalSnapshot
@@ -80,6 +81,14 @@ dbInstanceTest = do
                     waitUntilAvailable replicaId
                     deleteDBInstance replicaId SkipFinalSnapshot
 
+                    -- restoreDBInstanceToPointInTime
+                    restoreDBInstanceToPointInTime
+                        UseLatestRestorableTime $
+                        restoreDBInstanceToPointInTimeRequest dbiid restoreId
+                    waitUntilAvailable dbiid
+                    waitUntilAvailable restoreId
+                    deleteDBInstance restoreId SkipFinalSnapshot
+
                     -- modifyDBInstance
                     modifyDBInstance $ modifyTestDBInstanceRequest dbiid
 
@@ -109,6 +118,13 @@ restoreDBInstanceRequest :: Text -> Text -> RestoreDBInstanceFromDBSnapshotReque
 restoreDBInstanceRequest dbsid dbiid = RestoreDBInstanceFromDBSnapshotRequest
     Nothing Nothing Nothing dbiid Nothing dbsid Nothing
     Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+
+restoreDBInstanceToPointInTimeRequest :: Text -> Text -> RestoreDBInstanceToPointInTimeRequest
+restoreDBInstanceToPointInTimeRequest source target =
+    RestoreDBInstanceToPointInTimeRequest
+        source target
+        Nothing Nothing Nothing Nothing Nothing Nothing
+        Nothing Nothing Nothing Nothing Nothing Nothing
 
 modifyTestDBInstanceRequest :: Text -> ModifyDBInstanceRequest
 modifyTestDBInstanceRequest dbiid = ModifyDBInstanceRequest
