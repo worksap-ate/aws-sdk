@@ -47,23 +47,19 @@ testEC2
     -> EC2 (ResourceT IO) (ResumableSource (ResourceT IO) a)
     -> IO [a]
 testEC2 region request = do
-    cred <- loadCredential
-    runResourceT $ do
-        runEC2 (defaultSettings cred) $ do
-            setRegion region
-            response <- request
-            lift $ response $$+- CL.consume
+    runResourceT $ runEC2 $ do
+        setRegion region
+        response <- request
+        lift $ response $$+- CL.consume
 
 testEC2'
     :: Text
     -> EC2 (ResourceT IO) a
     -> IO a
 testEC2' region request = do
-    cred <- loadCredential
-    runResourceT $ do
-        runEC2 (defaultSettings cred) $ do
-            setRegion region
-            request
+    runResourceT $ runEC2 $ do
+        setRegion region
+        request
 
 withVpc
     :: (MonadBaseControl IO m, MonadResource m)

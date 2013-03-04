@@ -27,11 +27,9 @@ testRDS
     -> RDS (ResourceT IO) a
     -> IO a
 testRDS region request = do
-    cred <- loadCredential
-    runResourceT $ do
-        runRDS (defaultSettings cred) $ do
-            setRegion region
-            request
+    runResourceT $ runRDS $ do
+        setRegion region
+        request
 
 withDBInstance
     :: (MonadBaseControl IO m, MonadResource m)
