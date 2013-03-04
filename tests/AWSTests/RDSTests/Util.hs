@@ -7,6 +7,7 @@ module AWSTests.RDSTests.Util
     , withDBSnapshot
     , withEventSubscription
     , withDBParameterGroup
+    , withDBSecurityGroup
     )
     where
 
@@ -92,3 +93,12 @@ withDBParameterGroup
 withDBParameterGroup name = E.bracket
     (createDBParameterGroup "MySQL5.5" name "hspec-test")
     (deleteDBParameterGroup . dbParameterGroupName)
+
+withDBSecurityGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> (DBSecurityGroup -> RDS m a)
+    -> RDS m a
+withDBSecurityGroup name = E.bracket
+    (createDBSecurityGroup name "hspec-test")
+    (deleteDBSecurityGroup . dbSecurityGroupName)
