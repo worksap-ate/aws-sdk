@@ -8,6 +8,7 @@ module AWS.RDS.DBParameterGroup
     , modifyDBParameterGroup
     , resetDBParameterGroup
     , describeDBEngineVersions
+    , describeEngineDefaultParameters
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -194,3 +195,24 @@ characterSetSink
 characterSetSink = CharacterSet
     <$> getT "CharacterSetName"
     <*> getT "CharacterSetDescription"
+
+describeEngineDefaultParameters
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ DBparameterGroupFamily
+    -> Maybe Text -- ^ Marker
+    -> Maybe Int -- ^ MaxRecords
+    -> RDS m (Maybe Text, EngineDefaults) -- ^ (Marker, EngineDefaults)
+describeEngineDefaultParameters family marker maxRecords =
+    rdsQuery "DescribeEngineDefaultParameters" params $
+        element "EngineDefaults" $ (,)
+            <$> getT "Marker"
+            <*> (EngineDefaults
+                <$> getT "DBParameterGroupFamily"
+                <*> elements "Parameter" parameterSink
+                )
+  where
+    params =
+        [ "DBParameterGroupFamily" |= family
+        , "Marker" |=? marker
+        , "MaxRecords" |=? toText <$> maxRecords
+        ]

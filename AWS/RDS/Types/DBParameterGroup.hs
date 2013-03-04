@@ -7,6 +7,7 @@ module AWS.RDS.Types.DBParameterGroup
     , ResetParameter(..)
     , DBEngineVersion(..)
     , CharacterSet(..)
+    , EngineDefaults(..)
     ) where
 
 import AWS.Lib.FromText (Text)
@@ -68,5 +69,11 @@ data DBEngineVersion = DBEngineVersion
 data CharacterSet = CharacterSet
     { characterSetName :: Text
     , characterSetDescription :: Text
+    }
+  deriving (Show, Eq)
+
+data EngineDefaults = EngineDefaults
+    { engineDefaultsDBParameterGroupFamily :: Text
+    , engineDefaultsParameters :: [Parameter]
     }
   deriving (Show, Eq)
