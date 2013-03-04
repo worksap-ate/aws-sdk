@@ -11,6 +11,7 @@ module AWS.RDS.DBInstance
     , modifyDBInstance
     , describeOrderableDBInstanceOptions
     , restoreDBInstanceToPointInTime
+    , describeReservedDBInstancesOfferings
     ) where
 
 import Data.Text (Text)
@@ -401,3 +402,49 @@ restoreDBInstanceToPointInTime restore RestoreDBInstanceToPointInTimeRequest{..}
         "UseLatestRestorableTime" |= boolToText True
     restoreTimeParam (RestoreTime time) =
         "RestoreTime" |= toText time
+
+describeReservedDBInstancesOfferings
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Maybe Text -- ^ ReservedDBInstancesOfferingId
+    -> Maybe DBInstanceClass -- ^ DBInstanceClass
+    -> Maybe Int -- ^ Duration
+    -> Maybe Bool -- ^ MultiAZ
+    -> Maybe Text -- ^ OfferingType
+    -> Maybe Text -- ^ ProductDescription
+    -> Maybe Text -- ^ Marker
+    -> Maybe Int -- ^ MaxRecords
+    -> RDS m (Maybe Text, [ReservedDBInstancesOffering]) -- ^ (Marker, ReservedDBInstancesOfferings)
+describeReservedDBInstancesOfferings oid class' dur az offer desc marker maxRec =
+    rdsQuery "DescribeReservedDBInstancesOfferings" params $ (,)
+        <$> getT "Marker"
+        <*> elements "ReservedDBInstancesOffering" reservedDBInstancesOfferingSink
+  where
+    params =
+        [ "ReservedDBInstancesOfferingId" |=? oid
+        , "DBInstanceClass" |=? class'
+        , "Duration" |=? toText <$> dur
+        , "MultiAZ" |=? boolToText <$> az
+        , "OfferingType" |=? offer
+        , "ProductDescription" |=? desc
+        , "Marker" |=? marker
+        , "MaxRecords" |=? toText <$> maxRec
+        ]
+
+reservedDBInstancesOfferingSink
+    :: MonadThrow m
+    => Consumer Event m ReservedDBInstancesOffering
+reservedDBInstancesOfferingSink = ReservedDBInstancesOffering
+    <$> getT "OfferingType"
+    <*> getT "Duration"
+    <*> getT "CurrencyCode"
+    <*> elements "RecurringCharge" (
+        RecurringCharge
+        <$> getT "RecurringChargeFrequency"
+        <*> getT "RecurringChargeAmount"
+        )
+    <*> getT "FixedPrice"
+    <*> getT "ProductDescription"
+    <*> getT "UsagePrice"
+    <*> getT "ReservedDBInstancesOfferingId"
+    <*> getT "MultiAZ"
+    <*> getT "DBInstanceClass"

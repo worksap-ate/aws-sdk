@@ -19,6 +19,8 @@ module AWS.RDS.Types.DBInstance
     , OrderableDBInstanceOption(..)
     , RestoreDBInstanceToPointInTimeRequest(..)
     , RestoreTime(..)
+    , ReservedDBInstancesOffering(..)
+    , RecurringCharge(..)
     ) where
 
 import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
@@ -266,6 +268,26 @@ data RestoreDBInstanceToPointInTimeRequest
 data RestoreTime
     = UseLatestRestorableTime
     | RestoreTime UTCTime
+  deriving (Show, Eq)
+
+data ReservedDBInstancesOffering = ReservedDBInstancesOffering
+    { reservedDBInstanceOfferingOfferingType :: Text
+    , reservedDBInstanceOfferingDuration ::  Int
+    , reservedDBInstanceOfferingCurrencyCode :: Text
+    , reservedDBInstanceOfferingRecurringCharge :: [RecurringCharge]
+    , reservedDBInstanceOfferingFixedPrice :: Double
+    , reservedDBInstanceOfferingProductDescription :: Text
+    , reservedDBInstanceOfferingUsagePrice :: Double
+    , reservedDBInstanceOfferingId :: Text
+    , reservedDBInstanceOfferingMultiAZ :: Bool
+    , reservedDBInstanceOfferingDBInstanceClass :: DBInstanceClass
+    }
+  deriving (Show, Eq)
+
+data RecurringCharge = RecurringCharge
+    { recurringChargeFrequency :: Text
+    , recurringChargeAmount :: Double
+    }
   deriving (Show, Eq)
 
 deriveFromText "LicenseModel"
