@@ -7,6 +7,7 @@ import Data.Text (Text)
 import Test.Hspec
 
 import AWS.RDS
+import AWS.RDS.Types
 import AWSTests.Util
 import AWSTests.RDSTests.Util
 
@@ -18,6 +19,7 @@ runOptionGroupTests = hspec $ do
     describeOptionGroupsTest
     createAndDeleteOptionGroupTest
     describeOptionGroupOptionsTest
+    modifyOptionGroupTest
 
 describeOptionGroupsTest :: Spec
 describeOptionGroupsTest = do
@@ -45,3 +47,19 @@ describeOptionGroupOptionsTest = do
             testRDS region (do
                 describeOptionGroupOptions "oracle-se1" Nothing Nothing Nothing
                 ) `miss` anyConnectionException
+
+modifyOptionGroupTest :: Spec
+modifyOptionGroupTest = do
+    describe "modifyOptionGroupTest doesn't fail" $ do
+        it "modifyOptionGroupTest doesn't throw any exception" $ do
+            og <- getRandomText "hspec-test-option-group-"
+            testRDS region (do
+                withOptionGroup og $ \_ -> do
+                    modifyOptionGroup og include (Just True)
+                    modifyOptionGroup og remove (Just True)
+                ) `miss` anyConnectionException
+  where
+    include = OptionsToInclude
+        [ OptionConfiguration ["default"] "OEM" 30000 []
+        ]
+    remove = OptionsToRemove ["OEM"]

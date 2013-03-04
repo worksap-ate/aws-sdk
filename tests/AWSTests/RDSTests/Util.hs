@@ -8,6 +8,7 @@ module AWSTests.RDSTests.Util
     , withEventSubscription
     , withDBParameterGroup
     , withDBSecurityGroup
+    , withOptionGroup
     )
     where
 
@@ -102,3 +103,12 @@ withDBSecurityGroup
 withDBSecurityGroup name = E.bracket
     (createDBSecurityGroup name "hspec-test")
     (deleteDBSecurityGroup . dbSecurityGroupName)
+
+withOptionGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text
+    -> (OptionGroup -> RDS m a)
+    -> RDS m a
+withOptionGroup name = E.bracket
+    (createOptionGroup "oracle-ee" "11.2" "hspec-test" name)
+    (deleteOptionGroup . optionGroupName)
