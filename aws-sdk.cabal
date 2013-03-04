@@ -128,7 +128,7 @@ library
                    , old-locale
                    , http-conduit >= 1.9.0
                    , data-default
-                   , xml-conduit >= 1.0.3.3
+                   , xml-conduit >= 1.1.0.3
                    , xml-types
                    , text
                    , monad-control
