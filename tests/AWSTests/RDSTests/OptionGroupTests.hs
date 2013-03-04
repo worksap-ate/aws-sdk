@@ -17,6 +17,7 @@ runOptionGroupTests :: IO ()
 runOptionGroupTests = hspec $ do
     describeOptionGroupsTest
     createAndDeleteOptionGroupTest
+    describeOptionGroupOptionsTest
 
 describeOptionGroupsTest :: Spec
 describeOptionGroupsTest = do
@@ -36,3 +37,11 @@ createAndDeleteOptionGroupTest = do
                 ) `miss` anyConnectionException
   where
     name = "hspec-test-option-group"
+
+describeOptionGroupOptionsTest :: Spec
+describeOptionGroupOptionsTest = do
+    describe "describeOptionGroupOptions doesn't fail" $ do
+        it "describeOptionGroupOptions doesn't throw any exception" $ do
+            testRDS region (do
+                describeOptionGroupOptions "oracle-se1" Nothing Nothing Nothing
+                ) `miss` anyConnectionException
