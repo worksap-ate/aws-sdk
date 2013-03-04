@@ -2,6 +2,8 @@ module AWS.RDS.Types.OptionGroup
     ( OptionGroup(..)
     , Option(..)
     , OptionGroupOption(..)
+    , ModifyOptionGroupRequest(..)
+    , OptionConfiguration(..)
     ) where
 
 import AWS.Lib.FromText (Text)
@@ -39,5 +41,18 @@ data OptionGroupOption = OptionGroupOption
     , optionGroupOptionName :: Text
     , optionGroupOptionEngineName :: Text
     , optionGroupOptionMinimumRequiredMinorEngineVersion :: Text
+    }
+  deriving (Show, Eq)
+
+data ModifyOptionGroupRequest
+    = OptionsToInclude [OptionConfiguration]
+    | OptionsToRemove [Text]
+  deriving (Show, Eq)
+
+data OptionConfiguration = OptionConfiguration
+    { optionConfigurationDBSecurityGroupMemberships :: [Text]
+    , optionConfigurationOptionName :: Text
+    , optionConfigurationPort :: Int
+    , optionConfigurationVpcSecurityGroupMemberships :: [Text]
     }
   deriving (Show, Eq)

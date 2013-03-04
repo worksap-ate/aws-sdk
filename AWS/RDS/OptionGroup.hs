@@ -5,6 +5,7 @@ module AWS.RDS.OptionGroup
     , createOptionGroup
     , deleteOptionGroup
     , describeOptionGroupOptions
+    , modifyOptionGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -16,7 +17,7 @@ import AWS.Lib.Parser
 import AWS.Lib.Query
 import AWS.RDS.Internal
 import AWS.RDS.Types.OptionGroup
-import AWS.Util (toText)
+import AWS.Util (toText, boolToText)
 
 describeOptionGroups
     :: (MonadBaseControl IO m, MonadResource m)
@@ -117,3 +118,31 @@ optionGroupOptionSink = OptionGroupOption
     <*> getT "Name"
     <*> getT "EngineName"
     <*> getT "MinimumRequiredMinorEngineVersion"
+
+modifyOptionGroup
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ OptionGroupName
+    -> ModifyOptionGroupRequest -- ^ OptionsToInclude or OptionsToRemove
+    -> Maybe Bool -- ^ ApplyImmediately
+    -> RDS m OptionGroup
+modifyOptionGroup name req imm =
+    rdsQuery "ModifyOptionGroup" params $
+        element "OptionGroup" optionGroupSink
+  where
+    params =
+        [ "OptionGroupName" |= name
+        , "ApplyImmediately" |=? boolToText <$> imm
+        , reqParam req
+        ]
+    reqParam (OptionsToInclude confs) =
+        "OptionsToInclude.member" |.#. map confParams confs
+    reqParam (OptionsToRemove names) =
+        "OptionsToRemove.member" |.#= names
+    confParams conf =
+        [ "DBSecurityGroupMemberships.member" |.#=
+            optionConfigurationDBSecurityGroupMemberships conf
+        , "OptionName" |= optionConfigurationOptionName conf
+        , "Port" |= toText (optionConfigurationPort conf)
+        , "VpcSecurityGroupMemberships.member" |.#=
+            optionConfigurationVpcSecurityGroupMemberships conf
+        ]
