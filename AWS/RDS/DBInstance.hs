@@ -8,6 +8,7 @@ module AWS.RDS.DBInstance
     , promoteReadReplica
     , rebootDBInstance
     , restoreDBInstanceFromDBSnapshot
+    , modifyDBInstance
     ) where
 
 import Data.Text (Text)
@@ -263,4 +264,51 @@ restoreDBInstanceFromDBSnapshot RestoreDBInstanceFromDBSnapshotRequest{..} =
             restoreDBInstanceFromDBSnapshotRequestPort
         , "PubliclyAccessible" |=? boolToText <$>
             restoreDBInstanceFromDBSnapshotRequestPubliclyAccessible
+        ]
+
+modifyDBInstance
+    :: (MonadBaseControl IO m, MonadResource m)
+    => ModifyDBInstanceRequest
+    -> RDS m DBInstance
+modifyDBInstance ModifyDBInstanceRequest{..} =
+    rdsQuery "ModifyDBInstance" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "AllocatedStorage" |=? toText <$>
+            modifyDBInstanceRequestAllocatedStorage
+        , "AllowMajorVersionUpgrade" |=? boolToText <$>
+            modifyDBInstanceRequestAllowMajorVersionUpgrade
+        , "ApplyImmediately" |=? boolToText <$>
+            modifyDBInstanceRequestApplyImmediately
+        , "AutoMinorVersionUpgrade" |=? boolToText <$>
+            modifyDBInstanceRequestAutoMinorVersionUpgrade
+        , "BackupRetentionPeriod" |=? toText <$>
+            modifyDBInstanceRequestBackupRetentionPeriod
+        , "DBInstanceClass" |=?
+            modifyDBInstanceRequestDBInstanceClass
+        , "DBInstanceIdentifier" |=
+            modifyDBInstanceRequestDBInstanceIdentifier
+        , "DBParameterGroupName" |=?
+            modifyDBInstanceRequestDBParameterGroupName
+        , "DBSecurityGroups.member" |.#=
+            modifyDBInstanceRequestDBSecurityGroups
+        , "EngineVersion" |=?
+            modifyDBInstanceRequestEngineVersion
+        , "Iops" |=? toText <$>
+            modifyDBInstanceRequestIops
+        , "MasterUserPassword" |=?
+            modifyDBInstanceRequestMasterUserPassword
+        , "MultiAZ" |=? boolToText <$>
+            modifyDBInstanceRequestMultiAZ
+        , "NewDBInstanceIdentifier" |=?
+            modifyDBInstanceRequestNewDBInstanceIdentifier
+        , "OptionGroupName" |=?
+            modifyDBInstanceRequestOptionGroupName
+        , "PreferredBackupWindow" |=?
+            modifyDBInstanceRequestPrefferedBackupWindow
+        , "PreferredMaintenanceWindow" |=?
+            modifyDBInstanceRequestPrefferedMaintenanceWindow
+        , "VpcSecurityGroups.member" |.#=
+            modifyDBInstanceRequestVpcSecurityGroupIds
         ]

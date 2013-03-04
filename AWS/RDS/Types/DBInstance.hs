@@ -15,6 +15,7 @@ module AWS.RDS.Types.DBInstance
     , FinalSnapshot(..)
     , CreateReadReplicaRequest(..)
     , RestoreDBInstanceFromDBSnapshotRequest(..)
+    , ModifyDBInstanceRequest(..)
     ) where
 
 import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
@@ -190,6 +191,28 @@ data RestoreDBInstanceFromDBSnapshotRequest
         , restoreDBInstanceFromDBSnapshotRequestPubliclyAccessible
             :: Maybe Bool
         }
+  deriving (Show, Eq)
+
+data ModifyDBInstanceRequest = ModifyDBInstanceRequest
+    { modifyDBInstanceRequestAllocatedStorage :: Maybe Int
+    , modifyDBInstanceRequestAllowMajorVersionUpgrade :: Maybe Bool
+    , modifyDBInstanceRequestApplyImmediately :: Maybe Bool
+    , modifyDBInstanceRequestAutoMinorVersionUpgrade :: Maybe Bool
+    , modifyDBInstanceRequestBackupRetentionPeriod :: Maybe Int
+    , modifyDBInstanceRequestDBInstanceClass :: Maybe DBInstanceClass
+    , modifyDBInstanceRequestDBInstanceIdentifier :: Text
+    , modifyDBInstanceRequestDBParameterGroupName :: Maybe Text
+    , modifyDBInstanceRequestDBSecurityGroups :: [Text]
+    , modifyDBInstanceRequestEngineVersion :: Maybe Text
+    , modifyDBInstanceRequestIops :: Maybe Int
+    , modifyDBInstanceRequestMasterUserPassword :: Maybe Text
+    , modifyDBInstanceRequestMultiAZ :: Maybe Bool
+    , modifyDBInstanceRequestNewDBInstanceIdentifier :: Maybe Text
+    , modifyDBInstanceRequestOptionGroupName :: Maybe Text
+    , modifyDBInstanceRequestPrefferedBackupWindow :: Maybe Text
+    , modifyDBInstanceRequestPrefferedMaintenanceWindow :: Maybe Text
+    , modifyDBInstanceRequestVpcSecurityGroupIds :: [Text]
+    }
   deriving (Show, Eq)
 
 deriveFromText "LicenseModel"
