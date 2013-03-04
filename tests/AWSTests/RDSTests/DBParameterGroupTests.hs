@@ -24,6 +24,7 @@ runDBParameterGroupTests = hspec $ do
     describeDBParametersTest
     modifyAndResetDBParameterGroupTest
     describeDBEngineVersionsTest
+    describeEngineDefaultParametersTest
 
 describeDBParameterGroupsTest :: Spec
 describeDBParameterGroupsTest = do
@@ -81,4 +82,13 @@ describeDBEngineVersionsTest = do
         it "describeDBEngineVersions doesn't throw any exception" $ do
             testRDS region (do
                 describeDBEngineVersions Nothing Nothing Nothing Nothing (Just True) Nothing Nothing
+                ) `miss` anyConnectionException
+
+describeEngineDefaultParametersTest :: Spec
+describeEngineDefaultParametersTest = do
+    describe "describeEngineDefaultParameters doesn't fail" $ do
+        it "describeEngineDefaultParameters doesn't throw any exception" $ do
+            testRDS region (do
+                (marker, _) <- describeEngineDefaultParameters "mysql5.5" Nothing (Just 20)
+                describeEngineDefaultParameters "mysql5.5" marker Nothing
                 ) `miss` anyConnectionException
