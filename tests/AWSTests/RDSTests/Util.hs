@@ -18,7 +18,6 @@ import Data.List (find)
 import Data.Text (Text)
 import Data.Conduit (ResourceT, runResourceT)
 
-import AWS
 import AWS.RDS
 import AWS.RDS.Types
 

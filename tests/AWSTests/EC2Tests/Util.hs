@@ -37,7 +37,6 @@ import qualified Control.Exception.Lifted as E
 import Data.Text (Text)
 import Data.IP (IPv4, AddrRange)
 
-import AWS
 import AWS.EC2
 import AWS.EC2.Types
 import AWS.EC2.Util (retry, sleep, wait, list)

@@ -23,7 +23,7 @@ module AWS.Lib.Parser
 import Data.XML.Types (Event(..), Name(..))
 import Data.ByteString (ByteString)
 import Data.Conduit
-import Data.Conduit.Internal (ConduitM)
+import qualified Data.Conduit.Internal as CI
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XML
 import Control.Applicative
@@ -103,8 +103,8 @@ getT_ name = () <$ (getT name :: Consumer Event m (Maybe Text))
 
 elementM :: MonadThrow m
     => Text
-    -> ConduitM Event o m a
-    -> ConduitM Event o m (Maybe a)
+    -> CI.ConduitM Event o m a
+    -> CI.ConduitM Event o m (Maybe a)
 elementM name inner = do
     sinkDropWhile $ not . isTag
     XML.tagPredicate g (return ()) $ const inner
