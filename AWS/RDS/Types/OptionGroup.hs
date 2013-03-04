@@ -1,6 +1,7 @@
 module AWS.RDS.Types.OptionGroup
     ( OptionGroup(..)
     , Option(..)
+    , OptionGroupOption(..)
     ) where
 
 import AWS.Lib.FromText (Text)
@@ -26,5 +27,17 @@ data Option = Option
     , optionDescription :: Text
     , optionVpcSecurityGroupMemberships :: [VpcSecurityGroupMembership]
     , optionDBSecurityGroupMemberships :: [DBSecurityGroupMembership]
+    }
+  deriving (Show, Eq)
+
+data OptionGroupOption = OptionGroupOption
+    { optionGroupOptionMajorEngineVersion :: Text
+    , optionGroupOptionPortRequired :: Bool
+    , optionGroupOptionOptionsDependedOn :: [Text]
+    , optionGroupOptionDescription :: Text
+    , optionGroupOptionDefaultPort :: Maybe Int
+    , optionGroupOptionName :: Text
+    , optionGroupOptionEngineName :: Text
+    , optionGroupOptionMinimumRequiredMinorEngineVersion :: Text
     }
   deriving (Show, Eq)

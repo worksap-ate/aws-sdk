@@ -4,6 +4,7 @@ module AWS.RDS.OptionGroup
     ( describeOptionGroups
     , createOptionGroup
     , deleteOptionGroup
+    , describeOptionGroupOptions
     ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -14,7 +15,7 @@ import Data.XML.Types (Event)
 import AWS.Lib.Parser
 import AWS.Lib.Query
 import AWS.RDS.Internal
-import AWS.RDS.Types (OptionGroup(..), Option(..))
+import AWS.RDS.Types.OptionGroup
 import AWS.Util (toText)
 
 describeOptionGroups
@@ -85,3 +86,34 @@ deleteOptionGroup
 deleteOptionGroup name =
     rdsQueryOnlyMetadata "DeleteOptionGroup"
         [ "OptionGroupName" |= name ]
+
+describeOptionGroupOptions
+    :: (MonadBaseControl IO m, MonadResource m)
+    => Text -- ^ EngineName
+    -> Maybe Text -- ^ MajorEngineVersion
+    -> Maybe Text -- ^ Marker
+    -> Maybe Int -- ^ MaxRecords
+    -> RDS m [OptionGroupOption]
+describeOptionGroupOptions name version marker maxRecords =
+    rdsQuery "DescribeOptionGroupOptions" params $
+        elements "OptionGroupOption" optionGroupOptionSink
+  where
+    params =
+        [ "EngineName" |= name
+        , "MajorEngineVersion" |=? version
+        , "Marker" |=? marker
+        , "MaxRecords" |=? toText <$> maxRecords
+        ]
+
+optionGroupOptionSink
+    :: MonadThrow m
+    => Consumer Event m OptionGroupOption
+optionGroupOptionSink = OptionGroupOption
+    <$> getT "MajorEngineVersion"
+    <*> getT "PortRequired"
+    <*> elements' "OptionsDependedOn" "OptionName" text
+    <*> getT "Description"
+    <*> getT "DefaultPort"
+    <*> getT "Name"
+    <*> getT "EngineName"
+    <*> getT "MinimumRequiredMinorEngineVersion"
