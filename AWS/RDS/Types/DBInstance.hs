@@ -17,6 +17,8 @@ module AWS.RDS.Types.DBInstance
     , RestoreDBInstanceFromDBSnapshotRequest(..)
     , ModifyDBInstanceRequest(..)
     , OrderableDBInstanceOption(..)
+    , RestoreDBInstanceToPointInTimeRequest(..)
+    , RestoreTime(..)
     ) where
 
 import AWS.Lib.FromText (Text, UTCTime, deriveFromText)
@@ -226,6 +228,44 @@ data OrderableDBInstanceOption = OrderableDBInstanceOption
     , orderableDBInstanceOptionAvailabilityZones :: [AvailabilityZone]
     , orderableDBInstanceOptionDBInstanceClass :: DBInstanceClass
     }
+  deriving (Show, Eq)
+
+data RestoreDBInstanceToPointInTimeRequest
+    = RestoreDBInstanceToPointInTimeRequest
+        { restoreDBInstanceToPointInTimeSourceDBInstanceIdentifier
+            :: Text
+        , restoreDBInstanceToPointInTimeTargetDBInstanceIdentifier
+            :: Text
+        , restoreDBInstanceToPointInTimeAutoMinorVersionUpgrade
+            :: Maybe Bool
+        , restoreDBInstanceToPointInTimeAvailabilityZone
+            :: Maybe Text
+        , restoreDBInstanceToPointInTimeDBInstanceClass
+            :: Maybe DBInstanceClass
+        , restoreDBInstanceToPointInTimeDBName
+            :: Maybe Text
+        , restoreDBInstanceToPointInTimeDBSubnetGroupName
+            :: Maybe Text
+        , restoreDBInstanceToPointInTimeEngine
+            :: Maybe Engine
+        , restoreDBInstanceToPointInTimeIops
+            :: Maybe Int
+        , restoreDBInstanceToPointInTimeLicenseModel
+            :: Maybe LicenseModel
+        , restoreDBInstanceToPointInTimeMultiAZ
+            :: Maybe Bool
+        , restoreDBInstanceToPointInTimeOptionGroupName
+            :: Maybe Text
+        , restoreDBInstanceToPointInTimePort
+            :: Maybe Int
+        , restoreDBInstanceToPointInTimePubliclyAccessible
+            :: Maybe Bool
+        }
+  deriving (Show, Eq)
+
+data RestoreTime
+    = UseLatestRestorableTime
+    | RestoreTime UTCTime
   deriving (Show, Eq)
 
 deriveFromText "LicenseModel"

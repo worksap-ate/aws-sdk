@@ -10,6 +10,7 @@ module AWS.RDS.DBInstance
     , restoreDBInstanceFromDBSnapshot
     , modifyDBInstance
     , describeOrderableDBInstanceOptions
+    , restoreDBInstanceToPointInTime
     ) where
 
 import Data.Text (Text)
@@ -355,3 +356,48 @@ orderableDBInstanceOptionSink = OrderableDBInstanceOption
         <*> getT "ProvisionedIopsCapable"
         )
     <*> getT "DBInstanceClass"
+
+restoreDBInstanceToPointInTime
+    :: (MonadBaseControl IO m, MonadResource m)
+    => RestoreTime
+    -> RestoreDBInstanceToPointInTimeRequest
+    -> RDS m DBInstance
+restoreDBInstanceToPointInTime restore RestoreDBInstanceToPointInTimeRequest{..} =
+    rdsQuery "RestoreDBInstanceToPointInTime" params $
+        element "DBInstance" sinkDBInstance
+  where
+    params =
+        [ "SourceDBInstanceIdentifier" |=
+            restoreDBInstanceToPointInTimeSourceDBInstanceIdentifier
+        , "TargetDBInstanceIdentifier" |=
+            restoreDBInstanceToPointInTimeTargetDBInstanceIdentifier
+        , "AutoMinorVersionUpgrade" |=? boolToText <$>
+            restoreDBInstanceToPointInTimeAutoMinorVersionUpgrade
+        , "AvailabilityZone" |=?
+            restoreDBInstanceToPointInTimeAvailabilityZone
+        , "DBInstanceClass" |=?
+            restoreDBInstanceToPointInTimeDBInstanceClass
+        , "DBName" |=?
+            restoreDBInstanceToPointInTimeDBName
+        , "DBSubnetGroupName" |=?
+            restoreDBInstanceToPointInTimeDBSubnetGroupName
+        , "Engine" |=?
+            restoreDBInstanceToPointInTimeEngine
+        , "Iops" |=? toText <$>
+            restoreDBInstanceToPointInTimeIops
+        , "LicenseModel" |=? toText <$>
+            restoreDBInstanceToPointInTimeLicenseModel
+        , "MultiAZ" |=? boolToText <$>
+            restoreDBInstanceToPointInTimeMultiAZ
+        , "OptionGroupName" |=?
+            restoreDBInstanceToPointInTimeOptionGroupName
+        , "Port" |=? toText <$>
+            restoreDBInstanceToPointInTimePort
+        , "PubliclyAccessible" |=? boolToText <$>
+            restoreDBInstanceToPointInTimePubliclyAccessible
+        , restoreTimeParam restore
+        ]
+    restoreTimeParam UseLatestRestorableTime =
+        "UseLatestRestorableTime" |= boolToText True
+    restoreTimeParam (RestoreTime time) =
+        "RestoreTime" |= toText time
