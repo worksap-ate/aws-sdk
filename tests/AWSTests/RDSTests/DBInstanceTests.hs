@@ -6,6 +6,7 @@ module AWSTests.RDSTests.DBInstanceTests
     where
 
 import Data.Conduit
+import Data.Monoid ((<>))
 import Data.Text (Text)
 import Test.Hspec
 
@@ -78,6 +79,9 @@ dbInstanceTest = do
                     waitUntilAvailable replicaId
                     deleteDBInstance replicaId SkipFinalSnapshot
 
+                    -- modifyDBInstance
+                    modifyDBInstance $ modifyTestDBInstanceRequest dbiid
+
                     -- deleteDBSnapshot
                     deleteDBSnapshot finalSnapshot
                 ) `miss` anyConnectionException
@@ -104,3 +108,10 @@ restoreDBInstanceRequest :: Text -> Text -> RestoreDBInstanceFromDBSnapshotReque
 restoreDBInstanceRequest dbsid dbiid = RestoreDBInstanceFromDBSnapshotRequest
     Nothing Nothing Nothing dbiid Nothing dbsid Nothing
     Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+
+modifyTestDBInstanceRequest :: Text -> ModifyDBInstanceRequest
+modifyTestDBInstanceRequest dbiid = ModifyDBInstanceRequest
+    Nothing Nothing Nothing Nothing Nothing
+    Nothing dbiid Nothing [] Nothing Nothing
+    Nothing Nothing (Just $ dbiid <> "modified")
+    Nothing Nothing Nothing []
