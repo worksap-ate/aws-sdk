@@ -1,10 +1,12 @@
 module AWSTests.EC2Tests.AclTests (runAclTests) where
 
+import Data.List (find)
 import Data.Text (Text)
 import Test.Hspec
 
 import AWS.EC2
 import AWS.EC2.Types
+import qualified AWS.EC2.Util as Util
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -22,6 +24,19 @@ runAclTests = hspec $ do
             testEC2' region (do
                 withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} ->
                     withNetworkAcl vpc $ const (return ())
+                ) `miss` anyConnectionException
+
+    describe "replaceNetworkAclAssociation" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (do
+                withSubnet "10.0.0.0/24" $ \Subnet{subnetId = subnet, subnetVpcId = vpc} ->
+                    withNetworkAcl vpc $ \NetworkAcl{networkAclId = acl} -> do
+                        -- Find the association in the subnet
+                        Just NetworkAcl{networkAclAssociationSet = assocs} <- Util.head $ describeNetworkAcls [] [("association.subnet-id", [subnet])]
+                        let Just assoc = find ((== subnet) . networkAclAssociationSubnetId) assocs
+                        -- Replace and restore
+                        newAssoc <- replaceNetworkAclAssociation (networkAclAssociationId assoc) acl
+                        replaceNetworkAclAssociation newAssoc $ networkAclAssociationNetworkAclId assoc
                 ) `miss` anyConnectionException
 
     describe "{create,replace,delete}NetworkAclEntry" $ do
