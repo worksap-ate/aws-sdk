@@ -16,7 +16,7 @@ author:              Yusuke Nomura <yunomu@gmail.com>
                    , eagletmt <eagletmt@gmail.com>
                    , HATATANI Shinta <gamaguchi@gmail.com>
 maintainer:          Yusuke Nomura <yunomu@gmail.com>
-homepage:            http://worksap-ate.github.com/aws-sdk
+homepage:            https://github.com/worksap-ate/aws-sdk
 copyright:           AWS SDK for Haskell Developers
 category:            Cloud, AWS, Distributed Computing
 build-type:          Simple
