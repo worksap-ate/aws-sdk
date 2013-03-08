@@ -8,9 +8,9 @@ module AWSTests.EC2Tests.VolumeTests
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.EC2
-import AWS.EC2.Types
-import qualified AWS.EC2.Util as U
+import Cloud.AWS.EC2
+import Cloud.AWS.EC2.Types
+import qualified Cloud.AWS.EC2.Util as U
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 

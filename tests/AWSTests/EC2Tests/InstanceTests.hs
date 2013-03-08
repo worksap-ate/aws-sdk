@@ -10,9 +10,9 @@ import Data.Text (Text)
 import Data.List
 import Test.Hspec
 
-import AWS.EC2
-import qualified AWS.EC2.Util as Util
-import AWS.EC2.Types
+import Cloud.AWS.EC2
+import qualified Cloud.AWS.EC2.Util as Util
+import Cloud.AWS.EC2.Types
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 

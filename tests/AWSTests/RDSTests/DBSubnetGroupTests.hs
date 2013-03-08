@@ -6,8 +6,8 @@ module AWSTests.RDSTests.DBSubnetGroupTests
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.RDS
-import AWS.RDS.Types (DBSubnetGroup(..), Subnet(..))
+import Cloud.AWS.RDS
+import Cloud.AWS.RDS.Types (DBSubnetGroup(..), Subnet(..))
 import AWSTests.Util
 import AWSTests.RDSTests.Util
 

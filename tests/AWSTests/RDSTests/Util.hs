@@ -20,8 +20,8 @@ import Data.List (find)
 import Data.Text (Text)
 import Data.Conduit (ResourceT, runResourceT)
 
-import AWS.RDS
-import AWS.RDS.Types
+import Cloud.AWS.RDS
+import Cloud.AWS.RDS.Types
 
 testRDS
     :: Text

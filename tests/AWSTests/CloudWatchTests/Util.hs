@@ -6,7 +6,7 @@ module AWSTests.CloudWatchTests.Util
 import Data.Text (Text)
 import Data.Conduit (ResourceT, runResourceT)
 
-import AWS.CloudWatch
+import Cloud.AWS.CloudWatch
 
 testCloudWatch
     :: Text

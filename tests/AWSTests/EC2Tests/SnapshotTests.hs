@@ -9,9 +9,9 @@ import qualified Control.Exception.Lifted as E
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.EC2
-import AWS.EC2.Types
-import AWS.EC2.Util (list)
+import Cloud.AWS.EC2
+import Cloud.AWS.EC2.Types
+import Cloud.AWS.EC2.Util (list)
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 

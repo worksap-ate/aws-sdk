@@ -8,8 +8,8 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.RDS
-import AWS.RDS.Types (SourceType(..), DBInstance(..))
+import Cloud.AWS.RDS
+import Cloud.AWS.RDS.Types (SourceType(..), DBInstance(..))
 import AWSTests.Util
 import AWSTests.RDSTests.Util
 

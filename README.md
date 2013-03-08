@@ -21,7 +21,7 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
 
-import AWS.EC2
+import Cloud.AWS.EC2
 
 main :: IO ()
 main = do

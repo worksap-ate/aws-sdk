@@ -8,8 +8,8 @@ import Data.Text (Text)
 import Data.Time (UTCTime(..), getCurrentTime)
 import Test.Hspec
 
-import AWS.CloudWatch
-import AWS.CloudWatch.Types
+import Cloud.AWS.CloudWatch
+import Cloud.AWS.CloudWatch.Types
 import AWSTests.Util
 import AWSTests.CloudWatchTests.Util
 

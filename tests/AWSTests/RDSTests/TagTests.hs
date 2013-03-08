@@ -8,8 +8,8 @@ import Data.Monoid ((<>))
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.RDS
-import AWS.RDS.Types
+import Cloud.AWS.RDS
+import Cloud.AWS.RDS.Types
 import AWSTests.Util
 import AWSTests.RDSTests.Util
 

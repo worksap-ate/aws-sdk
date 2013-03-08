@@ -8,9 +8,9 @@ module AWSTests.EC2Tests.TagTests
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.EC2
-import AWS.EC2.Types
-import qualified AWS.EC2.Util as Util
+import Cloud.AWS.EC2
+import Cloud.AWS.EC2.Types
+import qualified Cloud.AWS.EC2.Util as Util
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 

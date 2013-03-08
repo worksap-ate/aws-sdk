@@ -6,7 +6,7 @@ module AWSTests.RDSTests.EventTests
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.RDS
+import Cloud.AWS.RDS
 import AWSTests.Util
 import AWSTests.RDSTests.Util
 

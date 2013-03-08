@@ -14,8 +14,8 @@ import Data.ByteString.Base64.Lazy (encode)
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.EC2
-import AWS.EC2.Types (KeyPair(..))
+import Cloud.AWS.EC2
+import Cloud.AWS.EC2.Types (KeyPair(..))
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 

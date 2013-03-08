@@ -6,7 +6,7 @@ module AWSTests.ELBTests.Util
 import Data.Text (Text)
 import Data.Conduit (ResourceT, runResourceT)
 
-import AWS.ELB
+import Cloud.AWS.ELB
 
 testELB
     :: Text

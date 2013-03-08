@@ -11,9 +11,9 @@ import Test.Hspec
 import qualified Control.Exception.Lifted as E
 import Data.Conduit (MonadBaseControl, MonadResource)
 
-import AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..), Instance(..))
-import AWS.ELB
-import AWS.ELB.Types hiding (Instance(..))
+import Cloud.AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..), Instance(..))
+import Cloud.AWS.ELB
+import Cloud.AWS.ELB.Types hiding (Instance(..))
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
     ( testEC2'

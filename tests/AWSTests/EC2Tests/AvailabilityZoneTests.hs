@@ -8,7 +8,7 @@ module AWSTests.EC2Tests.AvailabilityZoneTests
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.EC2
+import Cloud.AWS.EC2
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 

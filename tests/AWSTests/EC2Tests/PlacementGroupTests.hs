@@ -7,8 +7,8 @@ import Data.Text (Text)
 import Test.Hspec
 import qualified Control.Exception.Lifted as E
 
-import AWS.EC2
-import AWS.EC2.Types (PlacementGroupStrategy(..))
+import Cloud.AWS.EC2
+import Cloud.AWS.EC2.Types (PlacementGroupStrategy(..))
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 

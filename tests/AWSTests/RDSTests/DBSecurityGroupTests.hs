@@ -11,11 +11,11 @@ import Data.Conduit
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.EC2 (describeSecurityGroups)
-import AWS.EC2.Types (SecurityGroup(..))
-import AWS.RDS
-import AWS.RDS.Types
-import AWS.RDS.Util
+import Cloud.AWS.EC2 (describeSecurityGroups)
+import Cloud.AWS.EC2.Types (SecurityGroup(..))
+import Cloud.AWS.RDS
+import Cloud.AWS.RDS.Types
+import Cloud.AWS.RDS.Util
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 import AWSTests.RDSTests.Util

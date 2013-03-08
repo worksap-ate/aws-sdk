@@ -9,7 +9,7 @@ import Data.Monoid ((<>))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Typeable
-import AWS (AWSException(..))
+import Cloud.AWS (AWSException(..))
 
 miss :: Exception e => IO a -> Selector e -> Expectation
 action `miss` p = do

@@ -9,8 +9,8 @@ import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 import Test.Hspec
 
-import AWS.EC2
-import AWS.EC2.Types
+import Cloud.AWS.EC2
+import Cloud.AWS.EC2.Types
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
