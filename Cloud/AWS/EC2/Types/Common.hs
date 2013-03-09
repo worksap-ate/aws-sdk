@@ -19,6 +19,7 @@ module Cloud.AWS.EC2.Types.Common
 
 import Cloud.AWS.Lib.FromText
 import Cloud.AWS.Lib.ToText
+import Data.Maybe (fromMaybe)
 
 data Architecture
     = I386
@@ -36,7 +37,7 @@ data EC2Return
 
 instance FromText EC2Return
   where
-    fromTextMay t
+    fromTextMaybe t
         | t == "true" = Just EC2Success
         | otherwise   = Just $ EC2Error t
 
@@ -72,10 +73,11 @@ instance ToText Platform where
     toText PlatformOther = error "unsupported opperation: Platform.toText"
 
 instance FromText Platform where
-    fromMaybeText _name Nothing  = return PlatformOther
-    fromMaybeText _name (Just t)
+    fromTextMaybe t
         | t == "windows" = return PlatformWindows
         | otherwise      = return PlatformOther
+    fromMaybeText _
+        = return . fromMaybe PlatformOther . (>>= fromTextMaybe)
 
 data ProductCode = ProductCode
     { productCodeCode :: Text

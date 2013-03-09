@@ -468,16 +468,16 @@ describeInstanceAttribute iid attr =
            InstanceAttributeDisableApiTermination . just)
         , (InstanceAttributeRequestShutdownBehavior,
            InstanceAttributeShutdownBehavior
-           . fromJust . fromTextMay . fromJust)
+           . fromJust . fromTextMaybe . fromJust)
         , (InstanceAttributeRequestRootDeviceName,
            InstanceAttributeRootDeviceName)
         , (InstanceAttributeRequestSourceDestCheck,
            InstanceAttributeSourceDestCheck
-           . fromTextMay . fromJust)
+           . fromTextMaybe . fromJust)
         , (InstanceAttributeRequestEbsOptimized,
            InstanceAttributeEbsOptimized . just)
         ]
-    just = fromJust . join . (fromTextMay <$>)
+    just = fromJust . join . (fromTextMaybe <$>)
     valueSink name val =
         (element name $ getT "value") >>= return . val
 

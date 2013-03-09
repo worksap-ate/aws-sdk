@@ -144,8 +144,10 @@ data InstanceLifecycle
     | LifecycleNone
   deriving (Show, Read, Eq)
 
-instance FromText InstanceLifecycle
-  where
+instance FromText InstanceLifecycle where
+    fromTextMaybe t
+        | t == "spot" = Just LifecycleSpot
+        | otherwise   = Nothing
     fromMaybeText _name Nothing  = return LifecycleNone
     fromMaybeText _name (Just t)
         | t == "spot" = return LifecycleSpot

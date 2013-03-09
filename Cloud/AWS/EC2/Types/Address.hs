@@ -27,13 +27,14 @@ data AddressDomain
     | AddressDomainVPC
   deriving (Show, Read, Eq)
 
-instance FromText AddressDomain
-  where
-    fromMaybeText _name Nothing  = return AddressDomainStandard
-    fromMaybeText _name (Just t)
+instance FromText AddressDomain where
+    fromTextMaybe t
         | t == "standard" = return AddressDomainStandard
         | t == "vpc"      = return AddressDomainVPC
-        | otherwise       = monadThrow $ FromTextError t
+        | otherwise       = fail "unknown AddressDomain"
+    fromMaybeText _name Nothing  = return AddressDomainStandard
+    fromMaybeText _name (Just t)
+        = maybe (monadThrow $ FromTextError t) return $ fromTextMaybe t
 
 data AllocateAddress = AllocateAddress
     { allocateAddressPublicIp :: IPv4

@@ -27,16 +27,15 @@ import Safe
 
 import Cloud.AWS.Class
 
-class Read a => FromText a
+class FromText a
   where
     fromText :: MonadThrow m => Text -> m a
     fromText t
         = maybe (monadThrow $ FromTextError t) return
-        . fromTextMay
+        . fromTextMaybe
         $ t
 
-    fromTextMay :: Text -> Maybe a
-    fromTextMay = readMay . T.unpack
+    fromTextMaybe :: Text -> Maybe a
 
     fromMaybeText :: MonadThrow m => Text -> Maybe Text -> m a
     fromMaybeText name
@@ -46,32 +45,44 @@ class Read a => FromText a
 
 instance FromText a => FromText (Maybe a)
   where
-    fromText = return . join . fromTextMay
+    fromText = return . join . fromTextMaybe
     fromMaybeText _name Nothing  = return Nothing
-    fromMaybeText _name (Just t) = return $ fromTextMay t
-    fromTextMay = Just . fromTextMay
+    fromMaybeText _name (Just t) = return $ fromTextMaybe t
+    fromTextMaybe = Just . fromTextMaybe
 
-instance FromText Int
-instance FromText Integer
-instance FromText Double
-instance FromText IPv4
-instance FromText (AddrRange IPv4)
+instance FromText Int where
+    fromTextMaybe = fromTextMaybeR
+
+instance FromText Integer where
+    fromTextMaybe = fromTextMaybeR
+
+instance FromText Double where
+    fromTextMaybe = fromTextMaybeR
+
+instance FromText IPv4 where
+    fromTextMaybe = fromTextMaybeR
+
+instance FromText (AddrRange IPv4) where
+    fromTextMaybe = fromTextMaybeR
+
+fromTextMaybeR :: Read a => Text -> Maybe a
+fromTextMaybeR = readMay . T.unpack
 
 instance FromText Text
   where
-    fromTextMay t
+    fromTextMaybe t
         | t == ""   = Nothing
         | otherwise = Just t
 
 instance FromText Bool
   where
-    fromTextMay "true"  = Just True
-    fromTextMay "false" = Just False
-    fromTextMay _       = Nothing
+    fromTextMaybe "true"  = Just True
+    fromTextMaybe "false" = Just False
+    fromTextMaybe _       = Nothing
 
 instance FromText UTCTime
   where
-    fromTextMay t
+    fromTextMaybe t
         = Time.localTimeToUTC Time.utc . fst
         <$> (TP.strptime fmt $ T.unpack t)
       where
@@ -82,7 +93,7 @@ deriveFromText dstr strs = do
     ctrs <- map (\(NormalC name _) -> name) <$> cons
     x <- newName "x"
     let cases = caseE (varE x) (map f (zip strs ctrs) ++ [wild])
-    let fun = funD 'fromTextMay [clause [varP x] (normalB cases) []]
+    let fun = funD 'fromTextMaybe [clause [varP x] (normalB cases) []]
     (:[]) <$> instanceD ctx typ [fun]
   where
     d = mkName dstr
