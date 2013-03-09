@@ -86,6 +86,7 @@ library
                    , Cloud.AWS.Lib.FromText
                    , Cloud.AWS.Lib.Parser
                    , Cloud.AWS.Lib.Query
+                   , Cloud.AWS.Lib.ToText
                    , Cloud.AWS.RDS.Internal
                    , Cloud.AWS.RDS.DBInstance
                    , Cloud.AWS.RDS.DBParameterGroup

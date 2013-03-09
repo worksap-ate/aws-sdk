@@ -44,7 +44,7 @@ import Control.Exception
 import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 
-import Cloud.AWS.Util
+import Cloud.AWS.Lib.ToText
 
 base :: String
 base = "http://169.254.169.254"
@@ -60,16 +60,16 @@ query path = runResourceT $ do
     responseBody res $$+- CB.lines =$ CL.consume
 
 latestVersion :: IO Text
-latestVersion = bsToText . last . init <$> query ""
+latestVersion = toText . last . init <$> query ""
 
 metadata :: String -> IO [ByteString]
 metadata path = query $ version <> "/meta-data/" <> path
 
 h :: Functor f => f [ByteString] -> f Text
-h = fmap (bsToText . head)
+h = fmap (toText . head)
 
 t :: [ByteString] -> [Text]
-t = map bsToText
+t = map toText
 
 ignore :: IO (Maybe a) -> IO (Maybe a)
 ignore io = handle ignore' io
@@ -126,11 +126,11 @@ interfaces = do
     ms <- metadata macs
     vs <- mapM (\b -> (val b)) ms
     ts <- mapM (uncurry f) (zip ms vs)
-    return $ zip (map (bsToText . BC.init) ms) ts
+    return $ zip (map (toText . BC.init) ms) ts
   where
     macs = "network/interfaces/macs/"
     f m ks = zip (t ks) <$> mapM (kv m) ks
-    kv m k = bsToText . head <$> val (m <> k)
+    kv m k = toText . head <$> val (m <> k)
     val k = metadata $ macs <> BC.unpack k
 
 availabilityZone :: IO Text
@@ -161,7 +161,7 @@ queryRaw path = runResourceT $ do
 
 identity :: String -> IO Text
 identity name =
-    bsToText <$> (queryRaw $ is <> name)
+    toText <$> (queryRaw $ is <> name)
   where
     is = version <> "/dynamic/instance-identity/"
 

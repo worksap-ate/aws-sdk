@@ -24,6 +24,7 @@ module Cloud.AWS.RDS.Types.DBInstance
     ) where
 
 import Cloud.AWS.Lib.FromText (Text, UTCTime, deriveFromText)
+import Cloud.AWS.Lib.ToText
 import Cloud.AWS.RDS.Types.DBSubnetGroup (DBSubnetGroup, AvailabilityZone)
 
 data DBInstance = DBInstance
@@ -141,12 +142,12 @@ data LicenseModel
     = LicenseIncluded
     | BringYourOwnLicense
     | GeneralPublicLicense
-  deriving (Read, Eq)
+  deriving (Read, Eq, Show)
 
-instance Show LicenseModel where
-    show LicenseIncluded = "license-included"
-    show BringYourOwnLicense = "bring-your-own-license"
-    show GeneralPublicLicense = "general-public-license"
+instance ToText LicenseModel where
+    toText LicenseIncluded = "license-included"
+    toText BringYourOwnLicense = "bring-your-own-license"
+    toText GeneralPublicLicense = "general-public-license"
 
 data FinalSnapshot
     = FinalSnapshotIdentifier Text

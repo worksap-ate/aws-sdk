@@ -12,7 +12,6 @@ import Data.Conduit
 import Data.XML.Types (Event)
 import Control.Applicative
 
-import Cloud.AWS.Util
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
@@ -77,12 +76,12 @@ getMetricStatistics ds start end mn ns pe sts unit =
   where
     params =
         [ dimensionFiltersParam ds
-        , "StartTime" |= timeToText start
-        , "EndTime" |= timeToText end
+        , "StartTime" |= start
+        , "EndTime" |= end
         , "MetricName" |= mn
         , "Namespace" |= ns
-        , "Period" |= toText pe
-        , "Statistics" |.+ "member" |.#= map stringifyStatistic sts
+        , "Period" |= pe
+        , "Statistics" |.+ "member" |.#= sts
         , "Unit" |=? unit
         ]
 
@@ -104,18 +103,18 @@ fromMetricDatum MetricDatum{..} =
     [ "Dimensions.member" |.#. map fromDimension metricDatumDimensions
     , "MetricName" |= metricDatumMetricName
     , metricDatumValueParam metricDatumValue
-    , "Timestamp" |=? timeToText <$> metricDatumTimestamp
+    , "Timestamp" |=? metricDatumTimestamp
     , "Unit" |=? metricDatumUnit
     ]
 
 metricDatumValueParam :: MetricDatumValue -> QueryParam
-metricDatumValueParam (MetricDatumValue v) = "Value" |= toText v
+metricDatumValueParam (MetricDatumValue v) = "Value" |= v
 metricDatumValueParam (MetricDatumStatisticValues s) = "StatisticValues" |. fromStatisticSet s
 
 fromStatisticSet :: StatisticSet -> [QueryParam]
 fromStatisticSet StatisticSet{..} =
-    [ "Maximum" |= toText statisticSetMaximum
-    , "Minimum" |= toText statisticSetMinimum
-    , "SampleCount" |= toText statisticSetSampleCount
-    , "Sum" |= toText statisticSetSum
+    [ "Maximum" |= statisticSetMaximum
+    , "Minimum" |= statisticSetMinimum
+    , "SampleCount" |= statisticSetSampleCount
+    , "Sum" |= statisticSetSum
     ]

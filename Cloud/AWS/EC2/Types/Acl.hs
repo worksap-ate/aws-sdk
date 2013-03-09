@@ -12,6 +12,7 @@ module Cloud.AWS.EC2.Types.Acl
 
 import Cloud.AWS.EC2.Types.Common (ResourceTag)
 import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.ToText
 
 data IcmpTypeCode = IcmpTypeCode
     { icmpTypeCodeCode :: Int
@@ -64,6 +65,10 @@ data NetworkAclRuleAction
     = NetworkAclRuleActionAllow
     | NetworkAclRuleActionDeny
   deriving (Show, Read, Eq)
+
+instance ToText NetworkAclRuleAction where
+    toText NetworkAclRuleActionAllow = "allow"
+    toText NetworkAclRuleActionDeny = "deny"
 
 data PortRange = PortRange
     { portRangeFrom :: Int

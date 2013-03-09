@@ -19,7 +19,6 @@ import Cloud.AWS.EC2.Internal (EC2, groupSetSink, networkInterfaceAttachmentSink
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.EC2.Types (Group, NetworkInterfaceAttachment(..))
 import Cloud.AWS.Lib.Parser (element, getT, getT_)
-import Cloud.AWS.Util (toText)
 
 describeNetworkInterfaceDescription
     :: (MonadBaseControl IO m, MonadResource m)
@@ -84,7 +83,7 @@ modifyNetworkInterfaceSourceDestCheck
     -> Bool -- ^ Enables a Network Address Translation (NAT) instance in a VPC to perform NAT.
     -> EC2 m Bool
 modifyNetworkInterfaceSourceDestCheck iface check =
-    modifyNetworkInterfaceAttribute iface ["SourceDestCheck.Value" |= toText check]
+    modifyNetworkInterfaceAttribute iface ["SourceDestCheck.Value" |= check]
 
 modifyNetworkInterfaceAttachment
     :: (MonadBaseControl IO m, MonadResource m)
@@ -97,7 +96,7 @@ modifyNetworkInterfaceAttachment iface attachment deleteOnTermination =
   where
     params =
         [ "Attachment.AttachmentId" |= attachment
-        , "Attachment.DeleteOnTermination" |= toText deleteOnTermination
+        , "Attachment.DeleteOnTermination" |= deleteOnTermination
         ]
 
 modifyNetworkInterfaceAttribute

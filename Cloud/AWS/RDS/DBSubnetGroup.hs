@@ -7,7 +7,6 @@ module Cloud.AWS.RDS.DBSubnetGroup
     , modifyDBSubnetGroup
     ) where
 
-import Control.Applicative ((<$>))
 import Data.Conduit
 import Data.Text (Text)
 
@@ -15,7 +14,6 @@ import Cloud.AWS.Lib.Parser (element)
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#=))
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (DBSubnetGroup)
-import Cloud.AWS.Util (toText)
 
 describeDBSubnetGroups
     :: (MonadBaseControl IO m, MonadResource m)
@@ -30,7 +28,7 @@ describeDBSubnetGroups name marker maxRecords =
     params =
         [ "DBSubnetGroupName" |=? name
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         ]
 
 createDBSubnetGroup

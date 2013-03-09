@@ -4,13 +4,11 @@ module Cloud.AWS.EC2.Params
     , volumeTypeParams
     ) where
 
-import Control.Applicative
 import Data.Text (Text)
 import Data.IP (IPv4)
 
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Util
 
 blockDeviceMappingsParam :: [BlockDeviceMappingParam] -> QueryParam
 blockDeviceMappingsParam =
@@ -19,30 +17,30 @@ blockDeviceMappingsParam =
 blockDeviceMappingParams :: BlockDeviceMappingParam -> [QueryParam]
 blockDeviceMappingParams (BlockDeviceMappingParamEbs dn nd s dot vt) =
     [ "DeviceName" |= dn
-    , "NoDevice" |=? boolToText <$> nd
+    , "NoDevice" |=? nd
     , "Ebs" |. ebsSourceParams s ++
-        ["DeleteOnTermination" |=? boolToText <$> dot] ++
+        ["DeleteOnTermination" |=? dot] ++
         maybe [] volumeTypeParams vt
     ]
   where
     ebsSourceParams (EbsSourceSnapshotId sid) =
         ["SnapshotId" |= sid]
     ebsSourceParams (EbsSourceVolumeSize size) =
-        ["VolumeSize" |= toText size]
+        ["VolumeSize" |= size]
 blockDeviceMappingParams (BlockDeviceMappingParamInstanceStore dn nd vn) =
     [ "DeviceName"|= dn
-    , "NoDevice" |=? boolToText <$> nd
+    , "NoDevice" |=? nd
     , "VirtualName" |=? vn
     ]
 
 volumeTypeParams :: VolumeType -> [QueryParam]
 volumeTypeParams VolumeTypeStandard =
-    ["VolumeType" |= "standard"]
+    ["VolumeType" |= ("standard" :: Text)]
 volumeTypeParams (VolumeTypeIO1 iops) =
-    [ "VolumeType" |= "io1"
-    , "Iops" |= toText iops
+    [ "VolumeType" |= ("io1" :: Text)
+    , "Iops" |= iops
     ]
 
 privateIpAddressesParam :: Text -> [IPv4] -> QueryParam
 privateIpAddressesParam name =
-    (name |.#.) . map (\a -> ["PrivateIpAddress" |= toText a])
+    (name |.#.) . map (\a -> ["PrivateIpAddress" |= a])

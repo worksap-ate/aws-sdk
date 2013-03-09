@@ -40,7 +40,6 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
 
 ------------------------------------------------------------
 -- attachInternetGateway
@@ -214,7 +213,7 @@ createVpnConnection type' cgid vgid zone option =
         , "CustomerGatewayId" |= cgid
         , "VpnGatewayId" |= vgid
         , "AvailabilityZone" |=? zone
-        , "Options" |.+ "StaticRoutesOnly" |=? boolToText <$> option
+        , "Options" |.+ "StaticRoutesOnly" |=? option
         ]
 
 createVpnConnectionRoute
@@ -226,7 +225,7 @@ createVpnConnectionRoute cidr vpnConn =
     ec2Query "CreateVpnConnectionRoute" params $ getT "return"
   where
     params =
-        [ "DestinationCidrBlock" |= toText cidr
+        [ "DestinationCidrBlock" |= cidr
         , "VpnConnectionId" |= vpnConn
         ]
 
@@ -248,7 +247,7 @@ deleteVpnConnectionRoute cidr vpnConn =
     ec2Query "DeleteVpnConnectionRoute" params $ getT "return"
   where
     params =
-        [ "DestinationCidrBlock" |= toText cidr
+        [ "DestinationCidrBlock" |= cidr
         , "VpnConnectionId" |= vpnConn
         ]
 
@@ -293,7 +292,7 @@ createVpc cidrBlock instanceTenancy =
         element "vpc" vpcSink
   where
     params =
-        [ "CidrBlock" |= toText cidrBlock
+        [ "CidrBlock" |= cidrBlock
         , "instanceTenancy" |=? instanceTenancy
         ]
 
@@ -352,10 +351,9 @@ createVpnGateway type' availabilityZone = do
         element "vpnGateway" vpnGatewaySink
   where
     params =
-        [ "Type" |= createVpnGatewayTypeText type'
+        [ "Type" |= type'
         , "AvailabilityZone" |=? availabilityZone
         ]
-    createVpnGatewayTypeText CreateVpnGatewayTypeIpsec1 = "ipsec.1"
 
 ------------------------------------------------------------
 -- deleteVpnGateway
@@ -408,8 +406,8 @@ createCustomerGateway type' ipAddr bgpAsn = do
   where
     params =
         [ "Type" |= type'
-        , "IpAddress" |= toText ipAddr
-        , "BgpAsn" |= toText bgpAsn
+        , "IpAddress" |= ipAddr
+        , "BgpAsn" |= bgpAsn
         ]
 
 ------------------------------------------------------------

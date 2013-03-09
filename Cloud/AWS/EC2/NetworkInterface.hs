@@ -20,7 +20,7 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
+import Cloud.AWS.Lib.ToText (toText)
 
 assignPrivateIpAddresses
     :: (MonadBaseControl IO m, MonadResource m)
@@ -34,10 +34,10 @@ assignPrivateIpAddresses niid epip ar =
     params =
         [ "NetworkInterfaceId" |= niid
         , either f g epip
-        , "AllowReassignment" |=? boolToText <$> ar
+        , "AllowReassignment" |=? ar
         ]
-    f = ("PrivateIpAddress" |.#=) . map toText
-    g = ("SecondaryPrivateIpAddressCount" |=) . toText
+    f = ("PrivateIpAddress" |.#=)
+    g = ("SecondaryPrivateIpAddressCount" |=)
 
 unassignPrivateIpAddresses
     :: (MonadBaseControl IO m, MonadResource m)
@@ -49,7 +49,7 @@ unassignPrivateIpAddresses niid addrs =
   where
     params =
         [ "NetworkInterfaceId" |= niid
-        , "PrivateIpAddress" |.#= map toText addrs
+        , "PrivateIpAddress" |.#= addrs
         ]
 
 describeNetworkInterfaces
@@ -126,14 +126,14 @@ createNetworkInterface subnet privateAddresses description securityGroupIds =
 
     fromSecondary :: SecondaryPrivateIpAddressParam -> [QueryParam]
     fromSecondary SecondaryPrivateIpAddressParamNothing = []
-    fromSecondary (SecondaryPrivateIpAddressParamCount n) = ["SecondaryPrivateIpAddressCount" |= toText n]
+    fromSecondary (SecondaryPrivateIpAddressParamCount n) = ["SecondaryPrivateIpAddressCount" |= n]
     fromSecondary (SecondaryPrivateIpAddressParamSpecified addrs primary) =
-        [ "PrivateIpAddresses" |.#. map (\addr -> ["PrivateIpAddress" |= toText addr]) addrs
+        [ "PrivateIpAddresses" |.#. map (\addr -> ["PrivateIpAddress" |= addr]) addrs
         , maybeParam $ primaryParam <$> primary
         ]
 
     primaryParam :: Int -> QueryParam
-    primaryParam n = "PrivateIpAddresses" |.+ toText n |.+ "Primary" |= "true"
+    primaryParam n = "PrivateIpAddresses" |.+ toText n |.+ "Primary" |= True
 
 deleteNetworkInterface
     :: (MonadBaseControl IO m, MonadResource m)
@@ -154,7 +154,7 @@ attachNetworkInterface networkInterface inst deviceIdx =
     params =
         [ "NetworkInterfaceId" |= networkInterface
         , "InstanceId" |= inst
-        , "DeviceIndex" |= toText deviceIdx
+        , "DeviceIndex" |= deviceIdx
         ]
 
 detachNetworkInterface
@@ -167,5 +167,5 @@ detachNetworkInterface attachment force =
   where
     params =
         [ "AttachmentId" |= attachment
-        , "Force" |=? toText <$> force
+        , "Force" |=? force
         ]

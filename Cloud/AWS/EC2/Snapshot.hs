@@ -98,12 +98,8 @@ describeSnapshotAttribute ssid attr =
   where
     params =
         [ "SnapshotId" |= ssid
-        , "Attribute" |= attrText attr
+        , "Attribute" |= attr
         ]
-    attrText SnapshotAttributeRequestCreateVolumePermission
-        = "createVolumePermission"
-    attrText SnapshotAttributeRequestProductCodes
-        = "productCodes"
 
 snapshotAttributeSink
     :: MonadThrow m
@@ -154,7 +150,5 @@ resetSnapshotAttribute ssid attr =
   where
     params =
         [ "SnapshotId" |= ssid
-        , "Attribute" |= attrText attr
+        , "Attribute" |= attr
         ]
-    attrText ResetSnapshotAttributeRequestCreateVolumePermission
-        = "createVolumePermission"

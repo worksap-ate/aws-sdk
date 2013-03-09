@@ -18,7 +18,6 @@ import Cloud.AWS.Lib.Parser (getT, element)
 import Cloud.AWS.Lib.Query ((|=), (|=?))
 import Cloud.AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements)
 import Cloud.AWS.RDS.Types hiding (Event)
-import Cloud.AWS.Util (toText)
 
 describeDBSecurityGroups
     :: (MonadBaseControl IO m, MonadResource m)
@@ -33,7 +32,7 @@ describeDBSecurityGroups name marker maxRecords =
     params =
         [ "DBSecurityGroupName" |=? name
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         ]
 
 dbSecurityGroupSink
@@ -93,7 +92,7 @@ authorizeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
   where
     params =
         [ "DBSecurityGroupName" |= dbsg
-        , "CIDRIP" |=? toText <$> ip
+        , "CIDRIP" |=? ip
         , "EC2SecurityGroupId" |=? sgid
         , "EC2SecurityGroupName" |=? sgname
         , "EC2SecurityGroupOwnerId" |=? sgoid
@@ -113,7 +112,7 @@ revokeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
   where
     params =
         [ "DBSecurityGroupName" |= dbsg
-        , "CIDRIP" |=? toText <$> ip
+        , "CIDRIP" |=? ip
         , "EC2SecurityGroupId" |=? sgid
         , "EC2SecurityGroupName" |=? sgname
         , "EC2SecurityGroupOwnerId" |=? sgoid

@@ -17,7 +17,6 @@ import Cloud.AWS.Lib.Parser
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types.OptionGroup
-import Cloud.AWS.Util (toText, boolToText)
 
 describeOptionGroups
     :: (MonadBaseControl IO m, MonadResource m)
@@ -35,7 +34,7 @@ describeOptionGroups engine ver marker maxRecords name =
         [ "EngineName" |=? engine
         , "MajorEngineVersion" |=? ver
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         , "OptionGroupName" |=? name
         ]
 
@@ -103,7 +102,7 @@ describeOptionGroupOptions name version marker maxRecords =
         [ "EngineName" |= name
         , "MajorEngineVersion" |=? version
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         ]
 
 optionGroupOptionSink
@@ -131,7 +130,7 @@ modifyOptionGroup name req imm =
   where
     params =
         [ "OptionGroupName" |= name
-        , "ApplyImmediately" |=? boolToText <$> imm
+        , "ApplyImmediately" |=? imm
         , reqParam req
         ]
     reqParam (OptionsToInclude confs) =
@@ -142,7 +141,7 @@ modifyOptionGroup name req imm =
         [ "DBSecurityGroupMemberships.member" |.#=
             optionConfigurationDBSecurityGroupMemberships conf
         , "OptionName" |= optionConfigurationOptionName conf
-        , "Port" |= toText (optionConfigurationPort conf)
+        , "Port" |= optionConfigurationPort conf
         , "VpcSecurityGroupMemberships.member" |.#=
             optionConfigurationVpcSecurityGroupMemberships conf
         ]

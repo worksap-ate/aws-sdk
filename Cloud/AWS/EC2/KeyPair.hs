@@ -15,7 +15,6 @@ import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
-import Cloud.AWS.Util (bsToText)
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
@@ -64,5 +63,5 @@ importKeyPair name material =
   where
     params =
         [ "KeyName" |= name
-        , "PublicKeyMaterial" |= bsToText (BASE.encode material)
+        , "PublicKeyMaterial" |= BASE.encode material
         ]

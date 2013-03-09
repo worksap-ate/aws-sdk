@@ -43,10 +43,3 @@ fromDimension Dimension{..} =
     [ "Name" |= dimensionName
     , "Value" |= dimensionValue
     ]
-
-stringifyStatistic :: Statistic -> Text
-stringifyStatistic StatisticAverage     = "Average"
-stringifyStatistic StatisticSum         = "Sum"
-stringifyStatistic StatisticSampleCount = "SampleCount"
-stringifyStatistic StatisticMaximum     = "Maximum"
-stringifyStatistic StatisticMinimum     = "Minimum"

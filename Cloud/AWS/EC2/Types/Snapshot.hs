@@ -12,6 +12,7 @@ module Cloud.AWS.EC2.Types.Snapshot
 
 import Cloud.AWS.EC2.Types.Common (ProductCode, ResourceTag)
 import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.ToText
 
 data CreateVolumePermission = CreateVolumePermission
     { createVolumePermissionAdd :: [CreateVolumePermissionItem]
@@ -27,6 +28,10 @@ data CreateVolumePermissionItem
 data ResetSnapshotAttributeRequest
     = ResetSnapshotAttributeRequestCreateVolumePermission
   deriving (Show, Read, Eq)
+
+instance ToText ResetSnapshotAttributeRequest where
+    toText ResetSnapshotAttributeRequestCreateVolumePermission
+        = "createVolumePermission"
 
 data Snapshot = Snapshot
     { snapshotId :: Text
@@ -54,6 +59,12 @@ data SnapshotAttributeRequest
     = SnapshotAttributeRequestCreateVolumePermission
     | SnapshotAttributeRequestProductCodes
   deriving (Show, Read, Eq)
+
+instance ToText SnapshotAttributeRequest where
+    toText SnapshotAttributeRequestCreateVolumePermission
+        = "createVolumePermission"
+    toText SnapshotAttributeRequestProductCodes
+        = "productCodes"
 
 data SnapshotStatus
     = SnapshotPending

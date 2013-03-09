@@ -54,6 +54,7 @@ import Cloud.AWS.Class
 import Cloud.AWS.Util
 import Cloud.AWS.Credential
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.ToText
 import Cloud.AWS.EC2.Types (Filter)
 
 #ifdef DEBUG
@@ -92,8 +93,11 @@ partition p@(Leaf _ _) = [p]
 partition (Inner k ps) = concat $ map (partition . (k |.+)) ps
 
 -- | put a number to each value
-putNumberV :: [Text] -> [QueryParam]
-putNumberV = map (uncurry Leaf) . zip (map toText ([1..] :: [Int]))
+putNumberV :: ToText a => [a] -> [QueryParam]
+putNumberV
+    = map (uncurry Leaf)
+    . zip (map toText ([1..] :: [Int]))
+    . map toText
 
 -- | put a number to each params
 putNumberP :: [[QueryParam]] -> [QueryParam]
@@ -113,15 +117,15 @@ nothingParam :: QueryParam
 nothingParam = Inner "" []
 
 infixr 3 |=
-(|=) :: Text -> Text -> QueryParam
-(|=) = Leaf
+(|=) :: ToText a => Text -> a -> QueryParam
+(|=) a = Leaf a . toText
 
 infixr 3 |.
 (|.) :: Text -> [QueryParam] -> QueryParam
 (|.) = Inner
 
 infixr 3 |=?
-(|=?) :: Text -> Maybe Text -> QueryParam
+(|=?) :: ToText a => Text -> Maybe a -> QueryParam
 t |=? (Just a) = t |= a
 _ |=? Nothing = nothingParam
 
@@ -131,7 +135,7 @@ t |.? (Just ps) = t |. ps
 _ |.? Nothing = nothingParam
 
 infixr 3 |.#=
-(|.#=) :: Text -> [Text] -> QueryParam
+(|.#=) :: ToText a => Text -> [a] -> QueryParam
 t |.#= ts = t |. putNumberV ts
 
 infixr 3 |.#.
@@ -287,7 +291,7 @@ commonQuery apiVersion action params sink = do
     (res, rid) <- lift $ E.handle exceptionTransform $ do
         rs <- requestQuery settings ctx action params apiVersion sinkError
         rs $$+- XmlP.parseBytes XmlP.def
-           =$   sinkResponse (bsToText action) sink
+           =$   sinkResponse (toText action) sink
     State.put ctx { lastRequestId = Just rid }
     return res
 

@@ -21,7 +21,6 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
 
 describeSecurityGroups
     :: (MonadResource m, MonadBaseControl IO m)
@@ -144,10 +143,10 @@ securityGroupQuery act param ipps =
 ipPermissionParams :: IpPermission -> [QueryParam]
 ipPermissionParams ipp =
     [ "IpProtocol" |= ipPermissionIpProtocol ipp
-    , "FromPort" |=? toText <$> ipPermissionFromPort ipp
-    , "ToPort" |=? toText <$> ipPermissionToPort ipp
+    , "FromPort" |=? ipPermissionFromPort ipp
+    , "ToPort" |=? ipPermissionToPort ipp
     , "Groups" |.#. map groupPairParams (ipPermissionGroups ipp)
-    , "IpRanges" |.#. map (\a -> ["CidrIp" |= toText a]) (ipPermissionIpRanges ipp)
+    , "IpRanges" |.#. map (\a -> ["CidrIp" |= a]) (ipPermissionIpRanges ipp)
     ]
   where
     groupPairParams gp =

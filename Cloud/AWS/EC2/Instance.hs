@@ -31,7 +31,7 @@ import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
+import Cloud.AWS.Lib.ToText (toText)
 
 ------------------------------------------------------------
 -- DescribeInstances
@@ -202,7 +202,7 @@ describeInstanceStatus instanceIds isAll filters token =
   where
     params =
         [ "InstanceId" |.#= instanceIds
-        , "IncludeAllInstances" |= boolToText isAll
+        , "IncludeAllInstances" |= isAll
         , filtersParam filters
         ]
 
@@ -270,7 +270,7 @@ stopInstances instanceIds force =
   where
     params =
         [ "InstanceId" |.#= instanceIds
-        , "Force" |= boolToText force]
+        , "Force" |= force]
 
 ------------------------------------------------------------
 -- RebootInstances
@@ -310,12 +310,12 @@ runInstances param =
   where
     params =
         [ "ImageId" |= runInstancesRequestImageId param
-        , "MinCount" |= toText (runInstancesRequestMinCount param)
-        , "MaxCount" |= toText (runInstancesRequestMaxCount param)
+        , "MinCount" |= runInstancesRequestMinCount param
+        , "MaxCount" |= runInstancesRequestMaxCount param
         , "KeyName" |=? runInstancesRequestKeyName param
         , "SecurityGroupId" |.#= runInstancesRequestSecurityGroupIds param
         , "SecurityGroup" |.#= runInstancesRequestSecurityGroups param
-        , "UserData" |=? bsToText <$> runInstancesRequestUserData param
+        , "UserData" |=? runInstancesRequestUserData param
         , "InstanceType" |=? runInstancesRequestInstanceType param
         , "Placement" |.
             [ "AvailabilityZone" |=?
@@ -330,21 +330,21 @@ runInstances param =
         , blockDeviceMappingsParam $
             runInstancesRequestBlockDeviceMappings param
         , "Monitoring" |.+ "Enabled" |=?
-            boolToText <$> runInstancesRequestMonitoringEnabled param
+            runInstancesRequestMonitoringEnabled param
         , "SubnetId" |=? runInstancesRequestSubnetId param
         , "DisableApiTermination" |=?
-            boolToText <$> runInstancesRequestDisableApiTermination param
+            runInstancesRequestDisableApiTermination param
         , "InstanceInitiatedShutdownBehavior" |=?
-            sbToText <$> runInstancesRequestShutdownBehavior param
+            runInstancesRequestShutdownBehavior param
         , "PrivateIpAddress" |=?
-            toText <$> runInstancesRequestPrivateIpAddress param
+            runInstancesRequestPrivateIpAddress param
         , "ClientToken" |=? runInstancesRequestClientToken param
         , "NetworkInterface" |.#. map networkInterfaceParams
             (runInstancesRequestNetworkInterfaces param)
         , "IamInstanceProfile" |.? iamInstanceProfileParams <$>
             runInstancesRequestIamInstanceProfile param
         , "EbsOptimized" |=?
-            boolToText <$> runInstancesRequestEbsOptimized param
+            runInstancesRequestEbsOptimized param
         ]
     iamInstanceProfileParams iam =
         [ "Arn" |= iamInstanceProfileArn iam
@@ -385,32 +385,28 @@ defaultRunInstancesRequest iid minCount maxCount
 
 networkInterfaceParams :: NetworkInterfaceParam -> [QueryParam]
 networkInterfaceParams (NetworkInterfaceParamCreate di si d pia pias sgi dot) =
-    [ "DeviceIndex" |= toText di
+    [ "DeviceIndex" |= di
     , "SubnetId" |= si
     , "Description" |= d
-    , "PrivateIpAddress" |=? toText <$> pia
+    , "PrivateIpAddress" |=? pia
     , "SecurityGroupId" |.#= sgi
-    , "DeleteOnTermination" |= boolToText dot
+    , "DeleteOnTermination" |= dot
     ] ++ s pias
   where
     s SecondaryPrivateIpAddressParamNothing = []
     s (SecondaryPrivateIpAddressParamCount c) =
-        ["SecondaryPrivateIpAddressCount" |= toText c]
+        ["SecondaryPrivateIpAddressCount" |= c]
     s (SecondaryPrivateIpAddressParamSpecified addrs pr) =
         [ privateIpAddressesParam "PrivateIpAddresses" addrs
         , maybeParam $ ipAddressPrimaryParam <$> pr
         ]
     ipAddressPrimaryParam i =
-        "PrivateIpAddresses" |.+ toText i |.+ "Primary" |= "true"
+        "PrivateIpAddresses" |.+ toText i |.+ "Primary" |= True
 networkInterfaceParams (NetworkInterfaceParamAttach nid idx dot) =
     [ "NetworkInterfaceId" |= nid
-    , "DeviceIndex" |= toText idx
-    , "DeleteOnTermination" |= boolToText dot
+    , "DeviceIndex" |= idx
+    , "DeleteOnTermination" |= dot
     ]
-
-sbToText :: ShutdownBehavior -> Text
-sbToText ShutdownBehaviorStop      = "stop"
-sbToText ShutdownBehaviorTerminate = "terminate"
 
 ------------------------------------------------------------
 -- GetConsoleOutput
@@ -538,19 +534,19 @@ miap (ModifyInstanceAttributeRequestRamdiskId a) =
 miap (ModifyInstanceAttributeRequestUserData a) =
     "UserData" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestDisableApiTermination a) =
-    "DisableApiTermination" |.+ "Value" |= toText a
+    "DisableApiTermination" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestShutdownBehavior a) =
-    "InstanceInitiatedShutdownBehavior" |.+ "Value" |= sbToText a
+    "InstanceInitiatedShutdownBehavior" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestRootDeviceName a) =
     "RootDeviceName" |= a
 miap (ModifyInstanceAttributeRequestBlockDeviceMapping a) =
     blockDeviceMappingsParam a
 miap (ModifyInstanceAttributeRequestSourceDestCheck a) =
-    "SourceDestCheck" |.+ "Value" |= toText a
+    "SourceDestCheck" |.+ "Value" |= a
 miap (ModifyInstanceAttributeRequestGroupSet a) =
     "GroupId" |.#= a
 miap (ModifyInstanceAttributeRequestEbsOptimized a) =
-    "EbsOptimized" |= toText a
+    "EbsOptimized" |= a
 
 ------------------------------------------------------------
 -- MonitorInstances

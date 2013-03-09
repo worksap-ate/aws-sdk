@@ -19,6 +19,7 @@ module Cloud.AWS.EC2.Types.Image
 import Cloud.AWS.EC2.Types.Common
 import Cloud.AWS.EC2.Types.Volume (VolumeType)
 import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.ToText
 
 data AMIAttribute
     = AMIDescription
@@ -28,6 +29,14 @@ data AMIAttribute
     | AMIProductCodes
     | AMIBlockDeviceMapping
   deriving (Show, Read, Eq)
+
+instance ToText AMIAttribute where
+    toText AMIDescription        = "description"
+    toText AMIKernel             = "kernel"
+    toText AMIRamdisk            = "ramdisk"
+    toText AMILaunchPermission   = "launchPermission"
+    toText AMIProductCodes       = "productCodes"
+    toText AMIBlockDeviceMapping = "blockDeviceMapping"
 
 data AMIAttributeDescription = AMIAttributeDescription
     { amiAttributeDescriptionImageId :: Text

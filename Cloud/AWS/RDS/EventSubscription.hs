@@ -17,7 +17,6 @@ import Cloud.AWS.Lib.Parser
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (EventSubscription(..), SourceType)
-import Cloud.AWS.Util (toText, boolToText)
 
 describeEventSubscriptions
     :: (MonadBaseControl IO m, MonadResource m)
@@ -32,7 +31,7 @@ describeEventSubscriptions name marker maxRecords =
     params =
         [ "SubscriptionName" |=? name
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         ]
 
 eventSubscriptionSink
@@ -63,11 +62,11 @@ createEventSubscription enabled ecs topic sids stype name =
         element "EventSubscription" eventSubscriptionSink
   where
     params =
-        [ "Enabled" |=? boolToText <$> enabled
+        [ "Enabled" |=? enabled
         , "EventCategories.member" |.#= ecs
         , "SnsTopicArn" |= topic
         , "SourceIds.member" |.#= sids
-        , "SourceType" |=? sourceTypeToText <$> stype
+        , "SourceType" |=? stype
         , "SubscriptionName" |= name
         ]
 
@@ -92,10 +91,10 @@ modifyEventSubscription enabled ecs topic stype name =
         element "EventSubscription" eventSubscriptionSink
   where
     params =
-        [ "Enabled" |=? boolToText <$> enabled
+        [ "Enabled" |=? enabled
         , "EventCategories.member" |.#= ecs
         , "SnsTopicArn" |=? topic
-        , "SourceType" |=? sourceTypeToText <$> stype
+        , "SourceType" |=? stype
         , "SubscriptionName" |= name
         ]
 

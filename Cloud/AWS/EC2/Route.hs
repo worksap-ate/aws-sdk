@@ -14,7 +14,6 @@ import Cloud.AWS.EC2.Internal (EC2)
 import Cloud.AWS.EC2.Query (ec2Query, (|=))
 import Cloud.AWS.EC2.Types (CreateRouteRequest(..))
 import Cloud.AWS.Lib.Parser (getT)
-import Cloud.AWS.Util (toText)
 
 createRoute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -30,7 +29,7 @@ deleteRoute
 deleteRoute tableId cidrBlock =
     ec2Query "DeleteRoute"
         [ "RouteTableId" |= tableId
-        , "DestinationCidrBlock" |= toText cidrBlock
+        , "DestinationCidrBlock" |= cidrBlock
         ] $ getT "return"
 
 replaceRoute
@@ -62,7 +61,7 @@ routeRequest'
 routeRequest' action tableId cidrBlock targetName targetId =
     ec2Query action
         [ "RouteTableId" |= tableId
-        , "DestinationCidrBlock" |= toText cidrBlock
+        , "DestinationCidrBlock" |= cidrBlock
         , targetName |= targetId
         ] $ getT "return"
 

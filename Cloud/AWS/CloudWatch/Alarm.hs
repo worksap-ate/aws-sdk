@@ -20,7 +20,6 @@ import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.CloudWatch.Types
 import Cloud.AWS.Lib.Parser (getT, getT_, members, text)
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Util (toText, boolToText, timeToText)
 
 describeAlarms
     :: (MonadBaseControl IO m, MonadResource m)
@@ -37,18 +36,13 @@ describeAlarms prefix spec maxRecords nextToken state =
     params =
         [ "ActionPrefix" |=? prefix
         , specParam spec
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         , "NextToken" |=? nextToken
-        , "StateValue" |=? stringifyStateValue <$> state
+        , "StateValue" |=? state
         ]
     specParam AlarmSpecNothing = nothingParam
     specParam (AlarmSpecNamePrefix p) = "AlarmNamePrefix" |= p
     specParam (AlarmSpecNames ns) = "AlarmNames.member" |.#= ns
-
-stringifyStateValue :: StateValue -> Text
-stringifyStateValue StateValueOk = "OK"
-stringifyStateValue StateValueAlarm = "ALARM"
-stringifyStateValue StateValueInsufficientData = "INSUFFICIENT_DATA"
 
 sinkMetricAlarm :: MonadThrow m => Consumer Event m MetricAlarm
 sinkMetricAlarm =
@@ -91,8 +85,8 @@ describeAlarmsForMetric dims name ns period stat unit =
         [ "Dimensions.member" |.#. map fromDimension dims
         , "MetricName" |= name
         , "Namespace" |= ns
-        , "Period" |= toText period
-        , "Statistic" |= stringifyStatistic stat
+        , "Period" |= period
+        , "Statistic" |= stat
         , "Unit" |=? unit
         ]
 
@@ -104,20 +98,20 @@ putMetricAlarm PutMetricAlarmRequest{..} =
     cloudWatchQuery "PutMetricAlarm" params $ getT_ "PutMetricAlarmResult"
   where
     params =
-        [ "ActionsEnabled" |=? boolToText <$> putMetricAlarmActionsEnabled
+        [ "ActionsEnabled" |=? putMetricAlarmActionsEnabled
         , "AlarmActions.member" |.#= putMetricAlarmAlarmActions
         , "AlarmDescription" |=? putMetricAlarmAlarmDescription
         , "AlarmName" |= putMetricAlarmAlarmName
-        , "ComparisonOperator" |= toText putMetricAlarmComparisonOperator
+        , "ComparisonOperator" |= putMetricAlarmComparisonOperator
         , "Dimensions.member" |.#. map fromDimension putMetricAlarmDimensions
-        , "EvaluationPeriods" |= toText putMetricAlarmEvaluationPeriods
+        , "EvaluationPeriods" |= putMetricAlarmEvaluationPeriods
         , "InsufficientDataActions.member" |.#= putMetricAlarmInsufficientDataActions
         , "MetricName" |= putMetricAlarmMetricName
         , "Namespace" |= putMetricAlarmNamespace
         , "OKActions.member" |.#= putMetricAlarmOKActions
-        , "Period" |= toText putMetricAlarmPeriod
-        , "Statistic" |= stringifyStatistic putMetricAlarmStatistic
-        , "Threshold" |= toText putMetricAlarmThreshold
+        , "Period" |= putMetricAlarmPeriod
+        , "Statistic" |= putMetricAlarmStatistic
+        , "Threshold" |= putMetricAlarmThreshold
         , "Unit" |=? putMetricAlarmUnit
         ]
 
@@ -142,17 +136,12 @@ describeAlarmHistory alarm endDate type_ maxRecords nextToken startDate =
   where
     params =
         [ "AlarmName" |=? alarm
-        , "EndDate" |=? timeToText <$> endDate
-        , "HistoryItemType" |=? stringifyHistoryType <$> type_
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "EndDate" |=? endDate
+        , "HistoryItemType" |=? type_
+        , "MaxRecords" |=? maxRecords
         , "NextToken" |=? nextToken
-        , "StartDate" |=? timeToText <$> startDate
+        , "StartDate" |=? startDate
         ]
-
-stringifyHistoryType :: HistoryType -> Text
-stringifyHistoryType HistoryTypeConfigurationUpdate = "ConfigurationUpdate"
-stringifyHistoryType HistoryTypeStateUpdate = "StateUpdate"
-stringifyHistoryType HistoryTypeAction = "Action"
 
 sinkAlarmHistory :: MonadThrow m => Consumer Event m AlarmHistory
 sinkAlarmHistory =
@@ -191,5 +180,5 @@ setAlarmState alarm reason dat state =
         [ "AlarmName" |= alarm
         , "StateReason" |= reason
         , "StateReasonData" |= dat
-        , "StateValue" |= stringifyStateValue state
+        , "StateValue" |= state
         ]

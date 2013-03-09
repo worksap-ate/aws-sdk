@@ -15,7 +15,6 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
 
 ------------------------------------------------------------
 -- DescribeSubnets
@@ -63,7 +62,7 @@ createSubnet param =
 createSubnetParams :: CreateSubnetRequest -> [QueryParam]
 createSubnetParams (CreateSubnetRequest vid cidr zone) =
     [ "VpcId" |= vid
-    , "CidrBlock" |= toText cidr
+    , "CidrBlock" |= cidr
     , "AvailabilityZone" |=? zone
     ]
 

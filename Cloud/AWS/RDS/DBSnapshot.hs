@@ -12,7 +12,6 @@ import Data.Conduit
 import Control.Applicative
 import Data.XML.Types (Event(..))
 
-import Cloud.AWS.Util
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
 
@@ -34,7 +33,7 @@ describeDBSnapshots dbiid dbsid marker maxRecords sType =
         [ "DBInstanceIdentifier" |=? dbiid
         , "DBSnapshotIdentifier" |=? dbsid
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         , "SnapshotType" |=? sType
         ]
 

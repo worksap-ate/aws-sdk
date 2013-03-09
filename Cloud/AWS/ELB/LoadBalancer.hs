@@ -26,9 +26,9 @@ module Cloud.AWS.ELB.LoadBalancer
     , setLoadBalancerPoliciesForBackendServer
     ) where
 
-import Data.Text (Text)
+import Data.Text (Text, empty)
 import Data.Conduit
-import Control.Applicative
+import Control.Applicative hiding (empty)
 import Data.XML.Types (Event(..))
 
 import Cloud.AWS.Lib.Parser
@@ -36,8 +36,6 @@ import Cloud.AWS.Lib.Query
 
 import Cloud.AWS.ELB.Types
 import Cloud.AWS.ELB.Internal
-
-import Cloud.AWS.Util (toText)
 
 describeLoadBalancers
     :: (MonadBaseControl IO m, MonadResource m)
@@ -140,10 +138,10 @@ createLoadBalancer name listeners zones scheme groups subnets =
     listeners' = flip map listeners $
         \(Listener prot lbport iprot cert iport) ->
             [ "Protocol" |= prot
-            , "LoadBalancerPort" |= toText lbport
+            , "LoadBalancerPort" |= lbport
             , "InstanceProtocol" |= iprot
             , "SSLCertificateId" |=? cert
-            , "InstancePort" |= toText iport
+            , "InstancePort" |= iport
             ]
 
 deleteLoadBalancer
@@ -234,7 +232,7 @@ setLoadBalancerListenerSSLCertificate lb port cert =
   where
     params =
         [ "LoadBalancerName" |= lb
-        , "LoadBalancerPort" |= toText port
+        , "LoadBalancerPort" |= port
         , "SSLCertificateId" |= cert
         ]
 
@@ -254,10 +252,10 @@ createLoadBalancerListeners listeners lb =
 toListenerParam :: Listener -> [QueryParam]
 toListenerParam Listener{..} =
     [ "Protocol" |= listenerProtocol
-    , "LoadBalancerPort" |= toText listenerLoadBalancerPort
+    , "LoadBalancerPort" |= listenerLoadBalancerPort
     , "InstanceProtocol" |= listenerInstanceProtocol
     , "SSLCertificateId" |=? listenerSSLCertificateId
-    , "InstancePort" |= toText listenerInstancePort
+    , "InstancePort" |= listenerInstancePort
     ]
 
 deleteLoadBalancerListeners
@@ -270,7 +268,7 @@ deleteLoadBalancerListeners lb ports =
   where
     params =
         [ "LoadBalancerName" |= lb
-        , "LoadBalancerPorts.member" |.#= map toText ports
+        , "LoadBalancerPorts.member" |.#= ports
         ]
 
 describeLoadBalancerPolicies
@@ -396,11 +394,11 @@ configureHealthCheck hc lb =
 
 toHealthCheckParams :: HealthCheck -> [QueryParam]
 toHealthCheckParams HealthCheck{..} =
-    [ "HealthyThreshold" |= toText healthCheckHealthyThreshold
-    , "Interval" |= toText healthCheckInterval
+    [ "HealthyThreshold" |= healthCheckHealthyThreshold
+    , "Interval" |= healthCheckInterval
     , "Target" |= healthCheckTarget
-    , "Timeout" |= toText healthCheckTimeout
-    , "UnhealthyThreshold" |= toText healthCheckUnhealthyThreshold
+    , "Timeout" |= healthCheckTimeout
+    , "UnhealthyThreshold" |= healthCheckUnhealthyThreshold
     ]
 
 enableAvailabilityZonesForLoadBalancer
@@ -439,7 +437,7 @@ createLBCookieStickinessPolicy period lb policy =
     elbQuery "CreateLBCookieStickinessPolicy" params $ getT_ "CreateLBCookieStickinessPolicyResult"
   where
     params =
-        [ "CookieExpirationPeriod" |=? toText <$> period
+        [ "CookieExpirationPeriod" |=? period
         , "LoadBalancerName" |= lb
         , "PolicyName" |= policy
         ]
@@ -470,8 +468,8 @@ setLoadBalancerPoliciesOfListener lb port policies =
   where
     params =
         [ "LoadBalancerName" |= lb
-        , "LoadBalancerPort" |= toText port
-        , if null policies then "PolicyNames" |= "" else "PolicyNames.member" |.#= policies
+        , "LoadBalancerPort" |= port
+        , if null policies then "PolicyNames" |= empty else "PolicyNames.member" |.#= policies
         ]
 
 setLoadBalancerPoliciesForBackendServer
@@ -484,7 +482,7 @@ setLoadBalancerPoliciesForBackendServer port lb policies =
     elbQuery "SetLoadBalancerPoliciesForBackendServer" params $ getT_ "SetLoadBalancerPoliciesForBackendServerResult"
   where
     params =
-        [ "InstancePort" |= toText port
+        [ "InstancePort" |= port
         , "LoadBalancerName" |= lb
         , "PolicyNames.member" |.#= policies
         ]

@@ -20,7 +20,6 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
 
 -----------------------------------------------------
 -- DescribeAddresses
@@ -64,7 +63,7 @@ allocateAddress isVpc = do
         <*> getT "domain"
         <*> getT "allocationId"
   where
-    params = if isVpc then ["Domain" |= "vpc"] else []
+    params = if isVpc then ["Domain" |= ("vpc" :: Text)] else []
 
 -----------------------------------------------------
 -- ReleaseAddress
@@ -78,7 +77,7 @@ releaseAddress addr allocid = do
     ec2Query "ReleaseAddress" params $ getT "return"
   where
     params =
-        [ "PublicIp" |=? toText <$> addr
+        [ "PublicIp" |=? addr
         , "AllocationId" |=? allocid
         ]
 
@@ -98,15 +97,15 @@ associateAddress param = ec2Query "AssociateAddress" params $
 associateAddressParams
     :: AssociateAddressRequest -> [QueryParam]
 associateAddressParams (AssociateAddressRequestEc2 ip iid) =
-    [ "PublicIp" |= toText ip
+    [ "PublicIp" |= ip
     , "InstanceId" |= iid
     ]
 associateAddressParams (AssociateAddressRequestVpc aid iid nid pip ar) =
     [ "AllocationId" |= aid
     , "InstanceId" |=? iid
     , "NetworkInterfaceId" |=? nid
-    , "PrivateIpAddress" |=? toText <$> pip
-    , "AllowReassociation" |=? boolToText <$> ar
+    , "PrivateIpAddress" |=? pip
+    , "AllowReassociation" |=? ar
     ]
 
 disassociateAddress
@@ -118,6 +117,6 @@ disassociateAddress param =
         $ getT "return"
   where
     p (DisassociateAddressRequestEc2 pip)
-        = ["PublicIp" |= toText pip]
+        = ["PublicIp" |= pip]
     p (DisassociateAddressRequestVpc aid)
         = ["AssociationId" |= aid]

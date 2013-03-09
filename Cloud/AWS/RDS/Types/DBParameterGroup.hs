@@ -11,6 +11,7 @@ module Cloud.AWS.RDS.Types.DBParameterGroup
     ) where
 
 import Cloud.AWS.Lib.FromText (Text)
+import Cloud.AWS.Lib.ToText
 
 data DBParameterGroup = DBParameterGroup
     { dbParameterGroupFamily :: Text
@@ -43,6 +44,10 @@ data ApplyMethod
     = ApplyMethodImmediate
     | ApplyMethodPendingReboot
   deriving (Show, Eq)
+
+instance ToText ApplyMethod where
+    toText ApplyMethodImmediate = "immediate"
+    toText ApplyMethodPendingReboot = "pending-reboot"
 
 data ResetParameterRequest
     = ResetAllParameters

@@ -20,7 +20,6 @@ import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
 
 describeImages
     :: (MonadResource m, MonadBaseControl IO m)
@@ -94,7 +93,7 @@ createImage iid name desc noReboot bdms =
     params =
         [ "InstanceId" |= iid
         , "Name" |= name
-        , "NoReboot" |= boolToText noReboot
+        , "NoReboot" |= noReboot
         , "Description" |=? desc
         , blockDeviceMappingsParam bdms
         ]
@@ -146,14 +145,8 @@ describeImageAttribute iid attr =
   where
     getMMT name = join <$> elementM name (getT "value")
     params = [ "ImageId" |= iid
-             , "Attribute" |= attrText attr
+             , "Attribute" |= attr
              ]
-    attrText AMIDescription        = "description"
-    attrText AMIKernel             = "kernel"
-    attrText AMIRamdisk            = "ramdisk"
-    attrText AMILaunchPermission   = "launchPermission"
-    attrText AMIProductCodes       = "productCodes"
-    attrText AMIBlockDeviceMapping = "blockDeviceMapping"
 
 launchPermissionItemSink :: MonadThrow m => Consumer Event m LaunchPermissionItem
 launchPermissionItemSink = do

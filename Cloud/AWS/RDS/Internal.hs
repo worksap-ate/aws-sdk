@@ -8,7 +8,6 @@ module Cloud.AWS.RDS.Internal
     , elements
     , elements'
     , dbSubnetGroupSink
-    , sourceTypeToText
     , dbSecurityGroupMembershipSink
     , vpcSecurityGroupMembershipSink
     ) where
@@ -28,8 +27,8 @@ import qualified Text.XML.Stream.Parse as XmlP
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.ToText (toText)
 import Cloud.AWS.RDS.Types hiding (Event)
-import Cloud.AWS.Util
 
 -- | Ver.2013-01-10
 apiVersion :: ByteString
@@ -56,7 +55,7 @@ rdsQueryOnlyMetadata action params = do
     rs <- lift $ requestQuery settings ctx action params apiVersion sinkError
     rid <- lift $ rs $$+-
         XmlP.parseBytes XmlP.def =$
-            sinkResponseOnlyMetadata (bsToText action)
+            sinkResponseOnlyMetadata (toText action)
     State.put ctx { lastRequestId = Just rid }
     return ()
 
@@ -100,12 +99,6 @@ dbSubnetGroupSink = DBSubnetGroup
             <*> getT "ProvisionedIopsCapable"
             )
         )
-
-sourceTypeToText :: SourceType -> Text
-sourceTypeToText SourceTypeDBInstance = "db-instance"
-sourceTypeToText SourceTypeDBParameterGroup = "db-parameter-group"
-sourceTypeToText SourceTypeDBSecurityGroup = "db-security-group"
-sourceTypeToText SourceTypeDBSnapshot = "db-snapshot"
 
 dbSecurityGroupMembershipSink
     :: MonadThrow m

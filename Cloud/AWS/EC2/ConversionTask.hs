@@ -15,7 +15,6 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util (toText)
 
 describeConversionTasks
     :: (MonadResource m, MonadBaseControl IO m)
@@ -100,11 +99,11 @@ importVolume zone image desc size =
         [ "AvailabilityZone" |= zone
         , "Image" |. imageParams image
         , "Description" |=? desc
-        , "Volume" |.+ "Size" |= toText size
+        , "Volume" |.+ "Size" |= size
         ]
     imageParams img =
         [ "Format" |= importVolumeRequestImageFormat img
-        , "Bytes" |= toText (importVolumeRequestImageBytes img)
+        , "Bytes" |= importVolumeRequestImageBytes img
         , "ImportManifestUrl" |= importVolumeRequestImageImportManifestUrl img
         ]
 
@@ -123,36 +122,30 @@ importInstance desc ls images platform =
         [ "Description" |=? desc
         , "LaunchSpecification" |. launchSpecificationParams ls
         , "DiskImage" |.#. diskImageParams <$> images
-        , "Platform" |= platformText platform
+        , "Platform" |= platform
         ]
     launchSpecificationParams (LaunchSpecification{..}) =
         [ "Architecture" |=
-            architectureText launchSpecificationArchitecture
+            launchSpecificationArchitecture
         , "GroupName" |.#= launchSpecificationGroupNames
         , "UserData" |=? launchSpecificationUserData
         , "InstanceType" |= launchSpecificationInstanceType
         , "Placement" |.+ "AvailabilityZone" |=?
             launchSpecificationPlacementAvailabilityZone
         , "Monitoring" |.+ "Enabled" |=?
-            toText <$> launchSpecificationMonitoringEnabled
+            launchSpecificationMonitoringEnabled
         , "SubnetId" |=? launchSpecificationSubnetId
         , "InstanceInitiatedShutdownBehavior" |=?
-            shutdownBehaviorText <$> launchSpecificationInstanceInitiatedShutdownBehavior
+            launchSpecificationInstanceInitiatedShutdownBehavior
         , "PrivateIpAddress" |=?
-            toText <$> launchSpecificationPrivateIpAddress
+            launchSpecificationPrivateIpAddress
         ]
     diskImageParams (DiskImage{..}) =
         [ "Image" |.
             [ "Format" |= diskImageFormat
-            , "Bytes" |= toText diskImageBytes
+            , "Bytes" |= diskImageBytes
             , "ImportManifestUrl" |= diskImageImportManifestUrl
             , "Description" |=? diskImageDescripsion
             ]
-        , "Volume" |.+ "Size" |= toText diskImageVolumeSize
+        , "Volume" |.+ "Size" |= diskImageVolumeSize
         ]
-    shutdownBehaviorText ShutdownBehaviorStop = "stop"
-    shutdownBehaviorText ShutdownBehaviorTerminate = "terminate"
-    platformText PlatformWindows = "Windows"
-    platformText PlatformOther = error "Valid value is `Windows'"
-    architectureText I386 = "i386"
-    architectureText X86_64 = "x86_64"

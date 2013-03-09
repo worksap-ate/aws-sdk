@@ -19,6 +19,7 @@ module Cloud.AWS.EC2.Types.Volume
 
 import Cloud.AWS.EC2.Types.Common (ProductCode, ResourceTag)
 import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.ToText
 
 data AttachmentSetItemResponse = AttachmentSetItemResponse
     { attachmentSetItemResponseVolumeId :: Text
@@ -74,6 +75,10 @@ data VolumeAttributeRequest
     = VolumeAttributeRequestAutoEnableIO
     | VolumeAttributeRequestProductCodes
   deriving (Show, Read, Eq)
+
+instance ToText VolumeAttributeRequest where
+    toText VolumeAttributeRequestAutoEnableIO = "autoEnableIO"
+    toText VolumeAttributeRequestProductCodes = "productCodes"
 
 data VolumeState
     = VolumeStateCreating

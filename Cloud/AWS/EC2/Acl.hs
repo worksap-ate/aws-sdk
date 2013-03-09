@@ -19,7 +19,6 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
 
 describeNetworkAcls
     :: (MonadResource m, MonadBaseControl IO m)
@@ -105,29 +104,27 @@ reqToParams req =
         [ "NetworkAclId" |=
             networkAclEntryRequestNetworkAclId req
         , "RuleNumber" |=
-            toText (networkAclEntryRequestRuleNumber req)
+            networkAclEntryRequestRuleNumber req
         , "Protocol" |=
-            toText (networkAclEntryRequestProtocol req)
+            networkAclEntryRequestProtocol req
         , "RuleAction" |=
-            ruleToText (networkAclEntryRequestRuleAction req)
+            networkAclEntryRequestRuleAction req
         , "CidrBlock" |=
-            toText (networkAclEntryRequestCidrBlock req)
+            networkAclEntryRequestCidrBlock req
         , "Egress" |=
-            boolToText (networkAclEntryRequestEgress req)
+            networkAclEntryRequestEgress req
         , "Icmp" |.? icmpParams <$> networkAclEntryRequestIcmp req
         , "PortRange" |.?
              portRangeParams <$> networkAclEntryRequestPortRange req
         ]
   where
-    ruleToText NetworkAclRuleActionAllow = "allow"
-    ruleToText NetworkAclRuleActionDeny = "deny"
     icmpParams icmp =
-        [ "Code" |= toText (icmpTypeCodeCode icmp)
-        , "Type" |= toText (icmpTypeCodeType icmp)
+        [ "Code" |= icmpTypeCodeCode icmp
+        , "Type" |= icmpTypeCodeType icmp
         ]
     portRangeParams pr =
-        [ "From" |= toText (portRangeFrom pr)
-        , "To" |= toText (portRangeTo pr)
+        [ "From" |= portRangeFrom pr
+        , "To" |= portRangeTo pr
         ]
 
 deleteNetworkAclEntry
@@ -141,8 +138,8 @@ deleteNetworkAclEntry aclid rule egress =
   where
     params =
         [ "NetworkAclId" |= aclid
-        , "RuleNumber" |= toText rule
-        , "Egress" |= boolToText egress
+        , "RuleNumber" |= rule
+        , "Egress" |= egress
         ]
 
 replaceNetworkAclEntry

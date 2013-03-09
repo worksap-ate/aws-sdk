@@ -20,7 +20,6 @@ import Cloud.AWS.Lib.Parser (getT, element, elementM)
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#.))
 import Cloud.AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements, elements')
 import Cloud.AWS.RDS.Types hiding (Event)
-import Cloud.AWS.Util (toText, boolToText)
 
 describeDBParameterGroups
     :: (MonadBaseControl IO m, MonadResource m)
@@ -35,7 +34,7 @@ describeDBParameterGroups name marker maxRecords =
     params =
         [ "DBParameterGroupName" |=? name
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         ]
 
 dbParameterGroupSink
@@ -85,7 +84,7 @@ describeDBParameters name marker maxRecords src =
     params =
         [ "DBParameterGroupName" |= name
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText  <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         , "Source" |=? src
         ]
 
@@ -120,13 +119,8 @@ modifyDBParameterGroup name parameters =
     modifyParameterParams ModifyParameter{..} =
         [ "ParameterName" |= modifyParameterName
         , "ParameterValue" |= modifyParameterValue
-        , "ApplyMethod" |=
-            applyMethodToText modifyParameterApplyMethod
+        , "ApplyMethod" |= modifyParameterApplyMethod
         ]
-
-applyMethodToText :: ApplyMethod -> Text
-applyMethodToText ApplyMethodImmediate = "immediate"
-applyMethodToText ApplyMethodPendingReboot = "pending-reboot"
 
 resetDBParameterGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -141,16 +135,15 @@ resetDBParameterGroup name req =
         [ "DBParameterGroupName" |= name
         ] ++ reqParams req
     reqParams ResetAllParameters =
-        [ "ResetAllParameters" |= boolToText True ]
+        [ "ResetAllParameters" |= True ]
     reqParams (ResetParameters parameters) =
         [ "Parameters.member" |.#.
             map resetParameterParams parameters
-        , "ResetAllParameters" |= boolToText False
+        , "ResetAllParameters" |= False
         ]
     resetParameterParams ResetParameter{..} =
         [ "ParameterName" |= resetParameterName
-        , "ApplyMethod" |=
-            applyMethodToText resetParameterApplyMethod
+        , "ApplyMethod" |= resetParameterApplyMethod
         ]
 
 describeDBEngineVersions
@@ -169,12 +162,12 @@ describeDBEngineVersions family only engine ver list marker maxRec =
   where
     params =
         [ "DBParameterGroupFamily" |=? family
-        , "DefaultOnly" |=? boolToText <$> only
+        , "DefaultOnly" |=? only
         , "Engine" |=? engine
         , "EngineVersion" |=? ver
-        , "ListSupportedCharacterSets" |=? boolToText <$> list
+        , "ListSupportedCharacterSets" |=? list
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRec
+        , "MaxRecords" |=? maxRec
         ]
 
 dbEngineVersionSink
@@ -214,5 +207,5 @@ describeEngineDefaultParameters family marker maxRecords =
     params =
         [ "DBParameterGroupFamily" |= family
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         ]

@@ -22,7 +22,6 @@ import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Util
 
 describeVolumes
     :: (MonadResource m, MonadBaseControl IO m)
@@ -71,13 +70,13 @@ createVolume param =
 
 createVolumeParams :: CreateVolumeRequest -> [QueryParam]
 createVolumeParams (CreateNewVolume size zone vtype) =
-    [ "Size" |= toText size
+    [ "Size" |= size
     , "AvailabilityZone" |= zone
     ] ++ maybe [] volumeTypeParams vtype
 createVolumeParams (CreateFromSnapshot sid zone size vtype) =
     [ "SnapshotId" |= sid
     , "AvailabilityZone" |= zone
-    , "Size" |=? toText <$> size
+    , "Size" |=? size
     ] ++ maybe [] volumeTypeParams vtype
 
 deleteVolume
@@ -115,7 +114,7 @@ detachVolume volid iid dev force =
         [ "VolumeId" |= volid
         , "InstanceId" |=? iid
         , "Device" |=? dev
-        , "Force" |=? toText <$> force
+        , "Force" |=? force
         ]
 
 describeVolumeStatus
@@ -169,7 +168,7 @@ modifyVolumeAttribute vid enable =
   where
     params =
         [ "VolumeId" |= vid
-        , "AutoEnableIO" |.+ "Value" |= boolToText enable
+        , "AutoEnableIO" |.+ "Value" |= enable
         ]
 
 enableVolumeIO
@@ -194,10 +193,8 @@ describeVolumeAttribute vid attr =
   where
     params =
         [ "VolumeId" |= vid
-        , "Attribute" |= s attr
+        , "Attribute" |= attr
         ]
-    s VolumeAttributeRequestAutoEnableIO = "autoEnableIO"
-    s VolumeAttributeRequestProductCodes = "productCodes"
 
 volumeAttributeSink
     :: MonadThrow m

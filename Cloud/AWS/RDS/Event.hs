@@ -15,7 +15,6 @@ import Cloud.AWS.Lib.Parser
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types
-import Cloud.AWS.Util (toText)
 import Debug.Trace
 
 describeEvents
@@ -35,13 +34,13 @@ describeEvents sid stype d start end categories marker maxRecords =
   where
     params =
         [ "SourceIdentifier" |=? sid
-        , "SourceType" |=? sourceTypeToText <$> stype
-        , "Duration" |=? toText <$> d
-        , "StartTime" |=? toText <$> start
-        , "EndTime" |=? toText <$> end
+        , "SourceType" |=? stype
+        , "Duration" |=? d
+        , "StartTime" |=? start
+        , "EndTime" |=? end
         , "EventCategories" |.+ "member" |.#= categories
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         ]
 
 eventSink
@@ -64,7 +63,7 @@ describeEventCategories stype =
     rdsQuery "DescribeEventCategories" params $
         elements' "EventCategoriesMapList" "EventCategoriesMap" eventCategoriesMapSink
   where
-    params = [ "SourceType" |=? sourceTypeToText <$> stype ]
+    params = [ "SourceType" |=? stype ]
 
 eventCategoriesMapSink
     :: MonadThrow m

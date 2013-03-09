@@ -20,7 +20,6 @@ import Control.Applicative
 import Data.XML.Types (Event(..))
 import Data.Maybe (catMaybes)
 
-import Cloud.AWS.Util
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
 
@@ -39,7 +38,7 @@ describeDBInstances dbid maxRecords marker =
   where
     params =
         [ "DBInstanceIdentifier" |=? dbid
-        , "MaxRecords" |=? toText <$> maxRecords
+        , "MaxRecords" |=? maxRecords
         , "Marker" |=? marker
         ]
 
@@ -118,13 +117,13 @@ createDBInstance CreateDBInstanceRequest{..} =
   where
     params =
         [ "AllocatedStorage" |=
-            toText createDBInstanceAllocatedStorage
+            createDBInstanceAllocatedStorage
         , "AutoMinorVersionUpgrade" |=?
-            boolToText <$> createDBInstanceAutoMinorVersionUpgrade
+            createDBInstanceAutoMinorVersionUpgrade
         , "AvailabilityZone" |=?
             createDBInstanceAvailabilityZone
         , "BackupRetentionPeriod" |=?
-            toText <$> createDBInstanceBackupRetentionPeriod
+            createDBInstanceBackupRetentionPeriod
         , "CharacterSetName" |=?
             createDBInstanceCharacterSetName
         , "DBInstanceClass" |= createDBInstanceClass
@@ -139,20 +138,20 @@ createDBInstance CreateDBInstanceRequest{..} =
             createDBInstanceDBSubnetGroupName
         , "Engine" |= createDBInstanceEngine
         , "EngineVersion" |=? createDBInstanceEngineVersion
-        , "Iops" |=? toText <$> createDBInstanceIops
+        , "Iops" |=? createDBInstanceIops
         , "LicenseModel" |=?
-            toText <$> createDBInstanceLicenseModel
+            createDBInstanceLicenseModel
         , "MasterUserPassword" |= createDBInstanceMasterUserPassword
         , "MasterUsername" |= createDBInstanceMasterUsername
-        , "MultiAZ" |=? boolToText <$> createDBInstanceMultiAZ
+        , "MultiAZ" |=? createDBInstanceMultiAZ
         , "OptionGroupName" |=? createDBInstanceOptionGroupName
-        , "Port" |=? toText <$> createDBInstancePort
+        , "Port" |=? createDBInstancePort
         , "PreferredBackupWindow" |=?
             createDBInstancePreferredBackupWindow
         , "PreferredMaintenanceWindow" |=?
             createDBInstancePreferredMaintenanceWindow
         , "PubliclyAccessible" |=?
-            boolToText <$> createDBInstancePubliclyAccessible
+            createDBInstancePubliclyAccessible
         , "VpcSecurityGroupIds" |.#=
             createDBInstanceVpcSecurityGroupIds
         ]
@@ -170,9 +169,9 @@ deleteDBInstance dbiid final =
         [ "DBInstanceIdentifier" |= dbiid
         ] ++ finalSnapshotParams final
     finalSnapshotParams SkipFinalSnapshot =
-        [ "SkipFinalSnapshot" |= boolToText True ]
+        [ "SkipFinalSnapshot" |= True ]
     finalSnapshotParams (FinalSnapshotIdentifier sid) =
-        [ "SkipFinalSnapshot" |= boolToText False
+        [ "SkipFinalSnapshot" |= False
         , "FinalDBSnapshotIdentifier" |= sid
         ]
 
@@ -186,18 +185,18 @@ createDBInstanceReadReplica CreateReadReplicaRequest{..} =
   where
     params =
         [ "AutoMinorVersionUpgrade" |=?
-            boolToText <$> createReadReplicaAutoMinorVersionUpgrade
+            createReadReplicaAutoMinorVersionUpgrade
         , "AvailabilityZone" |=?
             createReadReplicaAvailabilityZone
         , "DBInstanceClass" |=
             createReadReplicaDBInstanceClass
         , "DBInstanceIdentifier" |=
             createReadReplicaDBInstanceIdentifier
-        , "Iops" |=? toText <$> createReadReplicaIops
+        , "Iops" |=? createReadReplicaIops
         , "OptionGroupName" |=? createReadReplicaOptionGroupName
-        , "Port" |=? toText <$> createReadReplicaPort
+        , "Port" |=? createReadReplicaPort
         , "PubliclyAccessible" |=?
-            boolToText <$> createReadReplicaPubliclyAccessible
+            createReadReplicaPubliclyAccessible
         , "SourceDBInstanceIdentifier" |=
             createReadReplicaSourceDBInstanceIdentifier
         ]
@@ -213,7 +212,7 @@ promoteReadReplica period dbiid window =
         element "DBInstance" sinkDBInstance
   where
     params =
-        [ "BackupRetentionPeriod" |=? toText <$> period
+        [ "BackupRetentionPeriod" |=? period
         , "DBInstanceIdentifier" |= dbiid
         , "PreferredBackupWindow" |=? window
         ]
@@ -229,7 +228,7 @@ rebootDBInstance dbiid force =
   where
     params =
         [ "DBInstanceIdentifier" |= dbiid
-        , "ForceFailover" |=? boolToText <$> force
+        , "ForceFailover" |=? force
         ]
 
 restoreDBInstanceFromDBSnapshot
@@ -241,7 +240,7 @@ restoreDBInstanceFromDBSnapshot RestoreDBInstanceFromDBSnapshotRequest{..} =
         element "DBInstance" sinkDBInstance
   where
     params =
-        [ "AutoMinorVersionUpgrade" |=? boolToText <$>
+        [ "AutoMinorVersionUpgrade" |=?
             restoreDBInstanceFromDBSnapshotRequestAutoMinorVersionUpgrade
         , "AvailabilityZone" |=?
             restoreDBInstanceFromDBSnapshotRequestAvailabilityZone
@@ -255,17 +254,15 @@ restoreDBInstanceFromDBSnapshot RestoreDBInstanceFromDBSnapshotRequest{..} =
         , "DBSubnetGroupName" |=?
             restoreDBInstanceFromDBSnapshotRequestDBSubnetGroupName
         , "Engine" |=? restoreDBInstanceFromDBSnapshotRequestEngine
-        , "Iops" |=? toText <$>
-            restoreDBInstanceFromDBSnapshotRequestIops
-        , "LicenseModel" |=? toText <$>
+        , "Iops" |=? restoreDBInstanceFromDBSnapshotRequestIops
+        , "LicenseModel" |=?
             restoreDBInstanceFromDBSnapshotRequestLicenseModel
-        , "MultiAZ" |=? boolToText <$>
+        , "MultiAZ" |=?
             restoreDBInstanceFromDBSnapshotRequestMultiAZ
         , "OptionGroupName" |=?
             restoreDBInstanceFromDBSnapshotRequestOptionGroupName
-        , "Port" |=? toText <$>
-            restoreDBInstanceFromDBSnapshotRequestPort
-        , "PubliclyAccessible" |=? boolToText <$>
+        , "Port" |=?  restoreDBInstanceFromDBSnapshotRequestPort
+        , "PubliclyAccessible" |=?
             restoreDBInstanceFromDBSnapshotRequestPubliclyAccessible
         ]
 
@@ -278,15 +275,15 @@ modifyDBInstance ModifyDBInstanceRequest{..} =
         element "DBInstance" sinkDBInstance
   where
     params =
-        [ "AllocatedStorage" |=? toText <$>
+        [ "AllocatedStorage" |=?
             modifyDBInstanceRequestAllocatedStorage
-        , "AllowMajorVersionUpgrade" |=? boolToText <$>
+        , "AllowMajorVersionUpgrade" |=?
             modifyDBInstanceRequestAllowMajorVersionUpgrade
-        , "ApplyImmediately" |=? boolToText <$>
+        , "ApplyImmediately" |=?
             modifyDBInstanceRequestApplyImmediately
-        , "AutoMinorVersionUpgrade" |=? boolToText <$>
+        , "AutoMinorVersionUpgrade" |=?
             modifyDBInstanceRequestAutoMinorVersionUpgrade
-        , "BackupRetentionPeriod" |=? toText <$>
+        , "BackupRetentionPeriod" |=?
             modifyDBInstanceRequestBackupRetentionPeriod
         , "DBInstanceClass" |=?
             modifyDBInstanceRequestDBInstanceClass
@@ -298,12 +295,10 @@ modifyDBInstance ModifyDBInstanceRequest{..} =
             modifyDBInstanceRequestDBSecurityGroups
         , "EngineVersion" |=?
             modifyDBInstanceRequestEngineVersion
-        , "Iops" |=? toText <$>
-            modifyDBInstanceRequestIops
+        , "Iops" |=? modifyDBInstanceRequestIops
         , "MasterUserPassword" |=?
             modifyDBInstanceRequestMasterUserPassword
-        , "MultiAZ" |=? boolToText <$>
-            modifyDBInstanceRequestMultiAZ
+        , "MultiAZ" |=? modifyDBInstanceRequestMultiAZ
         , "NewDBInstanceIdentifier" |=?
             modifyDBInstanceRequestNewDBInstanceIdentifier
         , "OptionGroupName" |=?
@@ -335,10 +330,10 @@ describeOrderableDBInstanceOptions class' engine ver license vpc marker maxRec =
         [ "DBInstanceClass" |=? class'
         , "Engine" |= engine
         , "EngineVersion" |=? ver
-        , "LicenseModel" |=? toText <$> license
-        , "Vpc" |=? boolToText <$> vpc
+        , "LicenseModel" |=? license
+        , "Vpc" |=? vpc
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRec
+        , "MaxRecords" |=? maxRec
         ]
 
 orderableDBInstanceOptionSink
@@ -372,7 +367,7 @@ restoreDBInstanceToPointInTime restore RestoreDBInstanceToPointInTimeRequest{..}
             restoreDBInstanceToPointInTimeSourceDBInstanceIdentifier
         , "TargetDBInstanceIdentifier" |=
             restoreDBInstanceToPointInTimeTargetDBInstanceIdentifier
-        , "AutoMinorVersionUpgrade" |=? boolToText <$>
+        , "AutoMinorVersionUpgrade" |=?
             restoreDBInstanceToPointInTimeAutoMinorVersionUpgrade
         , "AvailabilityZone" |=?
             restoreDBInstanceToPointInTimeAvailabilityZone
@@ -384,24 +379,21 @@ restoreDBInstanceToPointInTime restore RestoreDBInstanceToPointInTimeRequest{..}
             restoreDBInstanceToPointInTimeDBSubnetGroupName
         , "Engine" |=?
             restoreDBInstanceToPointInTimeEngine
-        , "Iops" |=? toText <$>
-            restoreDBInstanceToPointInTimeIops
-        , "LicenseModel" |=? toText <$>
+        , "Iops" |=? restoreDBInstanceToPointInTimeIops
+        , "LicenseModel" |=?
             restoreDBInstanceToPointInTimeLicenseModel
-        , "MultiAZ" |=? boolToText <$>
-            restoreDBInstanceToPointInTimeMultiAZ
+        , "MultiAZ" |=? restoreDBInstanceToPointInTimeMultiAZ
         , "OptionGroupName" |=?
             restoreDBInstanceToPointInTimeOptionGroupName
-        , "Port" |=? toText <$>
-            restoreDBInstanceToPointInTimePort
-        , "PubliclyAccessible" |=? boolToText <$>
+        , "Port" |=? restoreDBInstanceToPointInTimePort
+        , "PubliclyAccessible" |=?
             restoreDBInstanceToPointInTimePubliclyAccessible
         , restoreTimeParam restore
         ]
     restoreTimeParam UseLatestRestorableTime =
-        "UseLatestRestorableTime" |= boolToText True
+        "UseLatestRestorableTime" |= True
     restoreTimeParam (RestoreTime time) =
-        "RestoreTime" |= toText time
+        "RestoreTime" |= time
 
 describeReservedDBInstancesOfferings
     :: (MonadBaseControl IO m, MonadResource m)
@@ -422,12 +414,12 @@ describeReservedDBInstancesOfferings oid class' dur az offer desc marker maxRec 
     params =
         [ "ReservedDBInstancesOfferingId" |=? oid
         , "DBInstanceClass" |=? class'
-        , "Duration" |=? toText <$> dur
-        , "MultiAZ" |=? boolToText <$> az
+        , "Duration" |=? dur
+        , "MultiAZ" |=? az
         , "OfferingType" |=? offer
         , "ProductDescription" |=? desc
         , "Marker" |=? marker
-        , "MaxRecords" |=? toText <$> maxRec
+        , "MaxRecords" |=? maxRec
         ]
 
 reservedDBInstancesOfferingSink

@@ -7,6 +7,7 @@ module Cloud.AWS.RDS.Types.Event
     ) where
 
 import Cloud.AWS.Lib.FromText (deriveFromText, Text, UTCTime)
+import Cloud.AWS.Lib.ToText
 
 data Event = Event
     { eventMessage :: Text
@@ -23,6 +24,12 @@ data SourceType
     | SourceTypeDBSecurityGroup
     | SourceTypeDBSnapshot
   deriving (Show, Read, Eq)
+
+instance ToText SourceType where
+    toText SourceTypeDBInstance = "db-instance"
+    toText SourceTypeDBParameterGroup = "db-parameter-group"
+    toText SourceTypeDBSecurityGroup = "db-security-group"
+    toText SourceTypeDBSnapshot = "db-snapshot"
 
 data EventCategoriesMap = EventCategoriesMap
     { eventCategoriesMapSourceType :: SourceType

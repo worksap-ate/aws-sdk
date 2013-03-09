@@ -2,7 +2,9 @@
 module Cloud.AWS.CloudWatch.Types
     where
 
+import qualified Data.Text as T
 import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.ToText
 
 data Metric = Metric
     { metricDimensions :: [Dimension]
@@ -37,6 +39,14 @@ data Statistic
     | StatisticMaximum
     | StatisticMinimum
   deriving (Show, Eq, Read)
+
+instance ToText Statistic where
+    toText StatisticAverage     = "Average"
+    toText StatisticSum         = "Sum"
+    toText StatisticSampleCount = "SampleCount"
+    toText StatisticMaximum     = "Maximum"
+    toText StatisticMinimum     = "Minimum"
+
 deriveFromText "Statistic" ["Average", "Sum", "SampleCount", "Maximum", "Minimum"]
 
 allStatistics :: [Statistic]
@@ -59,6 +69,12 @@ data StateValue
     | StateValueAlarm
     | StateValueInsufficientData
   deriving (Show, Eq, Read)
+
+instance ToText StateValue where
+    toText StateValueOk = "OK"
+    toText StateValueAlarm = "ALARM"
+    toText StateValueInsufficientData = "INSUFFICIENT_DATA"
+
 deriveFromText "StateValue" ["OK", "ALARM", "INSUFFICIENT_DATA"]
 
 data ComparisonOperator
@@ -67,6 +83,10 @@ data ComparisonOperator
     | LessThanThreshold
     | LessThanOrEqualToThreshold
   deriving (Show, Eq, Read)
+
+instance ToText ComparisonOperator where
+    toText = T.pack . show
+
 deriveFromText "ComparisonOperator"
     [ "GreaterThanOrEqualToThreshold"
     , "GreaterThanThreshold"
@@ -132,6 +152,12 @@ data HistoryType
     | HistoryTypeStateUpdate
     | HistoryTypeAction
   deriving (Show, Eq, Read)
+
+instance ToText HistoryType where
+    toText HistoryTypeConfigurationUpdate = "ConfigurationUpdate"
+    toText HistoryTypeStateUpdate = "StateUpdate"
+    toText HistoryTypeAction = "Action"
+
 deriveFromText "HistoryType" ["ConfigurationUpdate", "StateUpdate", "Action"]
 
 data MetricDatum = MetricDatum
