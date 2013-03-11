@@ -42,8 +42,8 @@ dbSecurityGroupSink = DBSecurityGroup
     <$> elements "EC2SecurityGroup" (
         EC2SecurityGroup
         <$> getT "Status"
-        <*> getT "EC2SecurityGroupName"
         <*> getT "EC2SecurityGroupOwnerId"
+        <*> getT "EC2SecurityGroupName"
         <*> getT "EC2SecurityGroupId"
         )
     <*> getT "DBSecurityGroupDescription"

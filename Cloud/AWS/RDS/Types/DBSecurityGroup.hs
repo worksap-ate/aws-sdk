@@ -22,8 +22,8 @@ data DBSecurityGroup = DBSecurityGroup
 
 data EC2SecurityGroup = EC2SecurityGroup
     { ec2SecurityGroupStatus :: EC2SecurityGroupStatus
-    , ec2SecurityGroupName :: Text
     , ec2SecurityGroupOwnerId :: Maybe Text
+    , ec2SecurityGroupName :: Text
     , ec2SecurityGroupId :: Maybe Text
     }
   deriving (Show, Eq)
