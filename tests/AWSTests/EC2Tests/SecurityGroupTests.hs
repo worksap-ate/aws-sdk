@@ -12,6 +12,7 @@ import Test.Hspec
 
 import Cloud.AWS.EC2
 import Cloud.AWS.EC2.Types
+import qualified Cloud.AWS.EC2.Util as Util
 import AWSTests.Util
 import AWSTests.EC2Tests.Util
 
@@ -56,6 +57,7 @@ authorizeAndRevokeSecurityGroupIngressTest = do
                 testEC2' region (do
                     withSecurityGroup sgName "For testing" Nothing $ \msg -> do
                         withSecurityGroup sgName2 "For testing" Nothing $ \msg2 -> do
+                            Util.sleep 5
                             let req = toReq sgName2 msg2
                                 perms = [perm2 sgName msg]
                             authorizeSecurityGroupIngress req perms
