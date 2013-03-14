@@ -148,10 +148,14 @@ library
                    , directory
                    , io-choice
 
-test-suite test
+source-repository head
+    type:            git
+    location:        git://github.com/worksap-ate/aws-sdk.git
+
+test-suite test-ec2
     type:              exitcode-stdio-1.0
-    main-is:           Main.hs
-    hs-source-dirs:    tests
+    main-is:           EC2Tests.hs
+    hs-source-dirs:    test
     ghc-options:       -Wall
                        -threaded
                        -fno-warn-unused-do-bind
@@ -160,15 +164,12 @@ test-suite test
                  , aws-sdk
                  , conduit
                  , text
-                 , monad-control
                  , transformers
-                 , http-conduit >= 1.9.0
                  , hspec
                  , QuickCheck
                  , HUnit
                  , lifted-base
                  , iproute
-                 , tls
                  , time
                  , random
                  , bytestring
@@ -177,6 +178,74 @@ test-suite test
                  , crypto-random-api
                  , crypto-pubkey
 
-source-repository head
-    type:            git
-    location:        git://github.com/worksap-ate/aws-sdk.git
+test-suite test-rds
+    type:              exitcode-stdio-1.0
+    main-is:           RDSTests.hs
+    hs-source-dirs:    test
+    ghc-options:       -Wall
+                       -threaded
+                       -fno-warn-unused-do-bind
+    extensions: OverloadedStrings
+    build-depends: base
+                 , aws-sdk
+                 , conduit
+                 , text
+                 , transformers
+                 , hspec
+                 , QuickCheck
+                 , HUnit
+                 , lifted-base
+                 , iproute
+                 , time
+                 , random
+                 , certificate
+                 , crypto-random-api
+                 , crypto-pubkey
+
+test-suite test-elb
+    type:              exitcode-stdio-1.0
+    main-is:           ELBTests.hs
+    hs-source-dirs:    test
+    ghc-options:       -Wall
+                       -threaded
+                       -fno-warn-unused-do-bind
+    extensions: OverloadedStrings
+    build-depends: base
+                 , aws-sdk
+                 , conduit
+                 , text
+                 , transformers
+                 , hspec
+                 , QuickCheck
+                 , HUnit
+                 , lifted-base
+                 , iproute
+                 , time
+                 , random
+                 , certificate
+                 , crypto-random-api
+                 , crypto-pubkey
+
+test-suite test-cw
+    type:              exitcode-stdio-1.0
+    main-is:           CloudWatchTests.hs
+    hs-source-dirs:    test
+    ghc-options:       -Wall
+                       -threaded
+                       -fno-warn-unused-do-bind
+    extensions: OverloadedStrings
+    build-depends: base
+                 , aws-sdk
+                 , conduit
+                 , text
+                 , transformers
+                 , hspec
+                 , QuickCheck
+                 , HUnit
+                 , lifted-base
+                 , iproute
+                 , time
+                 , random
+                 , certificate
+                 , crypto-random-api
+                 , crypto-pubkey
