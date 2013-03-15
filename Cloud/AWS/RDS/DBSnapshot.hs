@@ -47,6 +47,7 @@ sinkDBSnapshot
     => Consumer Event m DBSnapshot
 sinkDBSnapshot = DBSnapshot
     <$> getT "Port"
+    <*> getT "OptionGroupName"
     <*> getT "Iops"
     <*> getT "Engine"
     <*> getT "Status"

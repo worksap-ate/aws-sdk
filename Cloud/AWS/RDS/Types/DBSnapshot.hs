@@ -6,6 +6,7 @@ import Cloud.AWS.Lib.FromText (Text, UTCTime)
 
 data DBSnapshot = DBSnapshot
     { dbSnapshotPort :: Int
+    , dbSnapshotOptionGroupName :: Maybe Text
     , dbSnapshotIops :: Maybe Int
     , dbSnapshotEngine :: Text
     , dbSnapshotStatus :: Text

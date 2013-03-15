@@ -60,6 +60,6 @@ modifyOptionGroupTest = do
                 ) `miss` anyConnectionException
   where
     include = OptionsToInclude
-        [ OptionConfiguration ["default"] "OEM" 30000 []
+        [ OptionConfiguration ["default"] "OEM" [] (Just 30000) []
         ]
     remove = OptionsToRemove ["OEM"]
