@@ -164,7 +164,7 @@ withVolume req = E.bracket
 withCustomerGateway :: (MonadBaseControl IO m, MonadResource m) => Text -> IPv4 -> Int -> (CustomerGateway -> EC2 m a) -> EC2 m a
 withCustomerGateway typ addr bgpasn = E.bracket
     (createCustomerGateway typ addr bgpasn)
-    (deleteCustomerGateway . customerGatewayId)
+    (retry 5 10 . deleteCustomerGateway . customerGatewayId)
 
 withVpnGateway :: (MonadBaseControl IO m, MonadResource m) => CreateVpnGatewayType -> Maybe Text -> (VpnGateway -> EC2 m a) -> EC2 m a
 withVpnGateway typ zone = E.bracket
