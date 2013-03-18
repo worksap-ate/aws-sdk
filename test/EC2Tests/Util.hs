@@ -169,7 +169,7 @@ withCustomerGateway typ addr bgpasn = E.bracket
 withVpnGateway :: (MonadBaseControl IO m, MonadResource m) => CreateVpnGatewayType -> Maybe Text -> (VpnGateway -> EC2 m a) -> EC2 m a
 withVpnGateway typ zone = E.bracket
     (createVpnGateway typ zone)
-    (deleteVpnGateway . vpnGatewayId)
+    (retry 5 10 . deleteVpnGateway . vpnGatewayId)
 
 withVpnGatewayAttached :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> EC2 m a -> EC2 m a
 withVpnGatewayAttached vgw vpc f = E.bracket
