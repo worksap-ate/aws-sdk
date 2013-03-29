@@ -229,7 +229,7 @@ requestQuery
     -> ByteString
     -> [QueryParam]
     -> ByteString
-    -> (ByteString -> Int -> Consumer Event m a)
+    -> (ByteString -> ByteString -> Int -> Consumer Event m a)
     -> m (ResumableSource m ByteString)
 requestQuery settings ctx action params ver errSink = do
     let mgr = manager ctx
@@ -250,12 +250,12 @@ requestQuery settings ctx action params ver errSink = do
         then body $=+ conduitLog "aws-sdk.log" url
         else do
             body' <- body $=+ conduitLog "aws-sdk-error.log" url
-            clientError st body' $ errSink action
+            clientError st body' $ errSink ep action
             fail "not reached"
 #else
         then return body
         else do
-            clientError st body $ errSink action
+            clientError st body $ errSink ep action
             fail "not reached"
 #endif
 

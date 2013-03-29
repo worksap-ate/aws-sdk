@@ -51,14 +51,16 @@ import Cloud.AWS.Credential
 
 data AWSException
     = ClientError
-        { clientErrorAction :: ByteString
+        { clientErrorEndpoint :: ByteString
+        , clientErrorAction :: ByteString
         , clientErrorStatus :: Int
         , clientErrorCode :: Text
         , clientErrorMessage :: Maybe Text
         , clientErrorRequestId :: Text
         } -- ^ This error is caused by client requests.
     | ServerError
-        { serverErrorAction :: ByteString
+        { serverErrorEndpoint :: ByteString
+        , serverErrorAction :: ByteString
         , serverErrorStatus :: Int
         , serverErrorCode :: Text
         , serverErrorMessage :: Maybe Text

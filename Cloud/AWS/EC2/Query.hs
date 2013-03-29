@@ -39,14 +39,17 @@ sinkRequestId = do
     await -- EventBeginElement DescribeImagesResponse
     getT "requestId"
 
-sinkError :: MonadThrow m => ByteString -> Int -> Consumer Event m a
-sinkError a s = do
+sinkError :: MonadThrow m
+    => ByteString -> ByteString -> Int -> Consumer Event m a
+sinkError ep a s = do
     await
     element "Response" $ do
         (c,m) <- element "Errors" $ element "Error" $
             (,) <$> getT "Code" <*> getT "Message"
         r <- getT "RequestID"
-        lift $ monadThrow $ ClientError a s c m r
+        lift $ monadThrow $ errorData ep a s c m r
+  where
+    errorData = if s < 500 then ClientError else ServerError
 
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)

@@ -150,13 +150,14 @@ sinkEventBeginDocument = do
         Just EventBeginDocument -> return ()
         Just _ -> fail $ "unexpected: " <> show me
 
-sinkError :: MonadThrow m => ByteString -> Int -> Consumer Event m a
-sinkError action status = element "ErrorResponse" $ do
+sinkError :: MonadThrow m
+    => ByteString -> ByteString -> Int -> Consumer Event m a
+sinkError region action status = element "ErrorResponse" $ do
     (c,m) <- element "Error" $ (,)
         <$> (getT_ "Type" *> getT "Code")
         <*> getT "Message"
     rid <- getT "RequestId"
-    lift $ monadThrow $ errorData action status c m rid
+    lift $ monadThrow $ errorData region action status c m rid
   where
     errorData = if status < 500 then ClientError else ServerError
 
