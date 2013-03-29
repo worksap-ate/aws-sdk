@@ -13,7 +13,7 @@ import Test.Hspec
 
 import Cloud.AWS.EC2
 import Cloud.AWS.EC2.Types
-import Cloud.AWS.EC2.Util (wait, list)
+import Cloud.AWS.EC2.Util (wait, list, sleep)
 import Util
 import EC2Tests.Util
 
@@ -156,15 +156,17 @@ createAndDeleteVpnConnectionRouteTest = do
 
 withVpn :: (MonadBaseControl IO m, MonadResource m) => Maybe Bool -> (Text -> EC2 m a) -> EC2 m a
 withVpn static f =
-    withCustomerGateway "ipsec.1" "202.202.202.20" 65000 $ \CustomerGateway{customerGatewayId = cgid} ->
+    withCustomerGateway "ipsec.1" "202.202.202.20" 65000 $ \CustomerGateway{customerGatewayId = cgid} -> do
         withVpnGateway CreateVpnGatewayTypeIpsec1 Nothing $ \VpnGateway{vpnGatewayId = vpnid} -> do
-            (c,ret) <- withVpnConnection "ipsec.1" cgid vpnid Nothing static $ \VpnConnection{vpnConnectionId = cid} ->
+            (c,ret) <- withVpnConnection "ipsec.1" cgid vpnid Nothing static $ \VpnConnection{vpnConnectionId = cid} -> do
+                waitVpnConnection VpnConnectionStateAvailable cid
                 (cid,) <$> f cid
-            wait
-                (\connection -> vpnConnectionState connection == VpnConnectionStateDeleted)
-                (\cid -> list $ describeVpnConnections [cid] [])
-                c
+            waitVpnConnection VpnConnectionStateDeleted c
             return ret
+  where
+    waitVpnConnection state = wait
+        (\connection -> vpnConnectionState connection == state)
+        (\cid -> list $ describeVpnConnections [cid] [])
 
 enableAndDisableVgwRoutePropagationTest :: Spec
 enableAndDisableVgwRoutePropagationTest = do

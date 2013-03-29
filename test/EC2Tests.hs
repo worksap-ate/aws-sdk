@@ -1,7 +1,6 @@
 module Main where
 
 import EC2Tests.InstanceTests
-import EC2Tests.VPCTests
 import EC2Tests.AddressTests
 import EC2Tests.SnapshotTests
 import EC2Tests.ImageTests
@@ -23,7 +22,6 @@ import EC2Tests.AclTests
 main :: IO ()
 main = do
     runInstanceTests
-    runVpcTests
     runAddressTests
     runSnapshotTests
     runImageTests

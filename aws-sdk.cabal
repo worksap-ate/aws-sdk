@@ -178,6 +178,32 @@ test-suite test-ec2
                  , crypto-random-api
                  , crypto-pubkey
 
+test-suite test-vpc
+    type:              exitcode-stdio-1.0
+    main-is:           VPCTests.hs
+    hs-source-dirs:    test
+    ghc-options:       -Wall
+                       -threaded
+                       -fno-warn-unused-do-bind
+    extensions: OverloadedStrings
+    build-depends: base
+                 , aws-sdk
+                 , conduit
+                 , text
+                 , transformers
+                 , hspec
+                 , QuickCheck
+                 , HUnit
+                 , lifted-base
+                 , iproute
+                 , time
+                 , random
+                 , bytestring
+                 , base64-bytestring
+                 , certificate
+                 , crypto-random-api
+                 , crypto-pubkey
+
 test-suite test-rds
     type:              exitcode-stdio-1.0
     main-is:           RDSTests.hs

@@ -164,12 +164,12 @@ withVolume req = E.bracket
 withCustomerGateway :: (MonadBaseControl IO m, MonadResource m) => Text -> IPv4 -> Int -> (CustomerGateway -> EC2 m a) -> EC2 m a
 withCustomerGateway typ addr bgpasn = E.bracket
     (createCustomerGateway typ addr bgpasn)
-    (retry 5 10 . deleteCustomerGateway . customerGatewayId)
+    (retry 5 30 . deleteCustomerGateway . customerGatewayId)
 
 withVpnGateway :: (MonadBaseControl IO m, MonadResource m) => CreateVpnGatewayType -> Maybe Text -> (VpnGateway -> EC2 m a) -> EC2 m a
 withVpnGateway typ zone = E.bracket
     (createVpnGateway typ zone)
-    (retry 5 10 . deleteVpnGateway . vpnGatewayId)
+    (retry 5 30 . deleteVpnGateway . vpnGatewayId)
 
 withVpnGatewayAttached :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> EC2 m a -> EC2 m a
 withVpnGatewayAttached vgw vpc f = E.bracket
@@ -179,7 +179,13 @@ withVpnGatewayAttached vgw vpc f = E.bracket
 
 withVpnConnection :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> Text -> Maybe Text -> Maybe Bool -> (VpnConnection -> EC2 m a) -> EC2 m a
 withVpnConnection typ cgid vgid zone option = E.bracket
-    (createVpnConnection typ cgid vgid zone option)
+    (do
+        vpn <- createVpnConnection typ cgid vgid zone option
+        wait
+            (\connection -> vpnConnectionState connection == VpnConnectionStateAvailable)
+            (\cid -> list $ describeVpnConnections [cid] [])
+            (vpnConnectionId vpn)
+    )
     (deleteVpnConnection . vpnConnectionId)
 
 withAddress :: (MonadBaseControl IO m, MonadResource m) => Bool -> (AllocateAddress -> EC2 m a) -> EC2 m a
