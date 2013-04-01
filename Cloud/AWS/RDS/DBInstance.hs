@@ -55,11 +55,6 @@ sinkDBInstance = DBInstance
     <*> getT "DBInstanceIdentifier"
     <*> getT "PreferredBackupWindow"
     <*> getT "PreferredMaintenanceWindow"
-    <*> elementM "OptionGroupMembership"
-        (OptionGroupMembership
-        <$> getT "OptionGroupName"
-        <*> getT "Status"
-        )
     <*> getT "AvailabilityZone"
     <*> getT "LatestRestorableTime"
     <*> elements "ReadReplicaDBInstanceIdentifier" text
@@ -80,6 +75,11 @@ sinkDBInstance = DBInstance
         )
     <*> getT "EngineVersion"
     <*> getT "ReadReplicaSourceDBInstanceIdentifier"
+    <*> elements "OptionGroupMembership"
+        (OptionGroupMembership
+        <$> getT "OptionGroupName"
+        <*> getT "Status"
+        )
     <*> getT "PubliclyAccessible"
     <*> elements "DBSecurityGroup" dbSecurityGroupMembershipSink
     <*> getT "AutoMinorVersionUpgrade"

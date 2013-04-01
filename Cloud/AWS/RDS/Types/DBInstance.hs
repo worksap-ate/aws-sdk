@@ -36,7 +36,6 @@ data DBInstance = DBInstance
     , dbInstanceIdentifier :: Text
     , dbInstancePreferredBackupWindow :: Text
     , dbInstancePreferredMaintenanceWindow :: Text
-    , dbInstanceOptionGroupMembership :: Maybe OptionGroupMembership
     , dbInstanceAvailabilityZone :: Maybe Text
     , dbInstanceLatestRestorableTime :: Maybe UTCTime
     , dbInstanceReadReplicaDBInstanceIdentifiers :: [Text]
@@ -49,6 +48,7 @@ data DBInstance = DBInstance
     , dbInstanceEndpoint :: Maybe Endpoint
     , dbInstanceEngineVersion :: Text
     , dbInstanceReadReplicaSourceDBInstanceIdentifier :: Maybe Text
+    , dbInstanceOptionGroupMemberships :: [OptionGroupMembership]
     , dbInstancePubliclyAccessible :: Bool
     , dbInstanceSecurityGroups :: [DBSecurityGroupMembership]
     , dbInstanceAutoMinorVersionUpgrade :: Bool
