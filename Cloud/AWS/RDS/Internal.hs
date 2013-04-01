@@ -32,7 +32,7 @@ import Cloud.AWS.RDS.Types hiding (Event)
 
 -- | Ver.2013-01-10
 apiVersion :: ByteString
-apiVersion = "2013-01-10"
+apiVersion = "2013-02-12"
 
 type RDS m a = AWS AWSContext m a
 

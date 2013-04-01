@@ -57,9 +57,25 @@ optionSink = Option
     <$> getT "Port"
     <*> getT "OptionName"
     <*> getT "OptionDescription"
+    <*> getT "Persistent"
+    <*> elements "OptionSetting" optionSettingSink
     <*> elements "VpcSecurityGroupMembership" vpcSecurityGroupMembershipSink
     <*> elements' "DBSecurityGroupMemberships" "DBSecurityGroup"
         dbSecurityGroupMembershipSink
+
+optionSettingSink
+    :: MonadThrow m
+    => Consumer Event m OptionSetting
+optionSettingSink = OptionSetting
+    <$> getT "AllowedValues"
+    <*> getT "ApplyType"
+    <*> getT "DataType"
+    <*> getT "DefaultValue"
+    <*> getT "Description"
+    <*> getT "IsCollection"
+    <*> getT "IsModifiable"
+    <*> getT "Name"
+    <*> getT "Value"
 
 createOptionGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -110,13 +126,26 @@ optionGroupOptionSink
     => Consumer Event m OptionGroupOption
 optionGroupOptionSink = OptionGroupOption
     <$> getT "MajorEngineVersion"
+    <*> getT "Persistent"
     <*> getT "PortRequired"
     <*> elements' "OptionsDependedOn" "OptionName" text
     <*> getT "Description"
     <*> getT "DefaultPort"
     <*> getT "Name"
+    <*> elements "OptionGroupOptionSetting" optionGroupOptionSettingSink
     <*> getT "EngineName"
     <*> getT "MinimumRequiredMinorEngineVersion"
+
+optionGroupOptionSettingSink
+    :: MonadThrow m
+    => Consumer Event m OptionGroupOptionSetting
+optionGroupOptionSettingSink = OptionGroupOptionSetting
+    <$> getT "AllowedValues"
+    <*> getT "ApplyType"
+    <*> getT "DefaultValue"
+    <*> getT "IsModifiable"
+    <*> getT "SettingDescription"
+    <*> getT "SettingName"
 
 modifyOptionGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -141,7 +170,20 @@ modifyOptionGroup name req imm =
         [ "DBSecurityGroupMemberships.member" |.#=
             optionConfigurationDBSecurityGroupMemberships conf
         , "OptionName" |= optionConfigurationOptionName conf
-        , "Port" |= optionConfigurationPort conf
+        , "OptionSettings.member" |.#. settingParams <$>
+            optionConfigurationOptionSettings conf
+        , "Port" |=? optionConfigurationPort conf
         , "VpcSecurityGroupMemberships.member" |.#=
             optionConfigurationVpcSecurityGroupMemberships conf
+        ]
+    settingParams setting =
+        [ "AllowedValues" |= optionSettingAllowedValues setting
+        , "ApplyType" |= optionSettingApplyType setting
+        , "DataType" |= optionSettingDataType setting
+        , "DefaultValue" |= optionSettingDefaultValue setting
+        , "Description" |= optionSettingDescription setting
+        , "IsCollection" |= optionSettingIsCollection setting
+        , "IsModifiable" |= optionSettingIsModifiable setting
+        , "Name" |= optionSettingName setting
+        , "Value" |= optionSettingValue setting
         ]

@@ -6,6 +6,7 @@ module Cloud.AWS.RDS.Util
 import Control.Applicative ((<$>))
 import qualified Control.Concurrent as CC
 import Control.Monad.IO.Class (liftIO, MonadIO)
+import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Safe
@@ -54,7 +55,7 @@ createDBInstanceRequest db newid passwd = CreateDBInstanceRequest
     passwd
     (dbInstanceMasterUsername db)
     (Just $ dbInstanceMultiAZ db)
-    (optionGroupMembershipName <$> dbInstanceOptionGroupMembership db)
+    (optionGroupMembershipName <$> listToMaybe (dbInstanceOptionGroupMemberships db))
     (endpointPort <$> dbInstanceEndpoint db)
     (Just $ dbInstancePreferredBackupWindow db)
     (Just $ dbInstancePreferredMaintenanceWindow db)
