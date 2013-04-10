@@ -61,6 +61,7 @@ sinkMetricAlarm =
     <*> getT "Namespace"
     <*> getT "Threshold"
     <*> getT "EvaluationPeriods"
+    <*> getT "Namespace"
     <*> getT "Statistic"
     <*> members "AlarmActions" text
     <*> getT "Unit"
