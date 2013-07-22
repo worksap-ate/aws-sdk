@@ -20,7 +20,6 @@ module Cloud.AWS.Lib.Query
     ) where
 
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
 import           Data.ByteString.Lazy.Char8 ()
 import qualified Data.ByteString.Char8 as BSC
 import Data.Text (Text)
@@ -40,10 +39,9 @@ import System.Locale (defaultTimeLocale, iso8601DateFormat)
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Network.HTTP.Conduit (HttpException)
+import qualified Network.HTTP.Rest.Signature.EC2 as Sign
 import qualified Network.HTTP.Types as H
 import Network.TLS (HandshakeFailed)
-import qualified Data.Digest.Pure.SHA as SHA
-import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Exception.Lifted as E
@@ -51,7 +49,6 @@ import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 
 import Cloud.AWS.Class
-import Cloud.AWS.Util
 import Cloud.AWS.Credential
 import Cloud.AWS.Lib.Parser
 import Cloud.AWS.Lib.ToText
@@ -168,35 +165,19 @@ mkUrl ep cred time action params ver = mconcat
     [ "https://"
     , ep
     , "/?"
-    , qparam
+    , Sign.toString qparam
     , "&Signature="
-    , signature ep (secretAccessKey cred) qparam
+    , Sign.signature' "GET" ep "/" (secretAccessKey cred) Sign.HmacSHA256 qparam
     ]
   where
     qheader = Map.fromList $ queryHeader action time cred ver
-    qparam = queryStr $ Map.union qheader $ paramsToMap params
+    qparam = Sign.queryStringFromMap $ Map.union qheader $ paramsToMap params
 
 textToBS :: Text -> ByteString
 textToBS = BSC.pack . T.unpack
 
-queryStr :: Map ByteString ByteString -> ByteString
-queryStr = BS.intercalate "&" . Map.foldrWithKey' concatWithEqual []
-  where
-    concatWithEqual key val acc
-        = key
-        <> "="
-        <> (H.urlEncode True val) : acc
-
 awsTimeFormat :: UTCTime -> ByteString
 awsTimeFormat = BSC.pack . formatTime defaultTimeLocale (iso8601DateFormat $ Just "%XZ")
-
-signature
-    :: ByteString -> SecretAccessKey -> ByteString -> ByteString
-signature ep secret query = urlstr
-  where
-    stringToSign = "GET\n" <> ep <> "\n/\n" <> query
-    signedStr = toS . SHA.bytestringDigest $ SHA.hmacSha256 (toL secret) (toL stringToSign)
-    urlstr = H.urlEncode True . BASE.encode $ signedStr
 
 checkStatus' ::
     H.Status -> H.ResponseHeaders -> HTTP.CookieJar -> Maybe SomeException
