@@ -147,6 +147,7 @@ library
                    , filepath
                    , directory
                    , io-choice
+                   , ec2-signature
 
 source-repository head
     type:            git
