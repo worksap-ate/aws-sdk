@@ -20,6 +20,9 @@ module Cloud.AWS.Lib.Query
     ) where
 
 import           Data.ByteString (ByteString)
+#ifdef DEBUG
+import qualified Data.ByteString as BS
+#endif
 import           Data.ByteString.Lazy.Char8 ()
 import qualified Data.ByteString.Char8 as BSC
 import Data.Text (Text)
