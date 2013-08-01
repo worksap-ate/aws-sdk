@@ -259,7 +259,7 @@ conduitLog path url = bracketP (E.try $ IO.openBinaryFile path IO.AppendMode) re
         liftIO $ do
             time <- getCurrentTime
             BSC.hPutStrLn h $ "[" <> awsTimeFormat time <> "] " <> url
-        awaitForever $ \bs -> liftIO (BS.hPut h bs) >> yield bs
+        awaitForever $ \bs -> liftIO (BSC.hPut h bs) >> yield bs
 #endif
 
 commonQuery
