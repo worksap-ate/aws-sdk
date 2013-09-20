@@ -1,12 +1,14 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, ScopedTypeVariables #-}
 
 module EC2Tests.KeyPairTests
     ( runKeyPairTests
     )
     where
 
+import Control.Applicative ((<$>))
 import Crypto.PubKey.RSA (generate)
-import Crypto.Random.API (getSystemRandomGen)
+import Crypto.Random.API (cprgCreate)
+import Crypto.Random (SystemRNG, createEntropyPool)
 import Data.Certificate.KeyRSA (encodePublic)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
@@ -37,7 +39,7 @@ runKeyPairTests = hspec $ do
 
     describe "importKeyPair" $ do
         it "doesn't throw any exception" $ do
-            gen <- getSystemRandomGen
+            (gen :: SystemRNG) <- cprgCreate <$> createEntropyPool
             let ((pubkey, _), _) = generate gen 128 1024
                 der = S.concat $ L.toChunks $ encode $ encodePublic pubkey
             testEC2' region (do

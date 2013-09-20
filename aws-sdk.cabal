@@ -176,7 +176,7 @@ test-suite test-ec2
                  , bytestring
                  , base64-bytestring
                  , certificate
-                 , crypto-random-api
+                 , crypto-random
                  , crypto-pubkey
 
 test-suite test-vpc
@@ -202,7 +202,7 @@ test-suite test-vpc
                  , bytestring
                  , base64-bytestring
                  , certificate
-                 , crypto-random-api
+                 , crypto-random
                  , crypto-pubkey
 
 test-suite test-rds
@@ -226,7 +226,7 @@ test-suite test-rds
                  , time
                  , random
                  , certificate
-                 , crypto-random-api
+                 , crypto-random
                  , crypto-pubkey
 
 test-suite test-elb
@@ -250,7 +250,7 @@ test-suite test-elb
                  , time
                  , random
                  , certificate
-                 , crypto-random-api
+                 , crypto-random
                  , crypto-pubkey
 
 test-suite test-cw
@@ -274,5 +274,5 @@ test-suite test-cw
                  , time
                  , random
                  , certificate
-                 , crypto-random-api
+                 , crypto-random
                  , crypto-pubkey
