@@ -94,7 +94,7 @@ awaitWhile f = await >>= g
 getT :: (MonadThrow m, FromText a)
     => Text
     -> Consumer Event m a
-getT name = elementM name text >>= lift . fromMaybeText name
+getT name = elementM name text >>= lift . fromNamedText name
 
 getT_ :: forall m . MonadThrow m
     => Text

@@ -34,7 +34,6 @@ module Cloud.AWS.EC2.Types.Instance
 
 import Data.ByteString (ByteString)
 
-import Cloud.AWS.Class
 import Cloud.AWS.EC2.Types.Common
 import Cloud.AWS.EC2.Types.Image (BlockDeviceMappingParam)
 import Cloud.AWS.EC2.Types.NetworkInterface (NetworkInterfaceParam)
@@ -145,13 +144,13 @@ data InstanceLifecycle
   deriving (Show, Read, Eq)
 
 instance FromText InstanceLifecycle where
-    fromTextMaybe t
-        | t == "spot" = Just LifecycleSpot
-        | otherwise   = Nothing
-    fromMaybeText _name Nothing  = return LifecycleNone
-    fromMaybeText _name (Just t)
+    fromText t
         | t == "spot" = return LifecycleSpot
-        | otherwise   = monadThrow $ FromTextError t
+        | otherwise   = fail "no Instance lifecycle"
+    fromNamedText _name Nothing  = return LifecycleNone
+    fromNamedText _name (Just t)
+        | t == "spot" = return LifecycleSpot
+        | otherwise   = failText t
 
 data InstanceMonitoringState
     = MonitoringDisabled

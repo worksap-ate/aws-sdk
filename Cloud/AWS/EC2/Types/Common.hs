@@ -35,11 +35,10 @@ data EC2Return
     | EC2Error Text
   deriving (Show, Read, Eq)
 
-instance FromText EC2Return
-  where
-    fromTextMaybe t
-        | t == "true" = Just EC2Success
-        | otherwise   = Just $ EC2Error t
+instance FromText EC2Return where
+    fromText t
+        | t == "true" = return EC2Success
+        | otherwise   = return $ EC2Error t
 
 type Filter = (Text, [Text])
 
@@ -73,11 +72,10 @@ instance ToText Platform where
     toText PlatformOther = error "unsupported opperation: Platform.toText"
 
 instance FromText Platform where
-    fromTextMaybe t
+    fromText t
         | t == "windows" = return PlatformWindows
         | otherwise      = return PlatformOther
-    fromMaybeText _
-        = return . fromMaybe PlatformOther . (>>= fromTextMaybe)
+    fromNamedText _ = return . fromMaybe PlatformOther . (>>= fromText)
 
 data ProductCode = ProductCode
     { productCodeCode :: Text

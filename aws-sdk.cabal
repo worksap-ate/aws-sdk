@@ -83,10 +83,8 @@ library
                    , Cloud.AWS.EC2.Types.Tag
                    , Cloud.AWS.EC2.Types.VPC
                    , Cloud.AWS.EC2.Types.Volume
-                   , Cloud.AWS.Lib.FromText
                    , Cloud.AWS.Lib.Parser
                    , Cloud.AWS.Lib.Query
-                   , Cloud.AWS.Lib.ToText
                    , Cloud.AWS.RDS.Internal
                    , Cloud.AWS.RDS.DBInstance
                    , Cloud.AWS.RDS.DBParameterGroup
@@ -148,6 +146,7 @@ library
                    , directory
                    , io-choice
                    , ec2-signature
+                   , aws-sdk-text-converter
 
 source-repository head
     type:            git
