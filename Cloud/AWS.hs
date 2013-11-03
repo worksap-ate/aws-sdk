@@ -1,4 +1,4 @@
--- | aws-sdk is an AWS library for Haskell
+-- |  aws-sdk is an AWS library for Haskell
 --
 -- Put your AWS AccessKey and SecretAccessKey into a configuration
 -- file. Write the following in /./\//aws.config/.

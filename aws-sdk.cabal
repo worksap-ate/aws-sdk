@@ -79,6 +79,7 @@ library
                    , Cloud.AWS.EC2.Types.RouteTable
                    , Cloud.AWS.EC2.Types.SecurityGroup
                    , Cloud.AWS.EC2.Types.Snapshot
+                   , Cloud.AWS.EC2.Types.SpotInstance
                    , Cloud.AWS.EC2.Types.Subnets
                    , Cloud.AWS.EC2.Types.Tag
                    , Cloud.AWS.EC2.Types.VPC

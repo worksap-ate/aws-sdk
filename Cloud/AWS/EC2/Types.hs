@@ -29,6 +29,8 @@ module Cloud.AWS.EC2.Types
     , module Cloud.AWS.EC2.Types.SecurityGroup
       -- * Snapshot
     , module Cloud.AWS.EC2.Types.Snapshot
+      -- * Spot Instances
+    , module Cloud.AWS.EC2.Types.SpotInstance
       -- * Subnets
     , module Cloud.AWS.EC2.Types.Subnets
       -- * Tag
@@ -54,6 +56,7 @@ import Cloud.AWS.EC2.Types.Route
 import Cloud.AWS.EC2.Types.RouteTable
 import Cloud.AWS.EC2.Types.SecurityGroup
 import Cloud.AWS.EC2.Types.Snapshot
+import Cloud.AWS.EC2.Types.SpotInstance
 import Cloud.AWS.EC2.Types.Subnets
 import Cloud.AWS.EC2.Types.Tag
 import Cloud.AWS.EC2.Types.VPC
