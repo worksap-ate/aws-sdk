@@ -13,6 +13,7 @@ module Cloud.AWS.EC2.Types.SpotInstance
     , SpotInstanceNetworkInterface (..)
     , SpotInstanceSecurityGroup (..)
     , RequestSpotInstancesParam (..)
+    , CancelSpotInstanceRequestsResponse (..)
     ) where
 
 import Cloud.AWS.EC2.Types.Common
@@ -146,6 +147,11 @@ data RequestSpotInstancesParam = RequestSpotInstancesParam
     }
   deriving (Show, Read, Eq)
 
+data CancelSpotInstanceRequestsResponse = CancelSpotInstanceRequestsResponse
+    { cancelSpotInstanceRequestId :: Text
+    , cancelSpotInstanceState :: SpotInstanceState
+    }
+  deriving (Show, Read, Eq)
 
 deriveFromText "SpotInstanceType" ["one-time", "persistent"]
 

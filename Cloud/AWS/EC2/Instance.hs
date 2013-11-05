@@ -19,6 +19,7 @@ module Cloud.AWS.EC2.Instance
     , describeSpotInstanceRequests
     , requestSpotInstances
     , defaultRequestSpotInstancesParam
+    , cancelSpotInstanceRequests
     ) where
 
 import Data.Text (Text)
@@ -773,3 +774,21 @@ defaultRequestSpotInstancesParam price iid iType
         Nothing
         Nothing
 
+------------------------------------------------------------
+-- CancelSpotInstanceRequests
+------------------------------------------------------------
+cancelSpotInstanceRequests
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> EC2 m (ResumableSource m CancelSpotInstanceRequestsResponse)
+cancelSpotInstanceRequests requestIds =
+    ec2QuerySource "CancelSpotInstanceRequests" params $
+        itemConduit "spotInstanceRequestSet" cancelSpotInstanceResponseSink
+  where
+    params = ["SpotInstanceRequestId" |.#= requestIds]
+
+cancelSpotInstanceResponseSink :: MonadThrow m
+    => Consumer Event m CancelSpotInstanceRequestsResponse
+cancelSpotInstanceResponseSink = CancelSpotInstanceRequestsResponse
+    <$> getT "spotInstanceRequestId"
+    <*> getT "state"
