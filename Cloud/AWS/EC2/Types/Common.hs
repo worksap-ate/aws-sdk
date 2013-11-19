@@ -43,7 +43,7 @@ instance FromText EC2Return where
 type Filter = (Text, [Text])
 
 data Group = Group
-    { groupId :: Text
+    { groupId :: Maybe Text
     , groupName :: Text
     }
   deriving (Show, Read, Eq)
@@ -58,7 +58,7 @@ deriveFromText "Hypervisor" ["ovm", "xen"]
 data Placement = Placement
     { placementAvailabilityZone :: Text
     , placementGroupName :: Maybe Text
-    , placementTenancy :: Text
+    , placementTenancy :: Maybe Text
     }
   deriving (Show, Read, Eq)
 

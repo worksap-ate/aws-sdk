@@ -49,10 +49,10 @@ data ConsoleOutput = ConsoleOutput
   deriving (Show, Read, Eq)
 
 data EbsInstanceBlockDevice = EbsInstanceBlockDevice
-    { ebsInstanceBlockDeviceVolumeId :: Text
-    , ebsInstanceBlockDeviceState :: AttachmentSetItemResponseStatus
-    , ebsInstanceBlockDeviceAttachTime :: UTCTime
-    , ebsInstanceBlockDeviceDeleteOnTermination :: Bool
+    { ebsInstanceBlockDeviceVolumeId :: Maybe Text
+    , ebsInstanceBlockDeviceState :: Maybe AttachmentSetItemResponseStatus
+    , ebsInstanceBlockDeviceAttachTime :: Maybe UTCTime
+    , ebsInstanceBlockDeviceDeleteOnTermination :: Maybe Bool
     }
   deriving (Show, Read, Eq)
 
@@ -160,19 +160,19 @@ data InstanceMonitoringState
   deriving (Show, Read, Eq)
 
 data InstanceNetworkInterface = InstanceNetworkInterface
-    { instanceNetworkInterfaceId :: Text
+    { instanceNetworkInterfaceId :: Maybe Text
     , instanceNetworkInterfaceSubnetId :: Maybe Text
     , instanceNetworkInterfaceVpcId :: Maybe Text
     , instanceNetworkInterfaceDescription :: Maybe Text
-    , instanceNetworkInterfaceOwnerId :: Text
-    , instanceNetworkInterfaceStatus :: Text
+    , instanceNetworkInterfaceOwnerId :: Maybe Text
+    , instanceNetworkInterfaceStatus :: Maybe Text
     , instanceNetworkInterfaceMacAddress :: Maybe Text
     , instanceNetworkInterfacePrivateIpAddress :: Maybe IPv4
     , instanceNetworkInterfacePrivateDnsName :: Maybe Text
     , instanceNetworkInterfaceSourceDestCheck :: Maybe Bool
     , instanceNetworkInterfaceGroupSet :: [Group]
     , instanceNetworkInterfaceAttachment
-        :: InstanceNetworkInterfaceAttachment
+        :: Maybe InstanceNetworkInterfaceAttachment
     , instanceNetworkInterfaceAssociation
         :: Maybe InstanceNetworkInterfaceAssociation
     , instanceNetworkInterfacePrivateIpAddressesSet

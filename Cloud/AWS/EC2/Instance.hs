@@ -16,6 +16,10 @@ module Cloud.AWS.EC2.Instance
     , modifyInstanceAttribute
     , monitorInstances
     , unmonitorInstances
+    , describeSpotInstanceRequests
+    , requestSpotInstances
+    , defaultRequestSpotInstancesParam
+    , cancelSpotInstanceRequests
     ) where
 
 import Data.Text (Text)
@@ -161,7 +165,7 @@ networkInterfaceSink = itemsSet "networkInterfaceSet" $
     <*> getT "privateDnsName"
     <*> getT "sourceDestCheck"
     <*> groupSetSink
-    <*> element "attachment" (
+    <*> elementM "attachment" (
         InstanceNetworkInterfaceAttachment
         <$> getT "attachmentId"
         <*> getT "deviceIndex"
@@ -577,3 +581,214 @@ unmonitorInstances
 unmonitorInstances iids =
     ec2QuerySource "UnmonitorInstances" ["InstanceId" |.#= iids]
         monitorInstancesResponseSink
+
+------------------------------------------------------------
+-- DescribeSpotInstanceRequests
+------------------------------------------------------------
+describeSpotInstanceRequests
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ SpotInstanceRequestIds
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m SpotInstanceRequest)
+describeSpotInstanceRequests requests filters = do
+--    ec2QueryDebug "DescribeInstances" params
+    ec2QuerySource "DescribeSpotInstanceRequests" params $
+        itemConduit "spotInstanceRequestSet" spotInstanceRequestSink
+  where
+    params =
+        [ "SpotInstanceRequestId" |.#= requests
+        , filtersParam filters
+        ]
+
+spotInstanceRequestSink :: MonadThrow m
+    => Consumer Event m SpotInstanceRequest
+spotInstanceRequestSink =
+    SpotInstanceRequest
+    <$> getT "spotInstanceRequestId"
+    <*> getT "spotPrice"
+    <*> getT "type"
+    <*> getT "state"
+    <*> elementM "fault" (
+        SpotInstanceFault
+        <$> getT "code"
+        <*> getT "message"
+        )
+    <*> element "status" (
+        SpotInstanceStatus
+        <$> getT "code"
+        <*> getT "updateTime"
+        <*> getT "message"
+        )
+    <*> getT "validFrom"
+    <*> getT "validUntil"
+    <*> getT "launchGroup"
+    <*> getT "availabilityZoneGroup"
+    <*> spotInstanceLaunchSpecificationSink "launchSpecification"
+    <*> getT "instanceId"
+    <*> getT "createTime"
+    <*> getT "productDescription"
+    <*> resourceTagSink
+    <*> getT "launchedAvailabilityZone"
+
+
+spotInstanceLaunchSpecificationSink :: MonadThrow m
+    => Text -> Consumer Event m SpotInstanceLaunchSpecification
+spotInstanceLaunchSpecificationSink label = element label (
+    SpotInstanceLaunchSpecification
+    <$> getT "imageId"
+    <*> getT "keyName"
+    <*> groupSetSink
+    <*> getT "instanceType"
+    <*> element "placement" (
+        Placement
+        <$> getT "availabilityZone"
+        <*> getT "groupName"
+        <*> getT "tenancy"
+        )
+    <*> getT "kernelId"
+    <*> getT "ramdiskId"
+    <*> spotInstanceBlockDeviceMappingsSink
+    <*> element "monitoring" (
+        SpotInstanceMonitoringState
+        <$> getT "enabled"
+        )
+    <*> getT "subnetId"
+    <*> spotInstanceNetworkInterfaceSink
+    <*> elementM "iamInstanceProfile" (
+        IamInstanceProfile
+        <$> getT "arn"
+        <*> getT "id"
+        )
+    <*> getT "ebsOptimized" 
+    )
+
+spotInstanceBlockDeviceMappingsSink :: MonadThrow m
+    => Consumer Event m [SpotInstanceBlockDeviceMapping]
+spotInstanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
+    SpotInstanceBlockDeviceMapping
+    <$> getT "deviceName"
+    <*> element "ebs" (
+        EbsSpotInstanceBlockDevice
+        <$> getT "volumeSize"
+        <*> getT "deleteOnTermination"
+        <*> getT "volumeType"
+        )
+    )
+
+spotInstanceNetworkInterfaceSink :: MonadThrow m
+    => Consumer Event m [SpotInstanceNetworkInterface]
+spotInstanceNetworkInterfaceSink = itemsSet "networkInterfaceSet" $
+    SpotInstanceNetworkInterface
+    <$> getT "deviceIndex"
+    <*> getT "subnetId"
+    <*> securityGroupSetSink
+
+securityGroupSetSink :: MonadThrow m
+    => Consumer Event m [SpotInstanceSecurityGroup]
+securityGroupSetSink = itemsSet "groupSet" $
+    SpotInstanceSecurityGroup
+    <$> getT "groupId"
+
+------------------------------------------------------------
+-- RequestSpotInstances
+------------------------------------------------------------
+-- | 'RequestSpotInstancesParam' is genereted with 'defaultRequestSpotInstancesParam'
+requestSpotInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => RequestSpotInstancesParam
+    -> EC2 m [SpotInstanceRequest]
+requestSpotInstances param =
+    ec2Query "RequestSpotInstances" params $
+        itemsSet "spotInstanceRequestSet" spotInstanceRequestSink
+  where
+    params =
+        [ "SpotPrice" |= requestSpotInstancesSpotPrice param
+        , "InstanceCount" |=? requestSpotInstancesCount param
+        , "Type" |=? requestSpotInstancesType param
+        , "ValidFrom" |=? requestSpotInstancesValidFrom param
+        , "ValidUntil" |=? requestSpotInstancesValidUntil param
+        , "LaunchGroup" |=? requestSpotInstancesLaunchGroup param
+        , "AvailabilityZoneGroup" |=? requestSpotInstancesLaunchGroup param
+        , "LaunchSpecification" |.
+          [ "ImageId" |= requestSpotInstancesImageId param
+          , "KeyName" |=? requestSpotInstancesKeyName param
+          , "SecurityGroupId" |.#= requestSpotInstancesSecurityGroupIds param
+          , "SecurityGroup" |.#= requestSpotInstancesSecurityGroups param
+          , "UserData" |=? requestSpotInstancesUserData param
+          , "InstanceType" |= requestSpotInstancesInstanceType param
+          , "Placement" |.
+              [ "AvailabilityZone" |=?
+                  requestSpotInstancesAvailabilityZone param
+              , "GroupName" |=?
+                  requestSpotInstancesPlacementGroup param
+              ]
+          , "KernelId" |=? requestSpotInstancesKernelId param
+          , "RamdiskId" |=? requestSpotInstancesRamdiskId param
+          , blockDeviceMappingsParam $
+              requestSpotInstancesBlockDeviceMappings param
+          , "Monitoring" |.+ "Enabled" |=?
+              requestSpotInstancesMonitoringEnabled param
+          , "SubnetId" |=? requestSpotInstancesSubnetId param
+          , "NetworkInterface" |.#. map networkInterfaceParams
+              (requestSpotInstancesNetworkInterfaces param)
+          , "IamInstanceProfile" |.? iamInstanceProfileParams <$>
+              requestSpotInstancesIamInstancesProfile param
+          , "EbsOptimized" |=?
+              requestSpotInstancesEbsOptimized param
+          ]
+        ]
+    iamInstanceProfileParams iam =
+        [ "Arn" |= iamInstanceProfileArn iam
+        , "Name" |= iamInstanceProfileId iam
+        ]
+
+-- | RequestSpotInstances parameter utility
+defaultRequestSpotInstancesParam
+    :: Text -- ^ Price
+    -> Text -- ^ ImageId
+    -> Text -- ^ Instance type
+    -> RequestSpotInstancesParam
+defaultRequestSpotInstancesParam price iid iType
+    = RequestSpotInstancesParam
+        price
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        iid
+        Nothing
+        []
+        []
+        Nothing
+        iType
+        Nothing
+        Nothing
+        Nothing
+        Nothing
+        []
+        Nothing
+        Nothing
+        []
+        Nothing
+        Nothing
+
+------------------------------------------------------------
+-- CancelSpotInstanceRequests
+------------------------------------------------------------
+cancelSpotInstanceRequests
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ InstanceIds
+    -> EC2 m (ResumableSource m CancelSpotInstanceRequestsResponse)
+cancelSpotInstanceRequests requestIds =
+    ec2QuerySource "CancelSpotInstanceRequests" params $
+        itemConduit "spotInstanceRequestSet" cancelSpotInstanceResponseSink
+  where
+    params = ["SpotInstanceRequestId" |.#= requestIds]
+
+cancelSpotInstanceResponseSink :: MonadThrow m
+    => Consumer Event m CancelSpotInstanceRequestsResponse
+cancelSpotInstanceResponseSink = CancelSpotInstanceRequestsResponse
+    <$> getT "spotInstanceRequestId"
+    <*> getT "state"
