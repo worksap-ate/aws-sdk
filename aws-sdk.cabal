@@ -148,6 +148,7 @@ library
                    , io-choice
                    , ec2-signature
                    , aws-sdk-text-converter
+                   , aws-sdk-xml-unordered
 
 source-repository head
     type:            git
