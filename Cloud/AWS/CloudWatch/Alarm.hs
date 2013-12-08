@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, RecordWildCards #-}
+{-# LANGUAGE RankNTypes #-}
 module Cloud.AWS.CloudWatch.Alarm
     ( describeAlarms
     , describeAlarmsForMetric
@@ -18,7 +19,8 @@ import Data.XML.Types (Event)
 
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.CloudWatch.Types
-import Cloud.AWS.Lib.Parser (getT, getT_, members, text)
+import Cloud.AWS.Lib.Parser (getT, members, text)
+import Cloud.AWS.Lib.Parser.Unordered hiding (getT)
 import Cloud.AWS.Lib.Query
 
 describeAlarms
@@ -92,11 +94,12 @@ describeAlarmsForMetric dims name ns period stat unit =
         ]
 
 putMetricAlarm
-    :: (MonadBaseControl IO m, MonadResource m)
+    :: forall m . (MonadBaseControl IO m, MonadResource m)
     => PutMetricAlarmRequest
     -> CloudWatch m ()
 putMetricAlarm PutMetricAlarmRequest{..} =
-    cloudWatchQuery "PutMetricAlarm" params $ getT_ "PutMetricAlarmResult"
+    cloudWatchQuery "PutMetricAlarm" params
+        $ xmlParser (.< "PutMetricAlarmResult")
   where
     params =
         [ "ActionsEnabled" |=? putMetricAlarmActionsEnabled
@@ -120,7 +123,9 @@ deleteAlarms
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ A list of alarms to be deleted.
     -> CloudWatch m ()
-deleteAlarms names = cloudWatchQuery "DeleteAlarms" ["AlarmNames.member" |.#= names] $ return ()
+deleteAlarms names =
+    cloudWatchQuery "DeleteAlarms" ["AlarmNames.member" |.#= names]
+        $ return ()
 
 describeAlarmHistory
     :: (MonadBaseControl IO m, MonadResource m)
@@ -158,14 +163,16 @@ enableAlarmActions
     => [Text] -- ^ The names of the alarms to enable actions for.
     -> CloudWatch m ()
 enableAlarmActions alarms =
-    cloudWatchQuery "EnableAlarmActions" ["AlarmNames.member" |.#= alarms] $ return ()
+    cloudWatchQuery "EnableAlarmActions" ["AlarmNames.member" |.#= alarms]
+        $ return ()
 
 disableAlarmActions
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ The names of the alarms to enable actions for.
     -> CloudWatch m ()
 disableAlarmActions alarms =
-    cloudWatchQuery "DisableAlarmActions" ["AlarmNames.member" |.#= alarms] $ return ()
+    cloudWatchQuery "DisableAlarmActions" ["AlarmNames.member" |.#= alarms]
+        $ return ()
 
 setAlarmState
     :: (MonadBaseControl IO m, MonadResource m)
