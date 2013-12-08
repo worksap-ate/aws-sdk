@@ -133,7 +133,7 @@ runAWS :: MonadIO m
     -> AWS c m a
     -> m a
 runAWS ctx app = do
-    mgr <- liftIO $ HTTP.newManager HTTP.def
+    mgr <- liftIO $ HTTP.newManager HTTP.conduitManagerSettings
     cred <- liftIO $ loadCredential
     runAWSwithManager mgr ctx (defaultSettings cred) app
 

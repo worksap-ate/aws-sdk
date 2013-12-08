@@ -126,8 +126,7 @@ library
                    , transformers
                    , time
                    , old-locale
-                   , http-conduit >= 1.9.0
-                   , data-default
+                   , http-conduit >= 2.0.0
                    , xml-conduit >= 1.1.0.3
                    , xml-types
                    , text
