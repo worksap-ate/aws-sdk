@@ -8,12 +8,11 @@ module Cloud.AWS.RDS.OptionGroup
     , modifyOptionGroup
     ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
-import Data.XML.Types (Event)
 
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement, content)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types.OptionGroup
@@ -39,43 +38,43 @@ describeOptionGroups engine ver marker maxRecords name =
         ]
 
 optionGroupSink
-    :: MonadThrow m
-    => Consumer Event m OptionGroup
-optionGroupSink = OptionGroup
-    <$> getT "AllowsVpcAndNonVpcInstanceMemberships"
-    <*> getT "MajorEngineVersion"
-    <*> getT "OptionGroupName"
-    <*> getT "VpcId"
-    <*> getT "EngineName"
-    <*> getT "OptionGroupDescription"
-    <*> elements "Option" optionSink
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m OptionGroup
+optionGroupSink xml = OptionGroup
+    <$> xml .< "AllowsVpcAndNonVpcInstanceMemberships"
+    <*> xml .< "MajorEngineVersion"
+    <*> xml .< "OptionGroupName"
+    <*> xml .< "VpcId"
+    <*> xml .< "EngineName"
+    <*> xml .< "OptionGroupDescription"
+    <*> elements "Option" optionSink xml
 
 optionSink
-    :: MonadThrow m
-    => Consumer Event m Option
-optionSink = Option
-    <$> getT "Port"
-    <*> getT "OptionName"
-    <*> getT "OptionDescription"
-    <*> getT "Persistent"
-    <*> elements "OptionSetting" optionSettingSink
-    <*> elements "VpcSecurityGroupMembership" vpcSecurityGroupMembershipSink
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Option
+optionSink xml = Option
+    <$> xml .< "Port"
+    <*> xml .< "OptionName"
+    <*> xml .< "OptionDescription"
+    <*> xml .< "Persistent"
+    <*> elements "OptionSetting" optionSettingSink xml
+    <*> elements "VpcSecurityGroupMembership" vpcSecurityGroupMembershipSink xml
     <*> elements' "DBSecurityGroupMemberships" "DBSecurityGroup"
-        dbSecurityGroupMembershipSink
+        dbSecurityGroupMembershipSink xml
 
 optionSettingSink
-    :: MonadThrow m
-    => Consumer Event m OptionSetting
-optionSettingSink = OptionSetting
-    <$> getT "AllowedValues"
-    <*> getT "ApplyType"
-    <*> getT "DataType"
-    <*> getT "DefaultValue"
-    <*> getT "Description"
-    <*> getT "IsCollection"
-    <*> getT "IsModifiable"
-    <*> getT "Name"
-    <*> getT "Value"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m OptionSetting
+optionSettingSink xml = OptionSetting
+    <$> xml .< "AllowedValues"
+    <*> xml .< "ApplyType"
+    <*> xml .< "DataType"
+    <*> xml .< "DefaultValue"
+    <*> xml .< "Description"
+    <*> xml .< "IsCollection"
+    <*> xml .< "IsModifiable"
+    <*> xml .< "Name"
+    <*> xml .< "Value"
 
 createOptionGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -85,8 +84,8 @@ createOptionGroup
     -> Text -- ^ OptionGroupName
     -> RDS m OptionGroup
 createOptionGroup engine ver desc name =
-    rdsQuery "CreateOptionGroup" params $
-        element "OptionGroup" optionGroupSink
+    rdsQuery "CreateOptionGroup" params $ \xml ->
+        getElement xml "OptionGroup" optionGroupSink
   where
     params =
         [ "EngineName" |= engine
@@ -122,30 +121,30 @@ describeOptionGroupOptions name version marker maxRecords =
         ]
 
 optionGroupOptionSink
-    :: MonadThrow m
-    => Consumer Event m OptionGroupOption
-optionGroupOptionSink = OptionGroupOption
-    <$> getT "MajorEngineVersion"
-    <*> getT "Persistent"
-    <*> getT "PortRequired"
-    <*> elements' "OptionsDependedOn" "OptionName" text
-    <*> getT "Description"
-    <*> getT "DefaultPort"
-    <*> getT "Name"
-    <*> elements "OptionGroupOptionSetting" optionGroupOptionSettingSink
-    <*> getT "EngineName"
-    <*> getT "MinimumRequiredMinorEngineVersion"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m OptionGroupOption
+optionGroupOptionSink xml = OptionGroupOption
+    <$> xml .< "MajorEngineVersion"
+    <*> xml .< "Persistent"
+    <*> xml .< "PortRequired"
+    <*> elements' "OptionsDependedOn" "OptionName" content xml
+    <*> xml .< "Description"
+    <*> xml .< "DefaultPort"
+    <*> xml .< "Name"
+    <*> elements "OptionGroupOptionSetting" optionGroupOptionSettingSink xml
+    <*> xml .< "EngineName"
+    <*> xml .< "MinimumRequiredMinorEngineVersion"
 
 optionGroupOptionSettingSink
-    :: MonadThrow m
-    => Consumer Event m OptionGroupOptionSetting
-optionGroupOptionSettingSink = OptionGroupOptionSetting
-    <$> getT "AllowedValues"
-    <*> getT "ApplyType"
-    <*> getT "DefaultValue"
-    <*> getT "IsModifiable"
-    <*> getT "SettingDescription"
-    <*> getT "SettingName"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m OptionGroupOptionSetting
+optionGroupOptionSettingSink xml = OptionGroupOptionSetting
+    <$> xml .< "AllowedValues"
+    <*> xml .< "ApplyType"
+    <*> xml .< "DefaultValue"
+    <*> xml .< "IsModifiable"
+    <*> xml .< "SettingDescription"
+    <*> xml .< "SettingName"
 
 modifyOptionGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -154,8 +153,8 @@ modifyOptionGroup
     -> Maybe Bool -- ^ ApplyImmediately
     -> RDS m OptionGroup
 modifyOptionGroup name req imm =
-    rdsQuery "ModifyOptionGroup" params $
-        element "OptionGroup" optionGroupSink
+    rdsQuery "ModifyOptionGroup" params $ \xml ->
+        getElement xml "OptionGroup" optionGroupSink
   where
     params =
         [ "OptionGroupName" |= name

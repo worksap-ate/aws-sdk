@@ -6,11 +6,10 @@ module Cloud.AWS.CloudWatch.Internal
 import Control.Applicative
 import Data.ByteString (ByteString)
 import Data.Conduit
-import Data.XML.Types (Event(..))
 
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Lib.Parser.Unordered hiding (getT)
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<))
 import Cloud.AWS.CloudWatch.Types
 
 -- | Ver.2010-08-01
@@ -23,7 +22,7 @@ cloudWatchQuery
     :: (MonadBaseControl IO m, MonadResource m)
     => ByteString -- ^ Action
     -> [QueryParam]
-    -> Consumer Event m a
+    -> (SimpleXML -> m a)
     -> CloudWatch m a
 cloudWatchQuery = commonQuery apiVersion
 

@@ -10,7 +10,7 @@ module Cloud.AWS.RDS.DBSubnetGroup
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser (element)
+import Cloud.AWS.Lib.Parser.Unordered (getElement)
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#=))
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (DBSubnetGroup)
@@ -38,8 +38,8 @@ createDBSubnetGroup
     -> Text -- ^ DBSubnetGroupDescription
     -> RDS m DBSubnetGroup
 createDBSubnetGroup name ids desc =
-    rdsQuery "CreateDBSubnetGroup" params $
-        element "DBSubnetGroup" dbSubnetGroupSink
+    rdsQuery "CreateDBSubnetGroup" params $ \xml ->
+        getElement xml "DBSubnetGroup" dbSubnetGroupSink
   where
     params =
         [ "DBSubnetGroupName" |= name
@@ -62,8 +62,8 @@ modifyDBSubnetGroup
     -> [Text] -- ^ SubnetIds
     -> RDS m DBSubnetGroup
 modifyDBSubnetGroup name desc ids =
-    rdsQuery "ModifyDBSubnetGroup" params $
-        element "DBSubnetGroup" dbSubnetGroupSink
+    rdsQuery "ModifyDBSubnetGroup" params $ \xml ->
+        getElement xml "DBSubnetGroup" dbSubnetGroupSink
   where
     params =
         [ "DBSubnetGroupName" |= name

@@ -5,14 +5,14 @@ module Cloud.AWS.RDS.Internal
     , RDS
     , rdsQuery
     , rdsQueryOnlyMetadata
-    , elements
-    , elements'
     , dbSubnetGroupSink
     , dbSecurityGroupMembershipSink
     , vpcSecurityGroupMembershipSink
+    , elements
+    , elements'
     ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative
 import qualified Control.Monad.Reader as Reader
 import qualified Control.Monad.State as State
 import Control.Monad.Trans.Class (lift)
@@ -20,13 +20,12 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit
 import Data.Monoid ((<>))
-import Data.XML.Types (Event(..))
-import Data.Maybe (fromMaybe)
 import qualified Text.XML.Stream.Parse as XmlP
 
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, xmlParser, getElement, getElements, (.<))
 import Cloud.AWS.Lib.ToText (toText)
 import Cloud.AWS.RDS.Types hiding (Event)
 
@@ -40,7 +39,7 @@ rdsQuery
     :: (MonadBaseControl IO m, MonadResource m)
     => ByteString -- ^ Action
     -> [QueryParam]
-    -> Consumer Event m a
+    -> (SimpleXML -> m a)
     -> RDS m a
 rdsQuery = commonQuery apiVersion
 
@@ -53,63 +52,65 @@ rdsQueryOnlyMetadata action params = do
     ctx <- State.get
     settings <- Reader.ask
     rs <- lift $ requestQuery settings ctx action params apiVersion sinkError
-    rid <- lift $ rs $$+-
-        XmlP.parseBytes XmlP.def =$
-            sinkResponseOnlyMetadata (toText action)
+    rid <- lift $ rs
+        $$+- XmlP.parseBytes XmlP.def
+        =$ xmlParser (sinkResponseOnlyMetadata (toText action))
     State.put ctx { lastRequestId = Just rid }
     return ()
 
 sinkResponseOnlyMetadata
-    :: MonadThrow m
+    :: (MonadThrow m, Applicative m)
     => Text
-    -> Consumer Event m RequestId
-sinkResponseOnlyMetadata action = do
-    sinkEventBeginDocument
-    element (action <> "Response") $ sinkResponseMetadata
+    -> SimpleXML
+    -> m RequestId
+sinkResponseOnlyMetadata action xml = do
+    getElement xml (action <> "Response") sinkResponseMetadata
 
-elements :: MonadThrow m
+elements :: (MonadThrow m, Applicative m)
     => Text
-    -> Consumer Event m a
-    -> Consumer Event m [a]
+    -> (SimpleXML -> m a)
+    -> SimpleXML
+    -> m [a]
 elements name = elements' (name <> "s") name
 
-elements' :: forall m a . MonadThrow m
+elements' :: forall m a . (MonadThrow m, Applicative m)
     => Text
     -> Text
-    -> Consumer Event m a
-    -> Consumer Event m [a]
-elements' setName itemName inner =
-    fromMaybe [] <$> elementM setName (listConsumer itemName inner)
+    -> (SimpleXML -> m a)
+    -> SimpleXML
+    -> m [a]
+elements' setName itemName inner xml =
+    getElements xml setName itemName inner
 
 dbSubnetGroupSink
-    :: MonadThrow m
-    => Consumer Event m DBSubnetGroup
-dbSubnetGroupSink = DBSubnetGroup
-    <$> getT "VpcId"
-    <*> getT "SubnetGroupStatus"
-    <*> getT "DBSubnetGroupDescription"
-    <*> getT "DBSubnetGroupName"
-    <*> elements "Subnet" (
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m DBSubnetGroup
+dbSubnetGroupSink xml = DBSubnetGroup
+    <$> xml .< "VpcId"
+    <*> xml .< "SubnetGroupStatus"
+    <*> xml .< "DBSubnetGroupDescription"
+    <*> xml .< "DBSubnetGroupName"
+    <*> elements "Subnet" (\xml' ->
         Subnet
-        <$> getT "SubnetStatus"
-        <*> getT "SubnetIdentifier"
-        <*> element "SubnetAvailabilityZone" (
+        <$> xml' .< "SubnetStatus"
+        <*> xml' .< "SubnetIdentifier"
+        <*> getElement xml' "SubnetAvailabilityZone" (\xml'' ->
             AvailabilityZone
-            <$> getT "Name"
-            <*> getT "ProvisionedIopsCapable"
+            <$> xml'' .< "Name"
+            <*> xml'' .< "ProvisionedIopsCapable"
             )
-        )
+        ) xml
 
 dbSecurityGroupMembershipSink
-    :: MonadThrow m
-    => Consumer Event m DBSecurityGroupMembership
-dbSecurityGroupMembershipSink = DBSecurityGroupMembership
-    <$> getT "Status"
-    <*> getT "DBSecurityGroupName"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m DBSecurityGroupMembership
+dbSecurityGroupMembershipSink xml = DBSecurityGroupMembership
+    <$> xml .< "Status"
+    <*> xml .< "DBSecurityGroupName"
 
 vpcSecurityGroupMembershipSink
-    :: MonadThrow m
-    => Consumer Event m VpcSecurityGroupMembership
-vpcSecurityGroupMembershipSink = VpcSecurityGroupMembership
-    <$> getT "Status"
-    <*> getT "VpcSecurityGroupId"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m VpcSecurityGroupMembership
+vpcSecurityGroupMembershipSink xml = VpcSecurityGroupMembership
+    <$> xml .< "Status"
+    <*> xml .< "VpcSecurityGroupId"
