@@ -13,8 +13,8 @@ import Control.Applicative
 
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Lib.Parser (members')
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), xmlParser)
+import Cloud.AWS.Lib.Parser (members, nodata)
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<))
 import Cloud.AWS.CloudWatch.Types
 
 dimensionFiltersParam :: [DimensionFilter] -> QueryParam
@@ -33,8 +33,8 @@ listMetrics
     -> Maybe Text -- ^ Namespace
     -> Maybe Text -- ^ NextToken
     -> CloudWatch m ([Metric], Maybe Text)
-listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $ xmlParser $ \xml ->
-    (,) <$> members' "Metrics" sinkMetric xml <*> xml .< "NextToken"
+listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $ \xml ->
+    (,) <$> members "Metrics" sinkMetric xml <*> xml .< "NextToken"
   where
     params =
         [ dimensionFiltersParam ds
@@ -47,7 +47,7 @@ sinkMetric :: (MonadThrow m, Applicative m)
     => SimpleXML -> m Metric
 sinkMetric xml =
     Metric
-    <$> members' "Dimensions" sinkDimension xml
+    <$> members "Dimensions" sinkDimension xml
     <*> xml .< "MetricName"
     <*> xml .< "Namespace"
 
@@ -63,8 +63,8 @@ getMetricStatistics
     -> Maybe Text -- ^ Unit
     -> CloudWatch m ([Datapoint], Text) -- ^ Datapoints and Label
 getMetricStatistics ds start end mn ns pe sts unit =
-    cloudWatchQuery "GetMetricStatistics" params $ xmlParser $ \xml -> (,)
-        <$> members' "Datapoints" (\xml' -> Datapoint
+    cloudWatchQuery "GetMetricStatistics" params $ \xml -> (,)
+        <$> members "Datapoints" (\xml' -> Datapoint
             <$> xml' .< "Timestamp"
             <*> xml' .< "SampleCount"
             <*> xml' .< "Unit"
@@ -92,7 +92,7 @@ putMetricData
     -> Text -- ^ The namespace for the metric data.
     -> CloudWatch m ()
 putMetricData dats ns =
-    cloudWatchQuery "PutMetricData" params $ return ()
+    cloudWatchQuery "PutMetricData" params nodata
   where
     params =
         [ "MetricData.member" |.#. map fromMetricDatum dats

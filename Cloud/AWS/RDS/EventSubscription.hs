@@ -8,12 +8,11 @@ module Cloud.AWS.RDS.EventSubscription
     , addSourceIdentifierToSubscription
     ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
-import Data.XML.Types (Event)
 
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content, getElement)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (EventSubscription(..), SourceType)
@@ -35,18 +34,18 @@ describeEventSubscriptions name marker maxRecords =
         ]
 
 eventSubscriptionSink
-    :: MonadThrow m
-    => Consumer Event m EventSubscription
-eventSubscriptionSink = EventSubscription
-    <$> getT "Enabled"
-    <*> getT "CustomerAwsId"
-    <*> getT "SourceType"
-    <*> getT "Status"
-    <*> elements' "SourceIdsList" "SourceId" text
-    <*> getT "SubscriptionCreationTime"
-    <*> elements' "EventCategoriesList" "EventCategory" text
-    <*> getT "CustSubscriptionId"
-    <*> getT "SnsTopicArn"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m EventSubscription
+eventSubscriptionSink xml = EventSubscription
+    <$> xml .< "Enabled"
+    <*> xml .< "CustomerAwsId"
+    <*> xml .< "SourceType"
+    <*> xml .< "Status"
+    <*> elements' "SourceIdsList" "SourceId" content xml
+    <*> xml .< "SubscriptionCreationTime"
+    <*> elements' "EventCategoriesList" "EventCategory" content xml
+    <*> xml .< "CustSubscriptionId"
+    <*> xml .< "SnsTopicArn"
 
 createEventSubscription
     :: (MonadBaseControl IO m, MonadResource m)
@@ -58,8 +57,8 @@ createEventSubscription
     -> Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 createEventSubscription enabled ecs topic sids stype name =
-    rdsQuery "CreateEventSubscription" params $
-        element "EventSubscription" eventSubscriptionSink
+    rdsQuery "CreateEventSubscription" params $ \xml ->
+        getElement xml "EventSubscription" eventSubscriptionSink
   where
     params =
         [ "Enabled" |=? enabled
@@ -75,8 +74,8 @@ deleteEventSubscription
     => Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 deleteEventSubscription name =
-    rdsQuery "DeleteEventSubscription" ["SubscriptionName" |= name] $
-        element "EventSubscription" eventSubscriptionSink
+    rdsQuery "DeleteEventSubscription" ["SubscriptionName" |= name] $ \xml ->
+        getElement xml "EventSubscription" eventSubscriptionSink
 
 modifyEventSubscription
     :: (MonadBaseControl IO m, MonadResource m)
@@ -87,8 +86,8 @@ modifyEventSubscription
     -> Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 modifyEventSubscription enabled ecs topic stype name =
-    rdsQuery "ModifyEventSubscription" params $
-        element "EventSubscription" eventSubscriptionSink
+    rdsQuery "ModifyEventSubscription" params $ \xml ->
+        getElement xml "EventSubscription" eventSubscriptionSink
   where
     params =
         [ "Enabled" |=? enabled
@@ -104,8 +103,8 @@ addSourceIdentifierToSubscription
     -> Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 addSourceIdentifierToSubscription src name =
-    rdsQuery "AddSourceIdentifierToSubscription" params $
-        element "EventSubscription" eventSubscriptionSink
+    rdsQuery "AddSourceIdentifierToSubscription" params $ \xml ->
+        getElement xml "EventSubscription" eventSubscriptionSink
   where
     params =
         [ "SourceIdentifier" |= src

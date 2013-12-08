@@ -145,7 +145,7 @@ library
                    , filepath
                    , directory
                    , io-choice
-                   , ec2-signature
+                   , ec2-signature >= 3.1
                    , aws-sdk-text-converter >=0.2
                    , aws-sdk-xml-unordered >=0.2
 

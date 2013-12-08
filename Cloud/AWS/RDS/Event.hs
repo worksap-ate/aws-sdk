@@ -5,17 +5,15 @@ module Cloud.AWS.RDS.Event
     , describeEventCategories
     ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import qualified Data.XML.Types as XML
 
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types
-import Debug.Trace
 
 describeEvents
     :: (MonadBaseControl IO m, MonadResource m)
@@ -44,16 +42,14 @@ describeEvents sid stype d start end categories marker maxRecords =
         ]
 
 eventSink
-    :: MonadThrow m
-    => Consumer XML.Event m Event
-eventSink = Event
-    <$> do
-        a <- getT "Message"
-        traceShow a $ return a
-    <*> getT "SourceType"
-    <*> elements' "EventCategories" "EventCategory" text
-    <*> getT "Date"
-    <*> getT "SourceIdentifier"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Event
+eventSink xml = Event
+    <$> xml .< "Message"
+    <*> xml .< "SourceType"
+    <*> elements' "EventCategories" "EventCategory" content xml
+    <*> xml .< "Date"
+    <*> xml .< "SourceIdentifier"
 
 describeEventCategories
     :: (MonadBaseControl IO m, MonadResource m)
@@ -66,8 +62,8 @@ describeEventCategories stype =
     params = [ "SourceType" |=? stype ]
 
 eventCategoriesMapSink
-    :: MonadThrow m
-    => Consumer XML.Event m EventCategoriesMap
-eventCategoriesMapSink = EventCategoriesMap
-    <$> getT "SourceType"
-    <*> elements' "EventCategories" "EventCategory" text
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m EventCategoriesMap
+eventCategoriesMapSink xml = EventCategoriesMap
+    <$> xml .< "SourceType"
+    <*> elements' "EventCategories" "EventCategory" content xml

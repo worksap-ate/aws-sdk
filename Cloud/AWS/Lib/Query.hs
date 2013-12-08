@@ -36,8 +36,6 @@ import qualified Text.XML.Stream.Parse as XmlP
 import Text.XML.Stream.Parse (XmlException)
 import Data.Time (UTCTime, formatTime, getCurrentTime)
 import System.Locale (defaultTimeLocale, iso8601DateFormat)
-import qualified Data.Map as Map
-import Data.Map (Map)
 import Network.HTTP.Conduit (HttpException)
 import qualified Network.HTTP.Rest.Signature.EC2 as Sign
 import qualified Network.HTTP.Types as H
@@ -51,6 +49,7 @@ import qualified Control.Monad.Reader as Reader
 import Cloud.AWS.Class
 import Cloud.AWS.Credential
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML)
 import Cloud.AWS.Lib.ToText
 import Cloud.AWS.EC2.Types (Filter)
 
@@ -77,12 +76,6 @@ infixr 3 |.+
 (|.+) :: Text -> QueryParam -> QueryParam
 t |.+ (Leaf k v) = t <> "." <> k |= v
 t |.+ (Inner k ps) = t <> "." <> k |. ps
-
-paramsToMap :: [QueryParam] -> Map ByteString ByteString
-paramsToMap = Map.fromList . map tup . concat . map partition
-  where
-    tup (Leaf k v) = (textToBS k, textToBS v)
-    tup (Inner _ _) = error "partition param error"
 
 -- | partition to unit
 partition :: QueryParam -> [QueryParam]
@@ -164,14 +157,17 @@ mkUrl :: ByteString
 mkUrl ep cred time action params ver = mconcat
     [ "https://"
     , ep
-    , "/?"
-    , Sign.toString qparam
+    , "/"
+    , H.renderSimpleQuery True qparam
     , "&Signature="
-    , Sign.signature' "GET" ep "/" (secretAccessKey cred) Sign.HmacSHA256 qparam
+    , Sign.signature "GET" ep "/" (secretAccessKey cred) Sign.HmacSHA256 qparam
     ]
   where
-    qheader = Map.fromList $ queryHeader action time cred ver
-    qparam = Sign.queryStringFromMap $ Map.union qheader $ paramsToMap params
+    qheader = queryHeader action time cred ver
+    qparam = qheader ++ f params
+    f = map tup . concat . map partition
+    tup (Leaf k v) = (textToBS k, textToBS v)
+    tup (Inner _ _) = error "partition param error"
 
 textToBS :: Text -> ByteString
 textToBS = BSC.pack . T.unpack
@@ -264,15 +260,15 @@ commonQuery
     => ByteString -- ^ apiVersion
     -> ByteString -- ^ Action
     -> [QueryParam]
-    -> Consumer Event m a
+    -> (SimpleXML -> m a)
     -> AWS AWSContext m a
-commonQuery apiVersion action params sink = do
+commonQuery apiVersion action params parser = do
     ctx <- State.get
     settings <- Reader.ask
     (res, rid) <- lift $ E.handle exceptionTransform $ do
         rs <- requestQuery settings ctx action params apiVersion sinkError
         rs $$+- XmlP.parseBytes XmlP.def
-           =$   sinkResponse (toText action) sink
+           =$   sinkResponse (toText action) parser
     State.put ctx { lastRequestId = Just rid }
     return res
 
