@@ -2,8 +2,6 @@
 module Cloud.AWS.CloudWatch.Types
     where
 
-import Control.Applicative
-import Data.Maybe (fromJust)
 import qualified Data.Text as T
 import Cloud.AWS.Lib.FromText
 import Cloud.AWS.Lib.ToText
@@ -108,10 +106,9 @@ data MetricAlarm = MetricAlarm
     , metricAlarmStateValue :: StateValue
     , metricAlarmOKActions :: [Text]
     , metricAlarmActionsEnabled :: Bool
-    , metricAlarmNamespace1 :: Maybe Text
+    , metricAlarmNamespace :: Text
     , metricAlarmThreshold :: Double
     , metricAlarmEvaluationPeriods :: Int
-    , metricAlarmNamespace2 :: Maybe Text
     , metricAlarmStatistic :: Statistic
     , metricAlarmAlarmActions :: [Text]
     , metricAlarmUnit :: Maybe Text
@@ -121,10 +118,6 @@ data MetricAlarm = MetricAlarm
     , metricAlarmMetricName :: Text
     }
   deriving (Show, Eq)
-
-metricAlarmNamespace :: MetricAlarm -> Text
-metricAlarmNamespace ma = fromJust
-    $ metricAlarmNamespace1 ma <|> metricAlarmNamespace2 ma
 
 data PutMetricAlarmRequest = PutMetricAlarmRequest
     { putMetricAlarmActionsEnabled :: Maybe Bool

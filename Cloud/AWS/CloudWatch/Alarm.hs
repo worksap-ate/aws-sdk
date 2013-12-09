@@ -15,12 +15,11 @@ import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Data.XML.Types (Event)
 
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.CloudWatch.Types
-import Cloud.AWS.Lib.Parser (getT, members, text)
-import Cloud.AWS.Lib.Parser.Unordered hiding (getT)
+import Cloud.AWS.Lib.Parser (members')
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content, xmlParser)
 import Cloud.AWS.Lib.Query
 
 describeAlarms
@@ -32,8 +31,8 @@ describeAlarms
     -> Maybe StateValue -- ^ The state value to be used in matching alarms.
     -> CloudWatch m ([MetricAlarm], Maybe Text) -- ^ A list of information for the specified alarms and NextToken.
 describeAlarms prefix spec maxRecords nextToken state =
-    cloudWatchQuery "DescribeAlarms" params $
-        (,) <$> members "MetricAlarms" sinkMetricAlarm <*> getT "NextToken"
+    cloudWatchQuery "DescribeAlarms" params $ xmlParser $ \xml ->
+        (,) <$> members' "MetricAlarms" sinkMetricAlarm xml <*> xml .< "NextToken"
   where
     params =
         [ "ActionPrefix" |=? prefix
@@ -46,31 +45,31 @@ describeAlarms prefix spec maxRecords nextToken state =
     specParam (AlarmSpecNamePrefix p) = "AlarmNamePrefix" |= p
     specParam (AlarmSpecNames ns) = "AlarmNames.member" |.#= ns
 
-sinkMetricAlarm :: MonadThrow m => Consumer Event m MetricAlarm
-sinkMetricAlarm =
+sinkMetricAlarm :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m MetricAlarm
+sinkMetricAlarm xml =
     MetricAlarm
-    <$> getT "AlarmDescription"
-    <*> getT "StateUpdatedTimestamp"
-    <*> members "InsufficientDataActions" text
-    <*> getT "StateReasonData"
-    <*> getT "AlarmArn"
-    <*> getT "AlarmConfigurationUpdatedTimestamp"
-    <*> getT "AlarmName"
-    <*> getT "Period"
-    <*> getT "StateValue"
-    <*> members "OKActions" text
-    <*> getT "ActionsEnabled"
-    <*> getT "Namespace"
-    <*> getT "Threshold"
-    <*> getT "EvaluationPeriods"
-    <*> getT "Namespace"
-    <*> getT "Statistic"
-    <*> members "AlarmActions" text
-    <*> getT "Unit"
-    <*> getT "StateReason"
-    <*> members "Dimensions" sinkDimension
-    <*> getT "ComparisonOperator"
-    <*> getT "MetricName"
+    <$> xml .< "AlarmDescription"
+    <*> xml .< "StateUpdatedTimestamp"
+    <*> members' "InsufficientDataActions" content xml
+    <*> xml .< "StateReasonData"
+    <*> xml .< "AlarmArn"
+    <*> xml .< "AlarmConfigurationUpdatedTimestamp"
+    <*> xml .< "AlarmName"
+    <*> xml .< "Period"
+    <*> xml .< "StateValue"
+    <*> members' "OKActions" content xml
+    <*> xml .< "ActionsEnabled"
+    <*> xml .< "Namespace"
+    <*> xml .< "Threshold"
+    <*> xml .< "EvaluationPeriods"
+    <*> xml .< "Statistic"
+    <*> members' "AlarmActions" content xml
+    <*> xml .< "Unit"
+    <*> xml .< "StateReason"
+    <*> members' "Dimensions" sinkDimension' xml
+    <*> xml .< "ComparisonOperator"
+    <*> xml .< "MetricName"
 
 describeAlarmsForMetric
     :: (MonadBaseControl IO m, MonadResource m)
@@ -82,7 +81,8 @@ describeAlarmsForMetric
     -> Maybe Text -- ^  The unit for the metric.
     -> CloudWatch m [MetricAlarm]
 describeAlarmsForMetric dims name ns period stat unit =
-    cloudWatchQuery "DescribeAlarmsForMetric" params $ members "MetricAlarms" sinkMetricAlarm
+    cloudWatchQuery "DescribeAlarmsForMetric" params $ xmlParser $ \xml ->
+        members' "MetricAlarms" sinkMetricAlarm xml
   where
     params =
         [ "Dimensions.member" |.#. map fromDimension dims
@@ -137,8 +137,8 @@ describeAlarmHistory
     -> Maybe UTCTime -- ^ The starting date to retrieve alarm history.
     -> CloudWatch m ([AlarmHistory], Maybe Text)
 describeAlarmHistory alarm endDate type_ maxRecords nextToken startDate =
-    cloudWatchQuery "DescribeAlarmHistory" params $
-        (,) <$> members "AlarmHistoryItems" sinkAlarmHistory <*> getT "NextToken"
+    cloudWatchQuery "DescribeAlarmHistory" params $ xmlParser $ \xml ->
+        (,) <$> members' "AlarmHistoryItems" sinkAlarmHistory xml <*> xml .< "NextToken"
   where
     params =
         [ "AlarmName" |=? alarm
@@ -149,14 +149,15 @@ describeAlarmHistory alarm endDate type_ maxRecords nextToken startDate =
         , "StartDate" |=? startDate
         ]
 
-sinkAlarmHistory :: MonadThrow m => Consumer Event m AlarmHistory
-sinkAlarmHistory =
+sinkAlarmHistory :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m AlarmHistory
+sinkAlarmHistory xml =
     AlarmHistory
-    <$> getT "Timestamp"
-    <*> getT "HistoryItemType"
-    <*> getT "AlarmName"
-    <*> getT "HistoryData"
-    <*> getT "HistorySummary"
+    <$> xml .< "Timestamp"
+    <*> xml .< "HistoryItemType"
+    <*> xml .< "AlarmName"
+    <*> xml .< "HistoryData"
+    <*> xml .< "HistorySummary"
 
 enableAlarmActions
     :: (MonadBaseControl IO m, MonadResource m)

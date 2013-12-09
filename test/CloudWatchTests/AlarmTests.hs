@@ -34,8 +34,8 @@ describeAlarmsTest = do
 
         it "describeAlarmsForMetric doesn't throw any exception" $ do
             testCloudWatch region (do
-                (ma@MetricAlarm{..}:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
-                describeAlarmsForMetric metricAlarmDimensions metricAlarmMetricName (metricAlarmNamespace ma) metricAlarmPeriod metricAlarmStatistic Nothing
+                (MetricAlarm{..}:_, _) <- describeAlarms Nothing AlarmSpecNothing Nothing Nothing Nothing
+                describeAlarmsForMetric metricAlarmDimensions metricAlarmMetricName metricAlarmNamespace metricAlarmPeriod metricAlarmStatistic Nothing
                 ) `miss` anyConnectionException
 
 putMetricAlarmTest :: Spec

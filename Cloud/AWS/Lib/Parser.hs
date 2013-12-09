@@ -16,6 +16,7 @@ module Cloud.AWS.Lib.Parser
     , sinkError
     , sinkEventBeginDocument
     , members
+    , members'
     , text
     , FromText(..)
     ) where
@@ -34,6 +35,7 @@ import Data.Maybe (fromMaybe)
 
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, getElements)
 
 type RequestId = Text
 
@@ -167,3 +169,10 @@ members :: MonadThrow m
     -> Consumer Event m [a]
 members name f =
     fromMaybe [] <$> elementM name (listConsumer "member" f)
+
+members' :: (MonadThrow m, Applicative m)
+    => Text
+    -> (SimpleXML -> m a)
+    -> SimpleXML
+    -> m [a]
+members' name f xml = getElements xml name "member" f

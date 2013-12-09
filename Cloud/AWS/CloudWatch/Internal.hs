@@ -13,6 +13,7 @@ import Data.XML.Types (Event(..))
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered hiding (getT)
 import Cloud.AWS.CloudWatch.Types
 
 -- | Ver.2010-08-01
@@ -37,6 +38,10 @@ elements name f = element (name <> "s") $ listConsumer name f
 
 sinkDimension :: MonadThrow m => Consumer Event m Dimension
 sinkDimension = Dimension <$> getT "Name" <*> getT "Value"
+
+sinkDimension' :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Dimension
+sinkDimension' xml = Dimension <$> xml .< "Name" <*> xml .< "Value"
 
 fromDimension :: Dimension -> [QueryParam]
 fromDimension Dimension{..} =
