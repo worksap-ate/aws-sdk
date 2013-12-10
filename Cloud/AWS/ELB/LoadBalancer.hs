@@ -29,9 +29,9 @@ module Cloud.AWS.ELB.LoadBalancer
 import Data.Text (Text, empty)
 import Data.Conduit
 import Control.Applicative hiding (empty)
-import Data.XML.Types (Event(..))
 
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser (members')
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, xmlParser, (.<), content, getElement, getElementM)
 import Cloud.AWS.Lib.Query
 
 import Cloud.AWS.ELB.Types
@@ -43,77 +43,80 @@ describeLoadBalancers
     -> Maybe Text -- ^ Marker
     -> ELB m [LoadBalancer]
 describeLoadBalancers lbs marker =
-    elbQuery "DescribeLoadBalancers" params sinkLoadBalancers
+    elbQuery "DescribeLoadBalancers" params $
+        xmlParser sinkLoadBalancers
   where
     params =
         [ "LoadBalancerNames.member" |.#= lbs
         , "Marker" |=? marker
         ]
 
-sinkLoadBalancers :: MonadThrow m
-    => Consumer Event m [LoadBalancer]
-sinkLoadBalancers = members "LoadBalancerDescriptions" $
+sinkLoadBalancers :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [LoadBalancer]
+sinkLoadBalancers = members' "LoadBalancerDescriptions" $ \xml ->
     LoadBalancer
-    <$> members "SecurityGroups" text
-    <*> getT "CreatedTime"
-    <*> getT "LoadBalancerName"
-    <*> element "HealthCheck" sinkHealthCheck
-    <*> getT "VPCId"
-    <*> members "ListenerDescriptions"
-        (ListenerDescription
-        <$> members "PolicyNames" text
-        <*> element "Listener"
-            (Listener
-            <$> getT "Protocol"
-            <*> getT "LoadBalancerPort"
-            <*> getT "InstanceProtocol"
-            <*> getT "SSLCertificateId"
-            <*> getT "InstancePort"
+    <$> members' "SecurityGroups" content xml
+    <*> xml .< "CreatedTime"
+    <*> xml .< "LoadBalancerName"
+    <*> getElement xml "HealthCheck" sinkHealthCheck
+    <*> xml .< "VPCId"
+    <*> members' "ListenerDescriptions"
+        (\xml' -> ListenerDescription
+        <$> members' "PolicyNames" content xml'
+        <*> getElement xml' "Listener"
+            (\xml'' -> Listener
+            <$> xml'' .< "Protocol"
+            <*> xml'' .< "LoadBalancerPort"
+            <*> xml'' .< "InstanceProtocol"
+            <*> xml'' .< "SSLCertificateId"
+            <*> xml'' .< "InstancePort"
             )
+        ) xml
+    <*> members' "Instances" sinkInstance xml
+    <*> getElement xml "Policies"
+        (\xml' -> Policies
+        <$> members' "AppCookieStickinessPolicies"
+            (\xml'' -> AppCookieStickinessPolicy
+            <$> xml'' .< "CookieName"
+            <*> xml'' .< "PolicyName"
+            ) xml'
+        <*> members' "OtherPolicies" content xml'
+        <*> members' "LBCookieStickinessPolicies"
+            (\xml'' -> LBCookieStickinessPolicy
+            <$> xml'' .< "PolicyName"
+            <*> xml'' .< "CookieExpirationPeriod"
+            ) xml'
         )
-    <*> members "Instances" sinkInstance
-    <*> element "Policies"
-        (Policies
-        <$> members "AppCookieStickinessPolicies"
-            (AppCookieStickinessPolicy
-            <$> getT "CookieName"
-            <*> getT "PolicyName"
-            )
-        <*> members "OtherPolicies" text
-        <*> members "LBCookieStickinessPolicies"
-            (LBCookieStickinessPolicy
-            <$> getT "PolicyName"
-            <*> getT "CookieExpirationPeriod"
-            )
+    <*> members' "AvailabilityZones" content xml
+    <*> xml .< "CanonicalHostedZoneName"
+    <*> xml .< "CanonicalHostedZoneNameID"
+    <*> xml .< "Scheme"
+    <*> getElementM xml "SourceSecurityGroup"
+        (\xml' -> SourceSecurityGroup
+        <$> xml' .< "OwnerAlias"
+        <*> xml' .< "GroupName"
         )
-    <*> members "AvailabilityZones" text
-    <*> getT "CanonicalHostedZoneName"
-    <*> getT "CanonicalHostedZoneNameID"
-    <*> getT "Scheme"
-    <*> elementM "SourceSecurityGroup"
-        (SourceSecurityGroup
-        <$> getT "OwnerAlias"
-        <*> getT "GroupName"
-        )
-    <*> getT "DNSName"
-    <*> members "BackendServerDescriptions"
-        (BackendServerDescription
-        <$> getT "InstancePort"
-        <*> members "PolicyNames" text
-        )
-    <*> members "Subnets" text
+    <*> xml .< "DNSName"
+    <*> members' "BackendServerDescriptions"
+        (\xml' -> BackendServerDescription
+        <$> xml' .< "InstancePort"
+        <*> members' "PolicyNames" content xml'
+        ) xml
+    <*> members' "Subnets" content xml
 
-sinkInstance :: MonadThrow m => Consumer Event m Instance
-sinkInstance = Instance <$> getT "InstanceId"
+sinkInstance :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Instance
+sinkInstance xml = Instance <$> xml .< "InstanceId"
 
-sinkHealthCheck :: MonadThrow m => Consumer Event m HealthCheck
-sinkHealthCheck =
+sinkHealthCheck :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m HealthCheck
+sinkHealthCheck xml =
     HealthCheck
-    <$> getT "Interval"
-    <*> getT "Target"
-    <*> getT "HealthyThreshold"
-    <*> getT "Timeout"
-    <*> getT "UnhealthyThreshold"
+    <$> xml .< "Interval"
+    <*> xml .< "Target"
+    <*> xml .< "HealthyThreshold"
+    <*> xml .< "Timeout"
+    <*> xml .< "UnhealthyThreshold"
 
 createLoadBalancer
     :: (MonadBaseControl IO m, MonadResource m)
@@ -125,7 +128,7 @@ createLoadBalancer
     -> [Text] -- ^ Subnets
     -> ELB m Text -- return DNSName
 createLoadBalancer name listeners zones scheme groups subnets =
-    elbQuery "CreateLoadBalancer" params $ getT "DNSName"
+    elbQuery "CreateLoadBalancer" params $ xmlParser $ (.< "DNSName")
   where
     params =
         [ "LoadBalancerName" |= name
@@ -149,7 +152,7 @@ deleteLoadBalancer
     => Text -- ^ LoadBalancerName
     -> ELB m ()
 deleteLoadBalancer name = elbQuery "DeleteLoadBalancer" params $
-    getT_ "DeleteLoadBalancerResult"
+    xmlParser $ (.< "DeleteLoadBalancerResult")
   where
     params = ["LoadBalancerName" |= name]
 
@@ -159,7 +162,8 @@ attachLoadBalancerToSubnets
     -> [Text] -- ^ A list of subnet IDs to add for the LoadBalancer.
     -> ELB m [Text] -- ^ A list of subnet IDs added for the LoadBalancer.
 attachLoadBalancerToSubnets name subnets =
-    elbQuery "AttachLoadBalancerToSubnets" params $ members "Subnets" text
+    elbQuery "AttachLoadBalancerToSubnets" params $ xmlParser $
+        members' "Subnets" content
   where
     params =
         [ "LoadBalancerName" |= name
@@ -172,7 +176,8 @@ detachLoadBalancerFromSubnets
     -> [Text] -- ^ A list of subnet IDs to remove from the set of configured subnets for the LoadBalancer.
     -> ELB m [Text] -- ^ A list of subnet IDs removed from the configured set of subnets for the LoadBalancer.
 detachLoadBalancerFromSubnets name subnets =
-    elbQuery "DetachLoadBalancerFromSubnets" params $ members "Subnets" text
+    elbQuery "DetachLoadBalancerFromSubnets" params $ xmlParser $ 
+        members' "Subnets" content
   where
     params =
         [ "LoadBalancerName" |= name
@@ -185,7 +190,8 @@ applySecurityGroupsToLoadBalancer
     -> [Text] -- ^ A list of security group IDs to associate with your LoadBalancer in VPC.
     -> ELB m [Text] -- ^ A list of security group IDs associated with your LoadBalancer.
 applySecurityGroupsToLoadBalancer name sgs =
-    elbQuery "ApplySecurityGroupsToLoadBalancer" params $ members "SecurityGroups" text
+    elbQuery "ApplySecurityGroupsToLoadBalancer" params $
+        xmlParser $ members' "SecurityGroups" content
   where
     params =
         [ "LoadBalancerName" |= name
@@ -198,7 +204,8 @@ registerInstancesWithLoadBalancer
     -> Text -- ^ The name associated with the LoadBalancer.
     -> ELB m [Instance]
 registerInstancesWithLoadBalancer insts name =
-    elbQuery "RegisterInstancesWithLoadBalancer" params $ members "Instances" sinkInstance
+    elbQuery "RegisterInstancesWithLoadBalancer" params $
+        xmlParser $ members' "Instances" sinkInstance
   where
     params =
         [ "Instances.member" |.#. map toInstanceParam insts
@@ -214,7 +221,8 @@ deregisterInstancesFromLoadBalancer
     -> Text -- ^ A list of EC2 instance IDs consisting of all instances to be deregistered.
     -> ELB m [Instance]
 deregisterInstancesFromLoadBalancer insts name =
-    elbQuery "DeregisterInstancesFromLoadBalancer" params $ members "Instances" sinkInstance
+    elbQuery "DeregisterInstancesFromLoadBalancer" params $
+        xmlParser $ members' "Instances" sinkInstance
   where
     params =
         [ "Instances.member" |.#. map toInstanceParam insts
@@ -228,7 +236,9 @@ setLoadBalancerListenerSSLCertificate
     -> Text -- ^ The ID of the SSL certificate chain to use.
     -> ELB m ()
 setLoadBalancerListenerSSLCertificate lb port cert =
-    elbQuery "SetLoadBalancerListenerSSLCertificate" params $ getT_ "SetLoadBalancerListenerSSLCertificateResult"
+    elbQuery "SetLoadBalancerListenerSSLCertificate" params
+    $ xmlParser
+    $ (.< "SetLoadBalancerListenerSSLCertificateResult")
   where
     params =
         [ "LoadBalancerName" |= lb
@@ -242,7 +252,8 @@ createLoadBalancerListeners
     -> Text -- ^ The name of the LoadBalancer.
     -> ELB m ()
 createLoadBalancerListeners listeners lb =
-    elbQuery "CreateLoadBalancerListeners" params $ getT_ "CreateLoadBalancerListenersResult"
+    elbQuery "CreateLoadBalancerListeners" params $ xmlParser $
+        (.< "CreateLoadBalancerListenersResult")
   where
     params =
         [ "Listeners.member" |.#. map toListenerParam listeners
@@ -264,7 +275,8 @@ deleteLoadBalancerListeners
     -> [Int] -- ^ The client port number(s) of the LoadBalancerListener(s) to be removed.
     -> ELB m ()
 deleteLoadBalancerListeners lb ports =
-    elbQuery "DeleteLoadBalancerListeners" params $ getT_ "DeleteLoadBalancerListenersResult"
+    elbQuery "DeleteLoadBalancerListeners" params $ xmlParser $
+        (.< "DeleteLoadBalancerListenersResult")
   where
     params =
         [ "LoadBalancerName" |= lb
@@ -277,50 +289,57 @@ describeLoadBalancerPolicies
     -> [Text] -- ^ The names of LoadBalancer policies you've created or Elastic Load Balancing sample policy names.
     -> ELB m [PolicyDescription]
 describeLoadBalancerPolicies mlb policies =
-    elbQuery "DescribeLoadBalancerPolicies" params $ members "PolicyDescriptions" sinkPolicyDescription
+    elbQuery "DescribeLoadBalancerPolicies" params $ xmlParser $
+        members' "PolicyDescriptions" sinkPolicyDescription
   where
     params =
         [ "LoadBalancerName" |=? mlb
         , "PolicyNames.member" |.#= policies
         ]
 
-sinkPolicyDescription :: MonadThrow m => Consumer Event m PolicyDescription
-sinkPolicyDescription =
+sinkPolicyDescription :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m PolicyDescription
+sinkPolicyDescription xml =
     PolicyDescription
-    <$> getT "PolicyName"
-    <*> getT "PolicyTypeName"
-    <*> members "PolicyAttributeDescriptions" sinkPolicyAttribute
+    <$> xml .< "PolicyName"
+    <*> xml .< "PolicyTypeName"
+    <*> members' "PolicyAttributeDescriptions" sinkPolicyAttribute xml
 
-sinkPolicyAttribute :: MonadThrow m => Consumer Event m PolicyAttribute
-sinkPolicyAttribute =
+sinkPolicyAttribute :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m PolicyAttribute
+sinkPolicyAttribute xml =
     PolicyAttribute
-    <$> getT "AttributeName"
-    <*> getT "AttributeValue"
+    <$> xml .< "AttributeName"
+    <*> xml .< "AttributeValue"
 
 describeLoadBalancerPolicyTypes
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ Specifies the name of the policy types.
     -> ELB m [PolicyType]
 describeLoadBalancerPolicyTypes typeNames =
-    elbQuery "DescribeLoadBalancerPolicyTypes" params $ members "PolicyTypeDescriptions" sinkPolicyType
+    elbQuery "DescribeLoadBalancerPolicyTypes" params
+    $ xmlParser
+    $ members' "PolicyTypeDescriptions" sinkPolicyType
   where
     params = ["PolicyTypeNames.member" |.#= typeNames]
 
-sinkPolicyType :: MonadThrow m => Consumer Event m PolicyType
-sinkPolicyType =
+sinkPolicyType :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m PolicyType
+sinkPolicyType xml =
     PolicyType
-    <$> members "PolicyAttributeTypeDescriptions" sinkPolicyAttributeType
-    <*> getT "PolicyTypeName"
-    <*> getT "Description"
+    <$> members' "PolicyAttributeTypeDescriptions" sinkPolicyAttributeType xml
+    <*> xml .< "PolicyTypeName"
+    <*> xml .< "Description"
 
-sinkPolicyAttributeType :: MonadThrow m => Consumer Event m PolicyAttributeType
-sinkPolicyAttributeType =
+sinkPolicyAttributeType :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m PolicyAttributeType
+sinkPolicyAttributeType xml =
     PolicyAttributeType
-    <$> getT "AttributeName"
-    <*> getT "AttributeType"
-    <*> getT "DefaultValue"
-    <*> getT "Cardinality"
-    <*> getT "Description"
+    <$> xml .< "AttributeName"
+    <*> xml .< "AttributeType"
+    <*> xml .< "DefaultValue"
+    <*> xml .< "Cardinality"
+    <*> xml .< "Description"
 
 createLoadBalancerPolicy
     :: (MonadBaseControl IO m, MonadResource m)
@@ -330,7 +349,8 @@ createLoadBalancerPolicy
     -> Text -- ^ The name of the base policy type being used to create this policy.
     -> ELB m ()
 createLoadBalancerPolicy lb attrs name typeName =
-    elbQuery "CreateLoadBalancerPolicy" params $ getT_ "CreateLoadBalancerPolicyResult"
+    elbQuery "CreateLoadBalancerPolicy" params $ xmlParser $
+        (.< "CreateLoadBalancerPolicyResult")
   where
     params =
         [ "LoadBalancerName" |= lb
@@ -351,7 +371,8 @@ deleteLoadBalancerPolicy
     -> Text -- ^ The mnemonic name for the policy being deleted.
     -> ELB m ()
 deleteLoadBalancerPolicy lb policyName =
-    elbQuery "DeleteLoadBalancerPolicy" params $ getT_ "DeleteLoadBalancerPolicyResult"
+    elbQuery "DeleteLoadBalancerPolicy" params $ xmlParser $
+        (.< "DeleteLoadBalancerPolicyResult")
   where
     params =
         [ "LoadBalancerName" |= lb
@@ -364,20 +385,22 @@ describeInstanceHealth
     -> Text -- ^ The name associated with the LoadBalancer.
     -> ELB m [InstanceState]
 describeInstanceHealth insts lb =
-    elbQuery "DescribeInstanceHealth" params $ members "InstanceStates" sinkInstanceState
+    elbQuery "DescribeInstanceHealth" params $ xmlParser $
+        members' "InstanceStates" sinkInstanceState
   where
     params =
         [ "Instances.member" |.#. map toInstanceParam insts
         , "LoadBalancerName" |= lb
         ]
 
-sinkInstanceState :: MonadThrow m => Consumer Event m InstanceState
-sinkInstanceState =
+sinkInstanceState :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m InstanceState
+sinkInstanceState xml =
     InstanceState
-    <$> getT "Description"
-    <*> getT "InstanceId"
-    <*> getT "State"
-    <*> getT "ReasonCode"
+    <$> xml .< "Description"
+    <*> xml .< "InstanceId"
+    <*> xml .< "State"
+    <*> xml .< "ReasonCode"
 
 configureHealthCheck
     :: (MonadBaseControl IO m, MonadResource m)
@@ -385,7 +408,8 @@ configureHealthCheck
     -> Text -- ^ The mnemonic name associated with the LoadBalancer.
     -> ELB m HealthCheck
 configureHealthCheck hc lb =
-    elbQuery "ConfigureHealthCheck" params $ element "HealthCheck" sinkHealthCheck
+    elbQuery "ConfigureHealthCheck" params $ xmlParser $ \xml ->
+        getElement xml "HealthCheck" sinkHealthCheck
   where
     params =
         [ "HealthCheck" |. toHealthCheckParams hc
@@ -407,7 +431,9 @@ enableAvailabilityZonesForLoadBalancer
     -> Text -- ^ The name associated with the LoadBalancer.
     -> ELB m [Text] -- ^ An updated list of Availability Zones for the LoadBalancer.
 enableAvailabilityZonesForLoadBalancer zones lb =
-    elbQuery "EnableAvailabilityZonesForLoadBalancer" params $ members "AvailabilityZones" text
+    elbQuery "EnableAvailabilityZonesForLoadBalancer" params
+    $ xmlParser
+    $ members' "AvailabilityZones" content
   where
     params =
         [ "AvailabilityZones.member" |.#= zones
@@ -420,7 +446,9 @@ disableAvailabilityZonesForLoadBalancer
     -> Text -- ^ The name associated with the LoadBalancer.
     -> ELB m [Text] -- ^ A list of updated Availability Zones for the LoadBalancer.
 disableAvailabilityZonesForLoadBalancer zones lb =
-    elbQuery "DisableAvailabilityZonesForLoadBalancer" params $ members "AvailabilityZones" text
+    elbQuery "DisableAvailabilityZonesForLoadBalancer" params
+    $ xmlParser
+    $ members' "AvailabilityZones" content
   where
     params =
         [ "AvailabilityZones.member" |.#= zones
@@ -434,7 +462,8 @@ createLBCookieStickinessPolicy
     -> Text -- ^ The name of the policy being created.
     -> ELB m ()
 createLBCookieStickinessPolicy period lb policy =
-    elbQuery "CreateLBCookieStickinessPolicy" params $ getT_ "CreateLBCookieStickinessPolicyResult"
+    elbQuery "CreateLBCookieStickinessPolicy" params $ xmlParser
+        (.< "CreateLBCookieStickinessPolicyResult")
   where
     params =
         [ "CookieExpirationPeriod" |=? period
@@ -449,7 +478,8 @@ createAppCookieStickinessPolicy
     -> Text -- ^ The name of the policy being created.
     -> ELB m ()
 createAppCookieStickinessPolicy cookieName lb policy =
-    elbQuery "CreateAppCookieStickinessPolicy" params $ getT_ "CreateAppCookieStickinessPolicyResult"
+    elbQuery "CreateAppCookieStickinessPolicy" params $ xmlParser
+        (.< "CreateAppCookieStickinessPolicyResult")
   where
     params =
         [ "CookieName" |= cookieName
@@ -464,7 +494,8 @@ setLoadBalancerPoliciesOfListener
     -> [Text] -- ^ List of policies to be associated with the listener.
     -> ELB m ()
 setLoadBalancerPoliciesOfListener lb port policies =
-    elbQuery "SetLoadBalancerPoliciesOfListener" params $ getT_ "SetLoadBalancerPoliciesOfListenerResult"
+    elbQuery "SetLoadBalancerPoliciesOfListener" params
+    $ xmlParser (.< "SetLoadBalancerPoliciesOfListenerResult")
   where
     params =
         [ "LoadBalancerName" |= lb
@@ -479,7 +510,8 @@ setLoadBalancerPoliciesForBackendServer
     -> [Text] -- ^ List of policy names to be set.
     -> ELB m ()
 setLoadBalancerPoliciesForBackendServer port lb policies =
-    elbQuery "SetLoadBalancerPoliciesForBackendServer" params $ getT_ "SetLoadBalancerPoliciesForBackendServerResult"
+    elbQuery "SetLoadBalancerPoliciesForBackendServer" params
+    $ xmlParser (.< "SetLoadBalancerPoliciesForBackendServerResult")
   where
     params =
         [ "InstancePort" |= port
