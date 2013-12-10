@@ -99,7 +99,7 @@ putMetricAlarm
     -> CloudWatch m ()
 putMetricAlarm PutMetricAlarmRequest{..} =
     cloudWatchQuery "PutMetricAlarm" params
-        $ xmlParser (.< "PutMetricAlarmResult")
+        $ return ()
   where
     params =
         [ "ActionsEnabled" |=? putMetricAlarmActionsEnabled
