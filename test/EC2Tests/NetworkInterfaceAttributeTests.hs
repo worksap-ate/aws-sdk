@@ -3,7 +3,7 @@ module EC2Tests.NetworkInterfaceAttributeTests
     ( runNetworkInterfaceAttributeTests
     ) where
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, catMaybes)
 import Data.Text (Text)
 import Data.Conduit (($$+-), MonadBaseControl, MonadResource)
 import qualified Data.Conduit.List as CL
@@ -75,7 +75,7 @@ modifyNetworkInterfaceAttributeTest = do
                             modifyNetworkInterfaceSecurityGroup nic [fromMaybe (error "No GroupId") msg]
                             -- Reset SecurityGroups.
                             -- Without this, DependencyViolation is raised because the NetworkInterface depends on the created SecurityGroup.
-                            modifyNetworkInterfaceSecurityGroup nic (map groupId sgs)
+                            modifyNetworkInterfaceSecurityGroup nic $ catMaybes $ map groupId sgs
                         modifyNetworkInterfaceDescription nic "Test Description"
                         modifyNetworkInterfaceSourceDestCheck nic True
 
