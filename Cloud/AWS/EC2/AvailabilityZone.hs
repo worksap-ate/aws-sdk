@@ -6,14 +6,13 @@ module Cloud.AWS.EC2.AvailabilityZone
 
 import Data.Text (Text)
 
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeAvailabilityZones
     :: (MonadResource m, MonadBaseControl IO m)
@@ -21,17 +20,18 @@ describeAvailabilityZones
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m AvailabilityZone)
 describeAvailabilityZones zones filters =
-    ec2QuerySource "DescribeAvailabilityZones" params availabilityZoneInfo
+    ec2QuerySource "DescribeAvailabilityZones" params $
+        xmlParserConduit "availabilityZoneInfo" availabilityZoneInfo
   where
     params =
         [ "ZoneName" |.#= zones
         , filtersParam filters
         ]
-    availabilityZoneInfo :: MonadThrow m
-        => Conduit Event m AvailabilityZone
-    availabilityZoneInfo = itemConduit "availabilityZoneInfo" $
+    availabilityZoneInfo :: (MonadThrow m, Applicative m)
+        => SimpleXML -> m AvailabilityZone
+    availabilityZoneInfo xml = getElement xml "item" $ \xml' ->
         AvailabilityZone
-        <$> getT "zoneName"
-        <*> getT "zoneState"
-        <*> getT "regionName"
-        <*> itemsSet "messageSet" (getT "message")
+        <$> xml' .< "zoneName"
+        <*> xml' .< "zoneState"
+        <*> xml' .< "regionName"
+        <*> getElements xml' "messageSet" "item" (.< "message")
