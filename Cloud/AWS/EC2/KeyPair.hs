@@ -11,14 +11,13 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base64 as BASE
 import Data.Text (Text)
 
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeKeyPairs
     :: (MonadResource m, MonadBaseControl IO m)
@@ -26,26 +25,27 @@ describeKeyPairs
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m KeyPair)
 describeKeyPairs names filters =
-    ec2QuerySource "DescribeKeyPairs" params
-        $ itemConduit "keySet" keyPairSink
+    ec2QuerySource "DescribeKeyPairs" params $
+        xmlParserConduit "keySet" $ \xml ->
+            getElement xml "item" keyPairConv
   where
     params =
         [ "KeyName" |.#= names
         , filtersParam filters
         ]
 
-keyPairSink :: MonadThrow m => Consumer Event m KeyPair
-keyPairSink = KeyPair
-    <$> getT "keyName"
-    <*> getT "keyFingerprint"
+keyPairConv :: (MonadThrow m, Applicative m) => SimpleXML -> m KeyPair
+keyPairConv xml = KeyPair
+    <$> xml .< "keyName"
+    <*> xml .< "keyFingerprint"
 
 createKeyPair
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ KeyName
     -> EC2 m (KeyPair, Text) -- ^ KeyPair and KeyMaterial
 createKeyPair name =
-    ec2Query "CreateKeyPair" ["KeyName" |= name]
-        $ (,) <$> keyPairSink <*> getT "keyMaterial"
+    ec2Query "CreateKeyPair" ["KeyName" |= name] $ xmlParser $ \xml ->
+        (,) <$> keyPairConv xml <*> xml .< "keyMaterial"
 
 deleteKeyPair
     :: (MonadResource m, MonadBaseControl IO m)
@@ -59,7 +59,7 @@ importKeyPair
     -> ByteString -- ^ PublicKeyMaterial
     -> EC2 m KeyPair
 importKeyPair name material =
-    ec2Query "ImportKeyPair" params keyPairSink
+    ec2Query "ImportKeyPair" params $ xmlParser keyPairConv
   where
     params =
         [ "KeyName" |= name
