@@ -13,19 +13,19 @@ import Control.Applicative
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeTags
     :: (MonadResource m, MonadBaseControl IO m)
     => [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Tag)
 describeTags filters =
-    ec2QuerySource "DescribeTags" params $ itemConduit "tagSet" $
+    ec2QuerySource "DescribeTags" params $ itemConduit' "tagSet" $ \xml ->
         Tag
-        <$> getT "resourceId"
-        <*> getT "resourceType"
-        <*> getT "key"
-        <*> getT "value"
+        <$> xml .< "resourceId"
+        <*> xml .< "resourceType"
+        <*> xml .< "key"
+        <*> xml .< "value"
   where
     params = [filtersParam filters]
 
@@ -35,7 +35,7 @@ createTags
     -> [(Text, Text)] -- ^ (Key, Value)
     -> EC2 m Bool
 createTags rids kvs =
-    ec2Query "CreateTags" params $ getT "return"
+    ec2Query "CreateTags" params $ xmlParser (.< "return")
   where
     params =
         [ "ResourceId" |.#= rids
@@ -52,7 +52,7 @@ deleteTags
     -> [ResourceTag]
     -> EC2 m Bool
 deleteTags rids tags =
-    ec2Query "DeleteTags" params $ getT "return"
+    ec2Query "DeleteTags" params $ xmlParser (.< "return")
   where
     params =
         [ "ResourceId" |.#= rids
