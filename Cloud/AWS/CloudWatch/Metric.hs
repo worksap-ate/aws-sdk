@@ -9,12 +9,12 @@ module Cloud.AWS.CloudWatch.Metric
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Conduit
-import Data.XML.Types (Event)
 import Control.Applicative
 
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser (members')
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), xmlParser)
 import Cloud.AWS.CloudWatch.Types
 
 dimensionFiltersParam :: [DimensionFilter] -> QueryParam
@@ -33,8 +33,8 @@ listMetrics
     -> Maybe Text -- ^ Namespace
     -> Maybe Text -- ^ NextToken
     -> CloudWatch m ([Metric], Maybe Text)
-listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
-    (,) <$> members "Metrics" sinkMetric <*> getT "NextToken"
+listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $ xmlParser $ \xml ->
+    (,) <$> members' "Metrics" sinkMetric xml <*> xml .< "NextToken"
   where
     params =
         [ dimensionFiltersParam ds
@@ -43,12 +43,13 @@ listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $
         , "NextToken" |=? nt
         ]
 
-sinkMetric :: MonadThrow m => Consumer Event m Metric
-sinkMetric =
+sinkMetric :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Metric
+sinkMetric xml =
     Metric
-    <$> members "Dimensions" sinkDimension
-    <*> getT "MetricName"
-    <*> getT "Namespace"
+    <$> members' "Dimensions" sinkDimension xml
+    <*> xml .< "MetricName"
+    <*> xml .< "Namespace"
 
 getMetricStatistics
     :: (MonadBaseControl IO m, MonadResource m)
@@ -62,17 +63,17 @@ getMetricStatistics
     -> Maybe Text -- ^ Unit
     -> CloudWatch m ([Datapoint], Text) -- ^ Datapoints and Label
 getMetricStatistics ds start end mn ns pe sts unit =
-    cloudWatchQuery "GetMetricStatistics" params $ (,)
-        <$> members "Datapoints" (Datapoint
-            <$> getT "Timestamp"
-            <*> getT "SampleCount"
-            <*> getT "Unit"
-            <*> getT "Minimum"
-            <*> getT "Maximum"
-            <*> getT "Sum"
-            <*> getT "Average"
-            )
-        <*> getT "Label"
+    cloudWatchQuery "GetMetricStatistics" params $ xmlParser $ \xml -> (,)
+        <$> members' "Datapoints" (\xml' -> Datapoint
+            <$> xml' .< "Timestamp"
+            <*> xml' .< "SampleCount"
+            <*> xml' .< "Unit"
+            <*> xml' .< "Minimum"
+            <*> xml' .< "Maximum"
+            <*> xml' .< "Sum"
+            <*> xml' .< "Average"
+            ) xml
+        <*> xml .< "Label"
   where
     params =
         [ dimensionFiltersParam ds
