@@ -10,7 +10,6 @@ module Cloud.AWS.EC2.Image
     ) where
 
 import Data.Text (Text)
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 import Control.Monad (join)
@@ -19,7 +18,7 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeImages
     :: (MonadResource m, MonadBaseControl IO m)
@@ -29,7 +28,8 @@ describeImages
     -> [Filter] -- ^ Filers
     -> EC2 m (ResumableSource m Image)
 describeImages imageIds owners execby filters =
-    ec2QuerySource "DescribeImages" params $ itemConduit "imagesSet" imageItem
+    ec2QuerySource "DescribeImages" params $
+        itemConduit' "imagesSet" imageItem
   where
     params =
         [ "ImageId" |.#= imageIds
@@ -38,44 +38,44 @@ describeImages imageIds owners execby filters =
         , filtersParam filters
         ]
 
-imageItem :: MonadThrow m
-    => Consumer Event m Image
-imageItem = Image
-    <$> getT "imageId"
-    <*> getT "imageLocation"
-    <*> getT "imageState"
-    <*> getT "imageOwnerId"
-    <*> getT "isPublic"
-    <*> productCodeSink
-    <*> getT "architecture"
-    <*> getT "imageType"
-    <*> getT "kernelId"
-    <*> getT "ramdiskId"
-    <*> getT "platform"
-    <*> stateReasonSink
-    <*> getT "viridianEnabled"
-    <*> getT "imageOwnerAlias"
-    <*> getT "name"
-    <*> getT "description"
-    <*> itemsSet "billingProducts" (getT "billingProduct")
-    <*> getT "rootDeviceType"
-    <*> getT "rootDeviceName"
-    <*> blockDeviceMappingSink
-    <*> getT "virtualizationType"
-    <*> resourceTagSink
-    <*> getT "hypervisor"
+imageItem :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Image
+imageItem xml = Image
+    <$> xml .< "imageId"
+    <*> xml .< "imageLocation"
+    <*> xml .< "imageState"
+    <*> xml .< "imageOwnerId"
+    <*> xml .< "isPublic"
+    <*> productCodeConv xml
+    <*> xml .< "architecture"
+    <*> xml .< "imageType"
+    <*> xml .< "kernelId"
+    <*> xml .< "ramdiskId"
+    <*> xml .< "platform"
+    <*> stateReasonConv xml
+    <*> xml .< "viridianEnabled"
+    <*> xml .< "imageOwnerAlias"
+    <*> xml .< "name"
+    <*> xml .< "description"
+    <*> itemsSet' xml "billingProducts" (.< "billingProduct")
+    <*> xml .< "rootDeviceType"
+    <*> xml .< "rootDeviceName"
+    <*> blockDeviceMappingConv xml
+    <*> xml .< "virtualizationType"
+    <*> resourceTagConv xml
+    <*> xml .< "hypervisor"
 
-blockDeviceMappingSink :: MonadThrow m => Consumer Event m [BlockDeviceMapping]
-blockDeviceMappingSink = itemsSet "blockDeviceMapping" (
+blockDeviceMappingConv :: (MonadThrow m, Applicative m) => SimpleXML -> m [BlockDeviceMapping]
+blockDeviceMappingConv xml = itemsSet' xml "blockDeviceMapping" (\xml' ->
     BlockDeviceMapping
-    <$> getT "deviceName"
-    <*> getT "virtualName"
-    <*> elementM "ebs" (
+    <$> xml' .< "deviceName"
+    <*> xml' .< "virtualName"
+    <*> getElementM xml' "ebs" (\xml'' ->
         EbsBlockDevice
-        <$> getT "snapshotId"
-        <*> getT "volumeSize"
-        <*> getT "deleteOnTermination"
-        <*> volumeTypeSink
+        <$> xml'' .< "snapshotId"
+        <*> xml'' .< "volumeSize"
+        <*> xml'' .< "deleteOnTermination"
+        <*> volumeTypeConv xml''
         )
     )
 
@@ -88,7 +88,7 @@ createImage
     -> [BlockDeviceMappingParam] -- ^ BlockDeviceMapping
     -> EC2 m Text
 createImage iid name desc noReboot bdms =
-    ec2Query "CreateImage" params $ getT "imageId"
+    ec2Query "CreateImage" params $ xmlParser (.< "imageId")
   where
     params =
         [ "InstanceId" |= iid
@@ -103,7 +103,7 @@ registerImage
     => RegisterImageRequest
     -> EC2 m Text
 registerImage req =
-    ec2Query "RegisterImage" params $ getT "imageId"
+    ec2Query "RegisterImage" params $ xmlParser (.< "imageId")
   where
     params =
         [ "Name" |= registerImageRequestName req
@@ -122,7 +122,7 @@ deregisterImage
     => Text -- ^ ImageId
     -> EC2 m Bool
 deregisterImage iid =
-    ec2Query "DeregisterImage" params $ getT "return"
+    ec2Query "DeregisterImage" params $ xmlParser (.< "return")
   where
     params = ["ImageId" |= iid]
 
@@ -132,28 +132,30 @@ describeImageAttribute
     -> AMIAttribute -- ^ Attribute
     -> EC2 m AMIAttributeDescription
 describeImageAttribute iid attr =
-    ec2Query "DescribeImageAttribute" params $ AMIAttributeDescription
-        <$> getT "imageId"
-        <*> itemsSet "launchPermission" launchPermissionItemSink
-        <*> itemsSet "productCodes"
-            (ProductCodeItem
-            <$> getT "productCode")
-        <*> getMMT "kernel"
-        <*> getMMT "ramdisk"
-        <*> getMMT "description"
-        <*> blockDeviceMappingSink
+    ec2Query "DescribeImageAttribute" params $ xmlParser $ \xml ->
+        AMIAttributeDescription
+        <$> xml .< "imageId"
+        <*> itemsSet' xml "launchPermission" launchPermissionItemConv
+        <*> itemsSet' xml "productCodes" (\xml' ->
+            ProductCodeItem
+            <$> xml' .< "productCode"
+            )
+        <*> getMMT xml "kernel"
+        <*> getMMT xml "ramdisk"
+        <*> getMMT xml "description"
+        <*> blockDeviceMappingConv xml
   where
-    getMMT name = join <$> elementM name (getT "value")
+    getMMT xml name = join <$> getElementM xml name (.< "value")
     params = [ "ImageId" |= iid
              , "Attribute" |= attr
              ]
 
-launchPermissionItemSink :: MonadThrow m => Consumer Event m LaunchPermissionItem
-launchPermissionItemSink = do
-    mg <- elementM "group" text
+launchPermissionItemConv :: (MonadThrow m, Applicative m) => SimpleXML -> m LaunchPermissionItem
+launchPermissionItemConv xml = do
+    mg <- getElementM xml "group" content
     case mg of
         Just g -> return $ LaunchPermissionItemGroup g
-        Nothing -> LaunchPermissionItemUserId <$> getT "userId"
+        Nothing -> LaunchPermissionItemUserId <$> xml .< "userId"
 
 modifyImageAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -163,7 +165,7 @@ modifyImageAttribute
     -> Maybe Text -- ^ Description
     -> EC2 m Bool
 modifyImageAttribute iid lp pcs desc =
-    ec2Query "ModifyImageAttribute" params $ getT "return"
+    ec2Query "ModifyImageAttribute" params $ xmlParser (.< "return")
   where
     params =
         [ "ImageId" |= iid

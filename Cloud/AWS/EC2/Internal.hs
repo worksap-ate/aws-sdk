@@ -19,8 +19,12 @@ module Cloud.AWS.EC2.Internal
     , itemConduit'
     , itemsSet'
     , resourceTagConv
+    , productCodeConv
+    , stateReasonConv
+    , volumeTypeConv
     ) where
 
+import Control.Monad (join)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
 import qualified Network.HTTP.Conduit as HTTP
@@ -137,3 +141,23 @@ resourceTagConv xml = getElements xml "tagSet" "item" $ \xml' ->
     ResourceTag
     <$> xml' .< "key"
     <*> xml' .< "value"
+
+productCodeConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [ProductCode]
+productCodeConv xml = itemsSet' xml "productCodes" $ \xml' ->
+    ProductCode
+    <$> xml' .< "productCode"
+    <*> xml' .< "type"
+
+stateReasonConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m (Maybe StateReason)
+stateReasonConv xml = getElementM xml "stateReason" $ \xml' ->
+    StateReason
+    <$> xml' .< "code"
+    <*> xml' .< "message"
+
+volumeTypeConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m VolumeType
+volumeTypeConv xml = join $ volumeType
+    <$> xml .< "volumeType"
+    <*> xml .< "iops"
