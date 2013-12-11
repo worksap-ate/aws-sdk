@@ -10,14 +10,13 @@ module Cloud.AWS.EC2.RouteTable
     ) where
 
 import Data.Text (Text)
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 ------------------------------------------------------------
 -- describeRouteTables
@@ -29,41 +28,42 @@ describeRouteTables
     -> EC2 m (ResumableSource m RouteTable)
 describeRouteTables routeTables filters = do
     ec2QuerySource "DescribeRouteTables" params $
-        itemConduit "routeTableSet" routeTableSink
+        itemConduit' "routeTableSet" routeTableConv
   where
     params =
         [ "RouteTableId" |.#= routeTables
         , filtersParam filters
         ]
 
-routeTableSink :: MonadThrow m
-    => Consumer Event m RouteTable
-routeTableSink = RouteTable
-    <$> getT "routeTableId"
-    <*> getT "vpcId"
-    <*> routeSink
-    <*> routeTableAssociationSink
-    <*> getT "propagatingVgwSet"
-    <*> resourceTagSink
+routeTableConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m RouteTable
+routeTableConv xml = RouteTable
+    <$> xml .< "routeTableId"
+    <*> xml .< "vpcId"
+    <*> routeConv xml
+    <*> routeTableAssociationConv xml
+    <*> xml .< "propagatingVgwSet"
+    <*> resourceTagConv xml
 
-routeSink :: MonadThrow m
-    => Consumer Event m [Route]
-routeSink = itemsSet "routeSet" $ Route
-    <$> getT "destinationCidrBlock"
-    <*> getT "gatewayId"
-    <*> getT "instanceId"
-    <*> getT "instanceOwnerId"
-    <*> getT "networkInterfaceId"
-    <*> getT "state"
-    <*> getT "origin"
+routeConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [Route]
+routeConv xml = itemsSet' xml "routeSet" $ \xml' -> Route
+    <$> xml' .< "destinationCidrBlock"
+    <*> xml' .< "gatewayId"
+    <*> xml' .< "instanceId"
+    <*> xml' .< "instanceOwnerId"
+    <*> xml' .< "networkInterfaceId"
+    <*> xml' .< "state"
+    <*> xml' .< "origin"
 
-routeTableAssociationSink :: MonadThrow m
-    => Consumer Event m [RouteTableAssociation]
-routeTableAssociationSink = itemsSet "associationSet" $ RouteTableAssociation
-    <$> getT "routeTableAssociationId"
-    <*> getT "routeTableId"
-    <*> getT "subnetId"
-    <*> getT "main"
+routeTableAssociationConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [RouteTableAssociation]
+routeTableAssociationConv xml = itemsSet' xml "associationSet" $ \xml' ->
+    RouteTableAssociation
+    <$> xml' .< "routeTableAssociationId"
+    <*> xml' .< "routeTableId"
+    <*> xml' .< "subnetId"
+    <*> xml' .< "main"
 
 ------------------------------------------------------------
 -- createRouteTable
@@ -73,8 +73,8 @@ createRouteTable
     => Text
     -> EC2 m RouteTable
 createRouteTable vid =
-    ec2Query "CreateRouteTable" ["VpcId" |= vid] $
-        element "routeTable" routeTableSink
+    ec2Query "CreateRouteTable" ["VpcId" |= vid] $ xmlParser $ \xml ->
+        getElement xml "routeTable" routeTableConv
 
 ------------------------------------------------------------
 -- deleteRouteTable
@@ -95,7 +95,7 @@ associateRouteTable
     -> EC2 m Text -- ^ associationId
 associateRouteTable rtid sid =
     ec2Query "AssociateRouteTable" params
-        $ getT "associationId"
+        $ xmlParser (.< "associationId")
   where
     params = [ "RouteTableId" |= rtid
              , "SubnetId" |= sid
@@ -110,7 +110,7 @@ disassociateRouteTable
     -> EC2 m Bool -- ^ return
 disassociateRouteTable aid =
     ec2Query "DisassociateRouteTable" ["AssociationId" |= aid]
-        $ getT "return"
+        $ xmlParser (.< "return")
 
 ------------------------------------------------------------
 -- replaceRouteTableAssociation
@@ -122,7 +122,7 @@ replaceRouteTableAssociation
     -> EC2 m Text -- ^ newAssociationId
 replaceRouteTableAssociation aid rtid =
     ec2Query "ReplaceRouteTableAssociation" params
-        $ getT "newAssociationId"
+        $ xmlParser (.< "newAssociationId")
   where
     params = [ "AssociationId" |= aid
              , "RouteTableId" |= rtid
