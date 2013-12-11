@@ -39,16 +39,16 @@ describeAddresses pubIps alloIds filters =
         ]
 
     addressSet :: (MonadThrow m, Applicative m) => Conduit Event m Address
-    addressSet = xmlParserConduit "addressesSet" $ \xml ->
-        getElement xml "item" $ \xml' -> Address
-            <$> xml' .< "publicIp"
-            <*> xml' .< "allocationId"
-            <*> xml' .< "domain"
-            <*> xml' .< "instanceId"
-            <*> xml' .< "associationId"
-            <*> xml' .< "networkInterfaceId"
-            <*> xml' .< "networkInterfaceOwnerId"
-            <*> xml' .< "privateIpAddress"
+    addressSet = itemConduit' "addressesSet" $ \xml ->
+        Address
+        <$> xml .< "publicIp"
+        <*> xml .< "allocationId"
+        <*> xml .< "domain"
+        <*> xml .< "instanceId"
+        <*> xml .< "associationId"
+        <*> xml .< "networkInterfaceId"
+        <*> xml .< "networkInterfaceOwnerId"
+        <*> xml .< "privateIpAddress"
 
 -----------------------------------------------------
 -- AllocateAddress

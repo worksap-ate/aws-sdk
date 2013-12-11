@@ -21,7 +21,7 @@ describeAvailabilityZones
     -> EC2 m (ResumableSource m AvailabilityZone)
 describeAvailabilityZones zones filters =
     ec2QuerySource "DescribeAvailabilityZones" params $
-        xmlParserConduit "availabilityZoneInfo" availabilityZoneInfo
+        itemConduit' "availabilityZoneInfo" availabilityZoneInfo
   where
     params =
         [ "ZoneName" |.#= zones
@@ -29,9 +29,9 @@ describeAvailabilityZones zones filters =
         ]
     availabilityZoneInfo :: (MonadThrow m, Applicative m)
         => SimpleXML -> m AvailabilityZone
-    availabilityZoneInfo xml = getElement xml "item" $ \xml' ->
+    availabilityZoneInfo xml =
         AvailabilityZone
-        <$> xml' .< "zoneName"
-        <*> xml' .< "zoneState"
-        <*> xml' .< "regionName"
-        <*> getElements xml' "messageSet" "item" (.< "message")
+        <$> xml .< "zoneName"
+        <*> xml .< "zoneState"
+        <*> xml .< "regionName"
+        <*> itemsSet' xml "messageSet" (.< "message")

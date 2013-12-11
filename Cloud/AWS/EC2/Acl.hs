@@ -26,8 +26,7 @@ describeNetworkAcls
     -> EC2 m (ResumableSource m NetworkAcl)
 describeNetworkAcls nids filters = do
     ec2QuerySource "DescribeNetworkAcls" params $
-        xmlParserConduit "networkAclSet" $ \xml ->
-            getElement xml "item" networkAclConv
+        itemConduit' "networkAclSet" networkAclConv
   where
     params =
         [ "NetworkAclId" |.#= nids
@@ -40,7 +39,7 @@ networkAclConv xml = NetworkAcl
     <$> xml .< "networkAclId"
     <*> xml .< "vpcId"
     <*> xml .< "default"
-    <*> getElements xml "entrySet" "item" (\xml' -> NetworkAclEntry
+    <*> itemsSet' xml "entrySet" (\xml' -> NetworkAclEntry
         <$> xml' .< "ruleNumber"
         <*> xml' .< "protocol"
         <*> xml' .< "ruleAction"
@@ -53,7 +52,7 @@ networkAclConv xml = NetworkAcl
         <*> getElementM xml' "portRange" (\xml'' -> PortRange
             <$> xml'' .< "from"
             <*> xml'' .< "to"))
-    <*> getElements xml "associationSet" "item" (\xml' -> NetworkAclAssociation
+    <*> itemsSet' xml "associationSet" (\xml' -> NetworkAclAssociation
         <$> xml' .< "networkAclAssociationId"
         <*> xml' .< "networkAclId"
         <*> xml' .< "subnetId"

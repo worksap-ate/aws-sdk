@@ -16,6 +16,8 @@ module Cloud.AWS.EC2.Internal
     , groupSetSink
     , networkInterfaceAttachmentSink
       -- new parsers
+    , itemConduit'
+    , itemsSet'
     , resourceTagConv
     ) where
 
@@ -59,11 +61,25 @@ itemConduit :: MonadThrow m
 itemConduit tag inner =
     fromMaybe (()) <$> elementM tag (listConduit "item" inner)
 
+itemConduit' :: (MonadThrow m, Applicative m)
+    => Text
+    -> (SimpleXML -> m o)
+    -> Conduit Event m o
+itemConduit' tag inner = xmlParserConduit tag $ \xml ->
+    getElement xml "item" inner
+
 itemsSet :: MonadThrow m
     => Text
     -> Consumer Event m o
     -> Consumer Event m [o]
 itemsSet tag inner = itemConduit tag inner =$= CL.consume
+
+itemsSet' :: (MonadThrow m, Applicative m)
+    => SimpleXML
+    -> Text
+    -> (SimpleXML -> m o)
+    -> m [o]
+itemsSet' xml tag inner = getElements xml tag "item" inner
 
 resourceTagSink :: MonadThrow m
     => Consumer Event m [ResourceTag]

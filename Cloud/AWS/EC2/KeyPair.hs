@@ -26,8 +26,7 @@ describeKeyPairs
     -> EC2 m (ResumableSource m KeyPair)
 describeKeyPairs names filters =
     ec2QuerySource "DescribeKeyPairs" params $
-        xmlParserConduit "keySet" $ \xml ->
-            getElement xml "item" keyPairConv
+        itemConduit' "keySet" keyPairConv
   where
     params =
         [ "KeyName" |.#= names
