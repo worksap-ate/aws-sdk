@@ -11,14 +11,13 @@ module Cloud.AWS.EC2.Acl
     ) where
 
 import Data.Text (Text)
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeNetworkAcls
     :: (MonadResource m, MonadBaseControl IO m)
@@ -27,46 +26,47 @@ describeNetworkAcls
     -> EC2 m (ResumableSource m NetworkAcl)
 describeNetworkAcls nids filters = do
     ec2QuerySource "DescribeNetworkAcls" params $
-        itemConduit "networkAclSet" networkAclSink
+        xmlParserConduit "networkAclSet" $ \xml ->
+            getElement xml "item" networkAclConv
   where
     params =
         [ "NetworkAclId" |.#= nids
         , filtersParam filters
         ]
 
-networkAclSink :: MonadThrow m
-    => Consumer Event m NetworkAcl
-networkAclSink = NetworkAcl
-    <$> getT "networkAclId"
-    <*> getT "vpcId"
-    <*> getT "default"
-    <*> itemsSet "entrySet" (NetworkAclEntry
-        <$> getT "ruleNumber"
-        <*> getT "protocol"
-        <*> getT "ruleAction"
-        <*> getT "egress"
-        <*> getT "cidrBlock"
-        <*> elementM "icmpTypeCode" (IcmpTypeCode
-            <$> getT "code"
-            <*> getT "type"
+networkAclConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m NetworkAcl
+networkAclConv xml = NetworkAcl
+    <$> xml .< "networkAclId"
+    <*> xml .< "vpcId"
+    <*> xml .< "default"
+    <*> getElements xml "entrySet" "item" (\xml' -> NetworkAclEntry
+        <$> xml' .< "ruleNumber"
+        <*> xml' .< "protocol"
+        <*> xml' .< "ruleAction"
+        <*> xml' .< "egress"
+        <*> xml' .< "cidrBlock"
+        <*> getElementM xml' "icmpTypeCode" (\xml'' -> IcmpTypeCode
+            <$> xml'' .< "code"
+            <*> xml'' .< "type"
             )
-        <*> elementM "portRange" (PortRange
-            <$> getT "from"
-            <*> getT "to"))
-    <*> itemsSet "associationSet" (NetworkAclAssociation
-        <$> getT "networkAclAssociationId"
-        <*> getT "networkAclId"
-        <*> getT "subnetId"
+        <*> getElementM xml' "portRange" (\xml'' -> PortRange
+            <$> xml'' .< "from"
+            <*> xml'' .< "to"))
+    <*> getElements xml "associationSet" "item" (\xml' -> NetworkAclAssociation
+        <$> xml' .< "networkAclAssociationId"
+        <*> xml' .< "networkAclId"
+        <*> xml' .< "subnetId"
         )
-    <*> resourceTagSink
+    <*> resourceTagConv xml
 
 createNetworkAcl
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ VpcId
     -> EC2 m NetworkAcl
 createNetworkAcl vpcid =
-    ec2Query "CreateNetworkAcl" params $
-        element "networkAcl" networkAclSink
+    ec2Query "CreateNetworkAcl" params $ xmlParser $ \xml ->
+        getElement xml "networkAcl" networkAclConv
   where
     params = ["VpcId" |= vpcid]
 
@@ -83,7 +83,7 @@ replaceNetworkAclAssociation
     -> EC2 m Text
 replaceNetworkAclAssociation assoc aclid =
     ec2Query "ReplaceNetworkAclAssociation" params $
-        getT "newAssociationId"
+        xmlParser (.< "newAssociationId")
   where
     params =
         [ "AssociationId" |= assoc
@@ -95,7 +95,7 @@ createNetworkAclEntry
     => NetworkAclEntryRequest
     -> EC2 m Bool
 createNetworkAclEntry req =
-    ec2Query "CreateNetworkAclEntry" params $ getT "return"
+    ec2Query "CreateNetworkAclEntry" params $ xmlParser (.< "return")
   where
     params = reqToParams req
 
@@ -134,7 +134,7 @@ deleteNetworkAclEntry
     -> Bool -- ^ Egress
     -> EC2 m Bool
 deleteNetworkAclEntry aclid rule egress =
-    ec2Query "DeleteNetworkAclEntry" params $ getT "return"
+    ec2Query "DeleteNetworkAclEntry" params $ xmlParser (.< "return")
   where
     params =
         [ "NetworkAclId" |= aclid
@@ -147,6 +147,6 @@ replaceNetworkAclEntry
     => NetworkAclEntryRequest
     -> EC2 m Bool
 replaceNetworkAclEntry req =
-    ec2Query "ReplaceNetworkAclEntry" params $ getT "return"
+    ec2Query "ReplaceNetworkAclEntry" params $ xmlParser (.< "return")
   where
     params = reqToParams req

@@ -15,6 +15,8 @@ module Cloud.AWS.EC2.Internal
     , volumeTypeSink
     , groupSetSink
     , networkInterfaceAttachmentSink
+      -- new parsers
+    , resourceTagConv
     ) where
 
 import Control.Monad.IO.Class (MonadIO)
@@ -30,6 +32,7 @@ import Data.Text (Text)
 
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered hiding (getT)
 import Cloud.AWS.EC2.Types
 
 initialEC2Context :: HTTP.Manager -> AWSContext
@@ -109,3 +112,12 @@ networkInterfaceAttachmentSink = elementM "attachment" $
     <*> getT "status"
     <*> getT "attachTime"
     <*> getT "deleteOnTermination"
+
+-- new parsers
+
+resourceTagConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [ResourceTag]
+resourceTagConv xml = getElements xml "tagSet" "item" $ \xml' ->
+    ResourceTag
+    <$> xml' .< "key"
+    <*> xml' .< "value"
