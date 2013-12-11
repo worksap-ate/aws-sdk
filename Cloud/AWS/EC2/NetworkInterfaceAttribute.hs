@@ -12,49 +12,52 @@ module Cloud.AWS.EC2.NetworkInterfaceAttribute
    ) where
 
 import Data.Text (Text)
-import Data.Conduit (Consumer, MonadBaseControl, MonadResource)
-import Data.XML.Types (Event)
+import Data.Conduit (MonadBaseControl, MonadResource)
 
-import Cloud.AWS.EC2.Internal (EC2, groupSetSink, networkInterfaceAttachmentSink)
+import Cloud.AWS.EC2.Internal (EC2, groupSetConv, networkInterfaceAttachmentConv)
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.EC2.Types (Group, NetworkInterfaceAttachment(..))
-import Cloud.AWS.Lib.Parser (element, getT, getT_)
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeNetworkInterfaceDescription
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ The ID of the network interface.
     -> EC2 m (Maybe Text)
-describeNetworkInterfaceDescription = describeNetworkInterfaceAttribute "description" $
-  element "description" $ getT "value"
+describeNetworkInterfaceDescription =
+    describeNetworkInterfaceAttribute "description" $ \xml ->
+        getElement xml "description" (.< "value")
 
 describeNetworkInterfaceGroupSet
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ The ID of the network interface.
     -> EC2 m [Group]
-describeNetworkInterfaceGroupSet = describeNetworkInterfaceAttribute "groupSet" groupSetSink
+describeNetworkInterfaceGroupSet =
+    describeNetworkInterfaceAttribute "groupSet" groupSetConv
 
 describeNetworkInterfaceSourceDestCheck
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ The ID of the network interface.
     -> EC2 m Bool
-describeNetworkInterfaceSourceDestCheck = describeNetworkInterfaceAttribute "sourceDestCheck" $
-  element "sourceDestCheck" $ getT "value"
+describeNetworkInterfaceSourceDestCheck =
+    describeNetworkInterfaceAttribute "sourceDestCheck" $ \xml ->
+        getElement xml "sourceDestCheck" (.< "value")
 
 describeNetworkInterfaceAttachment
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ The ID of the network interface.
     -> EC2 m (Maybe NetworkInterfaceAttachment)
-describeNetworkInterfaceAttachment = describeNetworkInterfaceAttribute "attachment" networkInterfaceAttachmentSink
+describeNetworkInterfaceAttachment =
+    describeNetworkInterfaceAttribute "attachment" networkInterfaceAttachmentConv
 
 describeNetworkInterfaceAttribute
     :: (MonadBaseControl IO m, MonadResource m)
     => Text
-    -> Consumer Event m a
+    -> (SimpleXML -> m a)
     -> Text
     -> EC2 m a
-describeNetworkInterfaceAttribute action sink networkInterface =
+describeNetworkInterfaceAttribute action conv networkInterface =
     ec2Query "DescribeNetworkInterfaceAttribute" params $
-        getT_ "networkInterfaceId" >> sink
+        xmlParser conv
   where
     params =
         [ "NetworkInterfaceId" |= networkInterface
@@ -105,7 +108,7 @@ modifyNetworkInterfaceAttribute
     -> [QueryParam]
     -> EC2 m Bool
 modifyNetworkInterfaceAttribute iface params =
-    ec2Query "ModifyNetworkInterfaceAttribute" params' $ getT "return"
+    ec2Query "ModifyNetworkInterfaceAttribute" params' $ xmlParser (.< "return")
   where
     params' = ("NetworkInterfaceId" |= iface) : params
 
@@ -113,7 +116,8 @@ resetNetworkInterfaceSourceDestCheck
     :: (MonadBaseControl IO m, MonadResource m)
     => Text -- ^ The ID of the network interface.
     -> EC2 m Bool
-resetNetworkInterfaceSourceDestCheck = resetNetworkInterfaceAttribute "sourceDestCheck"
+resetNetworkInterfaceSourceDestCheck =
+    resetNetworkInterfaceAttribute "sourceDestCheck"
 
 resetNetworkInterfaceAttribute
     :: (MonadBaseControl IO m, MonadResource m)
@@ -121,7 +125,7 @@ resetNetworkInterfaceAttribute
     -> Text
     -> EC2 m Bool
 resetNetworkInterfaceAttribute attrName iface =
-    ec2Query "ResetNetworkInterfaceAttribute" params $ getT "return"
+    ec2Query "ResetNetworkInterfaceAttribute" params $ xmlParser (.< "return")
   where
     params =
         [ "NetworkInterfaceId" |= iface
