@@ -22,6 +22,8 @@ module Cloud.AWS.EC2.Internal
     , productCodeConv
     , stateReasonConv
     , volumeTypeConv
+    , groupSetConv
+    , networkInterfaceAttachmentConv
     ) where
 
 import Control.Monad (join)
@@ -161,3 +163,21 @@ volumeTypeConv :: (MonadThrow m, Applicative m)
 volumeTypeConv xml = join $ volumeType
     <$> xml .< "volumeType"
     <*> xml .< "iops"
+
+groupSetConv :: (MonadThrow m, Applicative m) => SimpleXML -> m [Group]
+groupSetConv xml = itemsSet' xml "groupSet" $ \xml' -> Group
+    <$> xml' .< "groupId"
+    <*> xml' .< "groupName"
+
+networkInterfaceAttachmentConv
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m (Maybe NetworkInterfaceAttachment)
+networkInterfaceAttachmentConv xml = getElementM xml "attachment" $ \xml' ->
+    NetworkInterfaceAttachment
+    <$> xml' .< "attachmentId"
+    <*> xml' .< "instanceId"
+    <*> xml' .< "instanceOwnerId"
+    <*> xml' .< "deviceIndex"
+    <*> xml' .< "status"
+    <*> xml' .< "attachTime"
+    <*> xml' .< "deleteOnTermination"
