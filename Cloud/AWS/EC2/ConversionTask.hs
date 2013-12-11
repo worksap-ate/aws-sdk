@@ -21,7 +21,7 @@ describeConversionTasks
     -> EC2 m (ResumableSource m ConversionTask)
 describeConversionTasks ctids =
     ec2QuerySource "DescribeConversionTasks" params $
-        itemConduit' "conversionTasks" conversionTaskConv
+        itemConduit "conversionTasks" conversionTaskConv
   where
     params =
         [ "ConversionTaskId" |.#= ctids
@@ -43,7 +43,7 @@ conversionTaskConv xml = ConversionTask
         )
     <*> getElementM xml "importInstance" (\xml' ->
         ImportInstanceTaskDetails
-        <$> itemsSet' xml' "volumes" (\xml'' ->
+        <$> itemsSet xml' "volumes" (\xml'' ->
             ImportInstanceTaskDetailItem
             <$> xml'' .< "bytesConverted"
             <*> xml'' .< "availabilityZone"

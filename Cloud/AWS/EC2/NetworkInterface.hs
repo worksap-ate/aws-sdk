@@ -58,7 +58,7 @@ describeNetworkInterfaces
     -> EC2 m (ResumableSource m NetworkInterface)
 describeNetworkInterfaces niid filters =
     ec2QuerySource "DescribeNetworkInterfaces" params
-        $ itemConduit' "networkInterfaceSet" networkInterfaceConv
+        $ itemConduit "networkInterfaceSet" networkInterfaceConv
   where
     params =
         [ "NetworkInterfaceId" |.#= niid
@@ -86,7 +86,7 @@ networkInterfaceConv xml = NetworkInterface
     <*> networkInterfaceAttachmentConv xml
     <*> networkInterfaceAssociationConv xml
     <*> resourceTagConv xml
-    <*> itemsSet' xml "privateIpAddressesSet" (\xml' ->
+    <*> itemsSet xml "privateIpAddressesSet" (\xml' ->
         NetworkInterfacePrivateIpAddress
         <$> xml' .< "privateIpAddress"
         <*> xml' .< "privateDnsName"

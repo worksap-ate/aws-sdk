@@ -26,7 +26,7 @@ describeRegions regions filters =
         [ "RegionName" |.#= regions
         , filtersParam filters
         ]
-    regionInfoConduit = itemConduit' "regionInfo" $ \xml ->
+    regionInfoConduit = itemConduit "regionInfo" $ \xml ->
         Region
         <$> xml .< "regionName"
         <*> xml .< "regionEndpoint"

@@ -28,7 +28,7 @@ describeSnapshots
     -> EC2 m (ResumableSource m Snapshot)
 describeSnapshots ssids owners restby filters =
     ec2QuerySource "DescribeSnapshots" params $
-        itemConduit' "snapshotSet" snapshotConv
+        itemConduit "snapshotSet" snapshotConv
   where
     params =
         [ "SnapshotId" |.#= ssids
@@ -106,7 +106,7 @@ snapshotAttributeConv
     => SimpleXML -> m SnapshotAttribute
 snapshotAttributeConv xml = SnapshotAttribute
     <$> xml .< "snapshotId"
-    <*> itemsSet' xml "createVolumePermission" createVolumePermissionItemConv
+    <*> itemsSet xml "createVolumePermission" createVolumePermissionItemConv
     <*> productCodeConv xml
 
 createVolumePermissionItemConv :: (MonadThrow m, Applicative m) => SimpleXML -> m CreateVolumePermissionItem

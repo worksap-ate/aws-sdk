@@ -26,7 +26,7 @@ describeKeyPairs
     -> EC2 m (ResumableSource m KeyPair)
 describeKeyPairs names filters =
     ec2QuerySource "DescribeKeyPairs" params $
-        itemConduit' "keySet" keyPairConv
+        itemConduit "keySet" keyPairConv
   where
     params =
         [ "KeyName" |.#= names

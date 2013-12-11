@@ -39,7 +39,7 @@ describeAddresses pubIps alloIds filters =
         ]
 
     addressSet :: (MonadThrow m, Applicative m) => Conduit Event m Address
-    addressSet = itemConduit' "addressesSet" $ \xml ->
+    addressSet = itemConduit "addressesSet" $ \xml ->
         Address
         <$> xml .< "publicIp"
         <*> xml .< "allocationId"

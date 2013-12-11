@@ -126,7 +126,7 @@ describeInternetGateways
     -> EC2 m (ResumableSource m InternetGateway)
 describeInternetGateways internetGatewayIds filters = do
     ec2QuerySource "DescribeInternetGateways" params $
-        itemConduit' "internetGatewaySet" internetGatewayConv
+        itemConduit "internetGatewaySet" internetGatewayConv
   where
     params =
         [ "InternetGatewayId" |.#= internetGatewayIds
@@ -137,7 +137,7 @@ internetGatewayConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m InternetGateway
 internetGatewayConv xml = InternetGateway
     <$> xml .< "internetGatewayId"
-    <*> itemsSet' xml "attachmentSet" internetGatewayAttachmentConv
+    <*> itemsSet xml "attachmentSet" internetGatewayAttachmentConv
     <*> resourceTagConv xml
 
 internetGatewayAttachmentConv :: (MonadThrow m, Applicative m)
@@ -156,7 +156,7 @@ describeVpnConnections
     -> EC2 m (ResumableSource m VpnConnection)
 describeVpnConnections ids filters =
     ec2QuerySource "DescribeVpnConnections" params $
-        itemConduit' "vpnConnectionSet" vpnConnectionConv
+        itemConduit "vpnConnectionSet" vpnConnectionConv
   where
     params =
         [ "VpnConnectionId" |.#= ids
@@ -174,7 +174,7 @@ vpnConnectionConv xml = VpnConnection
     <*> xml .< "customerGatewayId"
     <*> xml .< "vpnGatewayId"
     <*> resourceTagConv xml
-    <*> itemsSet' xml "vgwTelemetry"
+    <*> itemsSet xml "vgwTelemetry"
         (\xml' -> VpnTunnelTelemetry
         <$> xml' .< "outsideIpAddress"
         <*> xml' .< "status"
@@ -186,7 +186,7 @@ vpnConnectionConv xml = VpnConnection
         (\xml' -> VpnConnectionOptionsRequest
         <$> xml' .< "staticRoutesOnly"
         )
-    <*> itemsSet' xml "routes"
+    <*> itemsSet xml "routes"
         (\xml' -> VpnStaticRoute
         <$> xml' .< "destinationCidrBlock"
         <*> xml' .< "source"
@@ -261,7 +261,7 @@ describeVpcs
     -> EC2 m (ResumableSource m Vpc)
 describeVpcs vpcIds filters = do
     ec2QuerySource "DescribeVpcs" params $
-        itemConduit' "vpcSet" vpcConv
+        itemConduit "vpcSet" vpcConv
   where
     params =
         [ "VpcId" |.#= vpcIds
@@ -315,7 +315,7 @@ describeVpnGateways
     -> EC2 m (ResumableSource m VpnGateway)
 describeVpnGateways ids filters = do
     ec2QuerySource "DescribeVpnGateways" params $
-        itemConduit' "vpnGatewaySet" vpnGatewayConv
+        itemConduit "vpnGatewaySet" vpnGatewayConv
   where
     params =
         [ "VpnGatewayId" |.#= ids
@@ -329,7 +329,7 @@ vpnGatewayConv xml = VpnGateway
     <*> xml .< "state"
     <*> xml .< "type"
     <*> xml .< "availabilityZone"
-    <*> itemsSet' xml "attachments" attachmentConv
+    <*> itemsSet xml "attachments" attachmentConv
     <*> resourceTagConv xml
 
 attachmentConv :: (MonadThrow m, Applicative m)
@@ -374,7 +374,7 @@ describeCustomerGateway
     -> EC2 m (ResumableSource m CustomerGateway)
 describeCustomerGateway ids filters = do
     ec2QuerySource "DescribeCustomerGateways" params $
-        itemConduit' "customerGatewaySet" customerGatewayConv
+        itemConduit "customerGatewaySet" customerGatewayConv
   where
     params =
         [ "CustomerGatewayId" |.#= ids
@@ -429,7 +429,7 @@ describeDhcpOptions
     -> EC2 m (ResumableSource m DhcpOptions)
 describeDhcpOptions ids filters =
     ec2QuerySource "DescribeDhcpOptions" params $
-        itemConduit' "dhcpOptionsSet" dhcpOptionsConv
+        itemConduit "dhcpOptionsSet" dhcpOptionsConv
   where
     params =
         [ "DhcpOptionsId" |.#= ids
@@ -440,14 +440,14 @@ dhcpOptionsConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m DhcpOptions
 dhcpOptionsConv xml = DhcpOptions
     <$> xml .< "dhcpOptionsId"
-    <*> itemsSet' xml "dhcpConfigurationSet" dhcpConfigurationConv
+    <*> itemsSet xml "dhcpConfigurationSet" dhcpConfigurationConv
     <*> resourceTagConv xml
 
 dhcpConfigurationConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m DhcpConfiguration
 dhcpConfigurationConv xml = DhcpConfiguration
     <$> xml .< "key"
-    <*> itemsSet' xml "valueSet"
+    <*> itemsSet xml "valueSet"
         (\xml' -> DhcpValue
         <$> xml' .< "value"
         )

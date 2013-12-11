@@ -28,7 +28,7 @@ describeRouteTables
     -> EC2 m (ResumableSource m RouteTable)
 describeRouteTables routeTables filters = do
     ec2QuerySource "DescribeRouteTables" params $
-        itemConduit' "routeTableSet" routeTableConv
+        itemConduit "routeTableSet" routeTableConv
   where
     params =
         [ "RouteTableId" |.#= routeTables
@@ -47,7 +47,7 @@ routeTableConv xml = RouteTable
 
 routeConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [Route]
-routeConv xml = itemsSet' xml "routeSet" $ \xml' -> Route
+routeConv xml = itemsSet xml "routeSet" $ \xml' -> Route
     <$> xml' .< "destinationCidrBlock"
     <*> xml' .< "gatewayId"
     <*> xml' .< "instanceId"
@@ -58,7 +58,7 @@ routeConv xml = itemsSet' xml "routeSet" $ \xml' -> Route
 
 routeTableAssociationConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [RouteTableAssociation]
-routeTableAssociationConv xml = itemsSet' xml "associationSet" $ \xml' ->
+routeTableAssociationConv xml = itemsSet xml "associationSet" $ \xml' ->
     RouteTableAssociation
     <$> xml' .< "routeTableAssociationId"
     <*> xml' .< "routeTableId"

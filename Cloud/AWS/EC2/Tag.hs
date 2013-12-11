@@ -20,7 +20,7 @@ describeTags
     => [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Tag)
 describeTags filters =
-    ec2QuerySource "DescribeTags" params $ itemConduit' "tagSet" $ \xml ->
+    ec2QuerySource "DescribeTags" params $ itemConduit "tagSet" $ \xml ->
         Tag
         <$> xml .< "resourceId"
         <*> xml .< "resourceType"

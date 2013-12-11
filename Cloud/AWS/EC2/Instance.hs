@@ -48,7 +48,7 @@ describeInstances
     -> EC2 m (ResumableSource m Reservation)
 describeInstances instances filters = do
     ec2QuerySource "DescribeInstances" params $
-        itemConduit' "reservationSet" reservationConv
+        itemConduit "reservationSet" reservationConv
   where
     params =
         [ "InstanceId" |.#= instances
@@ -67,7 +67,7 @@ reservationConv xml =
 
 instanceSetConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [Instance]
-instanceSetConv xml = itemsSet' xml "instancesSet" $ \xml' ->
+instanceSetConv xml = itemsSet xml "instancesSet" $ \xml' ->
     Instance
     <$> xml' .< "instanceId"
     <*> xml' .< "imageId"
@@ -117,7 +117,7 @@ instanceSetConv xml = itemsSet' xml "instancesSet" $ \xml' ->
 
 instanceBlockDeviceMappingsConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [InstanceBlockDeviceMapping]
-instanceBlockDeviceMappingsConv xml = itemsSet' xml "blockDeviceMapping" (\xml' ->
+instanceBlockDeviceMappingsConv xml = itemsSet xml "blockDeviceMapping" (\xml' ->
     InstanceBlockDeviceMapping
     <$> xml' .< "deviceName"
     <*> getElement xml' "ebs" (\xml'' ->
@@ -153,7 +153,7 @@ instanceStateConv label xml = getElement xml label $ \xml' ->
 
 networkInterfaceConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [InstanceNetworkInterface]
-networkInterfaceConv xml = itemsSet' xml "networkInterfaceSet" $ \xml' ->
+networkInterfaceConv xml = itemsSet xml "networkInterfaceSet" $ \xml' ->
     InstanceNetworkInterface
     <$> xml' .< "networkInterfaceId"
     <*> xml' .< "subnetId"
@@ -175,7 +175,7 @@ networkInterfaceConv xml = itemsSet' xml "networkInterfaceSet" $ \xml' ->
         <*> xml'' .< "deleteOnTermination"
         )
     <*> instanceNetworkInterfaceAssociationConv xml'
-    <*> itemsSet' xml' "privateIpAddressesSet" (\xml'' ->
+    <*> itemsSet xml' "privateIpAddressesSet" (\xml'' ->
         InstancePrivateIpAddress
         <$> xml'' .< "privateIpAddress"
         <*> xml'' .< "privateDnsName"
@@ -214,11 +214,11 @@ describeInstanceStatus instanceIds isAll filters token =
 instanceStatusSet :: (MonadThrow m, Applicative m)
     => Conduit Event m InstanceStatus
 instanceStatusSet = do
-    itemConduit' "instanceStatusSet" $ \xml ->
+    itemConduit "instanceStatusSet" $ \xml ->
         InstanceStatus
         <$> xml .< "instanceId"
         <*> xml .< "availabilityZone"
-        <*> itemsSet' xml "eventsSet" (\xml' ->
+        <*> itemsSet xml "eventsSet" (\xml' ->
             InstanceStatusEvent
             <$> xml' .< "code"
             <*> xml' .< "description"
@@ -234,7 +234,7 @@ instanceStatusTypeConv :: (MonadThrow m, Applicative m)
 instanceStatusTypeConv name xml = getElement xml name $ \xml' ->
     InstanceStatusType
     <$> xml' .< "status"
-    <*> itemsSet' xml' "details" (\xml'' ->
+    <*> itemsSet xml' "details" (\xml'' ->
         InstanceStatusDetail
         <$> xml'' .< "name"
         <*> xml'' .< "status"
@@ -256,7 +256,7 @@ startInstances instanceIds =
 instanceStateChangeSet
     :: (MonadResource m, MonadBaseControl IO m)
     => Conduit Event m InstanceStateChange
-instanceStateChangeSet = itemConduit' "instancesSet" $ \xml ->
+instanceStateChangeSet = itemConduit "instancesSet" $ \xml ->
     InstanceStateChange
     <$> xml .< "instanceId"
     <*> instanceStateConv "currentState" xml
@@ -462,7 +462,7 @@ describeInstanceAttribute iid attr =
     f InstanceAttributeRequestProductCodes xml =
         productCodeConv xml >>= return . InstanceAttributeProductCodes
     f InstanceAttributeRequestGroupSet xml =
-        (itemsSet' xml str (.< "groupId"))
+        (itemsSet xml str (.< "groupId"))
         >>= return . InstanceAttributeGroupSet
     f req xml = valueConv str (fromJust $ Map.lookup req h) xml
     h = Map.fromList
@@ -569,7 +569,7 @@ monitorInstances iids =
 monitorInstancesResponseConv
     :: (MonadResource m, MonadBaseControl IO m)
     => Conduit Event m MonitorInstancesResponse
-monitorInstancesResponseConv = itemConduit' "instancesSet" $ \xml ->
+monitorInstancesResponseConv = itemConduit "instancesSet" $ \xml ->
     MonitorInstancesResponse
     <$> xml .< "instanceId"
     <*> getElement xml "monitoring" (.< "state")
@@ -596,7 +596,7 @@ describeSpotInstanceRequests
 describeSpotInstanceRequests requests filters = do
 --    ec2QueryDebug "DescribeInstances" params
     ec2QuerySource "DescribeSpotInstanceRequests" params $
-        itemConduit' "spotInstanceRequestSet" spotInstanceRequestConv
+        itemConduit "spotInstanceRequestSet" spotInstanceRequestConv
   where
     params =
         [ "SpotInstanceRequestId" |.#= requests
@@ -665,7 +665,7 @@ spotInstanceLaunchSpecificationConv label xml = getElement xml label $ \xml' ->
 
 spotInstanceBlockDeviceMappingsConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [SpotInstanceBlockDeviceMapping]
-spotInstanceBlockDeviceMappingsConv xml = itemsSet' xml "blockDeviceMapping" $ \xml' ->
+spotInstanceBlockDeviceMappingsConv xml = itemsSet xml "blockDeviceMapping" $ \xml' ->
     SpotInstanceBlockDeviceMapping
     <$> xml' .< "deviceName"
     <*> getElement xml' "ebs" (\xml'' ->
@@ -678,7 +678,7 @@ spotInstanceBlockDeviceMappingsConv xml = itemsSet' xml "blockDeviceMapping" $ \
 
 spotInstanceNetworkInterfaceConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [SpotInstanceNetworkInterface]
-spotInstanceNetworkInterfaceConv xml = itemsSet' xml "networkInterfaceSet" $ \xml' ->
+spotInstanceNetworkInterfaceConv xml = itemsSet xml "networkInterfaceSet" $ \xml' ->
     SpotInstanceNetworkInterface
     <$> xml' .< "deviceIndex"
     <*> xml' .< "subnetId"
@@ -686,7 +686,7 @@ spotInstanceNetworkInterfaceConv xml = itemsSet' xml "networkInterfaceSet" $ \xm
 
 securityGroupSetConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [SpotInstanceSecurityGroup]
-securityGroupSetConv xml = itemsSet' xml "groupSet" $ \xml' ->
+securityGroupSetConv xml = itemsSet xml "groupSet" $ \xml' ->
     SpotInstanceSecurityGroup
     <$> xml' .< "groupId"
 
@@ -700,7 +700,7 @@ requestSpotInstances
     -> EC2 m [SpotInstanceRequest]
 requestSpotInstances param =
     ec2Query "RequestSpotInstances" params $ xmlParser $ \xml ->
-        itemsSet' xml "spotInstanceRequestSet" spotInstanceRequestConv
+        itemsSet xml "spotInstanceRequestSet" spotInstanceRequestConv
   where
     params =
         [ "SpotPrice" |= requestSpotInstancesSpotPrice param
@@ -784,7 +784,7 @@ cancelSpotInstanceRequests
     -> EC2 m (ResumableSource m CancelSpotInstanceRequestsResponse)
 cancelSpotInstanceRequests requestIds =
     ec2QuerySource "CancelSpotInstanceRequests" params $
-        itemConduit' "spotInstanceRequestSet" cancelSpotInstanceResponseConv
+        itemConduit "spotInstanceRequestSet" cancelSpotInstanceResponseConv
   where
     params = ["SpotInstanceRequestId" |.#= requestIds]
 

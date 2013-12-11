@@ -29,7 +29,7 @@ describeImages
     -> EC2 m (ResumableSource m Image)
 describeImages imageIds owners execby filters =
     ec2QuerySource "DescribeImages" params $
-        itemConduit' "imagesSet" imageItem
+        itemConduit "imagesSet" imageItem
   where
     params =
         [ "ImageId" |.#= imageIds
@@ -57,7 +57,7 @@ imageItem xml = Image
     <*> xml .< "imageOwnerAlias"
     <*> xml .< "name"
     <*> xml .< "description"
-    <*> itemsSet' xml "billingProducts" (.< "billingProduct")
+    <*> itemsSet xml "billingProducts" (.< "billingProduct")
     <*> xml .< "rootDeviceType"
     <*> xml .< "rootDeviceName"
     <*> blockDeviceMappingConv xml
@@ -66,7 +66,7 @@ imageItem xml = Image
     <*> xml .< "hypervisor"
 
 blockDeviceMappingConv :: (MonadThrow m, Applicative m) => SimpleXML -> m [BlockDeviceMapping]
-blockDeviceMappingConv xml = itemsSet' xml "blockDeviceMapping" (\xml' ->
+blockDeviceMappingConv xml = itemsSet xml "blockDeviceMapping" (\xml' ->
     BlockDeviceMapping
     <$> xml' .< "deviceName"
     <*> xml' .< "virtualName"
@@ -135,8 +135,8 @@ describeImageAttribute iid attr =
     ec2Query "DescribeImageAttribute" params $ xmlParser $ \xml ->
         AMIAttributeDescription
         <$> xml .< "imageId"
-        <*> itemsSet' xml "launchPermission" launchPermissionItemConv
-        <*> itemsSet' xml "productCodes" (\xml' ->
+        <*> itemsSet xml "launchPermission" launchPermissionItemConv
+        <*> itemsSet xml "productCodes" (\xml' ->
             ProductCodeItem
             <$> xml' .< "productCode"
             )

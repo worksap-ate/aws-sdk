@@ -21,7 +21,7 @@ describeAvailabilityZones
     -> EC2 m (ResumableSource m AvailabilityZone)
 describeAvailabilityZones zones filters =
     ec2QuerySource "DescribeAvailabilityZones" params $
-        itemConduit' "availabilityZoneInfo" availabilityZoneInfo
+        itemConduit "availabilityZoneInfo" availabilityZoneInfo
   where
     params =
         [ "ZoneName" |.#= zones
@@ -34,4 +34,4 @@ describeAvailabilityZones zones filters =
         <$> xml .< "zoneName"
         <*> xml .< "zoneState"
         <*> xml .< "regionName"
-        <*> itemsSet' xml "messageSet" (.< "message")
+        <*> itemsSet xml "messageSet" (.< "message")

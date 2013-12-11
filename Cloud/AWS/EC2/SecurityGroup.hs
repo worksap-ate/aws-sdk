@@ -29,7 +29,7 @@ describeSecurityGroups
     -> EC2 m (ResumableSource m SecurityGroup)
 describeSecurityGroups names ids filters =
     ec2QuerySource "DescribeSecurityGroups" params
-    $ itemConduit' "securityGroupInfo" $ \xml ->
+    $ itemConduit "securityGroupInfo" $ \xml ->
         SecurityGroup
         <$> xml .< "ownerId"
         <*> xml .< "groupId"
@@ -48,17 +48,17 @@ describeSecurityGroups names ids filters =
 
 ipPermissionsConv :: (MonadThrow m, Applicative m)
     => Text -> SimpleXML -> m [IpPermission]
-ipPermissionsConv name xml = itemsSet' xml name $ \xml' -> IpPermission
+ipPermissionsConv name xml = itemsSet xml name $ \xml' -> IpPermission
     <$> xml' .< "ipProtocol"
     <*> xml' .< "fromPort"
     <*> xml' .< "toPort"
-    <*> itemsSet' xml' "groups" (\xml'' ->
+    <*> itemsSet xml' "groups" (\xml'' ->
         UserIdGroupPair
         <$> xml'' .< "userId"
         <*> xml'' .< "groupId"
         <*> xml'' .< "groupName"
         )
-    <*> itemsSet' xml' "ipRanges" (.< "cidrIp")
+    <*> itemsSet xml' "ipRanges" (.< "cidrIp")
 
 createSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)

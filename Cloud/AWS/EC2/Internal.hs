@@ -7,8 +7,8 @@ module Cloud.AWS.EC2.Internal
     , initialEC2Context
     , runEC2
     , runEC2withManager
-    , itemConduit'
-    , itemsSet'
+    , itemConduit
+    , itemsSet
     , resourceTagConv
     , productCodeConv
     , stateReasonConv
@@ -47,19 +47,19 @@ runEC2withManager :: Monad m
 runEC2withManager mgr =
     runAWSwithManager mgr initialEC2Context
 
-itemConduit' :: (MonadThrow m, Applicative m)
+itemConduit :: (MonadThrow m, Applicative m)
     => Text
     -> (SimpleXML -> m o)
     -> Conduit Event m o
-itemConduit' tag inner = xmlParserConduit tag $ \xml ->
+itemConduit tag inner = xmlParserConduit tag $ \xml ->
     getElement xml "item" inner
 
-itemsSet' :: (MonadThrow m, Applicative m)
+itemsSet :: (MonadThrow m, Applicative m)
     => SimpleXML
     -> Text
     -> (SimpleXML -> m o)
     -> m [o]
-itemsSet' xml tag inner = getElements xml tag "item" inner
+itemsSet xml tag inner = getElements xml tag "item" inner
 
 volumeType :: MonadThrow m => Text -> Maybe Int -> m VolumeType
 volumeType t Nothing  | t == "standard" = return $ VolumeTypeStandard
@@ -75,7 +75,7 @@ resourceTagConv xml = getElements xml "tagSet" "item" $ \xml' ->
 
 productCodeConv :: (MonadThrow m, Applicative m)
     => SimpleXML -> m [ProductCode]
-productCodeConv xml = itemsSet' xml "productCodes" $ \xml' ->
+productCodeConv xml = itemsSet xml "productCodes" $ \xml' ->
     ProductCode
     <$> xml' .< "productCode"
     <*> xml' .< "type"
@@ -94,7 +94,7 @@ volumeTypeConv xml = join $ volumeType
     <*> xml .< "iops"
 
 groupSetConv :: (MonadThrow m, Applicative m) => SimpleXML -> m [Group]
-groupSetConv xml = itemsSet' xml "groupSet" $ \xml' -> Group
+groupSetConv xml = itemsSet xml "groupSet" $ \xml' -> Group
     <$> xml' .< "groupId"
     <*> xml' .< "groupName"
 

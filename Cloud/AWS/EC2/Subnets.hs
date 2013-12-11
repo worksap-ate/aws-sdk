@@ -25,7 +25,7 @@ describeSubnets
     -> EC2 m (ResumableSource m Subnet)
 describeSubnets subnets filters = do
     ec2QuerySource "DescribeSubnets" params $
-        itemConduit' "subnetSet" subnetConv
+        itemConduit "subnetSet" subnetConv
   where
     params =
         [ "SubnetId" |.#= subnets

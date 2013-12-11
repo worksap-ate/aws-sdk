@@ -9,7 +9,7 @@ import Control.Applicative ((<$>), (<*>), Applicative)
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.EC2.Internal (EC2, itemConduit')
+import Cloud.AWS.EC2.Internal (EC2, itemConduit)
 import Cloud.AWS.EC2.Query (ec2Query, ec2QuerySource)
 import Cloud.AWS.EC2.Types (Filter, PlacementGroup(..), PlacementGroupStrategy(..))
 import Cloud.AWS.Lib.Parser.Unordered ((.<), SimpleXML, xmlParser)
@@ -22,7 +22,7 @@ describePlacementGroups
     -> EC2 m (ResumableSource m PlacementGroup)
 describePlacementGroups groupNames filters =
     ec2QuerySource "DescribePlacementGroups" params $
-        itemConduit' "placementGroupSet" placementGroupConv
+        itemConduit "placementGroupSet" placementGroupConv
   where
     params =
         [ "GroupName" |.#= groupNames

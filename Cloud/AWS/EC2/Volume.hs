@@ -29,7 +29,7 @@ describeVolumes
     -> EC2 m (ResumableSource m Volume)
 describeVolumes vids filters =
     ec2QuerySource "DescribeVolumes" params $
-        itemConduit' "volumeSet" volumeConv
+        itemConduit "volumeSet" volumeConv
   where
     params =
         [ "VolumeId" |.#= vids
@@ -45,7 +45,7 @@ volumeConv xml = Volume
     <*> xml .< "availabilityZone"
     <*> xml .< "status"
     <*> xml .< "createTime"
-    <*> itemsSet' xml "attachmentSet" attachmentConv
+    <*> itemsSet xml "attachmentSet" attachmentConv
     <*> resourceTagConv xml
     <*> volumeTypeConv xml
 
@@ -124,7 +124,7 @@ describeVolumeStatus
     -> EC2 m (ResumableSource m VolumeStatus)
 describeVolumeStatus vids filters token =
     ec2QuerySource' "DescribeVolumeStatus" params token $
-       itemConduit' "volumeStatusSet" volumeStatusConv
+       itemConduit "volumeStatusSet" volumeStatusConv
   where
     params =
         [ "VolumeId" |.#= vids
@@ -139,13 +139,13 @@ volumeStatusConv xml = VolumeStatus
     <*> getElement xml "volumeStatus" (\xml' ->
         VolumeStatusInfo
         <$> xml' .< "status"
-        <*> itemsSet' xml' "details" (\xml'' ->
+        <*> itemsSet xml' "details" (\xml'' ->
             VolumeStatusDetail
             <$> xml'' .< "name"
             <*> xml'' .< "status"
             )
         )
-    <*> itemsSet' xml "eventsSet" (\xml' ->
+    <*> itemsSet xml "eventsSet" (\xml' ->
         VolumeStatusEvent
         <$> xml' .< "eventType"
         <*> xml' .< "eventId"
@@ -153,7 +153,7 @@ volumeStatusConv xml = VolumeStatus
         <*> xml' .< "notBefore"
         <*> xml' .< "notAfter"
         )
-    <*> itemsSet' xml "actionsSet" (\xml' ->
+    <*> itemsSet xml "actionsSet" (\xml' ->
         VolumeStatusAction
         <$> xml' .< "code"
         <*> xml' .< "eventType"
