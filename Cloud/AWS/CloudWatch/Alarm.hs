@@ -18,8 +18,8 @@ import Data.Time (UTCTime)
 
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.CloudWatch.Types
-import Cloud.AWS.Lib.Parser (members')
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content, xmlParser)
+import Cloud.AWS.Lib.Parser (members, nodata)
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content)
 import Cloud.AWS.Lib.Query
 
 describeAlarms
@@ -31,8 +31,8 @@ describeAlarms
     -> Maybe StateValue -- ^ The state value to be used in matching alarms.
     -> CloudWatch m ([MetricAlarm], Maybe Text) -- ^ A list of information for the specified alarms and NextToken.
 describeAlarms prefix spec maxRecords nextToken state =
-    cloudWatchQuery "DescribeAlarms" params $ xmlParser $ \xml ->
-        (,) <$> members' "MetricAlarms" sinkMetricAlarm xml <*> xml .< "NextToken"
+    cloudWatchQuery "DescribeAlarms" params $ \xml ->
+        (,) <$> members "MetricAlarms" sinkMetricAlarm xml <*> xml .< "NextToken"
   where
     params =
         [ "ActionPrefix" |=? prefix
@@ -51,23 +51,23 @@ sinkMetricAlarm xml =
     MetricAlarm
     <$> xml .< "AlarmDescription"
     <*> xml .< "StateUpdatedTimestamp"
-    <*> members' "InsufficientDataActions" content xml
+    <*> members "InsufficientDataActions" content xml
     <*> xml .< "StateReasonData"
     <*> xml .< "AlarmArn"
     <*> xml .< "AlarmConfigurationUpdatedTimestamp"
     <*> xml .< "AlarmName"
     <*> xml .< "Period"
     <*> xml .< "StateValue"
-    <*> members' "OKActions" content xml
+    <*> members "OKActions" content xml
     <*> xml .< "ActionsEnabled"
     <*> xml .< "Namespace"
     <*> xml .< "Threshold"
     <*> xml .< "EvaluationPeriods"
     <*> xml .< "Statistic"
-    <*> members' "AlarmActions" content xml
+    <*> members "AlarmActions" content xml
     <*> xml .< "Unit"
     <*> xml .< "StateReason"
-    <*> members' "Dimensions" sinkDimension xml
+    <*> members "Dimensions" sinkDimension xml
     <*> xml .< "ComparisonOperator"
     <*> xml .< "MetricName"
 
@@ -81,8 +81,8 @@ describeAlarmsForMetric
     -> Maybe Text -- ^  The unit for the metric.
     -> CloudWatch m [MetricAlarm]
 describeAlarmsForMetric dims name ns period stat unit =
-    cloudWatchQuery "DescribeAlarmsForMetric" params $ xmlParser $ \xml ->
-        members' "MetricAlarms" sinkMetricAlarm xml
+    cloudWatchQuery "DescribeAlarmsForMetric" params $ \xml ->
+        members "MetricAlarms" sinkMetricAlarm xml
   where
     params =
         [ "Dimensions.member" |.#. map fromDimension dims
@@ -98,8 +98,7 @@ putMetricAlarm
     => PutMetricAlarmRequest
     -> CloudWatch m ()
 putMetricAlarm PutMetricAlarmRequest{..} =
-    cloudWatchQuery "PutMetricAlarm" params
-        $ return ()
+    cloudWatchQuery "PutMetricAlarm" params nodata
   where
     params =
         [ "ActionsEnabled" |=? putMetricAlarmActionsEnabled
@@ -124,8 +123,7 @@ deleteAlarms
     => [Text] -- ^ A list of alarms to be deleted.
     -> CloudWatch m ()
 deleteAlarms names =
-    cloudWatchQuery "DeleteAlarms" ["AlarmNames.member" |.#= names]
-        $ return ()
+    cloudWatchQuery "DeleteAlarms" ["AlarmNames.member" |.#= names] nodata
 
 describeAlarmHistory
     :: (MonadBaseControl IO m, MonadResource m)
@@ -137,8 +135,8 @@ describeAlarmHistory
     -> Maybe UTCTime -- ^ The starting date to retrieve alarm history.
     -> CloudWatch m ([AlarmHistory], Maybe Text)
 describeAlarmHistory alarm endDate type_ maxRecords nextToken startDate =
-    cloudWatchQuery "DescribeAlarmHistory" params $ xmlParser $ \xml ->
-        (,) <$> members' "AlarmHistoryItems" sinkAlarmHistory xml <*> xml .< "NextToken"
+    cloudWatchQuery "DescribeAlarmHistory" params $ \xml ->
+        (,) <$> members "AlarmHistoryItems" sinkAlarmHistory xml <*> xml .< "NextToken"
   where
     params =
         [ "AlarmName" |=? alarm
@@ -164,16 +162,14 @@ enableAlarmActions
     => [Text] -- ^ The names of the alarms to enable actions for.
     -> CloudWatch m ()
 enableAlarmActions alarms =
-    cloudWatchQuery "EnableAlarmActions" ["AlarmNames.member" |.#= alarms]
-        $ return ()
+    cloudWatchQuery "EnableAlarmActions" ["AlarmNames.member" |.#= alarms] nodata
 
 disableAlarmActions
     :: (MonadBaseControl IO m, MonadResource m)
     => [Text] -- ^ The names of the alarms to enable actions for.
     -> CloudWatch m ()
 disableAlarmActions alarms =
-    cloudWatchQuery "DisableAlarmActions" ["AlarmNames.member" |.#= alarms]
-        $ return ()
+    cloudWatchQuery "DisableAlarmActions" ["AlarmNames.member" |.#= alarms] nodata
 
 setAlarmState
     :: (MonadBaseControl IO m, MonadResource m)
@@ -183,7 +179,7 @@ setAlarmState
     -> StateValue -- ^ The value of the state.
     -> CloudWatch m ()
 setAlarmState alarm reason dat state =
-    cloudWatchQuery "SetAlarmState" params $ return ()
+    cloudWatchQuery "SetAlarmState" params nodata
   where
     params =
         [ "AlarmName" |= alarm

@@ -6,12 +6,11 @@ module Cloud.AWS.RDS.Tag
     , removeTagsFromResource
     ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
-import Data.XML.Types (Event)
 
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<))
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (Tag(..))
@@ -29,11 +28,11 @@ listTagsForResource name =
         ]
 
 tagSink
-    :: MonadThrow m
-    => Consumer Event m Tag
-tagSink = Tag
-    <$> getT "Value"
-    <*> getT "Key"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Tag
+tagSink xml = Tag
+    <$> xml .< "Value"
+    <*> xml .< "Key"
 
 addTagsToResource
     :: (MonadBaseControl IO m, MonadResource m)

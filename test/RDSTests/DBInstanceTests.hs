@@ -111,7 +111,7 @@ createTestDBInstanceRequest dbiid = CreateDBInstanceRequest
     Nothing Nothing [] Nothing
     "MySQL"
     Nothing Nothing Nothing
-    "test"
+    "testtesttesttest"
     "test"
     Nothing Nothing Nothing Nothing Nothing Nothing []
 

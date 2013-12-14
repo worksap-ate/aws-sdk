@@ -51,6 +51,7 @@ import qualified Control.Monad.Reader as Reader
 import Cloud.AWS.Class
 import Cloud.AWS.Credential
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML)
 import Cloud.AWS.Lib.ToText
 import Cloud.AWS.EC2.Types (Filter)
 
@@ -264,15 +265,15 @@ commonQuery
     => ByteString -- ^ apiVersion
     -> ByteString -- ^ Action
     -> [QueryParam]
-    -> Consumer Event m a
+    -> (SimpleXML -> m a)
     -> AWS AWSContext m a
-commonQuery apiVersion action params sink = do
+commonQuery apiVersion action params parser = do
     ctx <- State.get
     settings <- Reader.ask
     (res, rid) <- lift $ E.handle exceptionTransform $ do
         rs <- requestQuery settings ctx action params apiVersion sinkError
         rs $$+- XmlP.parseBytes XmlP.def
-           =$   sinkResponse (toText action) sink
+           =$   sinkResponse (toText action) parser
     State.put ctx { lastRequestId = Just rid }
     return res
 

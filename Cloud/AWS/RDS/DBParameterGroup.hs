@@ -11,14 +11,13 @@ module Cloud.AWS.RDS.DBParameterGroup
     , describeEngineDefaultParameters
     ) where
 
-import Control.Applicative ((<$>), (<*>))
-import Data.Conduit (Consumer, MonadBaseControl, MonadResource, MonadThrow)
+import Control.Applicative
+import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
-import Data.XML.Types (Event)
 
-import Cloud.AWS.Lib.Parser (getT, element, elementM)
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement, getElementM)
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#.))
-import Cloud.AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements, elements')
+import Cloud.AWS.RDS.Internal (RDS, rdsQueryOnlyMetadata, rdsQuery, elements, elements')
 import Cloud.AWS.RDS.Types hiding (Event)
 
 describeDBParameterGroups
@@ -38,12 +37,12 @@ describeDBParameterGroups name marker maxRecords =
         ]
 
 dbParameterGroupSink
-    :: MonadThrow m
-    => Consumer Event m DBParameterGroup
-dbParameterGroupSink = DBParameterGroup
-    <$> getT "DBParameterGroupFamily"
-    <*> getT "Description"
-    <*> getT "DBParameterGroupName"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m DBParameterGroup
+dbParameterGroupSink xml = DBParameterGroup
+    <$> xml .< "DBParameterGroupFamily"
+    <*> xml .< "Description"
+    <*> xml .< "DBParameterGroupName"
 
 createDBParameterGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -52,8 +51,8 @@ createDBParameterGroup
     -> Text -- ^ Description
     -> RDS m DBParameterGroup
 createDBParameterGroup family name desc =
-    rdsQuery "CreateDBParameterGroup" params $
-        element "DBParameterGroup" dbParameterGroupSink
+    rdsQuery "CreateDBParameterGroup" params $ \xml ->
+        getElement xml "DBParameterGroup" dbParameterGroupSink
   where
     params =
         [ "DBParameterGroupFamily" |= family
@@ -77,9 +76,9 @@ describeDBParameters
     -> Maybe Text -- ^ Source
     -> RDS m (Maybe Text, [Parameter]) -- ^ (Marker, Parameters)
 describeDBParameters name marker maxRecords src =
-    rdsQuery "DescribeDBParameters" params $ (,)
-        <$> getT "Marker"
-        <*> elements "Parameter" parameterSink
+    rdsQuery "DescribeDBParameters" params $ \xml -> (,)
+        <$> xml .< "Marker"
+        <*> elements "Parameter" parameterSink xml
   where
     params =
         [ "DBParameterGroupName" |= name
@@ -89,18 +88,18 @@ describeDBParameters name marker maxRecords src =
         ]
 
 parameterSink
-    :: MonadThrow m
-    => Consumer Event m Parameter
-parameterSink = Parameter
-    <$> getT "ParameterValue"
-    <*> getT "DataType"
-    <*> getT "Source"
-    <*> getT "IsModifiable"
-    <*> getT "Description"
-    <*> getT "ApplyType"
-    <*> getT "AllowedValues"
-    <*> getT "ParameterName"
-    <*> getT "MinimumEngineVersion"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Parameter
+parameterSink xml = Parameter
+    <$> xml .< "ParameterValue"
+    <*> xml .< "DataType"
+    <*> xml .< "Source"
+    <*> xml .< "IsModifiable"
+    <*> xml .< "Description"
+    <*> xml .< "ApplyType"
+    <*> xml .< "AllowedValues"
+    <*> xml .< "ParameterName"
+    <*> xml .< "MinimumEngineVersion"
 
 modifyDBParameterGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -108,8 +107,7 @@ modifyDBParameterGroup
     -> [ModifyParameter] -- ^ Parameters
     -> RDS m Text
 modifyDBParameterGroup name parameters =
-    rdsQuery "ModifyDBParameterGroup" params $
-        getT "DBParameterGroupName"
+    rdsQuery "ModifyDBParameterGroup" params (.< "DBParameterGroupName")
   where
     params =
         [ "DBParameterGroupName" |= name
@@ -128,8 +126,7 @@ resetDBParameterGroup
     -> ResetParameterRequest
     -> RDS m Text
 resetDBParameterGroup name req =
-    rdsQuery "ResetDBParameterGroup" params $
-        getT "DBParameterGroupName"
+    rdsQuery "ResetDBParameterGroup" params (.< "DBParameterGroupName")
   where
     params =
         [ "DBParameterGroupName" |= name
@@ -171,23 +168,23 @@ describeDBEngineVersions family only engine ver list marker maxRec =
         ]
 
 dbEngineVersionSink
-    :: MonadThrow m
-    => Consumer Event m DBEngineVersion
-dbEngineVersionSink = DBEngineVersion
-    <$> getT "DBParameterGroupFamily"
-    <*> getT "Engine"
-    <*> elements' "SupportedCharacterSets" "CharacterSet" characterSetSink
-    <*> getT "DBEngineDescription"
-    <*> elementM "DefaultCharacterSet" characterSetSink
-    <*> getT "EngineVersion"
-    <*> getT "DBEngineVersionDescription"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m DBEngineVersion
+dbEngineVersionSink xml = DBEngineVersion
+    <$> xml .< "DBParameterGroupFamily"
+    <*> xml .< "Engine"
+    <*> elements' "SupportedCharacterSets" "CharacterSet" characterSetSink xml
+    <*> xml .< "DBEngineDescription"
+    <*> getElementM xml "DefaultCharacterSet" characterSetSink
+    <*> xml .< "EngineVersion"
+    <*> xml .< "DBEngineVersionDescription"
 
 characterSetSink
-    :: MonadThrow m
-    => Consumer Event m CharacterSet
-characterSetSink = CharacterSet
-    <$> getT "CharacterSetName"
-    <*> getT "CharacterSetDescription"
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m CharacterSet
+characterSetSink xml = CharacterSet
+    <$> xml .< "CharacterSetName"
+    <*> xml .< "CharacterSetDescription"
 
 describeEngineDefaultParameters
     :: (MonadBaseControl IO m, MonadResource m)
@@ -196,13 +193,13 @@ describeEngineDefaultParameters
     -> Maybe Int -- ^ MaxRecords
     -> RDS m (Maybe Text, EngineDefaults) -- ^ (Marker, EngineDefaults)
 describeEngineDefaultParameters family marker maxRecords =
-    rdsQuery "DescribeEngineDefaultParameters" params $
-        element "EngineDefaults" $ (,)
-            <$> getT "Marker"
-            <*> (EngineDefaults
-                <$> getT "DBParameterGroupFamily"
-                <*> elements "Parameter" parameterSink
-                )
+    rdsQuery "DescribeEngineDefaultParameters" params $ \xml ->
+        getElement xml "EngineDefaults" $ \xml' -> (,)
+            <$> xml' .< "Marker"
+            <*> (\xml'' -> EngineDefaults
+                <$> xml'' .< "DBParameterGroupFamily"
+                <*> elements "Parameter" parameterSink xml''
+                ) xml'
   where
     params =
         [ "DBParameterGroupFamily" |= family

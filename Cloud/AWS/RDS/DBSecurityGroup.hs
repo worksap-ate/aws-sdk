@@ -8,15 +8,14 @@ module Cloud.AWS.RDS.DBSecurityGroup
     , revokeDBSecurityGroupIngress
     ) where
 
-import Control.Applicative ((<$>), (<*>))
-import Data.Conduit (Consumer, MonadBaseControl, MonadResource, MonadThrow)
+import Control.Applicative
+import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
-import Data.XML.Types (Event)
 
 import Cloud.AWS.Lib.FromText (AddrRange, IPv4)
-import Cloud.AWS.Lib.Parser (getT, element)
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement)
 import Cloud.AWS.Lib.Query ((|=), (|=?))
-import Cloud.AWS.RDS.Internal (RDS, rdsQuery, rdsQueryOnlyMetadata, elements)
+import Cloud.AWS.RDS.Internal (RDS, rdsQueryOnlyMetadata, rdsQuery, elements)
 import Cloud.AWS.RDS.Types hiding (Event)
 
 describeDBSecurityGroups
@@ -36,25 +35,25 @@ describeDBSecurityGroups name marker maxRecords =
         ]
 
 dbSecurityGroupSink
-    :: MonadThrow m
-    => Consumer Event m DBSecurityGroup
-dbSecurityGroupSink = DBSecurityGroup
-    <$> elements "EC2SecurityGroup" (
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m DBSecurityGroup
+dbSecurityGroupSink xml = DBSecurityGroup
+    <$> elements "EC2SecurityGroup" (\xml' ->
         EC2SecurityGroup
-        <$> getT "Status"
-        <*> getT "EC2SecurityGroupOwnerId"
-        <*> getT "EC2SecurityGroupName"
-        <*> getT "EC2SecurityGroupId"
-        )
-    <*> getT "DBSecurityGroupDescription"
-    <*> elements "IPRange" (
+        <$> xml' .< "Status"
+        <*> xml' .< "EC2SecurityGroupOwnerId"
+        <*> xml' .< "EC2SecurityGroupName"
+        <*> xml' .< "EC2SecurityGroupId"
+        ) xml
+    <*> xml .< "DBSecurityGroupDescription"
+    <*> elements "IPRange" (\xml' ->
         IPRange
-        <$> getT "CIDRIP"
-        <*> getT "Status"
-        )
-    <*> getT "VpcId"
-    <*> getT "OwnerId"
-    <*> getT "DBSecurityGroupName"
+        <$> xml' .< "CIDRIP"
+        <*> xml' .< "Status"
+        ) xml
+    <*> xml .< "VpcId"
+    <*> xml .< "OwnerId"
+    <*> xml .< "DBSecurityGroupName"
 
 createDBSecurityGroup
     :: (MonadBaseControl IO m, MonadResource m)
@@ -62,8 +61,8 @@ createDBSecurityGroup
     -> Text -- ^ DBSecurityGroupDescription
     -> RDS m DBSecurityGroup
 createDBSecurityGroup name desc =
-    rdsQuery "CreateDBSecurityGroup" params $
-        element "DBSecurityGroup" dbSecurityGroupSink
+    rdsQuery "CreateDBSecurityGroup" params $ \xml ->
+        getElement xml "DBSecurityGroup" dbSecurityGroupSink
   where
     params =
         [ "DBSecurityGroupName" |= name
@@ -87,8 +86,8 @@ authorizeDBSecurityGroupIngress
     -> Maybe Text -- ^ EC2SecurityGroupOwnerId
     -> RDS m DBSecurityGroup
 authorizeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
-    rdsQuery "AuthorizeDBSecurityGroupIngress" params $
-        element "DBSecurityGroup" dbSecurityGroupSink
+    rdsQuery "AuthorizeDBSecurityGroupIngress" params $ \xml ->
+        getElement xml "DBSecurityGroup" dbSecurityGroupSink
   where
     params =
         [ "DBSecurityGroupName" |= dbsg
@@ -107,8 +106,8 @@ revokeDBSecurityGroupIngress
     -> Maybe Text -- ^ EC2SecurityGroupOwnerId
     -> RDS m DBSecurityGroup
 revokeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
-    rdsQuery "RevokeDBSecurityGroupIngress" params $
-        element "DBSecurityGroup" dbSecurityGroupSink
+    rdsQuery "RevokeDBSecurityGroupIngress" params $ \xml ->
+        getElement xml "DBSecurityGroup" dbSecurityGroupSink
   where
     params =
         [ "DBSecurityGroupName" |= dbsg
