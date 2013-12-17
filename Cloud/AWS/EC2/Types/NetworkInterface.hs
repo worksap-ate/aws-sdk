@@ -11,7 +11,10 @@ module Cloud.AWS.EC2.Types.NetworkInterface
     ) where
 
 import Cloud.AWS.EC2.Types.Common (Group, ResourceTag)
-import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Data.IP (IPv4)
 
 data NetworkInterface = NetworkInterface
     { networkInterfaceId :: Text

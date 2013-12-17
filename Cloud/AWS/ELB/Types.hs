@@ -2,6 +2,8 @@
 module Cloud.AWS.ELB.Types
     where
 
+import Data.Text (Text)
+import Data.Time (UTCTime)
 import Cloud.AWS.Lib.FromText
 
 data LoadBalancer = LoadBalancer

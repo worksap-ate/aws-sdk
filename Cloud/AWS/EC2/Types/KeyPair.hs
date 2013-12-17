@@ -2,7 +2,7 @@ module Cloud.AWS.EC2.Types.KeyPair
     ( KeyPair(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
+import Data.Text (Text)
 
 data KeyPair = KeyPair
     { keyPairName :: Text

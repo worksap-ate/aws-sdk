@@ -14,7 +14,9 @@ module Cloud.AWS.EC2.Types.ConversionTask
     ) where
 
 import Cloud.AWS.EC2.Types.Common (Architecture, ShutdownBehavior)
-import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Data.Text (Text)
+import Data.IP (IPv4)
 
 data ConversionTask = ConversionTask
     { conversionTaskId :: Text

@@ -2,7 +2,7 @@ module Cloud.AWS.EC2.Types.Tag
     ( Tag(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
+import Data.Text (Text)
 
 data Tag = Tag
     { tagResourceId :: Text

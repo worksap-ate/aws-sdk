@@ -4,7 +4,8 @@ module Cloud.AWS.RDS.Types.EventSubscription
     ( EventSubscription(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (deriveFromText, Text)
+import Data.Text (Text)
+import Cloud.AWS.Lib.FromText (deriveFromText)
 import Cloud.AWS.RDS.Types.Event (SourceType)
 
 data EventSubscription = EventSubscription

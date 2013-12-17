@@ -5,8 +5,9 @@ module Cloud.AWS.EC2.Types.SecurityGroup
     , UserIdGroupPair(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
 import Cloud.AWS.EC2.Types.Common (ResourceTag)
+import Data.IP (AddrRange, IPv4)
+import Data.Text (Text)
 
 data IpPermission = IpPermission
     { ipPermissionIpProtocol :: Text

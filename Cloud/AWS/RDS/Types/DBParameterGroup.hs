@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Cloud.AWS.RDS.Types.DBParameterGroup
     ( DBParameterGroup(..)
     , Parameter(..)
@@ -10,8 +12,8 @@ module Cloud.AWS.RDS.Types.DBParameterGroup
     , EngineDefaults(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (Text)
-import Cloud.AWS.Lib.ToText
+import Data.Text (Text)
+import Cloud.AWS.Lib.ToText (deriveToText)
 
 data DBParameterGroup = DBParameterGroup
     { dbParameterGroupFamily :: Text
@@ -45,9 +47,8 @@ data ApplyMethod
     | ApplyMethodPendingReboot
   deriving (Show, Eq)
 
-instance ToText ApplyMethod where
-    toText ApplyMethodImmediate = "immediate"
-    toText ApplyMethodPendingReboot = "pending-reboot"
+deriveToText "ApplyMethod"
+    [ "immediate", "pending-reboot" ]
 
 data ResetParameterRequest
     = ResetAllParameters

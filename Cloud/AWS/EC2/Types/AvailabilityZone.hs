@@ -3,7 +3,7 @@ module Cloud.AWS.EC2.Types.AvailabilityZone
     , AvailabilityZoneMessage
     ) where
 
-import Cloud.AWS.Lib.FromText
+import Data.Text (Text)
 
 data AvailabilityZone = AvailabilityZone
     { zoneName :: Text

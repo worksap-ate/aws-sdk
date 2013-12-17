@@ -11,8 +11,10 @@ module Cloud.AWS.EC2.Types.Acl
     ) where
 
 import Cloud.AWS.EC2.Types.Common (ResourceTag)
-import Cloud.AWS.Lib.FromText
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText)
+import Data.Text (Text)
+import Data.IP (AddrRange, IPv4)
 
 data IcmpTypeCode = IcmpTypeCode
     { icmpTypeCodeCode :: Int
@@ -66,10 +68,6 @@ data NetworkAclRuleAction
     | NetworkAclRuleActionDeny
   deriving (Show, Read, Eq)
 
-instance ToText NetworkAclRuleAction where
-    toText NetworkAclRuleActionAllow = "allow"
-    toText NetworkAclRuleActionDeny = "deny"
-
 data PortRange = PortRange
     { portRangeFrom :: Int
     , portRangeTo :: Int
@@ -77,3 +75,4 @@ data PortRange = PortRange
   deriving (Show, Read, Eq)
 
 deriveFromText "NetworkAclRuleAction" ["allow", "deny"]
+deriveToText "NetworkAclRuleAction" ["allow", "deny"]

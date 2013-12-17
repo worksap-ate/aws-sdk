@@ -23,9 +23,11 @@ module Cloud.AWS.RDS.Types.DBInstance
     , RecurringCharge(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (Text, UTCTime, deriveFromText)
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText)
 import Cloud.AWS.RDS.Types.DBSubnetGroup (DBSubnetGroup, AvailabilityZone)
+import Data.Text (Text)
+import Data.Time (UTCTime)
 
 data DBInstance = DBInstance
     { dbInstanceIops :: Maybe Int
@@ -144,10 +146,11 @@ data LicenseModel
     | GeneralPublicLicense
   deriving (Read, Eq, Show)
 
-instance ToText LicenseModel where
-    toText LicenseIncluded = "license-included"
-    toText BringYourOwnLicense = "bring-your-own-license"
-    toText GeneralPublicLicense = "general-public-license"
+deriveToText "LicenseModel"
+    [ "license-included"
+    , "bring-your-own-license"
+    , "general-public-license"
+    ]
 
 data FinalSnapshot
     = FinalSnapshotIdentifier Text

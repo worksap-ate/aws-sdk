@@ -2,7 +2,7 @@ module Cloud.AWS.RDS.Types.Tag
     ( Tag(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (Text)
+import Data.Text (Text)
 
 data Tag = Tag
     { tagValue :: Text

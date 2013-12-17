@@ -17,18 +17,17 @@ module Cloud.AWS.EC2.Types.Common
     , VirtualizationType(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.FromText (FromText(..), deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText)
 import Data.Maybe (fromMaybe)
+import Data.Text (Text)
 
 data Architecture
     = I386
     | X86_64
   deriving (Show, Read, Eq)
 
-instance ToText Architecture where
-    toText I386 = "i386"
-    toText X86_64 = "x86_64"
+deriveToText "Architecture" [ "i386", "x86_64" ]
 
 data EC2Return
     = EC2Success
@@ -67,9 +66,10 @@ data Platform
     | PlatformOther
   deriving (Show, Read, Eq)
 
-instance ToText Platform where
-    toText PlatformWindows = "Windows"
-    toText PlatformOther = error "unsupported opperation: Platform.toText"
+deriveToText "Platform"
+    [ "Windows"
+    , ""
+    ]
 
 instance FromText Platform where
     fromText t
@@ -104,9 +104,10 @@ data ShutdownBehavior
     | ShutdownBehaviorTerminate
   deriving (Show, Read, Eq)
 
-instance ToText ShutdownBehavior where
-    toText ShutdownBehaviorStop = "stop"
-    toText ShutdownBehaviorTerminate = "terminate"
+deriveToText "ShutdownBehavior"
+    [ "stop"
+    , "terminate"
+    ]
 
 data StateReason = StateReason
     { stateReasonCode :: Text

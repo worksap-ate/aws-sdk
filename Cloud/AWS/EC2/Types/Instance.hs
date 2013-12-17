@@ -38,7 +38,11 @@ import Cloud.AWS.EC2.Types.Common
 import Cloud.AWS.EC2.Types.Image (BlockDeviceMappingParam)
 import Cloud.AWS.EC2.Types.NetworkInterface (NetworkInterfaceParam)
 import Cloud.AWS.EC2.Types.Volume (AttachmentSetItemResponseStatus)
-import Cloud.AWS.Lib.FromText
+
+import Cloud.AWS.Lib.FromText (FromText(..), failText, deriveFromText)
+import Data.IP (IPv4)
+import Data.Text (Text)
+import Data.Time (UTCTime)
 
 data ConsoleOutput = ConsoleOutput
     { consoleOutputInstanceId :: Text

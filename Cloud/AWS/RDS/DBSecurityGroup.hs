@@ -10,9 +10,9 @@ module Cloud.AWS.RDS.DBSecurityGroup
 
 import Control.Applicative
 import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
+import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.FromText (AddrRange, IPv4)
 import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement)
 import Cloud.AWS.Lib.Query ((|=), (|=?))
 import Cloud.AWS.RDS.Internal (RDS, rdsQueryOnlyMetadata, rdsQuery, elements)

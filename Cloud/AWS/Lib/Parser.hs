@@ -20,19 +20,20 @@ module Cloud.AWS.Lib.Parser
     , nodata
     ) where
 
-import Data.XML.Types (Event(..), Name(..))
+import Cloud.AWS.Lib.FromText (FromText(fromNamedText))
+import Control.Applicative
+import Control.Monad (when, void)
+import Control.Monad.Trans.Class (lift)
 import Data.ByteString (ByteString)
 import Data.Conduit
 import qualified Data.Conduit.Internal as CI
 import qualified Data.Conduit.List as CL
-import qualified Text.XML.Stream.Parse as XML
-import Control.Applicative
-import Control.Monad (when, void)
 import Data.Monoid ((<>))
-import Control.Monad.Trans.Class (lift)
+import Data.Text (Text)
+import Data.XML.Types (Event(..), Name(..))
+import qualified Text.XML.Stream.Parse as XML
 
 import Cloud.AWS.Class
-import Cloud.AWS.Lib.FromText
 import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, getElements, getElement, getElementM, (.<), xmlParser)
 
 type RequestId = Text

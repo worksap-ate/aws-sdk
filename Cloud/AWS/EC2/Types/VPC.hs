@@ -26,8 +26,11 @@ module Cloud.AWS.EC2.Types.VPC
     ) where
 
 import Cloud.AWS.EC2.Types.Common (ResourceTag)
-import Cloud.AWS.Lib.FromText
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText)
+import Data.IP (AddrRange, IPv4)
+import Data.Text (Text)
+import Data.Time (UTCTime)
 
 data Attachment = Attachment
     { attachmentVpcId :: Text
@@ -44,8 +47,7 @@ data AttachmentState
 
 data CreateVpnGatewayType = CreateVpnGatewayTypeIpsec1
 
-instance ToText CreateVpnGatewayType where
-    toText CreateVpnGatewayTypeIpsec1 = "ipsec.1"
+deriveToText "CreateVpnGatewayType" ["ipsec.1"]
 
 data CustomerGateway = CustomerGateway
     { customerGatewayId :: Text

@@ -10,7 +10,8 @@ module Cloud.AWS.EC2.Types.RouteTable
     ) where
 
 import Cloud.AWS.EC2.Types.Common (ResourceTag)
-import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Data.Text (Text)
 
 type PropagatingVgw = Text
 

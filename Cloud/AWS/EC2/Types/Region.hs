@@ -2,7 +2,7 @@ module Cloud.AWS.EC2.Types.Region
     ( Region(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
+import Data.Text (Text)
 
 data Region = Region
     { regionName :: Text

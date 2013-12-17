@@ -8,7 +8,9 @@ module Cloud.AWS.RDS.Types.DBSecurityGroup
     , IPRangeStatus(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (deriveFromText, AddrRange, IPv4, Text)
+import Data.IP (AddrRange, IPv4)
+import Data.Text (Text)
+import Cloud.AWS.Lib.FromText (deriveFromText)
 
 data DBSecurityGroup = DBSecurityGroup
     { dbSecurityGroupEC2SecurityGroups :: [EC2SecurityGroup]

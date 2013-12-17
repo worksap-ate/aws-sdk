@@ -8,11 +8,11 @@ module Cloud.AWS.RDS.Types.OptionGroup
     , OptionGroupOptionSetting(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (Text)
 import Cloud.AWS.RDS.Types.DBInstance
     ( VpcSecurityGroupMembership
     , DBSecurityGroupMembership
     )
+import Data.Text (Text)
 
 data OptionGroup = OptionGroup
     { optionGroupAllowsVpcAndNonVpcInstanceMemberships :: Bool

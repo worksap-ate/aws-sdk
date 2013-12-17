@@ -2,7 +2,9 @@
 module Cloud.AWS.CloudWatch.Types
     where
 
+import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time (UTCTime)
 import Cloud.AWS.Lib.FromText
 import Cloud.AWS.Lib.ToText
 

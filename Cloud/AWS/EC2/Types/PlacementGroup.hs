@@ -6,7 +6,8 @@ module Cloud.AWS.EC2.Types.PlacementGroup
     , PlacementGroupStrategy(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Data.Text (Text)
 
 data PlacementGroup = PlacementGroup
     { placementGroupGroupName :: Text

@@ -2,7 +2,8 @@ module Cloud.AWS.EC2.Types.Route
     ( CreateRouteRequest(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
+import Data.IP (AddrRange, IPv4)
+import Data.Text (Text)
 
 data CreateRouteRequest
     = CreateRouteToGateway

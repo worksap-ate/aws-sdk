@@ -35,6 +35,7 @@ import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.FromText (fromText)
 import Cloud.AWS.Lib.ToText (toText)
 
 ------------------------------------------------------------

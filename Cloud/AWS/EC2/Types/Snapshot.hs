@@ -11,8 +11,10 @@ module Cloud.AWS.EC2.Types.Snapshot
     ) where
 
 import Cloud.AWS.EC2.Types.Common (ProductCode, ResourceTag)
-import Cloud.AWS.Lib.FromText
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText)
+import Data.Text (Text)
+import Data.Time (UTCTime)
 
 data CreateVolumePermission = CreateVolumePermission
     { createVolumePermissionAdd :: [CreateVolumePermissionItem]
@@ -29,9 +31,7 @@ data ResetSnapshotAttributeRequest
     = ResetSnapshotAttributeRequestCreateVolumePermission
   deriving (Show, Read, Eq)
 
-instance ToText ResetSnapshotAttributeRequest where
-    toText ResetSnapshotAttributeRequestCreateVolumePermission
-        = "createVolumePermission"
+deriveToText "ResetSnapshotAttributeRequest" ["createVolumePermission"]
 
 data Snapshot = Snapshot
     { snapshotId :: Text
@@ -60,12 +60,6 @@ data SnapshotAttributeRequest
     | SnapshotAttributeRequestProductCodes
   deriving (Show, Read, Eq)
 
-instance ToText SnapshotAttributeRequest where
-    toText SnapshotAttributeRequestCreateVolumePermission
-        = "createVolumePermission"
-    toText SnapshotAttributeRequestProductCodes
-        = "productCodes"
-
 data SnapshotStatus
     = SnapshotPending
     | SnapshotCompleted
@@ -73,3 +67,7 @@ data SnapshotStatus
   deriving (Show, Read, Eq)
 
 deriveFromText "SnapshotStatus" ["pending", "completed", "error"]
+deriveToText "SnapshotAttributeRequest"
+    [ "createVolumePermission"
+    , "productCodes"
+    ]

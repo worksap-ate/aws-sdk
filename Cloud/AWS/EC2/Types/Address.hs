@@ -8,7 +8,9 @@ module Cloud.AWS.EC2.Types.Address
     , DisassociateAddressRequest(..)
     ) where
 
-import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.FromText (FromText(..), failText)
+import Data.IP (IPv4)
+import Data.Text (Text)
 
 data Address = Address
     { addressPublicIp :: IPv4

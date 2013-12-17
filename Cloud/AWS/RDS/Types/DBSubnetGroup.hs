@@ -4,7 +4,7 @@ module Cloud.AWS.RDS.Types.DBSubnetGroup
     , AvailabilityZone(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (Text)
+import Data.Text (Text)
 
 data DBSubnetGroup = DBSubnetGroup
     { dbSubnetGroupVpcId :: Text

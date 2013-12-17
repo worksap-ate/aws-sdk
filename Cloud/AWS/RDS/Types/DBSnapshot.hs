@@ -2,7 +2,8 @@ module Cloud.AWS.RDS.Types.DBSnapshot
     ( DBSnapshot(..)
     ) where
 
-import Cloud.AWS.Lib.FromText (Text, UTCTime)
+import Data.Text (Text)
+import Data.Time (UTCTime)
 
 data DBSnapshot = DBSnapshot
     { dbSnapshotPort :: Int

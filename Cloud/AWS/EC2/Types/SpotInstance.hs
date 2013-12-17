@@ -18,11 +18,13 @@ module Cloud.AWS.EC2.Types.SpotInstance
 
 import Cloud.AWS.EC2.Types.Common
 import Cloud.AWS.EC2.Types.Instance
-import Cloud.AWS.Lib.FromText
 import Cloud.AWS.EC2.Types.Image (BlockDeviceMappingParam)
 import Cloud.AWS.EC2.Types.NetworkInterface (NetworkInterfaceParam)
 
-import Data.ByteString
+import Data.ByteString (ByteString)
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Cloud.AWS.Lib.FromText (deriveFromText)
 
 data SpotInstanceRequest = SpotInstanceRequest
     { spotInstanceRequestId :: Text

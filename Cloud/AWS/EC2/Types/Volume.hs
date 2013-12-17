@@ -18,8 +18,10 @@ module Cloud.AWS.EC2.Types.Volume
     ) where
 
 import Cloud.AWS.EC2.Types.Common (ProductCode, ResourceTag)
-import Cloud.AWS.Lib.FromText
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText)
+import Data.Text (Text)
+import Data.Time (UTCTime)
 
 data AttachmentSetItemResponse = AttachmentSetItemResponse
     { attachmentSetItemResponseVolumeId :: Text
@@ -75,10 +77,6 @@ data VolumeAttributeRequest
     = VolumeAttributeRequestAutoEnableIO
     | VolumeAttributeRequestProductCodes
   deriving (Show, Read, Eq)
-
-instance ToText VolumeAttributeRequest where
-    toText VolumeAttributeRequestAutoEnableIO = "autoEnableIO"
-    toText VolumeAttributeRequestProductCodes = "productCodes"
 
 data VolumeState
     = VolumeStateCreating
@@ -150,3 +148,6 @@ deriveFromText "VolumeState"
     ]
 deriveFromText "VolumeStatusInfoStatus"
     ["ok", "impaired", "insufficient-data"]
+
+deriveToText "VolumeAttributeRequest"
+    [ "autoEnableIO", "productCodes" ]
