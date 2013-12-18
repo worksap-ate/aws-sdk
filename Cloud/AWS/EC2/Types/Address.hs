@@ -35,8 +35,7 @@ instance FromText AddressDomain where
         | t == "vpc"      = return AddressDomainVPC
         | otherwise       = fail "unknown AddressDomain"
     fromNamedText _name Nothing  = return AddressDomainStandard
-    fromNamedText _name (Just t)
-        = maybe (failText t) return $ fromNamedText "AddressDomain" (Just t)
+    fromNamedText _name (Just t) = maybe (failText t) return $ fromText t
 
 data AllocateAddress = AllocateAddress
     { allocateAddressPublicIp :: IPv4
