@@ -13,7 +13,7 @@ import Test.Hspec
 
 import Cloud.AWS.EC2
 import Cloud.AWS.EC2.Types
-import Cloud.AWS.EC2.Util (wait, list, sleep)
+import Cloud.AWS.EC2.Util (wait, list)
 import Util
 import EC2Tests.Util
 

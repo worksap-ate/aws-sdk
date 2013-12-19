@@ -39,7 +39,7 @@ import Data.IP (IPv4, AddrRange)
 
 import Cloud.AWS.EC2
 import Cloud.AWS.EC2.Types
-import Cloud.AWS.EC2.Util (retry, sleep, wait, list)
+import qualified Cloud.AWS.EC2.Util as Util
 
 testEC2
     :: Text
@@ -66,7 +66,7 @@ withVpc
     -> (Vpc -> EC2 m a)
     -> EC2 m a
 withVpc cidr = E.bracket
-    (createVpc cidr Nothing <* sleep 2)
+    (createVpc cidr Nothing <* Util.sleep 2)
     (\vpc -> deleteVpc $ vpcId vpc)
 
 withSubnet
@@ -84,8 +84,8 @@ withSubnet'
     -> (Subnet -> EC2 m a)
     -> EC2 m a
 withSubnet' vpc cidr zone = E.bracket
-    (createSubnet (CreateSubnetRequest vpc cidr zone) <* sleep 2)
-    (retry 5 10 . deleteSubnet . subnetId)
+    (createSubnet (CreateSubnetRequest vpc cidr zone) <* Util.sleep 2)
+    (Util.retry 5 10 . deleteSubnet . subnetId)
 
 withInstance
     :: (MonadBaseControl IO m, MonadResource m)
@@ -93,7 +93,7 @@ withInstance
     -> (Instance -> EC2 m a)
     -> EC2 m a
 withInstance req = E.bracket
-    (head . reservationInstanceSet <$> runInstances req <* sleep 2)
+    (head . reservationInstanceSet <$> runInstances req <* Util.sleep 2)
     (\i -> terminateInstances [instanceId i])
 
 testRunInstancesRequest :: RunInstancesRequest
@@ -102,10 +102,10 @@ testRunInstancesRequest = (defaultRunInstancesRequest "ami-087acb09" 1 1)
     }
 
 waitForInstanceState :: (MonadBaseControl IO m, MonadResource m) => InstanceState -> Text -> EC2 m Reservation
-waitForInstanceState s = wait p desc
+waitForInstanceState s = Util.wait p desc
   where
     p r = (instanceState . head . reservationInstanceSet) r == s
-    desc inst = list $ describeInstances [inst] []
+    desc inst = Util.list $ describeInstances [inst] []
 
 withRouteTable :: (MonadBaseControl IO m, MonadResource m) => Text -> (RouteTable -> EC2 m a) -> EC2 m a
 withRouteTable vpc = E.bracket
@@ -138,10 +138,10 @@ withNetworkInterface subnet = E.bracket
     (deleteNetworkInterface . networkInterfaceId)
 
 waitForNetworkInterfaceStatus :: (MonadBaseControl IO m, MonadResource m) => NetworkInterfaceStatus -> Text -> EC2 m NetworkInterface
-waitForNetworkInterfaceStatus s = wait p desc
+waitForNetworkInterfaceStatus s = Util.wait p desc
   where
     p r = networkInterfaceStatus r == s
-    desc nic = list $ describeNetworkInterfaces [nic] []
+    desc nic = Util.list $ describeNetworkInterfaces [nic] []
 
 withSecurityGroup :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> Maybe Text -> (Maybe Text -> EC2 m a) -> EC2 m a
 withSecurityGroup name desc mvpc = E.bracket
@@ -164,12 +164,12 @@ withVolume req = E.bracket
 withCustomerGateway :: (MonadBaseControl IO m, MonadResource m) => Text -> IPv4 -> Int -> (CustomerGateway -> EC2 m a) -> EC2 m a
 withCustomerGateway typ addr bgpasn = E.bracket
     (createCustomerGateway typ addr bgpasn)
-    (retry 5 30 . deleteCustomerGateway . customerGatewayId)
+    (Util.retry 5 30 . deleteCustomerGateway . customerGatewayId)
 
 withVpnGateway :: (MonadBaseControl IO m, MonadResource m) => CreateVpnGatewayType -> Maybe Text -> (VpnGateway -> EC2 m a) -> EC2 m a
 withVpnGateway typ zone = E.bracket
     (createVpnGateway typ zone)
-    (retry 5 30 . deleteVpnGateway . vpnGatewayId)
+    (Util.retry 5 30 . deleteVpnGateway . vpnGatewayId)
 
 withVpnGatewayAttached :: (MonadBaseControl IO m, MonadResource m) => Text -> Text -> EC2 m a -> EC2 m a
 withVpnGatewayAttached vgw vpc f = E.bracket
@@ -181,9 +181,9 @@ withVpnConnection :: (MonadBaseControl IO m, MonadResource m) => Text -> Text ->
 withVpnConnection typ cgid vgid zone option = E.bracket
     (do
         vpn <- createVpnConnection typ cgid vgid zone option
-        wait
+        Util.wait
             (\connection -> vpnConnectionState connection == VpnConnectionStateAvailable)
-            (\cid -> list $ describeVpnConnections [cid] [])
+            (\cid -> Util.list $ describeVpnConnections [cid] [])
             (vpnConnectionId vpn)
     )
     (deleteVpnConnection . vpnConnectionId)
@@ -207,7 +207,7 @@ withImage inst name desc noReboot bdms = E.bracket
     deregisterImage
 
 waitForImageState :: (MonadBaseControl IO m, MonadResource m) => ImageState -> Text -> EC2 m Image
-waitForImageState s = wait p desc
+waitForImageState s = Util.wait p desc
   where
     p Image{imageImageState = s'} = s' == s
-    desc ami = list $ describeImages [ami] [] [] []
+    desc ami = Util.list $ describeImages [ami] [] [] []
