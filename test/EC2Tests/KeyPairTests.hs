@@ -40,7 +40,7 @@ runKeyPairTests = hspec $ do
     describe "importKeyPair" $ do
         it "doesn't throw any exception" $ do
             (gen :: SystemRNG) <- cprgCreate <$> createEntropyPool
-            let ((pubkey, _), _) = generate gen 128 1024
+            let ((pubkey, _), _) = generate gen 256 65537
                 der = S.concat $ L.toChunks $ encode $ encodePublic pubkey
             testEC2' region (do
                 keypair <- importKeyPair "importKeyPairTest" der
