@@ -23,6 +23,7 @@ region = "ap-southeast-1"
 runVpcTests :: IO ()
 runVpcTests = hspec $ do
     describeVpcsTest
+    describeVpcAttributeTest
     describeVpnGatewaysTest
     describeInternetGatewaysTest
     describeVpnConnectionsTest
@@ -43,6 +44,16 @@ describeVpcsTest = do
     describe "describeVpcs doesn't fail" $ do
         it "describeVpcs doesn't throw any exception" $ do
             testEC2 region (describeVpcs [] []) `miss` anyConnectionException
+
+describeVpcAttributeTest :: Spec
+describeVpcAttributeTest = do
+    describe "describeVpcAttribute doesn't fail" $ do
+        it "describeVpcAttribute doesn't throw any exception" $ do
+            testEC2' region (do
+                withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} -> do
+                    describeVpcAttribute vpc VpcAttributeNameEnableDnsSupport
+                    describeVpcAttribute vpc VpcAttributeNameEnableDnsHostnames
+                ) `miss` anyConnectionException
 
 describeVpnGatewaysTest :: Spec
 describeVpnGatewaysTest = do

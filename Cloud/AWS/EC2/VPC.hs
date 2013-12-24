@@ -21,6 +21,7 @@ module Cloud.AWS.EC2.VPC
     , describeVpnConnections
     , describeVpnGateways
     , describeVpcs
+    , describeVpcAttribute
     , describeCustomerGateway
     , describeInternetGateways
     , describeDhcpOptions
@@ -304,6 +305,32 @@ deleteVpc
     => Text -- ^ VpcId
     -> EC2 m Bool
 deleteVpc = ec2Delete "DeleteVpc" "VpcId"
+
+------------------------------------------------------------
+-- describeVpcAttribute
+------------------------------------------------------------
+describeVpcAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VpcId
+    -> VpcAttributeName -- ^ Attribute
+    -> EC2 m VpcAttribute
+describeVpcAttribute vpc attr =
+    ec2Query "DescribeVpcAttribute" params $ xmlParser $ vpcAttributeConv attr
+  where
+    params =
+        [ "VpcId" |= vpc
+        , "Attribute" |= attr
+        ]
+
+vpcAttributeConv
+    :: (MonadThrow m, Applicative m)
+    => VpcAttributeName -> SimpleXML -> m VpcAttribute
+vpcAttributeConv VpcAttributeNameEnableDnsSupport xml =
+    VpcAttributeEnableDnsSupport
+    <$> getElement xml "enableDnsSupport" (.< "value")
+vpcAttributeConv VpcAttributeNameEnableDnsHostnames xml =
+    VpcAttributeEnableDnsHostnames
+    <$> getElement xml "enableDnsHostnames" (.< "value")
 
 ------------------------------------------------------------
 -- describeVpnGateways

@@ -14,6 +14,8 @@ module Cloud.AWS.EC2.Types.VPC
     , InternetGatewayAttachmentState(..)
     , Vpc(..)
     , VpcState(..)
+    , VpcAttribute(..)
+    , VpcAttributeName(..)
     , VpnConnection(..)
     , VpnConnectionOptionsRequest(..)
     , VpnConnectionState(..)
@@ -120,6 +122,18 @@ data VpcState
     = VpcStatePending
     | VpcStateAvailable
   deriving (Show, Read, Eq)
+
+data VpcAttribute
+    = VpcAttributeEnableDnsSupport Bool
+    | VpcAttributeEnableDnsHostnames Bool
+  deriving (Show, Read, Eq)
+
+data VpcAttributeName
+    = VpcAttributeNameEnableDnsSupport
+    | VpcAttributeNameEnableDnsHostnames
+  deriving (Show, Read, Eq)
+
+deriveToText "VpcAttributeName" ["enableDnsSupport", "enableDnsHostnames"]
 
 data VpnConnection = VpnConnection
     { vpnConnectionId :: Text
