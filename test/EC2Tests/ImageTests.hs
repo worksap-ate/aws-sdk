@@ -48,6 +48,21 @@ runImageTests = hspec $ do
                     mapM_ deleteSnapshot snaps
                 ) `miss` anyConnectionException
 
+    describe "copyImage" $ do
+        it "doesn't throw any exception" $ do
+            testEC2' region (
+                withInstance testRunInstancesRequest $ \Instance{instanceId = inst} -> do
+                    waitForInstanceState InstanceStateRunning inst
+                    let name = "copyImageTestSource"
+                        desc = "For AWS-SDK HSpec testing"
+                    withImage inst name (Just desc) False [] $ \amiid -> do
+                        waitForImageState ImageStateAvailable amiid
+                        let name' = "copyImageTestDest"
+                            desc' = "For AWS-SDK Hspec testing"
+                        amiid' <- copyImage region amiid (Just name') (Just desc') Nothing
+                        deregisterImage amiid'
+                ) `miss` anyConnectionException
+
 allAttributes :: [AMIAttribute]
 allAttributes =
     [ AMIDescription

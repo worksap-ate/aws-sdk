@@ -28,9 +28,9 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.Lib.Parser hiding (sinkError)
 import Cloud.AWS.Lib.Query
 
--- | Ver.2012-12-01
+-- | Ver.2013-10-15
 apiVersion :: ByteString
-apiVersion = "2012-12-01"
+apiVersion = "2013-10-15"
 
 sinkRequestId :: MonadThrow m
     => Consumer Event m (Maybe Text)

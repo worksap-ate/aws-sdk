@@ -7,6 +7,7 @@ module Cloud.AWS.EC2.Image
     , deregisterImage
     , describeImageAttribute
     , modifyImageAttribute
+    , copyImage
     ) where
 
 import Data.Text (Text)
@@ -182,3 +183,22 @@ launchPermissionParams lp =
   where
     itemParams (LaunchPermissionItemGroup g) = ["Group" |= g]
     itemParams (LaunchPermissionItemUserId u) = ["UserId" |= u]
+
+copyImage
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ SourceRegion
+    -> Text -- ^ SourceImageId
+    -> Maybe Text -- ^ Name
+    -> Maybe Text -- ^ Description
+    -> Maybe Text -- ^ ClientToken
+    -> EC2 m Text -- ^ ImageId
+copyImage region iid name desc token =
+    ec2Query "CopyImage" params $ xmlParser (.< "imageId")
+  where
+    params =
+        [ "SourceRegion" |= region
+        , "SourceImageId" |= iid
+        , "Name" |=? name
+        , "Description" |=? desc
+        , "ClientToken" |=? token
+        ]
