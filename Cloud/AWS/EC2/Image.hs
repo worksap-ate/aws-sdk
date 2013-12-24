@@ -7,6 +7,7 @@ module Cloud.AWS.EC2.Image
     , deregisterImage
     , describeImageAttribute
     , modifyImageAttribute
+    , resetImageAttribute
     , copyImage
     ) where
 
@@ -183,6 +184,19 @@ launchPermissionParams lp =
   where
     itemParams (LaunchPermissionItemGroup g) = ["Group" |= g]
     itemParams (LaunchPermissionItemUserId u) = ["UserId" |= u]
+
+resetImageAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ ImageId
+    -> Text -- ^ Attribute (valid value: launchPermission)
+    -> EC2 m Bool
+resetImageAttribute iid attr =
+    ec2Query "ResetImageAttribute" params $ xmlParser (.< "return")
+  where
+    params =
+      [ "ImageId" |= iid
+      , "Attribute" |= attr
+      ]
 
 copyImage
     :: (MonadResource m, MonadBaseControl IO m)

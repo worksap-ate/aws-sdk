@@ -6,6 +6,7 @@ module EC2Tests.ImageTests
     where
 
 import Control.Monad ((>=>))
+import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import Test.Hspec
@@ -33,7 +34,7 @@ runImageTests = hspec $ do
                         desc = "For HSpec testing"
                     snaps <- withImage inst name (Just desc) False [] $ \ami -> do
                         Image{imageBlockDeviceMappings = bdms} <- waitForImageState ImageStateAvailable ami
-                        mapM_ (describeImageAttribute ami) allAttributes
+                        imgs <- mapM (describeImageAttribute ami) allAttributes
                         let params =
                                 [ LaunchPermissionItemGroup "all"
                                 , LaunchPermissionItemUserId "111122223333"
@@ -42,6 +43,11 @@ runImageTests = hspec $ do
                         modifyImageAttribute ami (Just $ LaunchPermission params []) [] Nothing
                         mapM_ (describeImageAttribute ami) allAttributes
                         modifyImageAttribute ami (Just $ LaunchPermission [] params) [] Nothing
+                        mapM_ (describeImageAttribute ami) allAttributes
+                        success <- resetImageAttribute ami "launchPermission"
+                        liftIO $ success `shouldBe` True
+                        imgs' <- mapM (describeImageAttribute ami) allAttributes
+                        liftIO $ imgs `shouldBe` imgs'
 
                         return $ catMaybes $ map (blockDeviceMappingEbs >=> ebsSnapshotId) bdms
                     -- Cleanup snapshots created by createImage
