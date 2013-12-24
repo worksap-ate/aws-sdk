@@ -6,6 +6,7 @@ module EC2Tests.VPCTests
     where
 
 import Control.Applicative ((<$>))
+import Control.Monad.IO.Class (liftIO)
 import Data.Conduit (MonadBaseControl, MonadResource)
 import Data.Text (Text)
 import Data.List (find)
@@ -31,6 +32,7 @@ runVpcTests = hspec $ do
     describeInternetGatewaysTest
     describeDhcpOptionsTest
     createVpcTest
+    modifyVpcAttributeTest
     createDhcpOptionsTest
     vpnConnectionTest
     attachAndDetachVpnGatewayTest
@@ -85,6 +87,26 @@ createVpcTest = do
         it "createVpc and deleteVpc doesn't fail" $ do
             vpc <- testEC2' region (createVpc "80.0.0.0/16" Nothing)
             testEC2' region (deleteVpc $ vpcId vpc) `shouldReturn` True
+
+modifyVpcAttributeTest :: Spec
+modifyVpcAttributeTest = do
+    describe "modifyVpcAttribute doesn't fail" $ do
+        it "modifyVpcAttribute doesn't throw any exception" $ do
+            testEC2' region (do
+                withVpc "10.0.0.0/24" $ \Vpc{vpcId = vpc} -> do
+                    enableSupport <- describeVpcAttribute vpc VpcAttributeNameEnableDnsSupport
+                    modifyVpcAttribute vpc (notAttr enableSupport)
+                    enableSupport' <- describeVpcAttribute vpc VpcAttributeNameEnableDnsSupport
+                    liftIO $ enableSupport' `shouldBe` (notAttr enableSupport)
+
+                    enableHostnames <- describeVpcAttribute vpc VpcAttributeNameEnableDnsHostnames
+                    modifyVpcAttribute vpc (notAttr enableHostnames)
+                    enableHostnames' <- describeVpcAttribute vpc VpcAttributeNameEnableDnsHostnames
+                    liftIO $ enableHostnames' `shouldBe` (notAttr enableHostnames)
+                ) `miss` anyConnectionException
+  where
+    notAttr (VpcAttributeEnableDnsSupport b) = VpcAttributeEnableDnsSupport (not b)
+    notAttr (VpcAttributeEnableDnsHostnames b) = VpcAttributeEnableDnsHostnames (not b)
 
 describeDhcpOptionsTest :: Spec
 describeDhcpOptionsTest = do

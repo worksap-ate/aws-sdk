@@ -29,6 +29,7 @@ module Cloud.AWS.EC2.VPC
     , detachVpnGateway
     , disableVgwRoutePropagation
     , enableVgwRoutePropagation
+    , modifyVpcAttribute
     ) where
 
 import Data.Text (Text)
@@ -331,6 +332,26 @@ vpcAttributeConv VpcAttributeNameEnableDnsSupport xml =
 vpcAttributeConv VpcAttributeNameEnableDnsHostnames xml =
     VpcAttributeEnableDnsHostnames
     <$> getElement xml "enableDnsHostnames" (.< "value")
+
+------------------------------------------------------------
+-- modifyVpcAttribute
+------------------------------------------------------------
+modifyVpcAttribute
+    :: (MonadResource m, MonadBaseControl IO m)
+    => Text -- ^ VpcId
+    -> VpcAttribute
+    -> EC2 m Bool
+modifyVpcAttribute vpc attr =
+    ec2Query "ModifyVpcAttribute" params $ xmlParser (.< "return")
+  where
+    params =
+        [ "VpcId" |= vpc
+        , attrParam attr
+        ]
+    attrParam (VpcAttributeEnableDnsSupport b) =
+        "EnableDnsSupport.Value" |= b
+    attrParam (VpcAttributeEnableDnsHostnames b) =
+        "EnableDnsHostnames.Value" |= b
 
 ------------------------------------------------------------
 -- describeVpnGateways
