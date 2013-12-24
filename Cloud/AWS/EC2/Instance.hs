@@ -20,6 +20,7 @@ module Cloud.AWS.EC2.Instance
     , requestSpotInstances
     , defaultRequestSpotInstancesParam
     , cancelSpotInstanceRequests
+    , describeReservedInstances
     ) where
 
 import Data.Text (Text)
@@ -793,3 +794,40 @@ cancelSpotInstanceResponseConv :: (MonadThrow m, Applicative m)
 cancelSpotInstanceResponseConv xml = CancelSpotInstanceRequestsResponse
     <$> xml .< "spotInstanceRequestId"
     <*> xml .< "state"
+
+------------------------------------------------------------
+-- DescribeReservedInstances
+------------------------------------------------------------
+describeReservedInstances
+    :: (MonadResource m, MonadBaseControl IO m)
+    => [Text] -- ^ ReservedInstanceIds
+    -> Maybe OfferingType -- ^ OfferingType
+    -> [Filter] -- ^ Filters
+    -> EC2 m (ResumableSource m ReservedInstance)
+describeReservedInstances ids offer filters =
+    ec2QuerySource "DescribeReservedInstances" params $
+        itemConduit "reservedInstancesSet" reservedInstanceConv
+  where
+    params =
+        [ "ReservedInstanceId" |.#= ids
+        , "OfferingType" |=? offer
+        , filtersParam filters
+        ]
+
+reservedInstanceConv
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m ReservedInstance
+reservedInstanceConv xml = ReservedInstance
+    <$> xml .< "reservedInstancesId"
+    <*> xml .< "instanceType"
+    <*> xml .< "availabilityZone"
+    <*> xml .< "duration"
+    <*> xml .< "fixedPrice"
+    <*> xml .< "usagePrice"
+    <*> xml .< "instanceCount"
+    <*> xml .< "productDescription"
+    <*> xml .< "state"
+    <*> xml .< "instanceTenancy"
+    <*> xml .< "currencyCode"
+    <*> xml .< "offeringType"
+    <*> xml .< "recurringCharges"

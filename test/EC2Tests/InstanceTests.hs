@@ -28,6 +28,7 @@ runInstanceTests = hspec $ do
     runRebootTerminateInstanceTest
     startStopInstanceTest
     getConsoleOutputTest
+    describeReservedInstancesTest
 
 describeInstancesTest :: Spec
 describeInstancesTest = do
@@ -113,3 +114,10 @@ getConsoleOutputTest = do
                     <- Util.head $ describeInstances [] []
                 getConsoleOutput inst
                 ) `miss` anyConnectionException
+
+describeReservedInstancesTest :: Spec
+describeReservedInstancesTest = do
+    describe "describeReservedInstances doesn't fail" $ do
+        it "describeReservedInstances doesn't throw any exception" $ do
+            testEC2 region (describeReservedInstances [] Nothing [])
+                `miss` anyConnectionException

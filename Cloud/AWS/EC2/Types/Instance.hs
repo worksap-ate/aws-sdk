@@ -26,8 +26,10 @@ module Cloud.AWS.EC2.Types.Instance
     , InstanceStatusTypeStatus(..)
     , ModifyInstanceAttributeRequest(..)
     , MonitorInstancesResponse(..)
+    , OfferingType(..)
     , PasswordData(..)
     , Reservation(..)
+    , ReservedInstance(..)
     , ResetInstanceAttributeRequest(..)
     , RunInstancesRequest(..)
     ) where
@@ -40,6 +42,7 @@ import Cloud.AWS.EC2.Types.NetworkInterface (NetworkInterfaceParam)
 import Cloud.AWS.EC2.Types.Volume (AttachmentSetItemResponseStatus)
 
 import Cloud.AWS.Lib.FromText (FromText(..), failText, deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText)
 import Data.IP (IPv4)
 import Data.Text (Text)
 import Data.Time (UTCTime)
@@ -303,6 +306,12 @@ data MonitorInstancesResponse = MonitorInstancesResponse
     }
   deriving (Show, Read, Eq)
 
+data OfferingType
+    = OfferingTypeHeavyUtilization
+    | OfferingTypeMediumUtilization
+    | OfferingTypeLightUtilization
+  deriving (Show, Read, Eq)
+
 data PasswordData = PasswordData
     { passwordDataInstanceId :: Text
     , passwordDataTimestamp :: UTCTime
@@ -317,6 +326,23 @@ data Reservation = Reservation
     , reservationGroupSet :: [Group]
     , reservationInstanceSet :: [Instance]
     , reservationRequesterId :: Maybe Text
+    }
+  deriving (Show, Read, Eq)
+
+data ReservedInstance = ReservedInstance
+    { reservedInstanceId :: Text
+    , reservedInstanceInstanceType :: Text
+    , reservedInstanceAvailabilityZone :: Text
+    , reservedInstanceDuration :: Int
+    , reservedInstanceFixedPrice :: Double
+    , reservedInstanceUsagePrice :: Double
+    , reservedInstanceInstanceCount :: Int
+    , reservedInstanceProductDescription :: Text
+    , reservedInstanceState :: InstanceState
+    , reservedInstanceInstanceTenancy :: Text
+    , reservedInstanceCurrencyCode :: Text
+    , reservedInstanceOfferingType :: OfferingType
+    , reservedInstanceRecurreingCharges :: Maybe Text
     }
   deriving (Show, Read, Eq)
 
@@ -362,6 +388,14 @@ data RunInstancesRequest = RunInstancesRequest
 
 deriveFromText "InstanceMonitoringState"
     ["disabled", "enabled", "pending", "disabling"]
+deriveFromText "InstanceState"
+    [ "pending"
+    , "running"
+    , "shutting down"
+    , "terminated"
+    , "stopping"
+    , "stopped"
+    ]
 deriveFromText "InstanceStatusEventCode"
     [ "instance-reboot"
     , "instance-stop"
@@ -370,3 +404,13 @@ deriveFromText "InstanceStatusEventCode"
     ]
 deriveFromText "InstanceStatusTypeStatus"
     ["ok", "impaired", "insufficient-data", "not-applicable", "initializing"]
+deriveFromText "OfferingType"
+    [ "Heavy Utilization"
+    , "Medium Utilization"
+    , "Light Utilization"
+    ]
+deriveToText "OfferingType"
+    [ "Heavy Utilization"
+    , "Medium Utilization"
+    , "Light Utilization"
+    ]
