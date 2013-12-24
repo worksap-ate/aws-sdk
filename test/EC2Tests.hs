@@ -18,6 +18,7 @@ import EC2Tests.NetworkInterfaceAttributeTests
 import EC2Tests.PlacementGroupTests
 import EC2Tests.ConversionTaskTests
 import EC2Tests.AclTests
+import EC2Tests.AccountTests
 
 main :: IO ()
 main = do
@@ -39,3 +40,4 @@ main = do
     runPlacementGroupTests
     runConversionTaskTests
     runAclTests
+    runAccountTests

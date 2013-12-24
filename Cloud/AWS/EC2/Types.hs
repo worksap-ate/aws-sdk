@@ -1,6 +1,8 @@
 module Cloud.AWS.EC2.Types
     ( -- * Common
       module Cloud.AWS.EC2.Types.Common
+      -- * Account
+    , module Cloud.AWS.EC2.Types.Account
       -- * Acl
     , module Cloud.AWS.EC2.Types.Acl
       -- * Address
@@ -41,6 +43,7 @@ module Cloud.AWS.EC2.Types
     , module Cloud.AWS.EC2.Types.Volume
     ) where
 
+import Cloud.AWS.EC2.Types.Account
 import Cloud.AWS.EC2.Types.Acl
 import Cloud.AWS.EC2.Types.Address
 import Cloud.AWS.EC2.Types.AvailabilityZone

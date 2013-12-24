@@ -43,6 +43,7 @@ library
                    , Cloud.AWS.Credential
                    , Cloud.AWS.Class
                    , Cloud.AWS.EC2.Internal
+                   , Cloud.AWS.EC2.Account
                    , Cloud.AWS.EC2.Address
                    , Cloud.AWS.EC2.AvailabilityZone
                    , Cloud.AWS.EC2.ConversionTask
@@ -64,6 +65,7 @@ library
                    , Cloud.AWS.EC2.Tag
                    , Cloud.AWS.EC2.Params
                    , Cloud.AWS.EC2.PlacementGroup
+                   , Cloud.AWS.EC2.Types.Account
                    , Cloud.AWS.EC2.Types.Acl
                    , Cloud.AWS.EC2.Types.Address
                    , Cloud.AWS.EC2.Types.AvailabilityZone
