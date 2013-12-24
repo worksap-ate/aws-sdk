@@ -6,15 +6,14 @@ module Cloud.AWS.EC2.ConversionTask
     , importInstance
     ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative ((<$>), (<*>), Applicative)
 import Data.Conduit
 import Data.Text (Text)
-import Data.XML.Types (Event)
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.EC2.Types
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeConversionTasks
     :: (MonadResource m, MonadBaseControl IO m)
@@ -22,60 +21,60 @@ describeConversionTasks
     -> EC2 m (ResumableSource m ConversionTask)
 describeConversionTasks ctids =
     ec2QuerySource "DescribeConversionTasks" params $
-        itemConduit "conversionTasks" conversionTaskSink
+        itemConduit "conversionTasks" conversionTaskConv
   where
     params =
         [ "ConversionTaskId" |.#= ctids
         ]
 
-conversionTaskSink
-    :: MonadThrow m
-    => Consumer Event m ConversionTask
-conversionTaskSink = ConversionTask
-    <$> getT "conversionTaskId"
-    <*> getT "expirationTime"
-    <*> elementM "importVolume" (
+conversionTaskConv
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m ConversionTask
+conversionTaskConv xml = ConversionTask
+    <$> xml .< "conversionTaskId"
+    <*> xml .< "expirationTime"
+    <*> getElementM xml "importVolume" (\xml' ->
         ImportVolumeTaskDetails
-        <$> getT "bytesConverted"
-        <*> getT "availabilityZone"
-        <*> getT "description"
-        <*> element "image" diskImageDescriptionSink
-        <*> element "volume" diskImageVolumeDescriptionSink
+        <$> xml' .< "bytesConverted"
+        <*> xml' .< "availabilityZone"
+        <*> xml' .< "description"
+        <*> getElement xml' "image" diskImageDescriptionConv
+        <*> getElement xml' "volume" diskImageVolumeDescriptionConv
         )
-    <*> elementM "importInstance" (
+    <*> getElementM xml "importInstance" (\xml' ->
         ImportInstanceTaskDetails
-        <$> itemsSet "volumes" (
+        <$> itemsSet xml' "volumes" (\xml'' ->
             ImportInstanceTaskDetailItem
-            <$> getT "bytesConverted"
-            <*> getT "availabilityZone"
-            <*> element "image" diskImageDescriptionSink
-            <*> getT "description"
-            <*> element "volume" diskImageVolumeDescriptionSink
-            <*> getT "status"
-            <*> getT "statusMessage"
+            <$> xml'' .< "bytesConverted"
+            <*> xml'' .< "availabilityZone"
+            <*> getElement xml'' "image" diskImageDescriptionConv
+            <*> xml'' .< "description"
+            <*> getElement xml'' "volume" diskImageVolumeDescriptionConv
+            <*> xml'' .< "status"
+            <*> xml'' .< "statusMessage"
             )
-        <*> getT "instanceId"
-        <*> getT "platform"
-        <*> getT "description"
+        <*> xml' .< "instanceId"
+        <*> xml' .< "platform"
+        <*> xml' .< "description"
         )
-    <*> getT "state"
-    <*> getT "statusMessage"
+    <*> xml .< "state"
+    <*> xml .< "statusMessage"
 
-diskImageDescriptionSink
-    :: MonadThrow m
-    => Consumer Event m DiskImageDescription
-diskImageDescriptionSink = DiskImageDescription
-    <$> getT "format"
-    <*> getT "size"
-    <*> getT "importManifestUrl"
-    <*> getT "checksum"
+diskImageDescriptionConv
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m DiskImageDescription
+diskImageDescriptionConv xml = DiskImageDescription
+    <$> xml .< "format"
+    <*> xml .< "size"
+    <*> xml .< "importManifestUrl"
+    <*> xml .< "checksum"
 
-diskImageVolumeDescriptionSink
-    :: MonadThrow m
-    => Consumer Event m DiskImageVolumeDescription
-diskImageVolumeDescriptionSink = DiskImageVolumeDescription
-    <$> getT "size"
-    <*> getT "id"
+diskImageVolumeDescriptionConv
+    :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m DiskImageVolumeDescription
+diskImageVolumeDescriptionConv xml = DiskImageVolumeDescription
+    <$> xml .< "size"
+    <*> xml .< "id"
 
 cancelConversionTask
     :: (MonadResource m, MonadBaseControl IO m)
@@ -92,8 +91,8 @@ importVolume
     -> Int -- ^ Volume Size
     -> EC2 m ConversionTask
 importVolume zone image desc size =
-    ec2Query "ImportVolume" params $
-        element "conversionTask" conversionTaskSink
+    ec2Query "ImportVolume" params $ xmlParser $ \xml ->
+        getElement xml "conversionTask" conversionTaskConv
   where
     params =
         [ "AvailabilityZone" |= zone
@@ -115,8 +114,8 @@ importInstance
     -> Platform -- ^ Platform
     -> EC2 m ConversionTask
 importInstance desc ls images platform =
-    ec2Query "ImportInstance" params $
-        element "conversionTask" conversionTaskSink
+    ec2Query "ImportInstance" params $ xmlParser $ \xml ->
+        getElement xml "conversionTask" conversionTaskConv
   where
     params =
         [ "Description" |=? desc

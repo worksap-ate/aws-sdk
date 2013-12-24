@@ -34,8 +34,8 @@ import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
 import Cloud.AWS.Lib.FromText (fromText)
+import Cloud.AWS.Lib.Parser.Unordered
 import Cloud.AWS.Lib.ToText (toText)
 
 ------------------------------------------------------------
@@ -47,86 +47,85 @@ describeInstances
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Reservation)
 describeInstances instances filters = do
---    ec2QueryDebug "DescribeInstances" params
     ec2QuerySource "DescribeInstances" params $
-        itemConduit "reservationSet" reservationSink
+        itemConduit "reservationSet" reservationConv
   where
     params =
         [ "InstanceId" |.#= instances
         , filtersParam filters
         ]
 
-reservationSink :: MonadThrow m
-    => Consumer Event m Reservation
-reservationSink =
+reservationConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Reservation
+reservationConv xml =
     Reservation
-    <$> getT "reservationId"
-    <*> getT "ownerId"
-    <*> groupSetSink
-    <*> instanceSetSink
-    <*> getT "requesterId"
+    <$> xml .< "reservationId"
+    <*> xml .< "ownerId"
+    <*> groupSetConv xml
+    <*> instanceSetConv xml
+    <*> xml .< "requesterId"
 
-instanceSetSink :: MonadThrow m
-    => Consumer Event m [Instance]
-instanceSetSink = itemsSet "instancesSet" $
+instanceSetConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [Instance]
+instanceSetConv xml = itemsSet xml "instancesSet" $ \xml' ->
     Instance
-    <$> getT "instanceId"
-    <*> getT "imageId"
-    <*> instanceStateSink "instanceState"
-    <*> getT "privateDnsName"
-    <*> getT "dnsName"
-    <*> getT "reason"
-    <*> getT "keyName"
-    <*> getT "amiLaunchIndex"
-    <*> productCodeSink
-    <*> getT "instanceType"
-    <*> getT "launchTime"
-    <*> element "placement" (
+    <$> xml' .< "instanceId"
+    <*> xml' .< "imageId"
+    <*> instanceStateConv "instanceState" xml'
+    <*> xml' .< "privateDnsName"
+    <*> xml' .< "dnsName"
+    <*> xml' .< "reason"
+    <*> xml' .< "keyName"
+    <*> xml' .< "amiLaunchIndex"
+    <*> productCodeConv xml'
+    <*> xml' .< "instanceType"
+    <*> xml' .< "launchTime"
+    <*> getElement xml' "placement" (\xml'' ->
         Placement
-        <$> getT "availabilityZone"
-        <*> getT "groupName"
-        <*> getT "tenancy"
+        <$> xml'' .< "availabilityZone"
+        <*> xml'' .< "groupName"
+        <*> xml'' .< "tenancy"
         )
-    <*> getT "kernelId"
-    <*> getT "ramdiskId"
-    <*> getT "platform"
-    <*> element "monitoring" (getT "state")
-    <*> getT "subnetId"
-    <*> getT "vpcId"
-    <*> getT "privateIpAddress"
-    <*> getT "ipAddress"
-    <*> getT "sourceDestCheck"
-    <*> groupSetSink
-    <*> stateReasonSink
-    <*> getT "architecture"
-    <*> getT "rootDeviceType"
-    <*> getT "rootDeviceName"
-    <*> instanceBlockDeviceMappingsSink
-    <*> getT "instanceLifecycle"
-    <*> getT "spotInstanceRequestId"
-    <*> getT "virtualizationType"
-    <*> getT "clientToken"
-    <*> resourceTagSink
-    <*> getT "hypervisor"
-    <*> networkInterfaceSink
-    <*> elementM "iamInstanceProfile" (
+    <*> xml' .< "kernelId"
+    <*> xml' .< "ramdiskId"
+    <*> xml' .< "platform"
+    <*> getElement xml' "monitoring" (.< "state")
+    <*> xml' .< "subnetId"
+    <*> xml' .< "vpcId"
+    <*> xml' .< "privateIpAddress"
+    <*> xml' .< "ipAddress"
+    <*> xml' .< "sourceDestCheck"
+    <*> groupSetConv xml'
+    <*> stateReasonConv xml'
+    <*> xml' .< "architecture"
+    <*> xml' .< "rootDeviceType"
+    <*> xml' .< "rootDeviceName"
+    <*> instanceBlockDeviceMappingsConv xml'
+    <*> xml' .< "instanceLifecycle"
+    <*> xml' .< "spotInstanceRequestId"
+    <*> xml' .< "virtualizationType"
+    <*> xml' .< "clientToken"
+    <*> resourceTagConv xml'
+    <*> xml' .< "hypervisor"
+    <*> networkInterfaceConv xml'
+    <*> getElementM xml' "iamInstanceProfile" (\xml'' ->
         IamInstanceProfile
-        <$> getT "arn"
-        <*> getT "id"
+        <$> xml'' .< "arn"
+        <*> xml'' .< "id"
         )
-    <*> getT "ebsOptimized"
+    <*> xml' .< "ebsOptimized"
 
-instanceBlockDeviceMappingsSink :: MonadThrow m
-    => Consumer Event m [InstanceBlockDeviceMapping]
-instanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
+instanceBlockDeviceMappingsConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [InstanceBlockDeviceMapping]
+instanceBlockDeviceMappingsConv xml = itemsSet xml "blockDeviceMapping" (\xml' ->
     InstanceBlockDeviceMapping
-    <$> getT "deviceName"
-    <*> element "ebs" (
+    <$> xml' .< "deviceName"
+    <*> getElement xml' "ebs" (\xml'' ->
         EbsInstanceBlockDevice
-        <$> getT "volumeId"
-        <*> getT "status"
-        <*> getT "attachTime"
-        <*> getT "deleteOnTermination"
+        <$> xml'' .< "volumeId"
+        <*> xml'' .< "status"
+        <*> xml'' .< "attachTime"
+        <*> xml'' .< "deleteOnTermination"
         )
     )
 
@@ -145,51 +144,52 @@ codeToState code _name = fromMaybe
     (InstanceStateUnknown code)
     (lookup code instanceStateCodes)
 
-instanceStateSink :: MonadThrow m
-    => Text -> Consumer Event m InstanceState
-instanceStateSink label = element label $ codeToState
-    <$> getT "code"
-    <*> getT "name"
+instanceStateConv :: (MonadThrow m, Applicative m)
+    => Text -> SimpleXML -> m InstanceState
+instanceStateConv label xml = getElement xml label $ \xml' ->
+    codeToState
+    <$> xml' .< "code"
+    <*> xml' .< "name"
 
-networkInterfaceSink :: MonadThrow m
-    => Consumer Event m [InstanceNetworkInterface]
-networkInterfaceSink = itemsSet "networkInterfaceSet" $
+networkInterfaceConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [InstanceNetworkInterface]
+networkInterfaceConv xml = itemsSet xml "networkInterfaceSet" $ \xml' ->
     InstanceNetworkInterface
-    <$> getT "networkInterfaceId"
-    <*> getT "subnetId"
-    <*> getT "vpcId"
-    <*> getT "description"
-    <*> getT "ownerId"
-    <*> getT "status"
-    <*> getT "macAddress"
-    <*> getT "privateIpAddress"
-    <*> getT "privateDnsName"
-    <*> getT "sourceDestCheck"
-    <*> groupSetSink
-    <*> elementM "attachment" (
+    <$> xml' .< "networkInterfaceId"
+    <*> xml' .< "subnetId"
+    <*> xml' .< "vpcId"
+    <*> xml' .< "description"
+    <*> xml' .< "ownerId"
+    <*> xml' .< "status"
+    <*> xml' .< "macAddress"
+    <*> xml' .< "privateIpAddress"
+    <*> xml' .< "privateDnsName"
+    <*> xml' .< "sourceDestCheck"
+    <*> groupSetConv xml'
+    <*> getElementM xml' "attachment" (\xml'' ->
         InstanceNetworkInterfaceAttachment
-        <$> getT "attachmentId"
-        <*> getT "deviceIndex"
-        <*> getT "status"
-        <*> getT "attachTime"
-        <*> getT "deleteOnTermination"
+        <$> xml'' .< "attachmentId"
+        <*> xml'' .< "deviceIndex"
+        <*> xml'' .< "status"
+        <*> xml'' .< "attachTime"
+        <*> xml'' .< "deleteOnTermination"
         )
-    <*> instanceNetworkInterfaceAssociationSink
-    <*> itemsSet "privateIpAddressesSet" (
+    <*> instanceNetworkInterfaceAssociationConv xml'
+    <*> itemsSet xml' "privateIpAddressesSet" (\xml'' ->
         InstancePrivateIpAddress
-        <$> getT "privateIpAddress"
-        <*> getT "privateDnsName"
-        <*> getT "primary"
-        <*> instanceNetworkInterfaceAssociationSink
+        <$> xml'' .< "privateIpAddress"
+        <*> xml'' .< "privateDnsName"
+        <*> xml'' .< "primary"
+        <*> instanceNetworkInterfaceAssociationConv xml''
         )
 
-instanceNetworkInterfaceAssociationSink :: MonadThrow m
-    => Consumer Event m (Maybe InstanceNetworkInterfaceAssociation)
-instanceNetworkInterfaceAssociationSink = elementM "association" $
+instanceNetworkInterfaceAssociationConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m (Maybe InstanceNetworkInterfaceAssociation)
+instanceNetworkInterfaceAssociationConv xml = getElementM xml "association" $ \xml' ->
     InstanceNetworkInterfaceAssociation
-    <$> getT "publicIp"
-    <*> getT "publicDnsName"
-    <*> getT "ipOwnerId"
+    <$> xml' .< "publicIp"
+    <*> xml' .< "publicDnsName"
+    <*> xml' .< "ipOwnerId"
 
 ------------------------------------------------------------
 -- DescribeInstanceStatus
@@ -211,34 +211,34 @@ describeInstanceStatus instanceIds isAll filters token =
         , filtersParam filters
         ]
 
-instanceStatusSet :: MonadThrow m
+instanceStatusSet :: (MonadThrow m, Applicative m)
     => Conduit Event m InstanceStatus
 instanceStatusSet = do
-    itemConduit "instanceStatusSet" $
+    itemConduit "instanceStatusSet" $ \xml ->
         InstanceStatus
-        <$> getT "instanceId"
-        <*> getT "availabilityZone"
-        <*> itemsSet "eventsSet" (
+        <$> xml .< "instanceId"
+        <*> xml .< "availabilityZone"
+        <*> itemsSet xml "eventsSet" (\xml' ->
             InstanceStatusEvent
-            <$> getT "code"
-            <*> getT "description"
-            <*> getT "notBefore"
-            <*> getT "notAfter"
+            <$> xml' .< "code"
+            <*> xml' .< "description"
+            <*> xml' .< "notBefore"
+            <*> xml' .< "notAfter"
             )
-        <*> instanceStateSink "instanceState"
-        <*> instanceStatusTypeSink "systemStatus"
-        <*> instanceStatusTypeSink "instanceStatus"
+        <*> instanceStateConv "instanceState" xml
+        <*> instanceStatusTypeConv "systemStatus" xml
+        <*> instanceStatusTypeConv "instanceStatus" xml
 
-instanceStatusTypeSink :: MonadThrow m
-    => Text -> Consumer Event m InstanceStatusType
-instanceStatusTypeSink name = element name $
+instanceStatusTypeConv :: (MonadThrow m, Applicative m)
+    => Text -> SimpleXML -> m InstanceStatusType
+instanceStatusTypeConv name xml = getElement xml name $ \xml' ->
     InstanceStatusType
-    <$> getT "status"
-    <*> itemsSet "details" (
+    <$> xml' .< "status"
+    <*> itemsSet xml' "details" (\xml'' ->
         InstanceStatusDetail
-        <$> getT "name"
-        <*> getT "status"
-        <*> getT "impairedSince"
+        <$> xml'' .< "name"
+        <*> xml'' .< "status"
+        <*> xml'' .< "impairedSince"
         )
 
 ------------------------------------------------------------
@@ -256,11 +256,11 @@ startInstances instanceIds =
 instanceStateChangeSet
     :: (MonadResource m, MonadBaseControl IO m)
     => Conduit Event m InstanceStateChange
-instanceStateChangeSet = itemConduit "instancesSet" $ do
+instanceStateChangeSet = itemConduit "instancesSet" $ \xml ->
     InstanceStateChange
-    <$> getT "instanceId"
-    <*> instanceStateSink "currentState"
-    <*> instanceStateSink "previousState"
+    <$> xml .< "instanceId"
+    <*> instanceStateConv "currentState" xml
+    <*> instanceStateConv "previousState" xml
 
 ------------------------------------------------------------
 -- StopInstances
@@ -285,7 +285,7 @@ rebootInstances
     => [Text] -- ^ InstanceIds
     -> EC2 m Bool
 rebootInstances instanceIds =
-    ec2Query "RebootInstances" params $ getT "return"
+    ec2Query "RebootInstances" params $ xmlParser (.< "return")
   where
     params = ["InstanceId" |.#= instanceIds]
 
@@ -311,7 +311,7 @@ runInstances
     => RunInstancesRequest
     -> EC2 m Reservation
 runInstances param =
-    ec2Query "RunInstances" params reservationSink
+    ec2Query "RunInstances" params $ xmlParser reservationConv
   where
     params =
         [ "ImageId" |= runInstancesRequestImageId param
@@ -422,10 +422,11 @@ getConsoleOutput
     -> EC2 m ConsoleOutput
 getConsoleOutput iid =
     ec2Query "GetConsoleOutput" ["InstanceId" |= iid] $
-        ConsoleOutput
-        <$> getT "instanceId"
-        <*> getT "timestamp"
-        <*> getT "output"
+        xmlParser $ \xml ->
+            ConsoleOutput
+            <$> xml .< "instanceId"
+            <*> xml .< "timestamp"
+            <*> xml .< "output"
 
 ------------------------------------------------------------
 -- GetPasswordData
@@ -436,10 +437,11 @@ getPasswordData
     -> EC2 m PasswordData
 getPasswordData iid =
     ec2Query "GetPasswordData" ["InstanceId" |= iid] $
-        PasswordData
-        <$> getT "instanceId"
-        <*> getT "timestamp"
-        <*> getT "passwordData"
+        xmlParser $ \xml ->
+            PasswordData
+            <$> xml .< "instanceId"
+            <*> xml .< "timestamp"
+            <*> xml .< "passwordData"
 
 describeInstanceAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -447,22 +449,22 @@ describeInstanceAttribute
     -> InstanceAttributeRequest -- ^ Attribute
     -> EC2 m InstanceAttribute
 describeInstanceAttribute iid attr =
-    ec2Query "DescribeInstanceAttribute" params
-        $ getT_ "instanceId" *> f attr
+    ec2Query "DescribeInstanceAttribute" params $
+        xmlParser $ f attr
   where
     str = iar attr
     params =
         [ "InstanceId" |= iid
         , "Attribute" |= str
         ]
-    f InstanceAttributeRequestBlockDeviceMapping = instanceBlockDeviceMappingsSink
+    f InstanceAttributeRequestBlockDeviceMapping xml = instanceBlockDeviceMappingsConv xml
         >>= return . InstanceAttributeBlockDeviceMapping
-    f InstanceAttributeRequestProductCodes =
-        productCodeSink >>= return . InstanceAttributeProductCodes
-    f InstanceAttributeRequestGroupSet =
-        (itemsSet str $ getT "groupId")
+    f InstanceAttributeRequestProductCodes xml =
+        productCodeConv xml >>= return . InstanceAttributeProductCodes
+    f InstanceAttributeRequestGroupSet xml =
+        (itemsSet xml str (.< "groupId"))
         >>= return . InstanceAttributeGroupSet
-    f req = valueSink str (fromJust $ Map.lookup req h)
+    f req xml = valueConv str (fromJust $ Map.lookup req h) xml
     h = Map.fromList
         [ (InstanceAttributeRequestInstanceType,
            InstanceAttributeInstanceType . fromJust)
@@ -483,8 +485,8 @@ describeInstanceAttribute iid attr =
            InstanceAttributeEbsOptimized . just)
         ]
     just = fromJust . join . (fromText <$>)
-    valueSink name val =
-        (element name $ getT "value") >>= return . val
+    valueConv name val xml =
+        (getElement xml name (.< "value")) >>= return . val
 
 iar :: InstanceAttributeRequest -> Text
 iar InstanceAttributeRequestInstanceType          = "instanceType"
@@ -511,7 +513,7 @@ resetInstanceAttribute
     -> ResetInstanceAttributeRequest
     -> EC2 m Bool
 resetInstanceAttribute iid attr =
-    ec2Query "ResetInstanceAttribute" params $ getT "return"
+    ec2Query "ResetInstanceAttribute" params $ xmlParser (.< "return")
   where
     params =
         [ "InstanceId" |= iid
@@ -525,7 +527,7 @@ modifyInstanceAttribute
     -> ModifyInstanceAttributeRequest
     -> EC2 m Bool
 modifyInstanceAttribute iid attr =
-    ec2Query "ModifyInstanceAttribute" params $ getT "return"
+    ec2Query "ModifyInstanceAttribute" params $ xmlParser (.< "return")
   where
     params = ["InstanceId" |= iid, miap attr]
 
@@ -562,15 +564,15 @@ monitorInstances
     -> EC2 m (ResumableSource m MonitorInstancesResponse)
 monitorInstances iids =
     ec2QuerySource "MonitorInstances" ["InstanceId" |.#= iids]
-        monitorInstancesResponseSink
+        monitorInstancesResponseConv
 
-monitorInstancesResponseSink
+monitorInstancesResponseConv
     :: (MonadResource m, MonadBaseControl IO m)
     => Conduit Event m MonitorInstancesResponse
-monitorInstancesResponseSink = itemConduit "instancesSet" $
+monitorInstancesResponseConv = itemConduit "instancesSet" $ \xml ->
     MonitorInstancesResponse
-    <$> getT "instanceId"
-    <*> element "monitoring" (getT "state")
+    <$> xml .< "instanceId"
+    <*> getElement xml "monitoring" (.< "state")
 
 ------------------------------------------------------------
 -- UnmonitorInstances
@@ -581,7 +583,7 @@ unmonitorInstances
     -> EC2 m (ResumableSource m MonitorInstancesResponse)
 unmonitorInstances iids =
     ec2QuerySource "UnmonitorInstances" ["InstanceId" |.#= iids]
-        monitorInstancesResponseSink
+        monitorInstancesResponseConv
 
 ------------------------------------------------------------
 -- DescribeSpotInstanceRequests
@@ -594,101 +596,99 @@ describeSpotInstanceRequests
 describeSpotInstanceRequests requests filters = do
 --    ec2QueryDebug "DescribeInstances" params
     ec2QuerySource "DescribeSpotInstanceRequests" params $
-        itemConduit "spotInstanceRequestSet" spotInstanceRequestSink
+        itemConduit "spotInstanceRequestSet" spotInstanceRequestConv
   where
     params =
         [ "SpotInstanceRequestId" |.#= requests
         , filtersParam filters
         ]
 
-spotInstanceRequestSink :: MonadThrow m
-    => Consumer Event m SpotInstanceRequest
-spotInstanceRequestSink =
+spotInstanceRequestConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m SpotInstanceRequest
+spotInstanceRequestConv xml =
     SpotInstanceRequest
-    <$> getT "spotInstanceRequestId"
-    <*> getT "spotPrice"
-    <*> getT "type"
-    <*> getT "state"
-    <*> elementM "fault" (
+    <$> xml .< "spotInstanceRequestId"
+    <*> xml .< "spotPrice"
+    <*> xml .< "type"
+    <*> xml .< "state"
+    <*> getElementM xml "fault" (\xml' ->
         SpotInstanceFault
-        <$> getT "code"
-        <*> getT "message"
+        <$> xml' .< "code"
+        <*> xml' .< "message"
         )
-    <*> element "status" (
+    <*> getElement xml "status" (\xml' ->
         SpotInstanceStatus
-        <$> getT "code"
-        <*> getT "updateTime"
-        <*> getT "message"
+        <$> xml' .< "code"
+        <*> xml' .< "updateTime"
+        <*> xml' .< "message"
         )
-    <*> getT "validFrom"
-    <*> getT "validUntil"
-    <*> getT "launchGroup"
-    <*> getT "availabilityZoneGroup"
-    <*> spotInstanceLaunchSpecificationSink "launchSpecification"
-    <*> getT "instanceId"
-    <*> getT "createTime"
-    <*> getT "productDescription"
-    <*> resourceTagSink
-    <*> getT "launchedAvailabilityZone"
+    <*> xml .< "validFrom"
+    <*> xml .< "validUntil"
+    <*> xml .< "launchGroup"
+    <*> xml .< "availabilityZoneGroup"
+    <*> spotInstanceLaunchSpecificationConv "launchSpecification" xml
+    <*> xml .< "instanceId"
+    <*> xml .< "createTime"
+    <*> xml .< "productDescription"
+    <*> resourceTagConv xml
+    <*> xml .< "launchedAvailabilityZone"
 
-
-spotInstanceLaunchSpecificationSink :: MonadThrow m
-    => Text -> Consumer Event m SpotInstanceLaunchSpecification
-spotInstanceLaunchSpecificationSink label = element label (
+spotInstanceLaunchSpecificationConv :: (MonadThrow m, Applicative m)
+    => Text -> SimpleXML -> m SpotInstanceLaunchSpecification
+spotInstanceLaunchSpecificationConv label xml = getElement xml label $ \xml' ->
     SpotInstanceLaunchSpecification
-    <$> getT "imageId"
-    <*> getT "keyName"
-    <*> groupSetSink
-    <*> getT "instanceType"
-    <*> element "placement" (
+    <$> xml' .< "imageId"
+    <*> xml' .< "keyName"
+    <*> groupSetConv xml'
+    <*> xml' .< "instanceType"
+    <*> getElement xml' "placement" (\xml'' ->
         Placement
-        <$> getT "availabilityZone"
-        <*> getT "groupName"
-        <*> getT "tenancy"
+        <$> xml'' .< "availabilityZone"
+        <*> xml'' .< "groupName"
+        <*> xml'' .< "tenancy"
         )
-    <*> getT "kernelId"
-    <*> getT "ramdiskId"
-    <*> spotInstanceBlockDeviceMappingsSink
-    <*> element "monitoring" (
+    <*> xml' .< "kernelId"
+    <*> xml' .< "ramdiskId"
+    <*> spotInstanceBlockDeviceMappingsConv xml'
+    <*> getElement xml' "monitoring" (\xml'' ->
         SpotInstanceMonitoringState
-        <$> getT "enabled"
+        <$> xml'' .< "enabled"
         )
-    <*> getT "subnetId"
-    <*> spotInstanceNetworkInterfaceSink
-    <*> elementM "iamInstanceProfile" (
+    <*> xml' .< "subnetId"
+    <*> spotInstanceNetworkInterfaceConv xml'
+    <*> getElementM xml' "iamInstanceProfile" (\xml'' ->
         IamInstanceProfile
-        <$> getT "arn"
-        <*> getT "id"
+        <$> xml'' .< "arn"
+        <*> xml'' .< "id"
         )
-    <*> getT "ebsOptimized" 
-    )
+    <*> xml .< "ebsOptimized"
 
-spotInstanceBlockDeviceMappingsSink :: MonadThrow m
-    => Consumer Event m [SpotInstanceBlockDeviceMapping]
-spotInstanceBlockDeviceMappingsSink = itemsSet "blockDeviceMapping" (
+spotInstanceBlockDeviceMappingsConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [SpotInstanceBlockDeviceMapping]
+spotInstanceBlockDeviceMappingsConv xml = itemsSet xml "blockDeviceMapping" $ \xml' ->
     SpotInstanceBlockDeviceMapping
-    <$> getT "deviceName"
-    <*> element "ebs" (
+    <$> xml' .< "deviceName"
+    <*> getElement xml' "ebs" (\xml'' ->
         EbsSpotInstanceBlockDevice
-        <$> getT "volumeSize"
-        <*> getT "deleteOnTermination"
-        <*> getT "volumeType"
+        <$> xml'' .< "volumeSize"
+        <*> xml'' .< "deleteOnTermination"
+        <*> xml'' .< "volumeType"
         )
-    )
 
-spotInstanceNetworkInterfaceSink :: MonadThrow m
-    => Consumer Event m [SpotInstanceNetworkInterface]
-spotInstanceNetworkInterfaceSink = itemsSet "networkInterfaceSet" $
+
+spotInstanceNetworkInterfaceConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [SpotInstanceNetworkInterface]
+spotInstanceNetworkInterfaceConv xml = itemsSet xml "networkInterfaceSet" $ \xml' ->
     SpotInstanceNetworkInterface
-    <$> getT "deviceIndex"
-    <*> getT "subnetId"
-    <*> securityGroupSetSink
+    <$> xml' .< "deviceIndex"
+    <*> xml' .< "subnetId"
+    <*> securityGroupSetConv xml'
 
-securityGroupSetSink :: MonadThrow m
-    => Consumer Event m [SpotInstanceSecurityGroup]
-securityGroupSetSink = itemsSet "groupSet" $
+securityGroupSetConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m [SpotInstanceSecurityGroup]
+securityGroupSetConv xml = itemsSet xml "groupSet" $ \xml' ->
     SpotInstanceSecurityGroup
-    <$> getT "groupId"
+    <$> xml' .< "groupId"
 
 ------------------------------------------------------------
 -- RequestSpotInstances
@@ -699,8 +699,8 @@ requestSpotInstances
     => RequestSpotInstancesParam
     -> EC2 m [SpotInstanceRequest]
 requestSpotInstances param =
-    ec2Query "RequestSpotInstances" params $
-        itemsSet "spotInstanceRequestSet" spotInstanceRequestSink
+    ec2Query "RequestSpotInstances" params $ xmlParser $ \xml ->
+        itemsSet xml "spotInstanceRequestSet" spotInstanceRequestConv
   where
     params =
         [ "SpotPrice" |= requestSpotInstancesSpotPrice param
@@ -784,12 +784,12 @@ cancelSpotInstanceRequests
     -> EC2 m (ResumableSource m CancelSpotInstanceRequestsResponse)
 cancelSpotInstanceRequests requestIds =
     ec2QuerySource "CancelSpotInstanceRequests" params $
-        itemConduit "spotInstanceRequestSet" cancelSpotInstanceResponseSink
+        itemConduit "spotInstanceRequestSet" cancelSpotInstanceResponseConv
   where
     params = ["SpotInstanceRequestId" |.#= requestIds]
 
-cancelSpotInstanceResponseSink :: MonadThrow m
-    => Consumer Event m CancelSpotInstanceRequestsResponse
-cancelSpotInstanceResponseSink = CancelSpotInstanceRequestsResponse
-    <$> getT "spotInstanceRequestId"
-    <*> getT "state"
+cancelSpotInstanceResponseConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m CancelSpotInstanceRequestsResponse
+cancelSpotInstanceResponseConv xml = CancelSpotInstanceRequestsResponse
+    <$> xml .< "spotInstanceRequestId"
+    <*> xml .< "state"

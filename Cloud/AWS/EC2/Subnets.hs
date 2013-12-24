@@ -7,14 +7,13 @@ module Cloud.AWS.EC2.Subnets
     ) where
 
 import Data.Text (Text)
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 ------------------------------------------------------------
 -- DescribeSubnets
@@ -26,25 +25,25 @@ describeSubnets
     -> EC2 m (ResumableSource m Subnet)
 describeSubnets subnets filters = do
     ec2QuerySource "DescribeSubnets" params $
-        itemConduit "subnetSet" subnetSink
+        itemConduit "subnetSet" subnetConv
   where
     params =
         [ "SubnetId" |.#= subnets
         , filtersParam filters
         ]
 
-subnetSink :: MonadThrow m
-    => Consumer Event m Subnet
-subnetSink = Subnet
-    <$> getT "subnetId"
-    <*> getT "state"
-    <*> getT "vpcId"
-    <*> getT "cidrBlock"
-    <*> getT "availableIpAddressCount"
-    <*> getT "availabilityZone"
-    <*> getT "defaultForAz"
-    <*> getT "mapPublicIpOnLaunch"
-    <*> resourceTagSink
+subnetConv :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m Subnet
+subnetConv xml = Subnet
+    <$> xml .< "subnetId"
+    <*> xml .< "state"
+    <*> xml .< "vpcId"
+    <*> xml .< "cidrBlock"
+    <*> xml .< "availableIpAddressCount"
+    <*> xml .< "availabilityZone"
+    <*> xml .< "defaultForAz"
+    <*> xml .< "mapPublicIpOnLaunch"
+    <*> resourceTagConv xml
 
 ------------------------------------------------------------
 -- CreateSubnet
@@ -55,7 +54,7 @@ createSubnet
     -> EC2 m Subnet
 createSubnet param =
     ec2Query "CreateSubnet" params $
-          element "subnet" subnetSink
+          xmlParser $ \xml -> getElement xml "subnet" subnetConv
   where
     params = createSubnetParams param
 

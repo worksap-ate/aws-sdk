@@ -5,15 +5,14 @@ module Cloud.AWS.EC2.PlacementGroup
     , deletePlacementGroup
     ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative ((<$>), (<*>), Applicative)
 import Data.Conduit
 import Data.Text (Text)
-import Data.XML.Types (Event)
 
 import Cloud.AWS.EC2.Internal (EC2, itemConduit)
 import Cloud.AWS.EC2.Query (ec2Query, ec2QuerySource)
 import Cloud.AWS.EC2.Types (Filter, PlacementGroup(..), PlacementGroupStrategy(..))
-import Cloud.AWS.Lib.Parser (getT)
+import Cloud.AWS.Lib.Parser.Unordered ((.<), SimpleXML, xmlParser)
 import Cloud.AWS.Lib.Query ((|=), (|.#=), filtersParam)
 
 describePlacementGroups
@@ -23,19 +22,19 @@ describePlacementGroups
     -> EC2 m (ResumableSource m PlacementGroup)
 describePlacementGroups groupNames filters =
     ec2QuerySource "DescribePlacementGroups" params $
-        itemConduit "placementGroupSet" placementGroupSink
+        itemConduit "placementGroupSet" placementGroupConv
   where
     params =
         [ "GroupName" |.#= groupNames
         , filtersParam filters
         ]
 
-placementGroupSink :: MonadThrow m => Consumer Event m PlacementGroup
-placementGroupSink =
+placementGroupConv :: (MonadThrow m, Applicative m) => SimpleXML -> m PlacementGroup
+placementGroupConv xml =
     PlacementGroup
-    <$> getT "groupName"
-    <*> getT "strategy"
-    <*> getT "state"
+    <$> xml .< "groupName"
+    <*> xml .< "strategy"
+    <*> xml .< "state"
 
 createPlacementGroup
     :: (MonadResource m, MonadBaseControl IO m)
@@ -43,7 +42,7 @@ createPlacementGroup
     -> PlacementGroupStrategy -- ^ The placement group strategy.
     -> EC2 m Bool
 createPlacementGroup groupName strategy =
-    ec2Query "CreatePlacementGroup" params $ getT "return"
+    ec2Query "CreatePlacementGroup" params $ xmlParser (.< "return")
   where
     params =
         [ "GroupName" |= groupName
@@ -58,4 +57,4 @@ deletePlacementGroup
     => Text -- ^ The name of the placement group.
     -> EC2 m Bool
 deletePlacementGroup groupName =
-    ec2Query "DeletePlacementGroup" ["GroupName" |= groupName] $ getT "return"
+    ec2Query "DeletePlacementGroup" ["GroupName" |= groupName] $ xmlParser (.< "return")

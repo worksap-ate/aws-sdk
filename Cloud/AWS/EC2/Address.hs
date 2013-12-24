@@ -19,7 +19,7 @@ import Control.Applicative
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 -----------------------------------------------------
 -- DescribeAddresses
@@ -38,16 +38,17 @@ describeAddresses pubIps alloIds filters =
         , filtersParam filters
         ]
 
-    addressSet :: MonadThrow m => Conduit Event m Address
-    addressSet = itemConduit "addressesSet" $ Address
-        <$> getT "publicIp"
-        <*> getT "allocationId"
-        <*> getT "domain"
-        <*> getT "instanceId"
-        <*> getT "associationId"
-        <*> getT "networkInterfaceId"
-        <*> getT "networkInterfaceOwnerId"
-        <*> getT "privateIpAddress"
+    addressSet :: (MonadThrow m, Applicative m) => Conduit Event m Address
+    addressSet = itemConduit "addressesSet" $ \xml ->
+        Address
+        <$> xml .< "publicIp"
+        <*> xml .< "allocationId"
+        <*> xml .< "domain"
+        <*> xml .< "instanceId"
+        <*> xml .< "associationId"
+        <*> xml .< "networkInterfaceId"
+        <*> xml .< "networkInterfaceOwnerId"
+        <*> xml .< "privateIpAddress"
 
 -----------------------------------------------------
 -- AllocateAddress
@@ -57,11 +58,11 @@ allocateAddress
     => Bool -- ^ is VPC?
     -> EC2 m AllocateAddress
 allocateAddress isVpc = do
-    ec2Query "AllocateAddress" params $
+    ec2Query "AllocateAddress" params $ xmlParser $ \xml ->
         AllocateAddress
-        <$> getT "publicIp"
-        <*> getT "domain"
-        <*> getT "allocationId"
+        <$> xml .< "publicIp"
+        <*> xml .< "domain"
+        <*> xml .< "allocationId"
   where
     params = if isVpc then ["Domain" |= ("vpc" :: Text)] else []
 
@@ -74,7 +75,7 @@ releaseAddress
     -> Maybe Text -- ^ AllocationId
     -> EC2 m EC2Return
 releaseAddress addr allocid = do
-    ec2Query "ReleaseAddress" params $ getT "return"
+    ec2Query "ReleaseAddress" params $ xmlParser (.< "return")
   where
     params =
         [ "PublicIp" |=? addr
@@ -88,9 +89,9 @@ associateAddress
     :: (MonadResource m, MonadBaseControl IO m)
     => AssociateAddressRequest
     -> EC2 m (Bool, Maybe Text)
-associateAddress param = ec2Query "AssociateAddress" params $
-    (,) <$> getT "return"
-        <*> getT "associationId"
+associateAddress param = ec2Query "AssociateAddress" params $ xmlParser $ \xml ->
+    (,) <$> xml .< "return"
+        <*> xml .< "associationId"
   where
     params = associateAddressParams param
 
@@ -114,7 +115,7 @@ disassociateAddress
     -> EC2 m Bool
 disassociateAddress param =
     ec2Query "DisassociateAddress" (p param)
-        $ getT "return"
+        $ xmlParser (.< "return")
   where
     p (DisassociateAddressRequestEc2 pip)
         = ["PublicIp" |= pip]

@@ -13,14 +13,13 @@ module Cloud.AWS.EC2.SecurityGroup
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser
+import Cloud.AWS.Lib.Parser.Unordered
 
 describeSecurityGroups
     :: (MonadResource m, MonadBaseControl IO m)
@@ -30,16 +29,16 @@ describeSecurityGroups
     -> EC2 m (ResumableSource m SecurityGroup)
 describeSecurityGroups names ids filters =
     ec2QuerySource "DescribeSecurityGroups" params
-    $ itemConduit "securityGroupInfo" $
+    $ itemConduit "securityGroupInfo" $ \xml ->
         SecurityGroup
-        <$> getT "ownerId"
-        <*> getT "groupId"
-        <*> getT "groupName"
-        <*> getT "groupDescription"
-        <*> getT "vpcId"
-        <*> ipPermissionsSink "ipPermissions"
-        <*> ipPermissionsSink "ipPermissionsEgress"
-        <*> resourceTagSink
+        <$> xml .< "ownerId"
+        <*> xml .< "groupId"
+        <*> xml .< "groupName"
+        <*> xml .< "groupDescription"
+        <*> xml .< "vpcId"
+        <*> ipPermissionsConv "ipPermissions" xml
+        <*> ipPermissionsConv "ipPermissionsEgress" xml
+        <*> resourceTagConv xml
   where
     params =
         [ "GroupName" |.#= names
@@ -47,19 +46,19 @@ describeSecurityGroups names ids filters =
         , filtersParam filters
         ]
 
-ipPermissionsSink :: MonadThrow m
-    => Text -> Consumer Event m [IpPermission]
-ipPermissionsSink name = itemsSet name $ IpPermission
-    <$> getT "ipProtocol"
-    <*> getT "fromPort"
-    <*> getT "toPort"
-    <*> itemsSet "groups" (
+ipPermissionsConv :: (MonadThrow m, Applicative m)
+    => Text -> SimpleXML -> m [IpPermission]
+ipPermissionsConv name xml = itemsSet xml name $ \xml' -> IpPermission
+    <$> xml' .< "ipProtocol"
+    <*> xml' .< "fromPort"
+    <*> xml' .< "toPort"
+    <*> itemsSet xml' "groups" (\xml'' ->
         UserIdGroupPair
-        <$> getT "userId"
-        <*> getT "groupId"
-        <*> getT "groupName"
+        <$> xml'' .< "userId"
+        <*> xml'' .< "groupId"
+        <*> xml'' .< "groupName"
         )
-    <*> itemsSet "ipRanges" (getT "cidrIp")
+    <*> itemsSet xml' "ipRanges" (.< "cidrIp")
 
 createSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)
@@ -69,7 +68,7 @@ createSecurityGroup
     -> EC2 m (Maybe Text) -- ^ GroupId
 createSecurityGroup name desc vpc =
     ec2Query "CreateSecurityGroup" params
-        $ getT_ "return" *> getT "groupId"
+        $ xmlParser (.< "groupId")
   where
     params =
         [ "GroupName" |= name
@@ -82,7 +81,7 @@ deleteSecurityGroup
     => SecurityGroupRequest
     -> EC2 m Bool
 deleteSecurityGroup param =
-    ec2Query "DeleteSecurityGroup" params $ getT "return"
+    ec2Query "DeleteSecurityGroup" params $ xmlParser (.< "return")
   where
     params = [securityGroupRequestParam param]
 
@@ -133,7 +132,7 @@ securityGroupQuery
     -> [IpPermission]
     -> EC2 m Bool
 securityGroupQuery act param ipps =
-    ec2Query act params $ getT "return"
+    ec2Query act params $ xmlParser (.< "return")
   where
     params =
         [ securityGroupRequestParam param
