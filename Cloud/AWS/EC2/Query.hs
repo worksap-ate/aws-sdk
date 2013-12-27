@@ -12,7 +12,7 @@ module Cloud.AWS.EC2.Query
 import           Data.ByteString (ByteString)
 import           Data.ByteString.Lazy.Char8 ()
 
-import Data.XML.Types (Event(..))
+import Data.XML.Types (Event)
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XmlP
@@ -25,7 +25,7 @@ import Control.Applicative
 
 import Cloud.AWS.Class
 import Cloud.AWS.EC2.Internal
-import Cloud.AWS.Lib.Parser hiding (sinkError)
+import Cloud.AWS.Lib.Parser.Unordered (xmlParser, (.<), getElement)
 import Cloud.AWS.Lib.Query
 
 -- | Ver.2012-12-01
@@ -37,17 +37,18 @@ sinkRequestId :: MonadThrow m
 sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
-    getT "requestId"
+    xmlParser (.< "requestId")
 
-sinkError :: MonadThrow m
+sinkError :: (MonadThrow m, Applicative m)
     => ByteString -> ByteString -> Int -> Consumer Event m a
-sinkError ep a s = do
-    await
-    element "Response" $ do
-        (c,m) <- element "Errors" $ element "Error" $
-            (,) <$> getT "Code" <*> getT "Message"
-        r <- getT "RequestID"
-        lift $ monadThrow $ errorData ep a s c m r
+sinkError ep a s = xmlParser $ \xml -> do
+    getElement xml "Response" $ \xml1 -> do
+        (c, m) <- getElement xml1 "Errors" $ \xml2 ->
+            getElement xml2 "Error" $ \xml3 ->
+                (,) <$> xml3 .< "Code"
+                    <*> xml3 .< "Message"
+        r <- xml1 .< "RequestID"
+        monadThrow $ errorData ep a s c m r
   where
     errorData = if s < 500 then ClientError else ServerError
 
@@ -90,7 +91,7 @@ ec2QuerySource' action params token cond = do
     params' = ("NextToken" |=? token) : params
 
 nextToken :: MonadThrow m => Conduit Event m o
-nextToken = getT "nextToken" >>= maybe (return ()) (E.throw . NextToken)
+nextToken = xmlParser $ \xml -> (xml .< "nextToken") >>= maybe (return ()) (E.throw . NextToken)
 
 ec2Delete
     :: (MonadResource m, MonadBaseControl IO m)
@@ -99,4 +100,4 @@ ec2Delete
     -> Text -- ^ ID of Target
     -> EC2 m Bool
 ec2Delete apiName idName targetId = do
-    ec2Query apiName [ idName |= targetId ] $ getT "return"
+    ec2Query apiName [ idName |= targetId ] $ xmlParser (.< "return")
