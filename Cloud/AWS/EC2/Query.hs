@@ -25,7 +25,7 @@ import Control.Applicative
 
 import Cloud.AWS.Class
 import Cloud.AWS.EC2.Internal
-import Cloud.AWS.Lib.Parser.Unordered (xmlParser, (.<), getElement)
+import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, xmlParser, (.<), getElement)
 import Cloud.AWS.Lib.Query
 
 -- | Ver.2012-12-01
@@ -38,6 +38,10 @@ sinkRequestId = do
     await -- EventBeginDocument
     await -- EventBeginElement DescribeImagesResponse
     xmlParser (.< "requestId")
+
+sinkRequestId' :: (MonadThrow m, Applicative m)
+    => SimpleXML -> m (Maybe Text)
+sinkRequestId' = (.< "requestId")
 
 sinkError :: (MonadThrow m, Applicative m)
     => ByteString -> ByteString -> Int -> Consumer Event m a
