@@ -12,34 +12,34 @@ module Cloud.AWS.EC2
       -- * Instances
     , module Cloud.AWS.EC2.Instance
       -- * Images
-    , module Cloud.AWS.EC2.Image
-      -- * Volumes
-    , module Cloud.AWS.EC2.Volume
-      -- * Snapshots
-    , module Cloud.AWS.EC2.Snapshot
-      -- * Addresses
-    , module Cloud.AWS.EC2.Address
-      -- * KeyPairs
-    , module Cloud.AWS.EC2.KeyPair
-      -- * SecurityGroups
-    , module Cloud.AWS.EC2.SecurityGroup
-      -- * NetworkInterface
-    , module Cloud.AWS.EC2.NetworkInterface
-    , module Cloud.AWS.EC2.NetworkInterfaceAttribute
-      -- * Placements
+    -- , module Cloud.AWS.EC2.Image
+    --   -- * Volumes
+    -- , module Cloud.AWS.EC2.Volume
+    --   -- * Snapshots
+    -- , module Cloud.AWS.EC2.Snapshot
+    --   -- * Addresses
+    -- , module Cloud.AWS.EC2.Address
+    --   -- * KeyPairs
+    -- , module Cloud.AWS.EC2.KeyPair
+    --   -- * SecurityGroups
+    -- , module Cloud.AWS.EC2.SecurityGroup
+    --   -- * NetworkInterface
+    -- , module Cloud.AWS.EC2.NetworkInterface
+    -- , module Cloud.AWS.EC2.NetworkInterfaceAttribute
+    --   -- * Placements
     , module Cloud.AWS.EC2.Region
-    , module Cloud.AWS.EC2.AvailabilityZone
-    , module Cloud.AWS.EC2.PlacementGroup
-      -- * Tags
-    , module Cloud.AWS.EC2.Tag
-      -- * VPC
-    , module Cloud.AWS.EC2.VPC
-    , module Cloud.AWS.EC2.Subnets
-    , module Cloud.AWS.EC2.Acl
-    , module Cloud.AWS.EC2.RouteTable
-    , module Cloud.AWS.EC2.Route
-      -- * Tasks
-    , module Cloud.AWS.EC2.ConversionTask
+    -- , module Cloud.AWS.EC2.AvailabilityZone
+    -- , module Cloud.AWS.EC2.PlacementGroup
+    --   -- * Tags
+    -- , module Cloud.AWS.EC2.Tag
+    --   -- * VPC
+    -- , module Cloud.AWS.EC2.VPC
+    -- , module Cloud.AWS.EC2.Subnets
+    -- , module Cloud.AWS.EC2.Acl
+    -- , module Cloud.AWS.EC2.RouteTable
+    -- , module Cloud.AWS.EC2.Route
+    --   -- * Tasks
+    -- , module Cloud.AWS.EC2.ConversionTask
     ) where
 
 import Data.Conduit
@@ -54,25 +54,25 @@ import Cloud.AWS.EC2.Types
 import qualified Cloud.AWS.EC2.Util as Util
 import Cloud.AWS.EC2.Query (apiVersion)
 
-import Cloud.AWS.EC2.Image
+-- import Cloud.AWS.EC2.Image
 import Cloud.AWS.EC2.Region
-import Cloud.AWS.EC2.AvailabilityZone
+-- import Cloud.AWS.EC2.AvailabilityZone
 import Cloud.AWS.EC2.Instance
-import Cloud.AWS.EC2.Address
-import Cloud.AWS.EC2.Tag
-import Cloud.AWS.EC2.Snapshot
-import Cloud.AWS.EC2.Volume
-import Cloud.AWS.EC2.KeyPair
-import Cloud.AWS.EC2.SecurityGroup
-import Cloud.AWS.EC2.VPC
-import Cloud.AWS.EC2.Subnets
-import Cloud.AWS.EC2.Acl
-import Cloud.AWS.EC2.Route
-import Cloud.AWS.EC2.RouteTable
-import Cloud.AWS.EC2.NetworkInterface
-import Cloud.AWS.EC2.NetworkInterfaceAttribute
-import Cloud.AWS.EC2.PlacementGroup
-import Cloud.AWS.EC2.ConversionTask
+-- import Cloud.AWS.EC2.Address
+-- import Cloud.AWS.EC2.Tag
+-- import Cloud.AWS.EC2.Snapshot
+-- import Cloud.AWS.EC2.Volume
+-- import Cloud.AWS.EC2.KeyPair
+-- import Cloud.AWS.EC2.SecurityGroup
+-- import Cloud.AWS.EC2.VPC
+-- import Cloud.AWS.EC2.Subnets
+-- import Cloud.AWS.EC2.Acl
+-- import Cloud.AWS.EC2.Route
+-- import Cloud.AWS.EC2.RouteTable
+-- import Cloud.AWS.EC2.NetworkInterface
+-- import Cloud.AWS.EC2.NetworkInterfaceAttribute
+-- import Cloud.AWS.EC2.PlacementGroup
+-- import Cloud.AWS.EC2.ConversionTask
 
 -- | set endpoint to EC2 context by giving the EC2 region.
 setRegion

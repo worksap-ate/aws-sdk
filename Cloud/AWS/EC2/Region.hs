@@ -20,13 +20,13 @@ describeRegions
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Region)
 describeRegions regions filters =
-    ec2QuerySource "DescribeRegions" params regionInfoConduit
+    ec2QuerySource "DescribeRegions" params path regionInfoConduit
   where
+    path = "regionInfo" .- end "item"
     params =
         [ "RegionName" |.#= regions
         , filtersParam filters
         ]
-    regionInfoConduit = itemConduit "regionInfo" $ \xml ->
-        Region
-        <$> xml .< "regionName"
-        <*> xml .< "regionEndpoint"
+    regionInfoConduit = itemConduit $ \e -> Region
+        <$> e .< "regionName"
+        <*> e .< "regionEndpoint"

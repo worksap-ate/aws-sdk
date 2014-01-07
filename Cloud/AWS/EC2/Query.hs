@@ -14,88 +14,95 @@ import           Data.ByteString.Lazy.Char8 ()
 
 import Data.XML.Types (Event)
 import Data.Conduit
-import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XmlP
 import Control.Monad.Trans.Class (lift)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E
 import Data.Text (Text)
+import Data.Monoid ((<>))
 import Control.Applicative
 
 import Cloud.AWS.Class
 import Cloud.AWS.EC2.Internal
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, xmlParser, (.<), getElement)
+import Cloud.AWS.Lib.Parser.Unordered
 import Cloud.AWS.Lib.Query
+import Cloud.AWS.Lib.ToText (toText)
 
 -- | Ver.2012-12-01
 apiVersion :: ByteString
 apiVersion = "2012-12-01"
 
-sinkRequestId :: MonadThrow m
-    => Consumer Event m (Maybe Text)
-sinkRequestId = do
-    await -- EventBeginDocument
-    await -- EventBeginElement DescribeImagesResponse
-    xmlParser (.< "requestId")
-
-sinkRequestId' :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m (Maybe Text)
-sinkRequestId' = (.< "requestId")
-
 sinkError :: (MonadThrow m, Applicative m)
     => ByteString -> ByteString -> Int -> Consumer Event m a
-sinkError ep a s = xmlParser $ \xml -> do
-    getElement xml "Response" $ \xml1 -> do
-        (c, m) <- getElement xml1 "Errors" $ \xml2 ->
-            getElement xml2 "Error" $ \xml3 ->
-                (,) <$> xml3 .< "Code"
-                    <*> xml3 .< "Message"
-        r <- xml1 .< "RequestID"
-        monadThrow $ errorData ep a s c m r
+sinkError ep a s = elementConsumer >>= element "Response" conv
   where
+    conv e = do
+        (c, m) <- element "Errors" conv' e
+        r <- e .< "RequestID"
+        monadThrow $ errorData ep a s c m r
+    conv' = element "Error" conv''
+    conv'' e = (,)
+        <$> e .< "Code"
+        <*> e .< "Message"
     errorData = if s < 500 then ClientError else ServerError
 
 ec2Query
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParam]
-    -> Consumer Event m o
+    -> (XmlElement -> m o)
     -> EC2 m o
-ec2Query action params sink = do
-    src <- ec2QuerySource action params $ sink >>= yield
-    lift (src $$+- CL.head) >>= maybe (fail "parse error") return
+ec2Query action params conv = do
+    settings <- Reader.ask
+    ctx <- State.get
+    e <- lift $ E.handle exceptionTransform $ do
+        response <- requestQuery settings ctx action params apiVersion sinkError
+        res <- response $=+ XmlP.parseBytes XmlP.def
+        res $$+- elementConsumer
+    (o, rid) <- lift $ element (toText action <> "Response") conv' e
+    State.put ctx{lastRequestId = rid}
+    return o
+  where
+    conv' e = do
+        rid <- e .< "requestId"
+        o <- conv e
+        e .< "nextToken" >>= maybe (return ()) (E.throw . NextToken)
+        return (o, rid)
 
 ec2QuerySource
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParam]
-    -> Conduit Event m o
+    -> ElementPath
+    -> Conduit XmlElement m o
     -> EC2 m (ResumableSource m o)
-ec2QuerySource action params cond = do
-    ec2QuerySource' action params Nothing cond
+ec2QuerySource action params path cond =
+    ec2QuerySource' action params Nothing path cond
 
 ec2QuerySource'
     :: (MonadResource m, MonadBaseControl IO m)
     => ByteString
     -> [QueryParam]
     -> Maybe Text
-    -> Conduit Event m o
+    -> ElementPath
+    -> Conduit XmlElement m o
     -> EC2 m (ResumableSource m o)
-ec2QuerySource' action params token cond = do
+ec2QuerySource' action params token path cond = do
     settings <- Reader.ask
     ctx <- State.get
-    (src1, rid) <- lift $ E.handle exceptionTransform $ do
+    src <- lift $ E.handle exceptionTransform $ do
         response <- requestQuery settings ctx action params' apiVersion sinkError
         res <- response $=+ XmlP.parseBytes XmlP.def
-        res $$++ sinkRequestId
+        res $=+ elementConduit path'
+    (src', rid) <- lift $ src $$++ sinkReqId
     State.put ctx{lastRequestId = rid}
-    lift $ src1 $=+ (cond >> nextToken)
+    lift $ src' $=+ (cond >> nextToken)
   where
     params' = ("NextToken" |=? token) : params
-
-nextToken :: MonadThrow m => Conduit Event m o
-nextToken = xmlParser $ \xml -> (xml .< "nextToken") >>= maybe (return ()) (E.throw . NextToken)
+    path' = tag (action <> "Response") .= [ end "requestId", end "nextToken", path ]
+    sinkReqId = tryConvert (.< "requestId")
+    nextToken = tryConvert content >>= maybe (return ()) (E.throw . NextToken)
 
 ec2Delete
     :: (MonadResource m, MonadBaseControl IO m)
@@ -104,4 +111,4 @@ ec2Delete
     -> Text -- ^ ID of Target
     -> EC2 m Bool
 ec2Delete apiName idName targetId = do
-    ec2Query apiName [ idName |= targetId ] $ xmlParser (.< "return")
+    ec2Query apiName [ idName |= targetId ] (.< "return")
