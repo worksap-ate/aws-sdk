@@ -38,8 +38,8 @@ module Cloud.AWS.EC2
     , module Cloud.AWS.EC2.Acl
     -- , module Cloud.AWS.EC2.RouteTable
     -- , module Cloud.AWS.EC2.Route
-    --   -- * Tasks
-    -- , module Cloud.AWS.EC2.ConversionTask
+      -- * Tasks
+    , module Cloud.AWS.EC2.ConversionTask
     ) where
 
 import Data.Conduit
@@ -72,7 +72,7 @@ import Cloud.AWS.EC2.Acl
 -- import Cloud.AWS.EC2.NetworkInterface
 -- import Cloud.AWS.EC2.NetworkInterfaceAttribute
 -- import Cloud.AWS.EC2.PlacementGroup
--- import Cloud.AWS.EC2.ConversionTask
+import Cloud.AWS.EC2.ConversionTask
 
 -- | set endpoint to EC2 context by giving the EC2 region.
 setRegion

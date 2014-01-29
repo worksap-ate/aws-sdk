@@ -20,49 +20,50 @@ describeConversionTasks
     => [Text] -- ^ ConversionTaskIds
     -> EC2 m (ResumableSource m ConversionTask)
 describeConversionTasks ctids =
-    ec2QuerySource "DescribeConversionTasks" params $
-        itemConduit "conversionTasks" conversionTaskConv
+    ec2QuerySource "DescribeConversionTasks" params path $
+        itemConduit conversionTaskConv
   where
+    path = itemsPath "conversionTasks"
     params =
         [ "ConversionTaskId" |.#= ctids
         ]
 
 conversionTaskConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m ConversionTask
+    => XmlElement -> m ConversionTask
 conversionTaskConv xml = ConversionTask
     <$> xml .< "conversionTaskId"
     <*> xml .< "expirationTime"
-    <*> getElementM xml "importVolume" (\xml' ->
+    <*> elementM "importVolume" (\xml' ->
         ImportVolumeTaskDetails
         <$> xml' .< "bytesConverted"
         <*> xml' .< "availabilityZone"
         <*> xml' .< "description"
-        <*> getElement xml' "image" diskImageDescriptionConv
-        <*> getElement xml' "volume" diskImageVolumeDescriptionConv
-        )
-    <*> getElementM xml "importInstance" (\xml' ->
+        <*> element "image" diskImageDescriptionConv xml'
+        <*> element "volume" diskImageVolumeDescriptionConv xml'
+        ) xml
+    <*> elementM "importInstance" (\xml' ->
         ImportInstanceTaskDetails
-        <$> itemsSet xml' "volumes" (\xml'' ->
+        <$> itemsSet "volumes" (\xml'' ->
             ImportInstanceTaskDetailItem
             <$> xml'' .< "bytesConverted"
             <*> xml'' .< "availabilityZone"
-            <*> getElement xml'' "image" diskImageDescriptionConv
+            <*> element "image" diskImageDescriptionConv xml''
             <*> xml'' .< "description"
-            <*> getElement xml'' "volume" diskImageVolumeDescriptionConv
+            <*> element "volume" diskImageVolumeDescriptionConv xml''
             <*> xml'' .< "status"
             <*> xml'' .< "statusMessage"
-            )
+            ) xml'
         <*> xml' .< "instanceId"
         <*> xml' .< "platform"
         <*> xml' .< "description"
-        )
+        ) xml
     <*> xml .< "state"
     <*> xml .< "statusMessage"
 
 diskImageDescriptionConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DiskImageDescription
+    => XmlElement -> m DiskImageDescription
 diskImageDescriptionConv xml = DiskImageDescription
     <$> xml .< "format"
     <*> xml .< "size"
@@ -71,7 +72,7 @@ diskImageDescriptionConv xml = DiskImageDescription
 
 diskImageVolumeDescriptionConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DiskImageVolumeDescription
+    => XmlElement -> m DiskImageVolumeDescription
 diskImageVolumeDescriptionConv xml = DiskImageVolumeDescription
     <$> xml .< "size"
     <*> xml .< "id"
@@ -91,8 +92,8 @@ importVolume
     -> Int -- ^ Volume Size
     -> EC2 m ConversionTask
 importVolume zone image desc size =
-    ec2Query "ImportVolume" params $ xmlParser $ \xml ->
-        getElement xml "conversionTask" conversionTaskConv
+    ec2Query "ImportVolume" params $
+        element "conversionTask" conversionTaskConv
   where
     params =
         [ "AvailabilityZone" |= zone
@@ -114,8 +115,8 @@ importInstance
     -> Platform -- ^ Platform
     -> EC2 m ConversionTask
 importInstance desc ls images platform =
-    ec2Query "ImportInstance" params $ xmlParser $ \xml ->
-        getElement xml "conversionTask" conversionTaskConv
+    ec2Query "ImportInstance" params $
+        element "conversionTask" conversionTaskConv
   where
     params =
         [ "Description" |=? desc
