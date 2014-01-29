@@ -32,10 +32,10 @@ module Cloud.AWS.EC2
     -- , module Cloud.AWS.EC2.PlacementGroup
     --   -- * Tags
     -- , module Cloud.AWS.EC2.Tag
-    --   -- * VPC
+      -- * VPC
     -- , module Cloud.AWS.EC2.VPC
     -- , module Cloud.AWS.EC2.Subnets
-    -- , module Cloud.AWS.EC2.Acl
+    , module Cloud.AWS.EC2.Acl
     -- , module Cloud.AWS.EC2.RouteTable
     -- , module Cloud.AWS.EC2.Route
     --   -- * Tasks
@@ -66,7 +66,7 @@ import Cloud.AWS.EC2.Instance
 -- import Cloud.AWS.EC2.SecurityGroup
 -- import Cloud.AWS.EC2.VPC
 -- import Cloud.AWS.EC2.Subnets
--- import Cloud.AWS.EC2.Acl
+import Cloud.AWS.EC2.Acl
 -- import Cloud.AWS.EC2.Route
 -- import Cloud.AWS.EC2.RouteTable
 -- import Cloud.AWS.EC2.NetworkInterface

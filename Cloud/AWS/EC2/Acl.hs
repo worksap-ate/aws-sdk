@@ -25,47 +25,52 @@ describeNetworkAcls
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m NetworkAcl)
 describeNetworkAcls nids filters = do
-    ec2QuerySource "DescribeNetworkAcls" params $
-        itemConduit "networkAclSet" networkAclConv
+    ec2QuerySource "DescribeNetworkAcls" params path $
+        itemConduit networkAclConv
   where
+    path = itemsPath "networkAclSet"
     params =
         [ "NetworkAclId" |.#= nids
         , filtersParam filters
         ]
 
 networkAclConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m NetworkAcl
-networkAclConv xml = NetworkAcl
-    <$> xml .< "networkAclId"
-    <*> xml .< "vpcId"
-    <*> xml .< "default"
-    <*> itemsSet xml "entrySet" (\xml' -> NetworkAclEntry
-        <$> xml' .< "ruleNumber"
-        <*> xml' .< "protocol"
-        <*> xml' .< "ruleAction"
-        <*> xml' .< "egress"
-        <*> xml' .< "cidrBlock"
-        <*> getElementM xml' "icmpTypeCode" (\xml'' -> IcmpTypeCode
-            <$> xml'' .< "code"
-            <*> xml'' .< "type"
-            )
-        <*> getElementM xml' "portRange" (\xml'' -> PortRange
-            <$> xml'' .< "from"
-            <*> xml'' .< "to"))
-    <*> itemsSet xml "associationSet" (\xml' -> NetworkAclAssociation
-        <$> xml' .< "networkAclAssociationId"
-        <*> xml' .< "networkAclId"
-        <*> xml' .< "subnetId"
-        )
-    <*> resourceTagConv xml
+    => XmlElement -> m NetworkAcl
+networkAclConv = conv
+  where
+    conv e = NetworkAcl
+        <$> e .< "networkAclId"
+        <*> e .< "vpcId"
+        <*> e .< "default"
+        <*> itemsSet "entrySet" entryConv e
+        <*> itemsSet "associationSet" assocConv e
+        <*> resourceTagConv e
+    entryConv e = NetworkAclEntry
+        <$> e .< "ruleNumber"
+        <*> e .< "protocol"
+        <*> e .< "ruleAction"
+        <*> e .< "egress"
+        <*> e .< "cidrBlock"
+        <*> elementM "icmpTypeCode" icmpConv e
+        <*> elementM "portRange" prConv e
+    icmpConv e = IcmpTypeCode
+        <$> e .< "code"
+        <*> e .< "type"
+    prConv e = PortRange
+        <$> e .< "from"
+        <*> e .< "to"
+    assocConv e = NetworkAclAssociation
+        <$> e .< "networkAclAssociationId"
+        <*> e .< "networkAclId"
+        <*> e .< "subnetId"
 
 createNetworkAcl
     :: (MonadResource m, MonadBaseControl IO m)
     => Text -- ^ VpcId
     -> EC2 m NetworkAcl
 createNetworkAcl vpcid =
-    ec2Query "CreateNetworkAcl" params $ xmlParser $ \xml ->
-        getElement xml "networkAcl" networkAclConv
+    ec2Query "CreateNetworkAcl" params $
+        element "networkAcl" networkAclConv
   where
     params = ["VpcId" |= vpcid]
 
@@ -81,8 +86,7 @@ replaceNetworkAclAssociation
     -> Text -- ^ NetworkAclId
     -> EC2 m Text
 replaceNetworkAclAssociation assoc aclid =
-    ec2Query "ReplaceNetworkAclAssociation" params $
-        xmlParser (.< "newAssociationId")
+    ec2Query "ReplaceNetworkAclAssociation" params (.< "newAssociationId")
   where
     params =
         [ "AssociationId" |= assoc
@@ -94,7 +98,7 @@ createNetworkAclEntry
     => NetworkAclEntryRequest
     -> EC2 m Bool
 createNetworkAclEntry req =
-    ec2Query "CreateNetworkAclEntry" params $ xmlParser (.< "return")
+    ec2Query "CreateNetworkAclEntry" params (.< "return")
   where
     params = reqToParams req
 
@@ -133,7 +137,7 @@ deleteNetworkAclEntry
     -> Bool -- ^ Egress
     -> EC2 m Bool
 deleteNetworkAclEntry aclid rule egress =
-    ec2Query "DeleteNetworkAclEntry" params $ xmlParser (.< "return")
+    ec2Query "DeleteNetworkAclEntry" params (.< "return")
   where
     params =
         [ "NetworkAclId" |= aclid
@@ -146,6 +150,6 @@ replaceNetworkAclEntry
     => NetworkAclEntryRequest
     -> EC2 m Bool
 replaceNetworkAclEntry req =
-    ec2Query "ReplaceNetworkAclEntry" params $ xmlParser (.< "return")
+    ec2Query "ReplaceNetworkAclEntry" params (.< "return")
   where
     params = reqToParams req

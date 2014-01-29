@@ -59,7 +59,7 @@ library
                    , Cloud.AWS.EC2.Query
                    , Cloud.AWS.EC2.Region
                    -- , Cloud.AWS.EC2.VPC
-                   -- , Cloud.AWS.EC2.Acl
+                   , Cloud.AWS.EC2.Acl
                    -- , Cloud.AWS.EC2.NetworkInterface
                    -- , Cloud.AWS.EC2.NetworkInterfaceAttribute
                    -- , Cloud.AWS.EC2.Tag
