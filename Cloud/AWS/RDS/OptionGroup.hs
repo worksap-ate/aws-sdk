@@ -12,7 +12,7 @@ import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement, content)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, content)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types.OptionGroup
@@ -39,7 +39,7 @@ describeOptionGroups engine ver marker maxRecords name =
 
 optionGroupSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m OptionGroup
+    => XmlElement -> m OptionGroup
 optionGroupSink xml = OptionGroup
     <$> xml .< "AllowsVpcAndNonVpcInstanceMemberships"
     <*> xml .< "MajorEngineVersion"
@@ -51,7 +51,7 @@ optionGroupSink xml = OptionGroup
 
 optionSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Option
+    => XmlElement -> m Option
 optionSink xml = Option
     <$> xml .< "Port"
     <*> xml .< "OptionName"
@@ -64,7 +64,7 @@ optionSink xml = Option
 
 optionSettingSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m OptionSetting
+    => XmlElement -> m OptionSetting
 optionSettingSink xml = OptionSetting
     <$> xml .< "AllowedValues"
     <*> xml .< "ApplyType"
@@ -84,8 +84,8 @@ createOptionGroup
     -> Text -- ^ OptionGroupName
     -> RDS m OptionGroup
 createOptionGroup engine ver desc name =
-    rdsQuery "CreateOptionGroup" params $ \xml ->
-        getElement xml "OptionGroup" optionGroupSink
+    rdsQuery "CreateOptionGroup" params $
+        element "OptionGroup" optionGroupSink
   where
     params =
         [ "EngineName" |= engine
@@ -122,7 +122,7 @@ describeOptionGroupOptions name version marker maxRecords =
 
 optionGroupOptionSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m OptionGroupOption
+    => XmlElement -> m OptionGroupOption
 optionGroupOptionSink xml = OptionGroupOption
     <$> xml .< "MajorEngineVersion"
     <*> xml .< "Persistent"
@@ -137,7 +137,7 @@ optionGroupOptionSink xml = OptionGroupOption
 
 optionGroupOptionSettingSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m OptionGroupOptionSetting
+    => XmlElement -> m OptionGroupOptionSetting
 optionGroupOptionSettingSink xml = OptionGroupOptionSetting
     <$> xml .< "AllowedValues"
     <*> xml .< "ApplyType"
@@ -153,8 +153,8 @@ modifyOptionGroup
     -> Maybe Bool -- ^ ApplyImmediately
     -> RDS m OptionGroup
 modifyOptionGroup name req imm =
-    rdsQuery "ModifyOptionGroup" params $ \xml ->
-        getElement xml "OptionGroup" optionGroupSink
+    rdsQuery "ModifyOptionGroup" params $
+        element "OptionGroup" optionGroupSink
   where
     params =
         [ "OptionGroupName" |= name

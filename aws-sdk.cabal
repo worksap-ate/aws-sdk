@@ -27,15 +27,14 @@ flag debug
     default: False
 
 library
-  exposed-modules:
-                   -- Cloud.AWS
-                   Cloud.AWS.EC2
+  exposed-modules:   Cloud.AWS
+                   , Cloud.AWS.EC2
                    , Cloud.AWS.EC2.Types
                    , Cloud.AWS.EC2.Util
                    , Cloud.AWS.EC2.Metadata
-                   -- , Cloud.AWS.RDS
-                   -- , Cloud.AWS.RDS.Types
-                   -- , Cloud.AWS.RDS.Util
+                   , Cloud.AWS.RDS
+                   , Cloud.AWS.RDS.Types
+                   , Cloud.AWS.RDS.Util
                    , Cloud.AWS.ELB
                    , Cloud.AWS.ELB.Types
                    , Cloud.AWS.CloudWatch
@@ -87,25 +86,25 @@ library
                    , Cloud.AWS.EC2.Types.Volume
                    , Cloud.AWS.Lib.Parser
                    , Cloud.AWS.Lib.Query
-                   -- , Cloud.AWS.RDS.Internal
-                   -- , Cloud.AWS.RDS.DBInstance
-                   -- , Cloud.AWS.RDS.DBParameterGroup
-                   -- , Cloud.AWS.RDS.DBSecurityGroup
-                   -- , Cloud.AWS.RDS.DBSnapshot
-                   -- , Cloud.AWS.RDS.DBSubnetGroup
-                   -- , Cloud.AWS.RDS.Event
-                   -- , Cloud.AWS.RDS.EventSubscription
-                   -- , Cloud.AWS.RDS.OptionGroup
-                   -- , Cloud.AWS.RDS.Tag
-                   -- , Cloud.AWS.RDS.Types.DBInstance
-                   -- , Cloud.AWS.RDS.Types.DBParameterGroup
-                   -- , Cloud.AWS.RDS.Types.DBSecurityGroup
-                   -- , Cloud.AWS.RDS.Types.DBSnapshot
-                   -- , Cloud.AWS.RDS.Types.DBSubnetGroup
-                   -- , Cloud.AWS.RDS.Types.Event
-                   -- , Cloud.AWS.RDS.Types.EventSubscription
-                   -- , Cloud.AWS.RDS.Types.OptionGroup
-                   -- , Cloud.AWS.RDS.Types.Tag
+                   , Cloud.AWS.RDS.Internal
+                   , Cloud.AWS.RDS.DBInstance
+                   , Cloud.AWS.RDS.DBParameterGroup
+                   , Cloud.AWS.RDS.DBSecurityGroup
+                   , Cloud.AWS.RDS.DBSnapshot
+                   , Cloud.AWS.RDS.DBSubnetGroup
+                   , Cloud.AWS.RDS.Event
+                   , Cloud.AWS.RDS.EventSubscription
+                   , Cloud.AWS.RDS.OptionGroup
+                   , Cloud.AWS.RDS.Tag
+                   , Cloud.AWS.RDS.Types.DBInstance
+                   , Cloud.AWS.RDS.Types.DBParameterGroup
+                   , Cloud.AWS.RDS.Types.DBSecurityGroup
+                   , Cloud.AWS.RDS.Types.DBSnapshot
+                   , Cloud.AWS.RDS.Types.DBSubnetGroup
+                   , Cloud.AWS.RDS.Types.Event
+                   , Cloud.AWS.RDS.Types.EventSubscription
+                   , Cloud.AWS.RDS.Types.OptionGroup
+                   , Cloud.AWS.RDS.Types.Tag
                    , Cloud.AWS.ELB.Internal
                    , Cloud.AWS.ELB.LoadBalancer
                    , Cloud.AWS.CloudWatch.Internal

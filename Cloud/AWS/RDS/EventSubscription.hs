@@ -12,7 +12,7 @@ import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content, getElement)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content, element)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (EventSubscription(..), SourceType)
@@ -35,7 +35,7 @@ describeEventSubscriptions name marker maxRecords =
 
 eventSubscriptionSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m EventSubscription
+    => XmlElement -> m EventSubscription
 eventSubscriptionSink xml = EventSubscription
     <$> xml .< "Enabled"
     <*> xml .< "CustomerAwsId"
@@ -57,8 +57,8 @@ createEventSubscription
     -> Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 createEventSubscription enabled ecs topic sids stype name =
-    rdsQuery "CreateEventSubscription" params $ \xml ->
-        getElement xml "EventSubscription" eventSubscriptionSink
+    rdsQuery "CreateEventSubscription" params $
+        element "EventSubscription" eventSubscriptionSink
   where
     params =
         [ "Enabled" |=? enabled
@@ -74,8 +74,8 @@ deleteEventSubscription
     => Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 deleteEventSubscription name =
-    rdsQuery "DeleteEventSubscription" ["SubscriptionName" |= name] $ \xml ->
-        getElement xml "EventSubscription" eventSubscriptionSink
+    rdsQuery "DeleteEventSubscription" ["SubscriptionName" |= name] $
+        element "EventSubscription" eventSubscriptionSink
 
 modifyEventSubscription
     :: (MonadBaseControl IO m, MonadResource m)
@@ -86,8 +86,8 @@ modifyEventSubscription
     -> Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 modifyEventSubscription enabled ecs topic stype name =
-    rdsQuery "ModifyEventSubscription" params $ \xml ->
-        getElement xml "EventSubscription" eventSubscriptionSink
+    rdsQuery "ModifyEventSubscription" params $
+        element "EventSubscription" eventSubscriptionSink
   where
     params =
         [ "Enabled" |=? enabled
@@ -103,8 +103,8 @@ addSourceIdentifierToSubscription
     -> Text -- ^ SubscriptionName
     -> RDS m EventSubscription
 addSourceIdentifierToSubscription src name =
-    rdsQuery "AddSourceIdentifierToSubscription" params $ \xml ->
-        getElement xml "EventSubscription" eventSubscriptionSink
+    rdsQuery "AddSourceIdentifierToSubscription" params $
+        element "EventSubscription" eventSubscriptionSink
   where
     params =
         [ "SourceIdentifier" |= src

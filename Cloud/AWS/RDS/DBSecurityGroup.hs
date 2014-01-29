@@ -13,7 +13,7 @@ import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 import Cloud.AWS.Lib.Query ((|=), (|=?))
 import Cloud.AWS.RDS.Internal (RDS, rdsQueryOnlyMetadata, rdsQuery, elements)
 import Cloud.AWS.RDS.Types hiding (Event)
@@ -36,7 +36,7 @@ describeDBSecurityGroups name marker maxRecords =
 
 dbSecurityGroupSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DBSecurityGroup
+    => XmlElement -> m DBSecurityGroup
 dbSecurityGroupSink xml = DBSecurityGroup
     <$> elements "EC2SecurityGroup" (\xml' ->
         EC2SecurityGroup
@@ -61,8 +61,8 @@ createDBSecurityGroup
     -> Text -- ^ DBSecurityGroupDescription
     -> RDS m DBSecurityGroup
 createDBSecurityGroup name desc =
-    rdsQuery "CreateDBSecurityGroup" params $ \xml ->
-        getElement xml "DBSecurityGroup" dbSecurityGroupSink
+    rdsQuery "CreateDBSecurityGroup" params $
+        element "DBSecurityGroup" dbSecurityGroupSink
   where
     params =
         [ "DBSecurityGroupName" |= name
@@ -86,8 +86,8 @@ authorizeDBSecurityGroupIngress
     -> Maybe Text -- ^ EC2SecurityGroupOwnerId
     -> RDS m DBSecurityGroup
 authorizeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
-    rdsQuery "AuthorizeDBSecurityGroupIngress" params $ \xml ->
-        getElement xml "DBSecurityGroup" dbSecurityGroupSink
+    rdsQuery "AuthorizeDBSecurityGroupIngress" params $
+        element "DBSecurityGroup" dbSecurityGroupSink
   where
     params =
         [ "DBSecurityGroupName" |= dbsg
@@ -106,8 +106,8 @@ revokeDBSecurityGroupIngress
     -> Maybe Text -- ^ EC2SecurityGroupOwnerId
     -> RDS m DBSecurityGroup
 revokeDBSecurityGroupIngress dbsg ip sgid sgname sgoid =
-    rdsQuery "RevokeDBSecurityGroupIngress" params $ \xml ->
-        getElement xml "DBSecurityGroup" dbSecurityGroupSink
+    rdsQuery "RevokeDBSecurityGroupIngress" params $
+        element "DBSecurityGroup" dbSecurityGroupSink
   where
     params =
         [ "DBSecurityGroupName" |= dbsg

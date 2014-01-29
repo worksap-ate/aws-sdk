@@ -10,7 +10,7 @@ import Data.Conduit
 import Data.Text (Text)
 import Data.Time (UTCTime)
 
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types
@@ -43,7 +43,7 @@ describeEvents sid stype d start end categories marker maxRecords =
 
 eventSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Event
+    => XmlElement -> m Event
 eventSink xml = Event
     <$> xml .< "Message"
     <*> xml .< "SourceType"
@@ -63,7 +63,7 @@ describeEventCategories stype =
 
 eventCategoriesMapSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m EventCategoriesMap
+    => XmlElement -> m EventCategoriesMap
 eventCategoriesMapSink xml = EventCategoriesMap
     <$> xml .< "SourceType"
     <*> elements' "EventCategories" "EventCategory" content xml

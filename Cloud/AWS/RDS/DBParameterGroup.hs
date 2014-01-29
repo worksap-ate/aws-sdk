@@ -15,7 +15,7 @@ import Control.Applicative
 import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement, getElementM)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM)
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#.))
 import Cloud.AWS.RDS.Internal (RDS, rdsQueryOnlyMetadata, rdsQuery, elements, elements')
 import Cloud.AWS.RDS.Types hiding (Event)
@@ -38,7 +38,7 @@ describeDBParameterGroups name marker maxRecords =
 
 dbParameterGroupSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DBParameterGroup
+    => XmlElement -> m DBParameterGroup
 dbParameterGroupSink xml = DBParameterGroup
     <$> xml .< "DBParameterGroupFamily"
     <*> xml .< "Description"
@@ -51,8 +51,8 @@ createDBParameterGroup
     -> Text -- ^ Description
     -> RDS m DBParameterGroup
 createDBParameterGroup family name desc =
-    rdsQuery "CreateDBParameterGroup" params $ \xml ->
-        getElement xml "DBParameterGroup" dbParameterGroupSink
+    rdsQuery "CreateDBParameterGroup" params $
+        element "DBParameterGroup" dbParameterGroupSink
   where
     params =
         [ "DBParameterGroupFamily" |= family
@@ -89,7 +89,7 @@ describeDBParameters name marker maxRecords src =
 
 parameterSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Parameter
+    => XmlElement -> m Parameter
 parameterSink xml = Parameter
     <$> xml .< "ParameterValue"
     <*> xml .< "DataType"
@@ -169,19 +169,19 @@ describeDBEngineVersions family only engine ver list marker maxRec =
 
 dbEngineVersionSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DBEngineVersion
+    => XmlElement -> m DBEngineVersion
 dbEngineVersionSink xml = DBEngineVersion
     <$> xml .< "DBParameterGroupFamily"
     <*> xml .< "Engine"
     <*> elements' "SupportedCharacterSets" "CharacterSet" characterSetSink xml
     <*> xml .< "DBEngineDescription"
-    <*> getElementM xml "DefaultCharacterSet" characterSetSink
+    <*> elementM "DefaultCharacterSet" characterSetSink xml
     <*> xml .< "EngineVersion"
     <*> xml .< "DBEngineVersionDescription"
 
 characterSetSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m CharacterSet
+    => XmlElement -> m CharacterSet
 characterSetSink xml = CharacterSet
     <$> xml .< "CharacterSetName"
     <*> xml .< "CharacterSetDescription"
@@ -193,16 +193,17 @@ describeEngineDefaultParameters
     -> Maybe Int -- ^ MaxRecords
     -> RDS m (Maybe Text, EngineDefaults) -- ^ (Marker, EngineDefaults)
 describeEngineDefaultParameters family marker maxRecords =
-    rdsQuery "DescribeEngineDefaultParameters" params $ \xml ->
-        getElement xml "EngineDefaults" $ \xml' -> (,)
-            <$> xml' .< "Marker"
-            <*> (\xml'' -> EngineDefaults
-                <$> xml'' .< "DBParameterGroupFamily"
-                <*> elements "Parameter" parameterSink xml''
-                ) xml'
+    rdsQuery "DescribeEngineDefaultParameters" params $
+        element "EngineDefaults" conv
   where
     params =
         [ "DBParameterGroupFamily" |= family
         , "Marker" |=? marker
         , "MaxRecords" |=? maxRecords
         ]
+    conv xml' = (,)
+        <$> xml' .< "Marker"
+        <*> (\xml'' -> EngineDefaults
+            <$> xml'' .< "DBParameterGroupFamily"
+            <*> elements "Parameter" parameterSink xml''
+            ) xml'
