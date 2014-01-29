@@ -31,7 +31,7 @@ import Data.Conduit
 import Control.Applicative hiding (empty)
 
 import Cloud.AWS.Lib.Parser (members)
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content, getElement, getElementM)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content, element, elementM)
 import Cloud.AWS.Lib.Query
 
 import Cloud.AWS.ELB.Types
@@ -51,64 +51,58 @@ describeLoadBalancers lbs marker =
         ]
 
 sinkLoadBalancers :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m [LoadBalancer]
+    => XmlElement -> m [LoadBalancer]
 sinkLoadBalancers = members "LoadBalancerDescriptions" $ \xml ->
     LoadBalancer
     <$> members "SecurityGroups" content xml
     <*> xml .< "CreatedTime"
     <*> xml .< "LoadBalancerName"
-    <*> getElement xml "HealthCheck" sinkHealthCheck
+    <*> element "HealthCheck" sinkHealthCheck xml
     <*> xml .< "VPCId"
-    <*> members "ListenerDescriptions"
-        (\xml' -> ListenerDescription
-        <$> members "PolicyNames" content xml'
-        <*> getElement xml' "Listener"
-            (\xml'' -> Listener
-            <$> xml'' .< "Protocol"
-            <*> xml'' .< "LoadBalancerPort"
-            <*> xml'' .< "InstanceProtocol"
-            <*> xml'' .< "SSLCertificateId"
-            <*> xml'' .< "InstancePort"
-            )
-        ) xml
+    <*> members "ListenerDescriptions" lisDescConv xml
     <*> members "Instances" sinkInstance xml
-    <*> getElement xml "Policies"
-        (\xml' -> Policies
-        <$> members "AppCookieStickinessPolicies"
-            (\xml'' -> AppCookieStickinessPolicy
-            <$> xml'' .< "CookieName"
-            <*> xml'' .< "PolicyName"
-            ) xml'
-        <*> members "OtherPolicies" content xml'
-        <*> members "LBCookieStickinessPolicies"
-            (\xml'' -> LBCookieStickinessPolicy
-            <$> xml'' .< "PolicyName"
-            <*> xml'' .< "CookieExpirationPeriod"
-            ) xml'
-        )
+    <*> element "Policies" polConv xml
     <*> members "AvailabilityZones" content xml
     <*> xml .< "CanonicalHostedZoneName"
     <*> xml .< "CanonicalHostedZoneNameID"
     <*> xml .< "Scheme"
-    <*> getElementM xml "SourceSecurityGroup"
-        (\xml' -> SourceSecurityGroup
-        <$> xml' .< "OwnerAlias"
-        <*> xml' .< "GroupName"
-        )
+    <*> elementM "SourceSecurityGroup" secConv xml
     <*> xml .< "DNSName"
-    <*> members "BackendServerDescriptions"
-        (\xml' -> BackendServerDescription
-        <$> xml' .< "InstancePort"
-        <*> members "PolicyNames" content xml'
-        ) xml
+    <*> members "BackendServerDescriptions" srvConv xml
     <*> members "Subnets" content xml
+  where
+    lisDescConv e = ListenerDescription
+        <$> members "PolicyNames" content e
+        <*> element "Listener" lisConv e
+    lisConv e = Listener
+        <$> e .< "Protocol"
+        <*> e .< "LoadBalancerPort"
+        <*> e .< "InstanceProtocol"
+        <*> e .< "SSLCertificateId"
+        <*> e .< "InstancePort"
+    polConv e = Policies
+        <$> members "AppCookieStickinessPolicies" appCookieConv e
+        <*> members "OtherPolicies" content e
+        <*> members "LBCookieStickinessPolicies" lbCookieConv e
+    appCookieConv e = AppCookieStickinessPolicy
+        <$> e .< "CookieName"
+        <*> e .< "PolicyName"
+    lbCookieConv e = LBCookieStickinessPolicy
+        <$> e .< "PolicyName"
+        <*> e .< "CookieExpirationPeriod"
+    secConv e = SourceSecurityGroup
+        <$> e .< "OwnerAlias"
+        <*> e .< "GroupName"
+    srvConv e = BackendServerDescription
+        <$> e .< "InstancePort"
+        <*> members "PolicyNames" content e
 
 sinkInstance :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Instance
+    => XmlElement -> m Instance
 sinkInstance xml = Instance <$> xml .< "InstanceId"
 
 sinkHealthCheck :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m HealthCheck
+    => XmlElement -> m HealthCheck
 sinkHealthCheck xml =
     HealthCheck
     <$> xml .< "Interval"
@@ -293,7 +287,7 @@ describeLoadBalancerPolicies mlb policies =
         ]
 
 sinkPolicyDescription :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m PolicyDescription
+    => XmlElement -> m PolicyDescription
 sinkPolicyDescription xml =
     PolicyDescription
     <$> xml .< "PolicyName"
@@ -301,7 +295,7 @@ sinkPolicyDescription xml =
     <*> members "PolicyAttributeDescriptions" sinkPolicyAttribute xml
 
 sinkPolicyAttribute :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m PolicyAttribute
+    => XmlElement -> m PolicyAttribute
 sinkPolicyAttribute xml =
     PolicyAttribute
     <$> xml .< "AttributeName"
@@ -318,7 +312,7 @@ describeLoadBalancerPolicyTypes typeNames =
     params = ["PolicyTypeNames.member" |.#= typeNames]
 
 sinkPolicyType :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m PolicyType
+    => XmlElement -> m PolicyType
 sinkPolicyType xml =
     PolicyType
     <$> members "PolicyAttributeTypeDescriptions" sinkPolicyAttributeType xml
@@ -326,7 +320,7 @@ sinkPolicyType xml =
     <*> xml .< "Description"
 
 sinkPolicyAttributeType :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m PolicyAttributeType
+    => XmlElement -> m PolicyAttributeType
 sinkPolicyAttributeType xml =
     PolicyAttributeType
     <$> xml .< "AttributeName"
@@ -388,7 +382,7 @@ describeInstanceHealth insts lb =
         ]
 
 sinkInstanceState :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m InstanceState
+    => XmlElement -> m InstanceState
 sinkInstanceState xml =
     InstanceState
     <$> xml .< "Description"
@@ -402,8 +396,8 @@ configureHealthCheck
     -> Text -- ^ The mnemonic name associated with the LoadBalancer.
     -> ELB m HealthCheck
 configureHealthCheck hc lb =
-    elbQuery "ConfigureHealthCheck" params $ \xml ->
-        getElement xml "HealthCheck" sinkHealthCheck
+    elbQuery "ConfigureHealthCheck" params $
+        element "HealthCheck" sinkHealthCheck
   where
     params =
         [ "HealthCheck" |. toHealthCheckParams hc

@@ -36,8 +36,8 @@ library
                    -- , Cloud.AWS.RDS
                    -- , Cloud.AWS.RDS.Types
                    -- , Cloud.AWS.RDS.Util
-                   -- , Cloud.AWS.ELB
-                   -- , Cloud.AWS.ELB.Types
+                   , Cloud.AWS.ELB
+                   , Cloud.AWS.ELB.Types
                    , Cloud.AWS.CloudWatch
                    , Cloud.AWS.CloudWatch.Types
   other-modules:     Cloud.AWS.Util
@@ -106,8 +106,8 @@ library
                    -- , Cloud.AWS.RDS.Types.EventSubscription
                    -- , Cloud.AWS.RDS.Types.OptionGroup
                    -- , Cloud.AWS.RDS.Types.Tag
-                   -- , Cloud.AWS.ELB.Internal
-                   -- , Cloud.AWS.ELB.LoadBalancer
+                   , Cloud.AWS.ELB.Internal
+                   , Cloud.AWS.ELB.LoadBalancer
                    , Cloud.AWS.CloudWatch.Internal
                    , Cloud.AWS.CloudWatch.Metric
                    , Cloud.AWS.CloudWatch.Alarm
