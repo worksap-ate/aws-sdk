@@ -19,7 +19,7 @@ import Data.Time (UTCTime)
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.CloudWatch.Types
 import Cloud.AWS.Lib.Parser (members, nodata)
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), content)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content)
 import Cloud.AWS.Lib.Query
 
 describeAlarms
@@ -46,7 +46,7 @@ describeAlarms prefix spec maxRecords nextToken state =
     specParam (AlarmSpecNames ns) = "AlarmNames.member" |.#= ns
 
 sinkMetricAlarm :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m MetricAlarm
+    => XmlElement -> m MetricAlarm
 sinkMetricAlarm xml =
     MetricAlarm
     <$> xml .< "AlarmDescription"
@@ -148,7 +148,7 @@ describeAlarmHistory alarm endDate type_ maxRecords nextToken startDate =
         ]
 
 sinkAlarmHistory :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m AlarmHistory
+    => XmlElement -> m AlarmHistory
 sinkAlarmHistory xml =
     AlarmHistory
     <$> xml .< "Timestamp"

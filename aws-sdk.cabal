@@ -38,8 +38,8 @@ library
                    -- , Cloud.AWS.RDS.Util
                    -- , Cloud.AWS.ELB
                    -- , Cloud.AWS.ELB.Types
-                   -- , Cloud.AWS.CloudWatch
-                   -- , Cloud.AWS.CloudWatch.Types
+                   , Cloud.AWS.CloudWatch
+                   , Cloud.AWS.CloudWatch.Types
   other-modules:     Cloud.AWS.Util
                    , Cloud.AWS.Credential
                    , Cloud.AWS.Class
@@ -108,9 +108,9 @@ library
                    -- , Cloud.AWS.RDS.Types.Tag
                    -- , Cloud.AWS.ELB.Internal
                    -- , Cloud.AWS.ELB.LoadBalancer
-                   -- , Cloud.AWS.CloudWatch.Internal
-                   -- , Cloud.AWS.CloudWatch.Metric
-                   -- , Cloud.AWS.CloudWatch.Alarm
+                   , Cloud.AWS.CloudWatch.Internal
+                   , Cloud.AWS.CloudWatch.Metric
+                   , Cloud.AWS.CloudWatch.Alarm
   ghc-options:       -Wall
                      -fno-warn-unused-do-bind
   if flag(debug)
