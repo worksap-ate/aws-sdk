@@ -28,7 +28,7 @@ module Cloud.AWS.EC2
     -- , module Cloud.AWS.EC2.NetworkInterfaceAttribute
     --   -- * Placements
     , module Cloud.AWS.EC2.Region
-    -- , module Cloud.AWS.EC2.AvailabilityZone
+    , module Cloud.AWS.EC2.AvailabilityZone
     -- , module Cloud.AWS.EC2.PlacementGroup
     --   -- * Tags
     -- , module Cloud.AWS.EC2.Tag
@@ -56,7 +56,7 @@ import Cloud.AWS.EC2.Query (apiVersion)
 
 -- import Cloud.AWS.EC2.Image
 import Cloud.AWS.EC2.Region
--- import Cloud.AWS.EC2.AvailabilityZone
+import Cloud.AWS.EC2.AvailabilityZone
 import Cloud.AWS.EC2.Instance
 import Cloud.AWS.EC2.Address
 -- import Cloud.AWS.EC2.Tag
