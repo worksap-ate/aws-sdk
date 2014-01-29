@@ -17,8 +17,8 @@ module Cloud.AWS.EC2
     -- , module Cloud.AWS.EC2.Volume
     --   -- * Snapshots
     -- , module Cloud.AWS.EC2.Snapshot
-    --   -- * Addresses
-    -- , module Cloud.AWS.EC2.Address
+      -- * Addresses
+    , module Cloud.AWS.EC2.Address
     --   -- * KeyPairs
     -- , module Cloud.AWS.EC2.KeyPair
     --   -- * SecurityGroups
@@ -58,7 +58,7 @@ import Cloud.AWS.EC2.Query (apiVersion)
 import Cloud.AWS.EC2.Region
 -- import Cloud.AWS.EC2.AvailabilityZone
 import Cloud.AWS.EC2.Instance
--- import Cloud.AWS.EC2.Address
+import Cloud.AWS.EC2.Address
 -- import Cloud.AWS.EC2.Tag
 -- import Cloud.AWS.EC2.Snapshot
 -- import Cloud.AWS.EC2.Volume

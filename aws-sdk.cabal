@@ -43,7 +43,7 @@ library
                    , Cloud.AWS.Credential
                    , Cloud.AWS.Class
                    , Cloud.AWS.EC2.Internal
-                   -- , Cloud.AWS.EC2.Address
+                   , Cloud.AWS.EC2.Address
                    -- , Cloud.AWS.EC2.AvailabilityZone
                    -- , Cloud.AWS.EC2.ConversionTask
                    -- , Cloud.AWS.EC2.Image
