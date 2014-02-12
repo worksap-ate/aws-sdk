@@ -51,7 +51,7 @@ library
                    -- , Cloud.AWS.EC2.Volume
                    , Cloud.AWS.EC2.KeyPair
                    , Cloud.AWS.EC2.Route
-                   -- , Cloud.AWS.EC2.RouteTable
+                   , Cloud.AWS.EC2.RouteTable
                    -- , Cloud.AWS.EC2.Snapshot
                    -- , Cloud.AWS.EC2.SecurityGroup
                    , Cloud.AWS.EC2.Subnets

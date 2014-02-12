@@ -27,16 +27,17 @@ describeRouteTables
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m RouteTable)
 describeRouteTables routeTables filters = do
-    ec2QuerySource "DescribeRouteTables" params $
-        itemConduit "routeTableSet" routeTableConv
+    ec2QuerySource "DescribeRouteTables" params path $
+        itemConduit routeTableConv
   where
+    path = itemsPath "routeTableSet"
     params =
         [ "RouteTableId" |.#= routeTables
         , filtersParam filters
         ]
 
 routeTableConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m RouteTable
+    => XmlElement -> m RouteTable
 routeTableConv xml = RouteTable
     <$> xml .< "routeTableId"
     <*> xml .< "vpcId"
@@ -46,24 +47,27 @@ routeTableConv xml = RouteTable
     <*> resourceTagConv xml
 
 routeConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m [Route]
-routeConv xml = itemsSet xml "routeSet" $ \xml' -> Route
-    <$> xml' .< "destinationCidrBlock"
-    <*> xml' .< "gatewayId"
-    <*> xml' .< "instanceId"
-    <*> xml' .< "instanceOwnerId"
-    <*> xml' .< "networkInterfaceId"
-    <*> xml' .< "state"
-    <*> xml' .< "origin"
+    => XmlElement -> m [Route]
+routeConv = itemsSet "routeSet" conv
+  where
+    conv e = Route
+        <$> e .< "destinationCidrBlock"
+        <*> e .< "gatewayId"
+        <*> e .< "instanceId"
+        <*> e .< "instanceOwnerId"
+        <*> e .< "networkInterfaceId"
+        <*> e .< "state"
+        <*> e .< "origin"
 
 routeTableAssociationConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m [RouteTableAssociation]
-routeTableAssociationConv xml = itemsSet xml "associationSet" $ \xml' ->
-    RouteTableAssociation
-    <$> xml' .< "routeTableAssociationId"
-    <*> xml' .< "routeTableId"
-    <*> xml' .< "subnetId"
-    <*> xml' .< "main"
+    => XmlElement -> m [RouteTableAssociation]
+routeTableAssociationConv = itemsSet "associationSet" conv
+  where
+    conv e = RouteTableAssociation
+        <$> e .< "routeTableAssociationId"
+        <*> e .< "routeTableId"
+        <*> e .< "subnetId"
+        <*> e .< "main"
 
 ------------------------------------------------------------
 -- createRouteTable
@@ -73,8 +77,8 @@ createRouteTable
     => Text
     -> EC2 m RouteTable
 createRouteTable vid =
-    ec2Query "CreateRouteTable" ["VpcId" |= vid] $ xmlParser $ \xml ->
-        getElement xml "routeTable" routeTableConv
+    ec2Query "CreateRouteTable" ["VpcId" |= vid] $
+        element "routeTable" routeTableConv
 
 ------------------------------------------------------------
 -- deleteRouteTable
@@ -94,8 +98,7 @@ associateRouteTable
     -> Text -- ^ SubnetId
     -> EC2 m Text -- ^ associationId
 associateRouteTable rtid sid =
-    ec2Query "AssociateRouteTable" params
-        $ xmlParser (.< "associationId")
+    ec2Query "AssociateRouteTable" params (.< "associationId")
   where
     params = [ "RouteTableId" |= rtid
              , "SubnetId" |= sid
@@ -110,7 +113,7 @@ disassociateRouteTable
     -> EC2 m Bool -- ^ return
 disassociateRouteTable aid =
     ec2Query "DisassociateRouteTable" ["AssociationId" |= aid]
-        $ xmlParser (.< "return")
+        (.< "return")
 
 ------------------------------------------------------------
 -- replaceRouteTableAssociation
@@ -122,7 +125,7 @@ replaceRouteTableAssociation
     -> EC2 m Text -- ^ newAssociationId
 replaceRouteTableAssociation aid rtid =
     ec2Query "ReplaceRouteTableAssociation" params
-        $ xmlParser (.< "newAssociationId")
+        (.< "newAssociationId")
   where
     params = [ "AssociationId" |= aid
              , "RouteTableId" |= rtid
