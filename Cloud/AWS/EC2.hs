@@ -22,7 +22,7 @@ module Cloud.AWS.EC2
     --   -- * KeyPairs
     , module Cloud.AWS.EC2.KeyPair
     --   -- * SecurityGroups
-    -- , module Cloud.AWS.EC2.SecurityGroup
+    , module Cloud.AWS.EC2.SecurityGroup
       -- * NetworkInterface
     , module Cloud.AWS.EC2.NetworkInterface
     , module Cloud.AWS.EC2.NetworkInterfaceAttribute
@@ -63,7 +63,7 @@ import Cloud.AWS.EC2.Address
 -- import Cloud.AWS.EC2.Snapshot
 -- import Cloud.AWS.EC2.Volume
 import Cloud.AWS.EC2.KeyPair
--- import Cloud.AWS.EC2.SecurityGroup
+import Cloud.AWS.EC2.SecurityGroup
 import Cloud.AWS.EC2.VPC
 import Cloud.AWS.EC2.Subnets
 import Cloud.AWS.EC2.Acl
