@@ -12,7 +12,7 @@ module Cloud.AWS.EC2
       -- * Instances
     , module Cloud.AWS.EC2.Instance
       -- * Images
-    -- , module Cloud.AWS.EC2.Image
+    , module Cloud.AWS.EC2.Image
     --   -- * Volumes
     -- , module Cloud.AWS.EC2.Volume
     --   -- * Snapshots
@@ -54,7 +54,7 @@ import Cloud.AWS.EC2.Types
 import qualified Cloud.AWS.EC2.Util as Util
 import Cloud.AWS.EC2.Query (apiVersion)
 
--- import Cloud.AWS.EC2.Image
+import Cloud.AWS.EC2.Image
 import Cloud.AWS.EC2.Region
 import Cloud.AWS.EC2.AvailabilityZone
 import Cloud.AWS.EC2.Instance

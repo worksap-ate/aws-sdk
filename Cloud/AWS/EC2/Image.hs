@@ -28,9 +28,10 @@ describeImages
     -> [Filter] -- ^ Filers
     -> EC2 m (ResumableSource m Image)
 describeImages imageIds owners execby filters =
-    ec2QuerySource "DescribeImages" params $
-        itemConduit "imagesSet" imageItem
+    ec2QuerySource "DescribeImages" params path $
+        itemConduit imageItem
   where
+    path = itemsPath "imagesSet"
     params =
         [ "ImageId" |.#= imageIds
         , "Owner" |.#= owners
@@ -39,7 +40,7 @@ describeImages imageIds owners execby filters =
         ]
 
 imageItem :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Image
+    => XmlElement -> m Image
 imageItem xml = Image
     <$> xml .< "imageId"
     <*> xml .< "imageLocation"
@@ -57,7 +58,7 @@ imageItem xml = Image
     <*> xml .< "imageOwnerAlias"
     <*> xml .< "name"
     <*> xml .< "description"
-    <*> itemsSet xml "billingProducts" (.< "billingProduct")
+    <*> itemsSet "billingProducts" (.< "billingProduct") xml
     <*> xml .< "rootDeviceType"
     <*> xml .< "rootDeviceName"
     <*> blockDeviceMappingConv xml
@@ -65,19 +66,20 @@ imageItem xml = Image
     <*> resourceTagConv xml
     <*> xml .< "hypervisor"
 
-blockDeviceMappingConv :: (MonadThrow m, Applicative m) => SimpleXML -> m [BlockDeviceMapping]
-blockDeviceMappingConv xml = itemsSet xml "blockDeviceMapping" (\xml' ->
-    BlockDeviceMapping
-    <$> xml' .< "deviceName"
-    <*> xml' .< "virtualName"
-    <*> getElementM xml' "ebs" (\xml'' ->
-        EbsBlockDevice
-        <$> xml'' .< "snapshotId"
-        <*> xml'' .< "volumeSize"
-        <*> xml'' .< "deleteOnTermination"
-        <*> volumeTypeConv xml''
-        )
-    )
+blockDeviceMappingConv :: (MonadThrow m, Applicative m)
+                       => XmlElement -> m [BlockDeviceMapping]
+blockDeviceMappingConv = itemsSet "blockDeviceMapping" conv
+  where
+    conv e = BlockDeviceMapping
+        <$> e .< "deviceName"
+        <*> e .< "virtualName"
+        <*> elementM "ebs" ebsConv e
+    ebsConv e = EbsBlockDevice
+        <$> e .< "snapshotId"
+        <*> e .< "volumeSize"
+        <*> e .< "deleteOnTermination"
+        <*> volumeTypeConv e
+
 
 createImage
     :: (MonadResource m, MonadBaseControl IO m)
@@ -88,7 +90,7 @@ createImage
     -> [BlockDeviceMappingParam] -- ^ BlockDeviceMapping
     -> EC2 m Text
 createImage iid name desc noReboot bdms =
-    ec2Query "CreateImage" params $ xmlParser (.< "imageId")
+    ec2Query "CreateImage" params (.< "imageId")
   where
     params =
         [ "InstanceId" |= iid
@@ -103,7 +105,7 @@ registerImage
     => RegisterImageRequest
     -> EC2 m Text
 registerImage req =
-    ec2Query "RegisterImage" params $ xmlParser (.< "imageId")
+    ec2Query "RegisterImage" params (.< "imageId")
   where
     params =
         [ "Name" |= registerImageRequestName req
@@ -122,7 +124,7 @@ deregisterImage
     => Text -- ^ ImageId
     -> EC2 m Bool
 deregisterImage iid =
-    ec2Query "DeregisterImage" params $ xmlParser (.< "return")
+    ec2Query "DeregisterImage" params (.< "return")
   where
     params = ["ImageId" |= iid]
 
@@ -132,27 +134,29 @@ describeImageAttribute
     -> AMIAttribute -- ^ Attribute
     -> EC2 m AMIAttributeDescription
 describeImageAttribute iid attr =
-    ec2Query "DescribeImageAttribute" params $ xmlParser $ \xml ->
-        AMIAttributeDescription
+    ec2Query "DescribeImageAttribute" params conv
+  where
+    getMMT xml name = join <$> elementM name (.< "value") xml
+    params = [ "ImageId" |= iid
+             , "Attribute" |= attr
+             ]
+    conv xml = AMIAttributeDescription
         <$> xml .< "imageId"
-        <*> itemsSet xml "launchPermission" launchPermissionItemConv
-        <*> itemsSet xml "productCodes" (\xml' ->
-            ProductCodeItem
-            <$> xml' .< "productCode"
-            )
+        <*> itemsSet "launchPermission" launchPermissionItemConv xml
+        <*> itemsSet "productCodes" pcConv xml
         <*> getMMT xml "kernel"
         <*> getMMT xml "ramdisk"
         <*> getMMT xml "description"
         <*> blockDeviceMappingConv xml
-  where
-    getMMT xml name = join <$> getElementM xml name (.< "value")
-    params = [ "ImageId" |= iid
-             , "Attribute" |= attr
-             ]
+    pcConv e = ProductCodeItem
+        <$> e .< "productCode"
 
-launchPermissionItemConv :: (MonadThrow m, Applicative m) => SimpleXML -> m LaunchPermissionItem
+
+
+launchPermissionItemConv :: (MonadThrow m, Applicative m)
+                         => XmlElement -> m LaunchPermissionItem
 launchPermissionItemConv xml = do
-    mg <- getElementM xml "group" content
+    mg <- elementM "group" content xml
     case mg of
         Just g -> return $ LaunchPermissionItemGroup g
         Nothing -> LaunchPermissionItemUserId <$> xml .< "userId"
@@ -165,7 +169,7 @@ modifyImageAttribute
     -> Maybe Text -- ^ Description
     -> EC2 m Bool
 modifyImageAttribute iid lp pcs desc =
-    ec2Query "ModifyImageAttribute" params $ xmlParser (.< "return")
+    ec2Query "ModifyImageAttribute" params (.< "return")
   where
     params =
         [ "ImageId" |= iid

@@ -46,7 +46,7 @@ library
                    , Cloud.AWS.EC2.Address
                    -- , Cloud.AWS.EC2.AvailabilityZone
                    , Cloud.AWS.EC2.ConversionTask
-                   -- , Cloud.AWS.EC2.Image
+                   , Cloud.AWS.EC2.Image
                    , Cloud.AWS.EC2.Instance
                    -- , Cloud.AWS.EC2.Volume
                    -- , Cloud.AWS.EC2.KeyPair

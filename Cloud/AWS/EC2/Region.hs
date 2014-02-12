@@ -22,7 +22,7 @@ describeRegions
 describeRegions regions filters =
     ec2QuerySource "DescribeRegions" params path regionInfoConduit
   where
-    path = "regionInfo" .- end "item"
+    path = itemsPath "regionInfo"
     params =
         [ "RegionName" |.#= regions
         , filtersParam filters
