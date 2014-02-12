@@ -13,8 +13,8 @@ module Cloud.AWS.EC2
     , module Cloud.AWS.EC2.Instance
       -- * Images
     , module Cloud.AWS.EC2.Image
-    --   -- * Volumes
-    -- , module Cloud.AWS.EC2.Volume
+      -- * Volumes
+    , module Cloud.AWS.EC2.Volume
       -- * Snapshots
     , module Cloud.AWS.EC2.Snapshot
       -- * Addresses
@@ -26,12 +26,12 @@ module Cloud.AWS.EC2
       -- * NetworkInterface
     , module Cloud.AWS.EC2.NetworkInterface
     , module Cloud.AWS.EC2.NetworkInterfaceAttribute
-    --   -- * Placements
+      -- * Placements
     , module Cloud.AWS.EC2.Region
     , module Cloud.AWS.EC2.AvailabilityZone
     , module Cloud.AWS.EC2.PlacementGroup
-    --   -- * Tags
-    -- , module Cloud.AWS.EC2.Tag
+      -- * Tags
+    , module Cloud.AWS.EC2.Tag
       -- * VPC
     , module Cloud.AWS.EC2.VPC
     , module Cloud.AWS.EC2.Subnets
@@ -59,9 +59,9 @@ import Cloud.AWS.EC2.Region
 import Cloud.AWS.EC2.AvailabilityZone
 import Cloud.AWS.EC2.Instance
 import Cloud.AWS.EC2.Address
--- import Cloud.AWS.EC2.Tag
+import Cloud.AWS.EC2.Tag
 import Cloud.AWS.EC2.Snapshot
--- import Cloud.AWS.EC2.Volume
+import Cloud.AWS.EC2.Volume
 import Cloud.AWS.EC2.KeyPair
 import Cloud.AWS.EC2.SecurityGroup
 import Cloud.AWS.EC2.VPC

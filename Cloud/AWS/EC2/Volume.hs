@@ -28,16 +28,17 @@ describeVolumes
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Volume)
 describeVolumes vids filters =
-    ec2QuerySource "DescribeVolumes" params $
-        itemConduit "volumeSet" volumeConv
+    ec2QuerySource "DescribeVolumes" params path $
+        itemConduit volumeConv
   where
+    path = itemsPath "volumeSet"
     params =
         [ "VolumeId" |.#= vids
         , filtersParam filters
         ]
 
 volumeConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Volume
+    => XmlElement -> m Volume
 volumeConv xml = Volume
     <$> xml .< "volumeId"
     <*> xml .< "size"
@@ -45,11 +46,11 @@ volumeConv xml = Volume
     <*> xml .< "availabilityZone"
     <*> xml .< "status"
     <*> xml .< "createTime"
-    <*> itemsSet xml "attachmentSet" attachmentConv
+    <*> itemsSet "attachmentSet" attachmentConv xml
     <*> resourceTagConv xml
     <*> volumeTypeConv xml
 
-attachmentConv :: (MonadThrow m, Applicative m) => SimpleXML -> m AttachmentSetItemResponse
+attachmentConv :: (MonadThrow m, Applicative m) => XmlElement -> m AttachmentSetItemResponse
 attachmentConv xml = AttachmentSetItemResponse
     <$> xml .< "volumeId"
     <*> xml .< "instanceId"
@@ -63,7 +64,7 @@ createVolume
     => CreateVolumeRequest
     -> EC2 m Volume
 createVolume param =
-    ec2Query "CreateVolume" param' $ xmlParser volumeConv
+    ec2Query "CreateVolume" param' volumeConv
   where
     param' = createVolumeParams param
 
@@ -91,7 +92,7 @@ attachVolume
     -> Text -- ^ Device
     -> EC2 m AttachmentSetItemResponse
 attachVolume volid iid dev =
-    ec2Query "AttachVolume" params $ xmlParser attachmentConv
+    ec2Query "AttachVolume" params attachmentConv
   where
     params =
         [ "VolumeId" |= volid
@@ -107,7 +108,7 @@ detachVolume
     -> Maybe Bool -- ^ Force
     -> EC2 m AttachmentSetItemResponse
 detachVolume volid iid dev force =
-    ec2Query "DetachVolume" params $ xmlParser attachmentConv
+    ec2Query "DetachVolume" params attachmentConv
   where
     params =
         [ "VolumeId" |= volid
@@ -123,43 +124,41 @@ describeVolumeStatus
     -> Maybe Text -- ^ next token
     -> EC2 m (ResumableSource m VolumeStatus)
 describeVolumeStatus vids filters token =
-    ec2QuerySource' "DescribeVolumeStatus" params token $
-       itemConduit "volumeStatusSet" volumeStatusConv
+    ec2QuerySource' "DescribeVolumeStatus" params token path $
+       itemConduit volumeStatusConv
   where
+    path = itemsPath "volumeStatusSet"
     params =
         [ "VolumeId" |.#= vids
         , filtersParam filters
         ]
 
 volumeStatusConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m VolumeStatus
+    => XmlElement -> m VolumeStatus
 volumeStatusConv xml = VolumeStatus
     <$> xml .< "volumeId"
     <*> xml .< "availabilityZone"
-    <*> getElement xml "volumeStatus" (\xml' ->
-        VolumeStatusInfo
-        <$> xml' .< "status"
-        <*> itemsSet xml' "details" (\xml'' ->
-            VolumeStatusDetail
-            <$> xml'' .< "name"
-            <*> xml'' .< "status"
-            )
-        )
-    <*> itemsSet xml "eventsSet" (\xml' ->
-        VolumeStatusEvent
-        <$> xml' .< "eventType"
-        <*> xml' .< "eventId"
-        <*> xml' .< "description"
-        <*> xml' .< "notBefore"
-        <*> xml' .< "notAfter"
-        )
-    <*> itemsSet xml "actionsSet" (\xml' ->
-        VolumeStatusAction
-        <$> xml' .< "code"
-        <*> xml' .< "eventType"
-        <*> xml' .< "eventId"
-        <*> xml' .< "description"
-        )
+    <*> element "volumeStatus" statusConv xml
+    <*> itemsSet "eventsSet" eventConv xml
+    <*> itemsSet "actionsSet" actionConv xml
+  where
+    statusConv e = VolumeStatusInfo
+        <$> e .< "status"
+        <*> itemsSet "details" detailConv e
+    detailConv e = VolumeStatusDetail
+        <$> e .< "name"
+        <*> e .< "status"
+    eventConv e = VolumeStatusEvent
+        <$> e .< "eventType"
+        <*> e .< "eventId"
+        <*> e .< "description"
+        <*> e .< "notBefore"
+        <*> e .< "notAfter"
+    actionConv e = VolumeStatusAction
+        <$> e .< "code"
+        <*> e .< "eventType"
+        <*> e .< "eventId"
+        <*> e .< "description"
 
 modifyVolumeAttribute
     :: (MonadResource m, MonadBaseControl IO m)
@@ -167,7 +166,7 @@ modifyVolumeAttribute
     -> Bool -- ^ AutoEnableIO
     -> EC2 m Bool
 modifyVolumeAttribute vid enable =
-    ec2Query "ModifyVolumeAttribute" params $ xmlParser (.< "return")
+    ec2Query "ModifyVolumeAttribute" params (.< "return")
   where
     params =
         [ "VolumeId" |= vid
@@ -179,7 +178,7 @@ enableVolumeIO
     => Text -- ^ VolumeId
     -> EC2 m Bool
 enableVolumeIO vid =
-    ec2Query "EnableVolumeIO" params $ xmlParser (.< "return")
+    ec2Query "EnableVolumeIO" params (.< "return")
   where
     params = ["VolumeId" |= vid]
 
@@ -190,7 +189,7 @@ describeVolumeAttribute
     -> VolumeAttributeRequest
     -> EC2 m (Text, VolumeAttribute)
 describeVolumeAttribute vid attr =
-    ec2Query "DescribeVolumeAttribute" params $ xmlParser $ \xml ->
+    ec2Query "DescribeVolumeAttribute" params $ \xml ->
         (,)
         <$> xml .< "volumeId"
         <*> volumeAttributeConv attr xml
@@ -203,11 +202,11 @@ describeVolumeAttribute vid attr =
 volumeAttributeConv
     :: (MonadThrow m, Applicative m)
     => VolumeAttributeRequest
-    -> SimpleXML
+    -> XmlElement
     -> m VolumeAttribute
 volumeAttributeConv VolumeAttributeRequestAutoEnableIO xml
     = VolumeAttributeAutoEnableIO
-    <$> getElement xml "autoEnableIO" (.< "value")
+    <$> element "autoEnableIO" (.< "value") xml
 volumeAttributeConv VolumeAttributeRequestProductCodes xml
     = VolumeAttributeProductCodes
     <$> productCodeConv xml
