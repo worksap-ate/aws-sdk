@@ -37,7 +37,7 @@ module Cloud.AWS.EC2
     , module Cloud.AWS.EC2.Subnets
     , module Cloud.AWS.EC2.Acl
     -- , module Cloud.AWS.EC2.RouteTable
-    -- , module Cloud.AWS.EC2.Route
+    , module Cloud.AWS.EC2.Route
       -- * Tasks
     , module Cloud.AWS.EC2.ConversionTask
     ) where
@@ -67,7 +67,7 @@ import Cloud.AWS.EC2.KeyPair
 import Cloud.AWS.EC2.VPC
 import Cloud.AWS.EC2.Subnets
 import Cloud.AWS.EC2.Acl
--- import Cloud.AWS.EC2.Route
+import Cloud.AWS.EC2.Route
 -- import Cloud.AWS.EC2.RouteTable
 import Cloud.AWS.EC2.NetworkInterface
 import Cloud.AWS.EC2.NetworkInterfaceAttribute
