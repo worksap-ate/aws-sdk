@@ -63,7 +63,7 @@ library
                    , Cloud.AWS.EC2.NetworkInterfaceAttribute
                    -- , Cloud.AWS.EC2.Tag
                    -- , Cloud.AWS.EC2.Params
-                   -- , Cloud.AWS.EC2.PlacementGroup
+                   , Cloud.AWS.EC2.PlacementGroup
                    , Cloud.AWS.EC2.Types.Acl
                    , Cloud.AWS.EC2.Types.Address
                    , Cloud.AWS.EC2.Types.AvailabilityZone

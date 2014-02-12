@@ -29,7 +29,7 @@ module Cloud.AWS.EC2
     --   -- * Placements
     , module Cloud.AWS.EC2.Region
     , module Cloud.AWS.EC2.AvailabilityZone
-    -- , module Cloud.AWS.EC2.PlacementGroup
+    , module Cloud.AWS.EC2.PlacementGroup
     --   -- * Tags
     -- , module Cloud.AWS.EC2.Tag
       -- * VPC
@@ -71,7 +71,7 @@ import Cloud.AWS.EC2.Acl
 -- import Cloud.AWS.EC2.RouteTable
 import Cloud.AWS.EC2.NetworkInterface
 import Cloud.AWS.EC2.NetworkInterfaceAttribute
--- import Cloud.AWS.EC2.PlacementGroup
+import Cloud.AWS.EC2.PlacementGroup
 import Cloud.AWS.EC2.ConversionTask
 
 -- | set endpoint to EC2 context by giving the EC2 region.
