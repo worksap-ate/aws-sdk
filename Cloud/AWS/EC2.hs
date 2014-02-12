@@ -25,7 +25,7 @@ module Cloud.AWS.EC2
     -- , module Cloud.AWS.EC2.SecurityGroup
       -- * NetworkInterface
     , module Cloud.AWS.EC2.NetworkInterface
-    -- , module Cloud.AWS.EC2.NetworkInterfaceAttribute
+    , module Cloud.AWS.EC2.NetworkInterfaceAttribute
     --   -- * Placements
     , module Cloud.AWS.EC2.Region
     , module Cloud.AWS.EC2.AvailabilityZone
@@ -70,7 +70,7 @@ import Cloud.AWS.EC2.Acl
 -- import Cloud.AWS.EC2.Route
 -- import Cloud.AWS.EC2.RouteTable
 import Cloud.AWS.EC2.NetworkInterface
--- import Cloud.AWS.EC2.NetworkInterfaceAttribute
+import Cloud.AWS.EC2.NetworkInterfaceAttribute
 -- import Cloud.AWS.EC2.PlacementGroup
 import Cloud.AWS.EC2.ConversionTask
 
