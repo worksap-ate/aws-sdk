@@ -34,7 +34,7 @@ module Cloud.AWS.EC2
     -- , module Cloud.AWS.EC2.Tag
       -- * VPC
     , module Cloud.AWS.EC2.VPC
-    -- , module Cloud.AWS.EC2.Subnets
+    , module Cloud.AWS.EC2.Subnets
     , module Cloud.AWS.EC2.Acl
     -- , module Cloud.AWS.EC2.RouteTable
     -- , module Cloud.AWS.EC2.Route
@@ -65,7 +65,7 @@ import Cloud.AWS.EC2.Address
 -- import Cloud.AWS.EC2.KeyPair
 -- import Cloud.AWS.EC2.SecurityGroup
 import Cloud.AWS.EC2.VPC
--- import Cloud.AWS.EC2.Subnets
+import Cloud.AWS.EC2.Subnets
 import Cloud.AWS.EC2.Acl
 -- import Cloud.AWS.EC2.Route
 -- import Cloud.AWS.EC2.RouteTable

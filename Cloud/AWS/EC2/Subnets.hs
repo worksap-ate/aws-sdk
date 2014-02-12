@@ -24,16 +24,17 @@ describeSubnets
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Subnet)
 describeSubnets subnets filters = do
-    ec2QuerySource "DescribeSubnets" params $
-        itemConduit "subnetSet" subnetConv
+    ec2QuerySource "DescribeSubnets" params path $
+        itemConduit subnetConv
   where
+    path = itemsPath "subnetSet"
     params =
         [ "SubnetId" |.#= subnets
         , filtersParam filters
         ]
 
 subnetConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Subnet
+    => XmlElement -> m Subnet
 subnetConv xml = Subnet
     <$> xml .< "subnetId"
     <*> xml .< "state"
@@ -54,7 +55,7 @@ createSubnet
     -> EC2 m Subnet
 createSubnet param =
     ec2Query "CreateSubnet" params $
-          xmlParser $ \xml -> getElement xml "subnet" subnetConv
+        element "subnet" subnetConv
   where
     params = createSubnetParams param
 

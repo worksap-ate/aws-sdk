@@ -54,7 +54,7 @@ library
                    -- , Cloud.AWS.EC2.RouteTable
                    -- , Cloud.AWS.EC2.Snapshot
                    -- , Cloud.AWS.EC2.SecurityGroup
-                   -- , Cloud.AWS.EC2.Subnets
+                   , Cloud.AWS.EC2.Subnets
                    , Cloud.AWS.EC2.Query
                    , Cloud.AWS.EC2.Region
                    , Cloud.AWS.EC2.VPC
