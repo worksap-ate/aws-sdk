@@ -49,7 +49,7 @@ describeInstances instances filters = do
     ec2QuerySource "DescribeInstances" params path $
         itemConduit reservationConv
   where
-    path = "reservationSet" .- end "item"
+    path = itemsPath "reservationSet"
     params =
         [ "InstanceId" |.#= instances
         , filtersParam filters
@@ -204,7 +204,7 @@ describeInstanceStatus instanceIds isAll filters token =
     ec2QuerySource' "DescribeInstanceStatus" params token path $
         itemConduit instanceStatusConv
   where
-    path = "instanceStatusSet" .- end "item"
+    path = itemsPath "instanceStatusSet"
     params =
         [ "InstanceId" |.#= instanceIds
         , "IncludeAllInstances" |= isAll
@@ -254,7 +254,7 @@ startInstances instanceIds =
     params = ["InstanceId" |.#= instanceIds]
 
 instanceStateChangePath :: ElementPath
-instanceStateChangePath = "instancesSet" .- end "item"
+instanceStateChangePath = itemsPath "instancesSet"
 
 instanceStateChangeSet
     :: (MonadResource m, MonadBaseControl IO m)
@@ -566,7 +566,7 @@ monitorInstances
     -> EC2 m (ResumableSource m MonitorInstancesResponse)
 monitorInstances iids =
     ec2QuerySource "MonitorInstances" ["InstanceId" |.#= iids]
-        ("instancesSet" .- end "item") monitorInstancesResponseConv
+        (itemsPath "instancesSet") monitorInstancesResponseConv
 
 monitorInstancesResponseConv
     :: (MonadResource m, MonadBaseControl IO m)
@@ -585,7 +585,7 @@ unmonitorInstances
     -> EC2 m (ResumableSource m MonitorInstancesResponse)
 unmonitorInstances iids =
     ec2QuerySource "UnmonitorInstances" ["InstanceId" |.#= iids]
-        ("instancesSet" .- end "item") monitorInstancesResponseConv
+        (itemsPath "instancesSet") monitorInstancesResponseConv
 
 ------------------------------------------------------------
 -- DescribeSpotInstanceRequests
@@ -600,7 +600,7 @@ describeSpotInstanceRequests requests filters = do
     ec2QuerySource "DescribeSpotInstanceRequests" params path $
         itemConduit spotInstanceRequestConv
   where
-    path = "spotInstanceRequestSet" .- end "item"
+    path = itemsPath "spotInstanceRequestSet"
     params =
         [ "SpotInstanceRequestId" |.#= requests
         , filtersParam filters
@@ -789,7 +789,7 @@ cancelSpotInstanceRequests requestIds =
     ec2QuerySource "CancelSpotInstanceRequests" params path $
         itemConduit cancelSpotInstanceResponseConv
   where
-    path = "spotInstanceRequestSet" .- end "item"
+    path = itemsPath "spotInstanceRequestSet"
     params = ["SpotInstanceRequestId" |.#= requestIds]
 
 cancelSpotInstanceResponseConv :: (MonadThrow m, Applicative m)
