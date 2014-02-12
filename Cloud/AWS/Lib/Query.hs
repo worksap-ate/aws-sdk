@@ -39,7 +39,7 @@ import System.Locale (defaultTimeLocale, iso8601DateFormat)
 import Network.HTTP.Conduit (HttpException)
 import qualified Network.HTTP.Rest.Signature.EC2 as Sign
 import qualified Network.HTTP.Types as H
-import Network.TLS (HandshakeFailed)
+import Network.TLS (TLSException)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Exception.Lifted as E
@@ -286,5 +286,5 @@ exceptionTransform e
     awse = fromException e :: Maybe AWSException
     xmle = fromException e :: Maybe XmlException
     httpe = fromException e :: Maybe HttpException
-    tlse  = fromException e :: Maybe HandshakeFailed
+    tlse  = fromException e :: Maybe TLSException
     ioe   = fromException e :: Maybe IOException
