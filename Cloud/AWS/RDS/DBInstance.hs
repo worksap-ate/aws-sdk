@@ -20,7 +20,7 @@ import Control.Applicative
 import Data.Maybe (catMaybes, fromMaybe)
 
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement, getElementM, content)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM, content)
 
 import Cloud.AWS.RDS.Types hiding (Event)
 import Cloud.AWS.RDS.Internal
@@ -43,7 +43,7 @@ describeDBInstances dbid maxRecords marker =
 
 sinkDBInstance
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DBInstance
+    => XmlElement -> m DBInstance
 sinkDBInstance xml = DBInstance
     <$> xml .< "Iops"
     <*> xml .< "BackupRetentionPeriod"
@@ -61,17 +61,17 @@ sinkDBInstance xml = DBInstance
     <*> sinkPendingModifiedValues xml
     <*> xml .< "CharacterSetName"
     <*> xml .< "LicenseModel"
-    <*> getElementM xml "DBSubnetGroup" dbSubnetGroupSink
+    <*> elementM "DBSubnetGroup" dbSubnetGroupSink xml
     <*> elements "DBParameterGroup"
         (\xml' -> DBParameterGroupStatus
         <$> xml' .< "ParameterApplyStatus"
         <*> xml' .< "DBParameterGroupName"
         ) xml
-    <*> getElementM xml "Endpoint"
+    <*> elementM "Endpoint"
         (\xml' -> Endpoint
         <$> xml' .< "Port"
         <*> xml' .< "Address"
-        )
+        ) xml
     <*> xml .< "EngineVersion"
     <*> xml .< "ReadReplicaSourceDBInstanceIdentifier"
     <*> elements "OptionGroupMembership"
@@ -90,8 +90,8 @@ sinkDBInstance xml = DBInstance
 
 sinkPendingModifiedValues
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m [PendingModifiedValue]
-sinkPendingModifiedValues sxml = fromMaybe [] <$> getElementM sxml "PendingModifiedValue" (\xml ->
+    => XmlElement -> m [PendingModifiedValue]
+sinkPendingModifiedValues sxml = fromMaybe [] <$> elementM "PendingModifiedValue" (\xml ->
     catMaybes <$> sequence
         [ f xml PendingModifiedValueMasterUserPassword "MasterUserPassword"
         , f xml PendingModifiedValueIops "Iops"
@@ -103,7 +103,7 @@ sinkPendingModifiedValues sxml = fromMaybe [] <$> getElementM sxml "PendingModif
         , f xml PendingModifiedValueBackupRetentionPeriod "BackupRetentionPeriod"
         , f xml PendingModifiedValuePort "Port"
         ]
-    )
+    ) sxml
   where
     f xml c name = fmap c <$> xml .< name
 
@@ -112,8 +112,8 @@ createDBInstance
     => CreateDBInstanceRequest -- ^ data type of CreateDBInstance
     -> RDS m DBInstance
 createDBInstance CreateDBInstanceRequest{..} =
-    rdsQuery "CreateDBInstance" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "CreateDBInstance" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "AllocatedStorage" |=
@@ -162,8 +162,8 @@ deleteDBInstance
     -> FinalSnapshot -- ^ FinalSnapshot
     -> RDS m DBInstance
 deleteDBInstance dbiid final =
-    rdsQuery "DeleteDBInstance" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "DeleteDBInstance" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "DBInstanceIdentifier" |= dbiid
@@ -180,8 +180,8 @@ createDBInstanceReadReplica
     => CreateReadReplicaRequest
     -> RDS m DBInstance
 createDBInstanceReadReplica CreateReadReplicaRequest{..} =
-    rdsQuery "CreateDBInstanceReadReplica" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "CreateDBInstanceReadReplica" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "AutoMinorVersionUpgrade" |=?
@@ -208,8 +208,8 @@ promoteReadReplica
     -> Maybe Text -- ^ PreferredBackupWindow
     -> RDS m DBInstance
 promoteReadReplica period dbiid window =
-    rdsQuery "PromoteReadReplica" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "PromoteReadReplica" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "BackupRetentionPeriod" |=? period
@@ -223,8 +223,8 @@ rebootDBInstance
     -> Maybe Bool -- ^ ForceFailover
     -> RDS m DBInstance
 rebootDBInstance dbiid force =
-    rdsQuery "RebootDBInstance" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "RebootDBInstance" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "DBInstanceIdentifier" |= dbiid
@@ -236,8 +236,8 @@ restoreDBInstanceFromDBSnapshot
     => RestoreDBInstanceFromDBSnapshotRequest
     -> RDS m DBInstance
 restoreDBInstanceFromDBSnapshot RestoreDBInstanceFromDBSnapshotRequest{..} =
-    rdsQuery "RestoreDBInstanceFromDBSnapshot" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "RestoreDBInstanceFromDBSnapshot" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "AutoMinorVersionUpgrade" |=?
@@ -271,8 +271,8 @@ modifyDBInstance
     => ModifyDBInstanceRequest
     -> RDS m DBInstance
 modifyDBInstance ModifyDBInstanceRequest{..} =
-    rdsQuery "ModifyDBInstance" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "ModifyDBInstance" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "AllocatedStorage" |=?
@@ -338,7 +338,7 @@ describeOrderableDBInstanceOptions class' engine ver license vpc marker maxRec =
 
 orderableDBInstanceOptionSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m OrderableDBInstanceOption
+    => XmlElement -> m OrderableDBInstanceOption
 orderableDBInstanceOptionSink xml = OrderableDBInstanceOption
     <$> xml .< "MultiAZCapable"
     <*> xml .< "Engine"
@@ -359,8 +359,8 @@ restoreDBInstanceToPointInTime
     -> RestoreDBInstanceToPointInTimeRequest
     -> RDS m DBInstance
 restoreDBInstanceToPointInTime restore RestoreDBInstanceToPointInTimeRequest{..} =
-    rdsQuery "RestoreDBInstanceToPointInTime" params $ \xml ->
-        getElement xml "DBInstance" sinkDBInstance
+    rdsQuery "RestoreDBInstanceToPointInTime" params $
+        element "DBInstance" sinkDBInstance
   where
     params =
         [ "SourceDBInstanceIdentifier" |=
@@ -424,7 +424,7 @@ describeReservedDBInstancesOfferings oid class' dur az offer desc marker maxRec 
 
 reservedDBInstancesOfferingSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m ReservedDBInstancesOffering
+    => XmlElement -> m ReservedDBInstancesOffering
 reservedDBInstancesOfferingSink xml = ReservedDBInstancesOffering
     <$> xml .< "OfferingType"
     <*> xml .< "Duration"

@@ -12,7 +12,6 @@ module Cloud.AWS.EC2.Address
 
 import Data.Text (Text)
 import Data.IP (IPv4)
-import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 
@@ -31,15 +30,15 @@ describeAddresses
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Address)
 describeAddresses pubIps alloIds filters =
-    ec2QuerySource "DescribeAddresses" params addressSet where
+    ec2QuerySource "DescribeAddresses" params path addressSet
+  where
     params =
         [ "PublicIp" |.#= pubIps
         , "AllocationId" |.#= alloIds
         , filtersParam filters
         ]
-
-    addressSet :: (MonadThrow m, Applicative m) => Conduit Event m Address
-    addressSet = itemConduit "addressesSet" $ \xml ->
+    path = itemsPath "addressesSet"
+    addressSet = itemConduit $ \xml ->
         Address
         <$> xml .< "publicIp"
         <*> xml .< "allocationId"
@@ -58,7 +57,7 @@ allocateAddress
     => Bool -- ^ is VPC?
     -> EC2 m AllocateAddress
 allocateAddress isVpc = do
-    ec2Query "AllocateAddress" params $ xmlParser $ \xml ->
+    ec2Query "AllocateAddress" params $ \xml ->
         AllocateAddress
         <$> xml .< "publicIp"
         <*> xml .< "domain"
@@ -75,7 +74,7 @@ releaseAddress
     -> Maybe Text -- ^ AllocationId
     -> EC2 m EC2Return
 releaseAddress addr allocid = do
-    ec2Query "ReleaseAddress" params $ xmlParser (.< "return")
+    ec2Query "ReleaseAddress" params (.< "return")
   where
     params =
         [ "PublicIp" |=? addr
@@ -89,7 +88,7 @@ associateAddress
     :: (MonadResource m, MonadBaseControl IO m)
     => AssociateAddressRequest
     -> EC2 m (Bool, Maybe Text)
-associateAddress param = ec2Query "AssociateAddress" params $ xmlParser $ \xml ->
+associateAddress param = ec2Query "AssociateAddress" params $ \xml ->
     (,) <$> xml .< "return"
         <*> xml .< "associationId"
   where
@@ -114,8 +113,7 @@ disassociateAddress
     => DisassociateAddressRequest
     -> EC2 m Bool
 disassociateAddress param =
-    ec2Query "DisassociateAddress" (p param)
-        $ xmlParser (.< "return")
+    ec2Query "DisassociateAddress" (p param) (.< "return")
   where
     p (DisassociateAddressRequestEc2 pip)
         = ["PublicIp" |= pip]

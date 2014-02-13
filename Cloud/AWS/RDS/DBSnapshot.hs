@@ -12,7 +12,7 @@ import Data.Conduit
 import Control.Applicative
 
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<), getElement)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 
 import Cloud.AWS.RDS.Types hiding (Event)
 import Cloud.AWS.RDS.Internal
@@ -38,12 +38,12 @@ describeDBSnapshots dbiid dbsid marker maxRecords sType =
 
 sinkDBSnapshots
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m [DBSnapshot]
+    => XmlElement -> m [DBSnapshot]
 sinkDBSnapshots = elements "DBSnapshot" sinkDBSnapshot
 
 sinkDBSnapshot
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DBSnapshot
+    => XmlElement -> m DBSnapshot
 sinkDBSnapshot xml = DBSnapshot
     <$> xml .< "Port"
     <*> xml .< "OptionGroupName"
@@ -68,8 +68,8 @@ createDBSnapshot
     -> Text -- ^ DBSnapshotIdentifier
     -> RDS m DBSnapshot
 createDBSnapshot dbiid dbsid =
-    rdsQuery "CreateDBSnapshot" params $ \xml ->
-        getElement xml "DBSnapshot" sinkDBSnapshot
+    rdsQuery "CreateDBSnapshot" params $
+        element "DBSnapshot" sinkDBSnapshot
   where
     params =
         [ "DBInstanceIdentifier" |= dbiid
@@ -81,8 +81,8 @@ deleteDBSnapshot
     => Text -- ^ DBSnapshotIdentifier
     -> RDS m DBSnapshot
 deleteDBSnapshot dbsid =
-    rdsQuery "DeleteDBSnapshot" params $ \xml ->
-        getElement xml "DBSnapshot" sinkDBSnapshot
+    rdsQuery "DeleteDBSnapshot" params $
+        element "DBSnapshot" sinkDBSnapshot
   where
     params = ["DBSnapshotIdentifier" |= dbsid]
 
@@ -92,8 +92,8 @@ copyDBSnapshot
     -> Text -- ^ TargetDBSnapshotIdentifier
     -> RDS m DBSnapshot
 copyDBSnapshot source target =
-    rdsQuery "CopyDBSnapshot" params $ \xml ->
-        getElement xml "DBSnapshot" sinkDBSnapshot
+    rdsQuery "CopyDBSnapshot" params $
+        element "DBSnapshot" sinkDBSnapshot
   where
     params =
         [ "SourceDBSnapshotIdentifier" |= source

@@ -10,7 +10,7 @@ import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<))
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (Tag(..))
@@ -29,7 +29,7 @@ listTagsForResource name =
 
 tagSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Tag
+    => XmlElement -> m Tag
 tagSink xml = Tag
     <$> xml .< "Value"
     <*> xml .< "Key"

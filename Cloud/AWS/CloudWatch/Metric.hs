@@ -14,7 +14,7 @@ import Control.Applicative
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser (members, nodata)
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, (.<))
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 import Cloud.AWS.CloudWatch.Types
 
 dimensionFiltersParam :: [DimensionFilter] -> QueryParam
@@ -44,7 +44,7 @@ listMetrics ds mn ns nt = cloudWatchQuery "ListMetrics" params $ \xml ->
         ]
 
 sinkMetric :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Metric
+    => XmlElement -> m Metric
 sinkMetric xml =
     Metric
     <$> members "Dimensions" sinkDimension xml

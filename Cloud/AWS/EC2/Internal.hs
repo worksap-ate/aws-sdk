@@ -1,5 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Cloud.AWS.EC2.Internal
     ( module Cloud.AWS.Class
@@ -9,6 +10,7 @@ module Cloud.AWS.EC2.Internal
     , runEC2withManager
     , itemConduit
     , itemsSet
+    , itemsPath
     , resourceTagConv
     , productCodeConv
     , stateReasonConv
@@ -23,11 +25,10 @@ import qualified Network.HTTP.Conduit as HTTP
 import Data.ByteString.Char8 ()
 import Control.Applicative
 import Data.Conduit
-import Data.XML.Types (Event)
 import Data.Text (Text)
 
 import Cloud.AWS.Class
-import Cloud.AWS.Lib.Parser.Unordered hiding (getT)
+import Cloud.AWS.Lib.Parser.Unordered
 import Cloud.AWS.EC2.Types
 
 initialEC2Context :: HTTP.Manager -> AWSContext
@@ -47,19 +48,20 @@ runEC2withManager :: Monad m
 runEC2withManager mgr =
     runAWSwithManager mgr initialEC2Context
 
-itemConduit :: (MonadThrow m, Applicative m)
-    => Text
-    -> (SimpleXML -> m o)
-    -> Conduit Event m o
-itemConduit tag inner = xmlParserConduit tag $ \xml ->
-    getElement xml "item" inner
+itemConduit :: (MonadBaseControl IO m, MonadThrow m)
+    => (XmlElement -> m o)
+    -> Conduit XmlElement m o
+itemConduit inner = convertConduit $ element "item" inner
 
-itemsSet :: (MonadThrow m, Applicative m)
-    => SimpleXML
-    -> Text
-    -> (SimpleXML -> m o)
+itemsSet :: MonadThrow m
+    => Text
+    -> (XmlElement -> m o)
+    -> XmlElement
     -> m [o]
-itemsSet xml tag inner = getElements xml tag "item" inner
+itemsSet t = elements t "item"
+
+itemsPath :: Text -> ElementPath
+itemsPath t = tag t .- end "item"
 
 volumeType :: MonadThrow m => Text -> Maybe Int -> m VolumeType
 volumeType t Nothing  | t == "standard" = return $ VolumeTypeStandard
@@ -67,46 +69,52 @@ volumeType t (Just i) | t == "io1"      = return $ VolumeTypeIO1 i
 volumeType t _ = monadThrow $ FromTextError t
 
 resourceTagConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m [ResourceTag]
-resourceTagConv xml = getElements xml "tagSet" "item" $ \xml' ->
-    ResourceTag
-    <$> xml' .< "key"
-    <*> xml' .< "value"
+    => XmlElement -> m [ResourceTag]
+resourceTagConv = elements "tagSet" "item" conv
+  where
+    conv e = ResourceTag
+        <$> e .< "key"
+        <*> e .< "value"
 
 productCodeConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m [ProductCode]
-productCodeConv xml = itemsSet xml "productCodes" $ \xml' ->
-    ProductCode
-    <$> xml' .< "productCode"
-    <*> xml' .< "type"
+    => XmlElement -> m [ProductCode]
+productCodeConv = itemsSet "productCodes" conv
+  where
+    conv e = ProductCode
+        <$> e .< "productCode"
+        <*> e .< "type"
 
 stateReasonConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m (Maybe StateReason)
-stateReasonConv xml = getElementM xml "stateReason" $ \xml' ->
-    StateReason
-    <$> xml' .< "code"
-    <*> xml' .< "message"
+    => XmlElement -> m (Maybe StateReason)
+stateReasonConv = elementM "stateReason" conv
+  where
+    conv e = StateReason
+        <$> e .< "code"
+        <*> e .< "message"
 
 volumeTypeConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m VolumeType
+    => XmlElement -> m VolumeType
 volumeTypeConv xml = join $ volumeType
     <$> xml .< "volumeType"
     <*> xml .< "iops"
 
-groupSetConv :: (MonadThrow m, Applicative m) => SimpleXML -> m [Group]
-groupSetConv xml = itemsSet xml "groupSet" $ \xml' -> Group
-    <$> xml' .< "groupId"
-    <*> xml' .< "groupName"
+groupSetConv :: (MonadThrow m, Applicative m) => XmlElement -> m [Group]
+groupSetConv = itemsSet "groupSet" conv
+  where
+    conv e = Group
+        <$> e .< "groupId"
+        <*> e .< "groupName"
 
 networkInterfaceAttachmentConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m (Maybe NetworkInterfaceAttachment)
-networkInterfaceAttachmentConv xml = getElementM xml "attachment" $ \xml' ->
-    NetworkInterfaceAttachment
-    <$> xml' .< "attachmentId"
-    <*> xml' .< "instanceId"
-    <*> xml' .< "instanceOwnerId"
-    <*> xml' .< "deviceIndex"
-    <*> xml' .< "status"
-    <*> xml' .< "attachTime"
-    <*> xml' .< "deleteOnTermination"
+    => XmlElement -> m (Maybe NetworkInterfaceAttachment)
+networkInterfaceAttachmentConv = elementM "attachment" conv
+  where
+    conv e = NetworkInterfaceAttachment
+        <$> e .< "attachmentId"
+        <*> e .< "instanceId"
+        <*> e .< "instanceOwnerId"
+        <*> e .< "deviceIndex"
+        <*> e .< "status"
+        <*> e .< "attachTime"
+        <*> e .< "deleteOnTermination"

@@ -21,7 +21,7 @@ module Cloud.AWS.EC2
     , module Cloud.AWS.EC2.Address
       -- * KeyPairs
     , module Cloud.AWS.EC2.KeyPair
-      -- * SecurityGroups
+       -- * SecurityGroups
     , module Cloud.AWS.EC2.SecurityGroup
       -- * NetworkInterface
     , module Cloud.AWS.EC2.NetworkInterface

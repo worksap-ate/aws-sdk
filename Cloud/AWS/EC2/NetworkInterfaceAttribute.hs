@@ -24,8 +24,8 @@ describeNetworkInterfaceDescription
     => Text -- ^ The ID of the network interface.
     -> EC2 m (Maybe Text)
 describeNetworkInterfaceDescription =
-    describeNetworkInterfaceAttribute "description" $ \xml ->
-        getElement xml "description" (.< "value")
+    describeNetworkInterfaceAttribute "description" $
+        element "description" (.< "value")
 
 describeNetworkInterfaceGroupSet
     :: (MonadBaseControl IO m, MonadResource m)
@@ -39,8 +39,8 @@ describeNetworkInterfaceSourceDestCheck
     => Text -- ^ The ID of the network interface.
     -> EC2 m Bool
 describeNetworkInterfaceSourceDestCheck =
-    describeNetworkInterfaceAttribute "sourceDestCheck" $ \xml ->
-        getElement xml "sourceDestCheck" (.< "value")
+    describeNetworkInterfaceAttribute "sourceDestCheck" $
+        element "sourceDestCheck" (.< "value")
 
 describeNetworkInterfaceAttachment
     :: (MonadBaseControl IO m, MonadResource m)
@@ -52,12 +52,11 @@ describeNetworkInterfaceAttachment =
 describeNetworkInterfaceAttribute
     :: (MonadBaseControl IO m, MonadResource m)
     => Text
-    -> (SimpleXML -> m a)
+    -> (XmlElement -> m a)
     -> Text
     -> EC2 m a
 describeNetworkInterfaceAttribute action conv networkInterface =
-    ec2Query "DescribeNetworkInterfaceAttribute" params $
-        xmlParser conv
+    ec2Query "DescribeNetworkInterfaceAttribute" params conv
   where
     params =
         [ "NetworkInterfaceId" |= networkInterface
@@ -108,7 +107,7 @@ modifyNetworkInterfaceAttribute
     -> [QueryParam]
     -> EC2 m Bool
 modifyNetworkInterfaceAttribute iface params =
-    ec2Query "ModifyNetworkInterfaceAttribute" params' $ xmlParser (.< "return")
+    ec2Query "ModifyNetworkInterfaceAttribute" params' (.< "return")
   where
     params' = ("NetworkInterfaceId" |= iface) : params
 
@@ -125,7 +124,7 @@ resetNetworkInterfaceAttribute
     -> Text
     -> EC2 m Bool
 resetNetworkInterfaceAttribute attrName iface =
-    ec2Query "ResetNetworkInterfaceAttribute" params $ xmlParser (.< "return")
+    ec2Query "ResetNetworkInterfaceAttribute" params (.< "return")
   where
     params =
         [ "NetworkInterfaceId" |= iface

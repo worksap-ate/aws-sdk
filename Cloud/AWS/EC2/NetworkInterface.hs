@@ -28,7 +28,7 @@ assignPrivateIpAddresses
     -> Maybe Bool
     -> EC2 m Bool
 assignPrivateIpAddresses niid epip ar =
-    ec2Query "AssignPrivateIpAddresses" params $ xmlParser (.< "return")
+    ec2Query "AssignPrivateIpAddresses" params (.< "return")
   where
     params =
         [ "NetworkInterfaceId" |= niid
@@ -44,7 +44,7 @@ unassignPrivateIpAddresses
     -> [IPv4] -- ^ PrivateIpAddresses
     -> EC2 m Bool
 unassignPrivateIpAddresses niid addrs =
-    ec2Query "UnassignPrivateIpAddresses" params $ xmlParser (.< "return")
+    ec2Query "UnassignPrivateIpAddresses" params (.< "return")
   where
     params =
         [ "NetworkInterfaceId" |= niid
@@ -57,9 +57,10 @@ describeNetworkInterfaces
     -> [Filter]
     -> EC2 m (ResumableSource m NetworkInterface)
 describeNetworkInterfaces niid filters =
-    ec2QuerySource "DescribeNetworkInterfaces" params
-        $ itemConduit "networkInterfaceSet" networkInterfaceConv
+    ec2QuerySource "DescribeNetworkInterfaces" params path
+        $ itemConduit networkInterfaceConv
   where
+    path = itemsPath "networkInterfaceSet"
     params =
         [ "NetworkInterfaceId" |.#= niid
         , filtersParam filters
@@ -67,7 +68,7 @@ describeNetworkInterfaces niid filters =
 
 networkInterfaceConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m NetworkInterface
+    => XmlElement -> m NetworkInterface
 networkInterfaceConv xml = NetworkInterface
     <$> xml .< "networkInterfaceId"
     <*> xml .< "subnetId"
@@ -86,25 +87,26 @@ networkInterfaceConv xml = NetworkInterface
     <*> networkInterfaceAttachmentConv xml
     <*> networkInterfaceAssociationConv xml
     <*> resourceTagConv xml
-    <*> itemsSet xml "privateIpAddressesSet" (\xml' ->
+    <*> itemsSet "privateIpAddressesSet" (\xml' ->
         NetworkInterfacePrivateIpAddress
         <$> xml' .< "privateIpAddress"
         <*> xml' .< "privateDnsName"
         <*> xml' .< "primary"
         <*> networkInterfaceAssociationConv xml
-        )
+        ) xml
 
 networkInterfaceAssociationConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m (Maybe NetworkInterfaceAssociation)
-networkInterfaceAssociationConv xml = getElementM xml "association" $ \xml' ->
-    NetworkInterfaceAssociation
-    <$> xml' .< "attachmentId"
-    <*> xml' .< "instanceId"
-    <*> xml' .< "publicIp"
-    <*> xml' .< "publicDnsName"
-    <*> xml' .< "ipOwnerId"
-    <*> xml' .< "associationId"
+    => XmlElement -> m (Maybe NetworkInterfaceAssociation)
+networkInterfaceAssociationConv = elementM "association" conv
+  where
+    conv e = NetworkInterfaceAssociation
+        <$> e .< "attachmentId"
+        <*> e .< "instanceId"
+        <*> e .< "publicIp"
+        <*> e .< "publicDnsName"
+        <*> e .< "ipOwnerId"
+        <*> e .< "associationId"
 
 createNetworkInterface
     :: (MonadBaseControl IO m, MonadResource m)
@@ -114,8 +116,8 @@ createNetworkInterface
     -> [Text] -- ^ A list of security group IDs for use by the network interface.
     -> EC2 m NetworkInterface
 createNetworkInterface subnet privateAddresses description securityGroupIds =
-    ec2Query "CreateNetworkInterface" params $ xmlParser $ \xml ->
-        getElement xml "networkInterface" networkInterfaceConv
+    ec2Query "CreateNetworkInterface" params $
+        element "networkInterface" networkInterfaceConv
   where
     params :: [QueryParam]
     params =
@@ -140,8 +142,8 @@ deleteNetworkInterface
     => Text -- ^ The ID of the network interface.
     -> EC2 m Bool
 deleteNetworkInterface networkInterface =
-    ec2Query "DeleteNetworkInterface" ["NetworkInterfaceId" |= networkInterface] $
-        xmlParser (.< "return")
+    ec2Query "DeleteNetworkInterface" ["NetworkInterfaceId" |= networkInterface]
+        (.< "return")
 
 attachNetworkInterface
     :: (MonadBaseControl IO m, MonadResource m)
@@ -150,7 +152,7 @@ attachNetworkInterface
     -> Int -- ^ The index of the device for the network interface attachment.
     -> EC2 m Text -- ^ The ID of the attachment.
 attachNetworkInterface networkInterface inst deviceIdx =
-    ec2Query "AttachNetworkInterface" params $ xmlParser (.< "attachmentId")
+    ec2Query "AttachNetworkInterface" params (.< "attachmentId")
   where
     params =
         [ "NetworkInterfaceId" |= networkInterface
@@ -164,7 +166,7 @@ detachNetworkInterface
     -> Maybe Bool -- ^ Set to true to force a detachment.
     -> EC2 m Bool
 detachNetworkInterface attachment force =
-    ec2Query "DetachNetworkInterface" params $ xmlParser (.< "return")
+    ec2Query "DetachNetworkInterface" params (.< "return")
   where
     params =
         [ "AttachmentId" |= attachment

@@ -9,10 +9,10 @@ import Control.Applicative ((<$>), (<*>), Applicative)
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.EC2.Internal (EC2, itemConduit)
+import Cloud.AWS.EC2.Internal (EC2, itemConduit, itemsPath)
 import Cloud.AWS.EC2.Query (ec2Query, ec2QuerySource)
 import Cloud.AWS.EC2.Types (Filter, PlacementGroup(..), PlacementGroupStrategy(..))
-import Cloud.AWS.Lib.Parser.Unordered ((.<), SimpleXML, xmlParser)
+import Cloud.AWS.Lib.Parser.Unordered ((.<), XmlElement)
 import Cloud.AWS.Lib.Query ((|=), (|.#=), filtersParam)
 
 describePlacementGroups
@@ -21,15 +21,16 @@ describePlacementGroups
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m PlacementGroup)
 describePlacementGroups groupNames filters =
-    ec2QuerySource "DescribePlacementGroups" params $
-        itemConduit "placementGroupSet" placementGroupConv
+    ec2QuerySource "DescribePlacementGroups" params path $
+        itemConduit placementGroupConv
   where
+    path = itemsPath "placementGroupSet"
     params =
         [ "GroupName" |.#= groupNames
         , filtersParam filters
         ]
 
-placementGroupConv :: (MonadThrow m, Applicative m) => SimpleXML -> m PlacementGroup
+placementGroupConv :: (MonadThrow m, Applicative m) => XmlElement -> m PlacementGroup
 placementGroupConv xml =
     PlacementGroup
     <$> xml .< "groupName"
@@ -42,7 +43,7 @@ createPlacementGroup
     -> PlacementGroupStrategy -- ^ The placement group strategy.
     -> EC2 m Bool
 createPlacementGroup groupName strategy =
-    ec2Query "CreatePlacementGroup" params $ xmlParser (.< "return")
+    ec2Query "CreatePlacementGroup" params (.< "return")
   where
     params =
         [ "GroupName" |= groupName
@@ -57,4 +58,4 @@ deletePlacementGroup
     => Text -- ^ The name of the placement group.
     -> EC2 m Bool
 deletePlacementGroup groupName =
-    ec2Query "DeletePlacementGroup" ["GroupName" |= groupName] $ xmlParser (.< "return")
+    ec2Query "DeletePlacementGroup" ["GroupName" |= groupName] (.< "return")

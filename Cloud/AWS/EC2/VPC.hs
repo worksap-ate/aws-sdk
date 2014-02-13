@@ -49,7 +49,7 @@ attachInternetGateway
     -> Text -- ^ VpcId
     -> EC2 m Bool
 attachInternetGateway internetGatewayId vid =
-    ec2Query "AttachInternetGateway" params $ xmlParser (.< "return")
+    ec2Query "AttachInternetGateway" params (.< "return")
   where
     params =
         [ "InternetGatewayId" |= internetGatewayId
@@ -61,8 +61,8 @@ attachVpnGateway
     -> Text -- ^ The ID of the VPC.
     -> EC2 m Attachment
 attachVpnGateway vgw vpc =
-    ec2Query "AttachVpnGateway" params $ xmlParser $ \xml ->
-        getElement xml "attachment" attachmentConv
+    ec2Query "AttachVpnGateway" params $
+        element "attachment" attachmentConv
   where
     params =
         [ "VpnGatewayId" |= vgw
@@ -78,7 +78,7 @@ detachInternetGateway
     -> Text -- ^ VpcId
     -> EC2 m Bool
 detachInternetGateway internetGatewayId vid =
-    ec2Query "DetachInternetGateway" params $ xmlParser (.< "return")
+    ec2Query "DetachInternetGateway" params (.< "return")
   where
     params =
         [ "InternetGatewayId" |= internetGatewayId
@@ -90,7 +90,7 @@ detachVpnGateway
     -> Text -- ^ The ID of the VPC.
     -> EC2 m Bool
 detachVpnGateway vgw vpc =
-    ec2Query "DetachVpnGateway" params $ xmlParser (.< "return")
+    ec2Query "DetachVpnGateway" params (.< "return")
   where
     params =
         [ "VpnGatewayId" |= vgw
@@ -113,8 +113,8 @@ createInternetGateway
     :: (MonadResource m, MonadBaseControl IO m)
     => EC2 m InternetGateway
 createInternetGateway =
-    ec2Query "CreateInternetGateway" [] $ xmlParser $ \xml ->
-        getElement xml "internetGateway" internetGatewayConv
+    ec2Query "CreateInternetGateway" [] $
+        element "internetGateway" internetGatewayConv
 
 ------------------------------------------------------------
 -- describeInternetGateways
@@ -125,23 +125,24 @@ describeInternetGateways
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m InternetGateway)
 describeInternetGateways internetGatewayIds filters = do
-    ec2QuerySource "DescribeInternetGateways" params $
-        itemConduit "internetGatewaySet" internetGatewayConv
+    ec2QuerySource "DescribeInternetGateways" params path $
+        itemConduit internetGatewayConv
   where
+    path = itemsPath "internetGatewaySet"
     params =
         [ "InternetGatewayId" |.#= internetGatewayIds
         , filtersParam filters
         ]
 
 internetGatewayConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m InternetGateway
+    => XmlElement -> m InternetGateway
 internetGatewayConv xml = InternetGateway
     <$> xml .< "internetGatewayId"
-    <*> itemsSet xml "attachmentSet" internetGatewayAttachmentConv
+    <*> itemsSet "attachmentSet" internetGatewayAttachmentConv xml
     <*> resourceTagConv xml
 
 internetGatewayAttachmentConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m InternetGatewayAttachment
+    => XmlElement -> m InternetGatewayAttachment
 internetGatewayAttachmentConv xml = InternetGatewayAttachment
     <$> xml .< "vpcId"
     <*> xml .< "state"
@@ -155,9 +156,10 @@ describeVpnConnections
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m VpnConnection)
 describeVpnConnections ids filters =
-    ec2QuerySource "DescribeVpnConnections" params $
-        itemConduit "vpnConnectionSet" vpnConnectionConv
+    ec2QuerySource "DescribeVpnConnections" params path $
+        itemConduit vpnConnectionConv
   where
+    path = itemsPath "vpnConnectionSet"
     params =
         [ "VpnConnectionId" |.#= ids
         , filtersParam filters
@@ -165,7 +167,7 @@ describeVpnConnections ids filters =
 
 vpnConnectionConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m VpnConnection
+    => XmlElement -> m VpnConnection
 vpnConnectionConv xml = VpnConnection
     <$> xml .< "vpnConnectionId"
     <*> xml .< "state"
@@ -174,24 +176,24 @@ vpnConnectionConv xml = VpnConnection
     <*> xml .< "customerGatewayId"
     <*> xml .< "vpnGatewayId"
     <*> resourceTagConv xml
-    <*> itemsSet xml "vgwTelemetry"
+    <*> itemsSet "vgwTelemetry"
         (\xml' -> VpnTunnelTelemetry
         <$> xml' .< "outsideIpAddress"
         <*> xml' .< "status"
         <*> xml' .< "lastStatusChange"
         <*> xml' .< "statusMessage"
         <*> xml' .< "acceptedRouteCount"
-        )
-    <*> getElementM xml "options"
+        ) xml
+    <*> elementM "options"
         (\xml' -> VpnConnectionOptionsRequest
         <$> xml' .< "staticRoutesOnly"
-        )
-    <*> itemsSet xml "routes"
+        ) xml
+    <*> itemsSet "routes"
         (\xml' -> VpnStaticRoute
         <$> xml' .< "destinationCidrBlock"
         <*> xml' .< "source"
         <*> xml' .< "state"
-        )
+        ) xml
 
 ------------------------------------------------------------
 -- createVpnConnection
@@ -205,8 +207,8 @@ createVpnConnection
     -> Maybe Bool -- ^ Option
     -> EC2 m VpnConnection
 createVpnConnection type' cgid vgid zone option =
-    ec2Query "CreateVpnConnection" params $ xmlParser $ \xml ->
-        getElement xml "vpnConnection" vpnConnectionConv
+    ec2Query "CreateVpnConnection" params $
+        element "vpnConnection" vpnConnectionConv
   where
     params =
         [ "Type" |= type'
@@ -222,7 +224,7 @@ createVpnConnectionRoute
     -> Text -- ^ The ID of the VPN connection.
     -> EC2 m Bool
 createVpnConnectionRoute cidr vpnConn =
-    ec2Query "CreateVpnConnectionRoute" params $ xmlParser (.< "return")
+    ec2Query "CreateVpnConnectionRoute" params (.< "return")
   where
     params =
         [ "DestinationCidrBlock" |= cidr
@@ -244,7 +246,7 @@ deleteVpnConnectionRoute
     -> Text -- ^ The ID of the VPN connection.
     -> EC2 m Bool
 deleteVpnConnectionRoute cidr vpnConn =
-    ec2Query "DeleteVpnConnectionRoute" params $ xmlParser (.< "return")
+    ec2Query "DeleteVpnConnectionRoute" params (.< "return")
   where
     params =
         [ "DestinationCidrBlock" |= cidr
@@ -260,16 +262,17 @@ describeVpcs
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Vpc)
 describeVpcs vpcIds filters = do
-    ec2QuerySource "DescribeVpcs" params $
-        itemConduit "vpcSet" vpcConv
+    ec2QuerySource "DescribeVpcs" params path $
+        itemConduit vpcConv
   where
+    path = itemsPath "vpcSet"
     params =
         [ "VpcId" |.#= vpcIds
         , filtersParam filters
         ]
 
 vpcConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Vpc
+    => XmlElement -> m Vpc
 vpcConv xml = Vpc
     <$> xml .< "vpcId"
     <*> xml .< "state"
@@ -288,8 +291,8 @@ createVpc
     -> Maybe Text -- ^ instanceTenancy
     -> EC2 m Vpc
 createVpc cidrBlock instanceTenancy =
-    ec2Query "CreateVpc" params $ xmlParser $ \xml ->
-        getElement xml "vpc" vpcConv
+    ec2Query "CreateVpc" params $
+        element "vpc" vpcConv
   where
     params =
         [ "CidrBlock" |= cidrBlock
@@ -314,26 +317,27 @@ describeVpnGateways
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m VpnGateway)
 describeVpnGateways ids filters = do
-    ec2QuerySource "DescribeVpnGateways" params $
-        itemConduit "vpnGatewaySet" vpnGatewayConv
+    ec2QuerySource "DescribeVpnGateways" params path $
+        itemConduit vpnGatewayConv
   where
+    path = itemsPath "vpnGatewaySet"
     params =
         [ "VpnGatewayId" |.#= ids
         , filtersParam filters
         ]
 
 vpnGatewayConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m VpnGateway
+    => XmlElement -> m VpnGateway
 vpnGatewayConv xml = VpnGateway
     <$> xml .< "vpnGatewayId"
     <*> xml .< "state"
     <*> xml .< "type"
     <*> xml .< "availabilityZone"
-    <*> itemsSet xml "attachments" attachmentConv
+    <*> itemsSet "attachments" attachmentConv xml
     <*> resourceTagConv xml
 
 attachmentConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Attachment
+    => XmlElement -> m Attachment
 attachmentConv xml = Attachment
     <$> xml .< "vpcId"
     <*> xml .< "state"
@@ -347,8 +351,8 @@ createVpnGateway
     -> Maybe Text -- ^ AvailabilityZone
     -> EC2 m VpnGateway
 createVpnGateway type' availabilityZone = do
-    ec2Query "CreateVpnGateway" params $ xmlParser $ \xml ->
-        getElement xml "vpnGateway" vpnGatewayConv
+    ec2Query "CreateVpnGateway" params $
+        element "vpnGateway" vpnGatewayConv
   where
     params =
         [ "Type" |= type'
@@ -373,16 +377,17 @@ describeCustomerGateway
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m CustomerGateway)
 describeCustomerGateway ids filters = do
-    ec2QuerySource "DescribeCustomerGateways" params $
-        itemConduit "customerGatewaySet" customerGatewayConv
+    ec2QuerySource "DescribeCustomerGateways" params path $
+        itemConduit customerGatewayConv
   where
+    path = itemsPath "customerGatewaySet"
     params =
         [ "CustomerGatewayId" |.#= ids
         , filtersParam filters
         ]
 
 customerGatewayConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m CustomerGateway
+    => XmlElement -> m CustomerGateway
 customerGatewayConv xml = CustomerGateway
     <$> xml .< "customerGatewayId"
     <*> xml .< "state"
@@ -401,8 +406,8 @@ createCustomerGateway
     -> Int -- ^ BgpAsn
     -> EC2 m CustomerGateway
 createCustomerGateway type' ipAddr bgpAsn = do
-    ec2Query "CreateCustomerGateway" params $ xmlParser $ \xml ->
-        getElement xml "customerGateway" customerGatewayConv
+    ec2Query "CreateCustomerGateway" params $
+        element "customerGateway" customerGatewayConv
   where
     params =
         [ "Type" |= type'
@@ -428,29 +433,30 @@ describeDhcpOptions
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m DhcpOptions)
 describeDhcpOptions ids filters =
-    ec2QuerySource "DescribeDhcpOptions" params $
-        itemConduit "dhcpOptionsSet" dhcpOptionsConv
+    ec2QuerySource "DescribeDhcpOptions" params path $
+        itemConduit dhcpOptionsConv
   where
+    path = itemsPath "dhcpOptionsSet"
     params =
         [ "DhcpOptionsId" |.#= ids
         , filtersParam filters
         ]
 
 dhcpOptionsConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DhcpOptions
+    => XmlElement -> m DhcpOptions
 dhcpOptionsConv xml = DhcpOptions
     <$> xml .< "dhcpOptionsId"
-    <*> itemsSet xml "dhcpConfigurationSet" dhcpConfigurationConv
+    <*> itemsSet "dhcpConfigurationSet" dhcpConfigurationConv xml
     <*> resourceTagConv xml
 
 dhcpConfigurationConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DhcpConfiguration
+    => XmlElement -> m DhcpConfiguration
 dhcpConfigurationConv xml = DhcpConfiguration
     <$> xml .< "key"
-    <*> itemsSet xml "valueSet"
+    <*> itemsSet "valueSet"
         (\xml' -> DhcpValue
         <$> xml' .< "value"
-        )
+        ) xml
 
 ------------------------------------------------------------
 -- createDhcpOptions
@@ -460,8 +466,8 @@ createDhcpOptions
     => [DhcpConfiguration] -- ^ DhcpConfigurations
     -> EC2 m DhcpOptions
 createDhcpOptions confs =
-    ec2Query "CreateDhcpOptions" params $ xmlParser $ \xml ->
-        getElement xml "dhcpOptions" dhcpOptionsConv
+    ec2Query "CreateDhcpOptions" params $
+        element "dhcpOptions" dhcpOptionsConv
   where
     params = ["DhcpConfiguration" |.#. map dhcpConfigurationParams confs]
     dhcpConfigurationParams conf =
@@ -477,7 +483,7 @@ deleteDhcpOptions
     => Text -- ^ DhcpOptionsId
     -> EC2 m Bool
 deleteDhcpOptions doid =
-    ec2Query "DeleteDhcpOptions" params $ xmlParser (.< "return")
+    ec2Query "DeleteDhcpOptions" params (.< "return")
   where
     params = ["DhcpOptionsId" |= doid]
 
@@ -490,7 +496,7 @@ associateDhcpOptions
     -> Text -- ^ VpcId
     -> EC2 m Bool
 associateDhcpOptions doid vpcid =
-    ec2Query "AssociateDhcpOptions" params $ xmlParser (.< "return")
+    ec2Query "AssociateDhcpOptions" params (.< "return")
   where
     params =
         [ "DhcpOptionsId" |= doid
@@ -503,7 +509,7 @@ enableVgwRoutePropagation
     -> Text -- ^ The ID of the virtual private gateway.
     -> EC2 m Bool
 enableVgwRoutePropagation rtb vgw =
-    ec2Query "EnableVgwRoutePropagation" params $ xmlParser (.< "return")
+    ec2Query "EnableVgwRoutePropagation" params (.< "return")
   where
     params =
         [ "RouteTableId" |= rtb
@@ -516,7 +522,7 @@ disableVgwRoutePropagation
     -> Text -- ^ The ID of the virtual private gateway.
     -> EC2 m Bool
 disableVgwRoutePropagation rtb vgw =
-    ec2Query "DisableVgwRoutePropagation" params $ xmlParser (.< "return")
+    ec2Query "DisableVgwRoutePropagation" params (.< "return")
   where
     params =
         [ "RouteTableId" |= rtb

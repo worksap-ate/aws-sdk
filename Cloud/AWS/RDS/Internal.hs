@@ -25,7 +25,8 @@ import qualified Text.XML.Stream.Parse as XmlP
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML, xmlParser, getElement, getElements, (.<))
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, elementConsumer, element, (.<))
+import qualified Cloud.AWS.Lib.Parser.Unordered as U
 import Cloud.AWS.Lib.ToText (toText)
 import Cloud.AWS.RDS.Types hiding (Event)
 
@@ -39,7 +40,7 @@ rdsQuery
     :: (MonadBaseControl IO m, MonadResource m)
     => ByteString -- ^ Action
     -> [QueryParam]
-    -> (SimpleXML -> m a)
+    -> (XmlElement -> m a)
     -> RDS m a
 rdsQuery = commonQuery apiVersion
 
@@ -52,65 +53,65 @@ rdsQueryOnlyMetadata action params = do
     ctx <- State.get
     settings <- Reader.ask
     rs <- lift $ requestQuery settings ctx action params apiVersion sinkError
-    rid <- lift $ rs
+    e <- lift $ rs
         $$+- XmlP.parseBytes XmlP.def
-        =$ xmlParser (sinkResponseOnlyMetadata (toText action))
+        =$ elementConsumer
+    rid <- lift $ sinkResponseOnlyMetadata (toText action) e
     State.put ctx { lastRequestId = Just rid }
     return ()
 
 sinkResponseOnlyMetadata
     :: (MonadThrow m, Applicative m)
     => Text
-    -> SimpleXML
+    -> XmlElement
     -> m RequestId
-sinkResponseOnlyMetadata action xml = do
-    getElement xml (action <> "Response") sinkResponseMetadata
+sinkResponseOnlyMetadata action =
+    element (action <> "Response") sinkResponseMetadata
 
 elements :: (MonadThrow m, Applicative m)
     => Text
-    -> (SimpleXML -> m a)
-    -> SimpleXML
+    -> (XmlElement -> m a)
+    -> XmlElement
     -> m [a]
 elements name = elements' (name <> "s") name
 
 elements' :: forall m a . (MonadThrow m, Applicative m)
     => Text
     -> Text
-    -> (SimpleXML -> m a)
-    -> SimpleXML
+    -> (XmlElement -> m a)
+    -> XmlElement
     -> m [a]
-elements' setName itemName inner xml =
-    getElements xml setName itemName inner
+elements' setName itemName inner =
+    U.elements setName itemName inner
 
 dbSubnetGroupSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DBSubnetGroup
+    => XmlElement -> m DBSubnetGroup
 dbSubnetGroupSink xml = DBSubnetGroup
     <$> xml .< "VpcId"
     <*> xml .< "SubnetGroupStatus"
     <*> xml .< "DBSubnetGroupDescription"
     <*> xml .< "DBSubnetGroupName"
-    <*> elements "Subnet" (\xml' ->
-        Subnet
+    <*> elements "Subnet" subnetConv xml
+  where
+    subnetConv xml' = Subnet
         <$> xml' .< "SubnetStatus"
         <*> xml' .< "SubnetIdentifier"
-        <*> getElement xml' "SubnetAvailabilityZone" (\xml'' ->
-            AvailabilityZone
-            <$> xml'' .< "Name"
-            <*> xml'' .< "ProvisionedIopsCapable"
-            )
-        ) xml
+        <*> element "SubnetAvailabilityZone" avConv xml'
+    avConv xml'' = AvailabilityZone
+        <$> xml'' .< "Name"
+        <*> xml'' .< "ProvisionedIopsCapable"
 
 dbSecurityGroupMembershipSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m DBSecurityGroupMembership
+    => XmlElement -> m DBSecurityGroupMembership
 dbSecurityGroupMembershipSink xml = DBSecurityGroupMembership
     <$> xml .< "Status"
     <*> xml .< "DBSecurityGroupName"
 
 vpcSecurityGroupMembershipSink
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m VpcSecurityGroupMembership
+    => XmlElement -> m VpcSecurityGroupMembership
 vpcSecurityGroupMembershipSink xml = VpcSecurityGroupMembership
     <$> xml .< "Status"
     <*> xml .< "VpcSecurityGroupId"

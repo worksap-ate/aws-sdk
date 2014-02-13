@@ -27,9 +27,10 @@ describeSnapshots
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m Snapshot)
 describeSnapshots ssids owners restby filters =
-    ec2QuerySource "DescribeSnapshots" params $
-        itemConduit "snapshotSet" snapshotConv
+    ec2QuerySource "DescribeSnapshots" params path $
+        itemConduit snapshotConv
   where
+    path = itemsPath "snapshotSet"
     params =
         [ "SnapshotId" |.#= ssids
         , "Owner" |.#= owners
@@ -38,7 +39,7 @@ describeSnapshots ssids owners restby filters =
         ]
 
 snapshotConv :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m Snapshot
+    => XmlElement -> m Snapshot
 snapshotConv xml = Snapshot
         <$> xml .< "snapshotId"
         <*> xml .< "volumeId"
@@ -57,7 +58,7 @@ createSnapshot
     -> Maybe Text -- ^ Description
     -> EC2 m Snapshot
 createSnapshot volid desc =
-    ec2Query "CreateSnapshot" params $ xmlParser snapshotConv
+    ec2Query "CreateSnapshot" params snapshotConv
   where
     params =
         [ "VolumeId" |= volid
@@ -69,7 +70,7 @@ deleteSnapshot
     => Text -- ^ SnapshotId
     -> EC2 m Bool
 deleteSnapshot ssid =
-    ec2Query "DeleteSnapshot" params $ xmlParser (.< "return")
+    ec2Query "DeleteSnapshot" params (.< "return")
   where
     params = ["SnapshotId" |= ssid]
 
@@ -80,7 +81,7 @@ copySnapshot
     -> Maybe Text -- ^ Description
     -> EC2 m Text
 copySnapshot region sid desc =
-    ec2Query "CopySnapshot" params $ xmlParser (.< "snapshotId")
+    ec2Query "CopySnapshot" params (.< "snapshotId")
   where
     params = [ "SourceRegion" |= region
              , "SourceSnapshotId" |= sid
@@ -93,8 +94,8 @@ describeSnapshotAttribute
     -> SnapshotAttributeRequest -- ^ Attribute
     -> EC2 m SnapshotAttribute
 describeSnapshotAttribute ssid attr =
-    ec2Query "DescribeSnapshotAttribute" params $
-        xmlParser snapshotAttributeConv
+    ec2Query "DescribeSnapshotAttribute" params
+        snapshotAttributeConv
   where
     params =
         [ "SnapshotId" |= ssid
@@ -103,15 +104,15 @@ describeSnapshotAttribute ssid attr =
 
 snapshotAttributeConv
     :: (MonadThrow m, Applicative m)
-    => SimpleXML -> m SnapshotAttribute
+    => XmlElement -> m SnapshotAttribute
 snapshotAttributeConv xml = SnapshotAttribute
     <$> xml .< "snapshotId"
-    <*> itemsSet xml "createVolumePermission" createVolumePermissionItemConv
+    <*> itemsSet "createVolumePermission" createVolumePermissionItemConv xml
     <*> productCodeConv xml
 
-createVolumePermissionItemConv :: (MonadThrow m, Applicative m) => SimpleXML -> m CreateVolumePermissionItem
+createVolumePermissionItemConv :: (MonadThrow m, Applicative m) => XmlElement -> m CreateVolumePermissionItem
 createVolumePermissionItemConv xml = do
-    mg <- getElementM xml "group" content
+    mg <- elementM "group" content xml
     case mg of
         Just g -> return $ CreateVolumePermissionItemGroup g
         Nothing -> CreateVolumePermissionItemUserId <$> xml .< "userId"
@@ -122,7 +123,7 @@ modifySnapshotAttribute
     -> CreateVolumePermission -- ^ CreateVolumePermission
     -> EC2 m Bool
 modifySnapshotAttribute ssid cvp =
-    ec2Query "ModifySnapshotAttribute" params $ xmlParser (.< "return")
+    ec2Query "ModifySnapshotAttribute" params (.< "return")
   where
     params =
         [ "SnapshotId" |= ssid
@@ -146,7 +147,7 @@ resetSnapshotAttribute
     -> ResetSnapshotAttributeRequest -- ^ Attribute
     -> EC2 m Bool
 resetSnapshotAttribute ssid attr =
-    ec2Query "ResetSnapshotAttribute" params $ xmlParser (.< "return")
+    ec2Query "ResetSnapshotAttribute" params (.< "return")
   where
     params =
         [ "SnapshotId" |= ssid

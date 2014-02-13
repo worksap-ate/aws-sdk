@@ -28,8 +28,8 @@ describeSecurityGroups
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m SecurityGroup)
 describeSecurityGroups names ids filters =
-    ec2QuerySource "DescribeSecurityGroups" params
-    $ itemConduit "securityGroupInfo" $ \xml ->
+    ec2QuerySource "DescribeSecurityGroups" params path
+    $ itemConduit $ \xml ->
         SecurityGroup
         <$> xml .< "ownerId"
         <*> xml .< "groupId"
@@ -40,6 +40,7 @@ describeSecurityGroups names ids filters =
         <*> ipPermissionsConv "ipPermissionsEgress" xml
         <*> resourceTagConv xml
   where
+    path = itemsPath "securityGroupInfo"
     params =
         [ "GroupName" |.#= names
         , "GroupId" |.#= ids
@@ -47,18 +48,20 @@ describeSecurityGroups names ids filters =
         ]
 
 ipPermissionsConv :: (MonadThrow m, Applicative m)
-    => Text -> SimpleXML -> m [IpPermission]
-ipPermissionsConv name xml = itemsSet xml name $ \xml' -> IpPermission
-    <$> xml' .< "ipProtocol"
-    <*> xml' .< "fromPort"
-    <*> xml' .< "toPort"
-    <*> itemsSet xml' "groups" (\xml'' ->
-        UserIdGroupPair
-        <$> xml'' .< "userId"
-        <*> xml'' .< "groupId"
-        <*> xml'' .< "groupName"
-        )
-    <*> itemsSet xml' "ipRanges" (.< "cidrIp")
+    => Text -> XmlElement -> m [IpPermission]
+ipPermissionsConv name = itemsSet name conv
+  where
+    conv e = IpPermission
+        <$> e .< "ipProtocol"
+        <*> e .< "fromPort"
+        <*> e .< "toPort"
+        <*> itemsSet "groups" uidConv e
+        <*> itemsSet "ipRanges" (.< "cidrIp") e
+    uidConv e = UserIdGroupPair
+        <$> e .< "userId"
+        <*> e .< "groupId"
+        <*> e .< "groupName"
+
 
 createSecurityGroup
     :: (MonadResource m, MonadBaseControl IO m)
@@ -67,8 +70,7 @@ createSecurityGroup
     -> Maybe Text -- ^ VpcId
     -> EC2 m (Maybe Text) -- ^ GroupId
 createSecurityGroup name desc vpc =
-    ec2Query "CreateSecurityGroup" params
-        $ xmlParser (.< "groupId")
+    ec2Query "CreateSecurityGroup" params (.< "groupId")
   where
     params =
         [ "GroupName" |= name
@@ -81,7 +83,7 @@ deleteSecurityGroup
     => SecurityGroupRequest
     -> EC2 m Bool
 deleteSecurityGroup param =
-    ec2Query "DeleteSecurityGroup" params $ xmlParser (.< "return")
+    ec2Query "DeleteSecurityGroup" params (.< "return")
   where
     params = [securityGroupRequestParam param]
 
@@ -132,7 +134,7 @@ securityGroupQuery
     -> [IpPermission]
     -> EC2 m Bool
 securityGroupQuery act param ipps =
-    ec2Query act params $ xmlParser (.< "return")
+    ec2Query act params (.< "return")
   where
     params =
         [ securityGroupRequestParam param

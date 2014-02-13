@@ -48,8 +48,8 @@ import qualified Control.Monad.Reader as Reader
 
 import Cloud.AWS.Class
 import Cloud.AWS.Credential
-import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Lib.Parser.Unordered (SimpleXML)
+import Cloud.AWS.Lib.Parser (sinkError, sinkResponse)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement)
 import Cloud.AWS.Lib.ToText
 import Cloud.AWS.EC2.Types (Filter)
 
@@ -260,7 +260,7 @@ commonQuery
     => ByteString -- ^ apiVersion
     -> ByteString -- ^ Action
     -> [QueryParam]
-    -> (SimpleXML -> m a)
+    -> (XmlElement -> m a)
     -> AWS AWSContext m a
 commonQuery apiVersion action params parser = do
     ctx <- State.get

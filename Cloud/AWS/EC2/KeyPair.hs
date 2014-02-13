@@ -25,15 +25,16 @@ describeKeyPairs
     -> [Filter] -- ^ Filters
     -> EC2 m (ResumableSource m KeyPair)
 describeKeyPairs names filters =
-    ec2QuerySource "DescribeKeyPairs" params $
-        itemConduit "keySet" keyPairConv
+    ec2QuerySource "DescribeKeyPairs" params path $
+        itemConduit keyPairConv
   where
+    path = itemsPath "keySet"
     params =
         [ "KeyName" |.#= names
         , filtersParam filters
         ]
 
-keyPairConv :: (MonadThrow m, Applicative m) => SimpleXML -> m KeyPair
+keyPairConv :: (MonadThrow m, Applicative m) => XmlElement -> m KeyPair
 keyPairConv xml = KeyPair
     <$> xml .< "keyName"
     <*> xml .< "keyFingerprint"
@@ -43,7 +44,7 @@ createKeyPair
     => Text -- ^ KeyName
     -> EC2 m (KeyPair, Text) -- ^ KeyPair and KeyMaterial
 createKeyPair name =
-    ec2Query "CreateKeyPair" ["KeyName" |= name] $ xmlParser $ \xml ->
+    ec2Query "CreateKeyPair" ["KeyName" |= name] $ \xml ->
         (,) <$> keyPairConv xml <*> xml .< "keyMaterial"
 
 deleteKeyPair
@@ -58,7 +59,7 @@ importKeyPair
     -> ByteString -- ^ PublicKeyMaterial
     -> EC2 m KeyPair
 importKeyPair name material =
-    ec2Query "ImportKeyPair" params $ xmlParser keyPairConv
+    ec2Query "ImportKeyPair" params keyPairConv
   where
     params =
         [ "KeyName" |= name
