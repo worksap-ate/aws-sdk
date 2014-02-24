@@ -24,7 +24,6 @@ import Data.XML.Types (Event(..), Name(..))
 import Data.ByteString (ByteString)
 import Data.Char (isSpace)
 import Data.Conduit
-import Data.Conduit.Internal (ConduitM)
 import qualified Data.Conduit.List as CL
 import qualified Data.Text as T
 import qualified Text.XML.Stream.Parse as XML

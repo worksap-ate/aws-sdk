@@ -125,7 +125,7 @@ runAWS :: MonadIO m
     -> AWS c m a
     -> m a
 runAWS ctx cred app = do
-    mgr <- liftIO $ HTTP.newManager HTTP.def
+    mgr <- liftIO $ HTTP.newManager HTTP.conduitManagerSettings
     runAWSwithManager mgr ctx cred app
 
 runAWSwithManager :: Monad m

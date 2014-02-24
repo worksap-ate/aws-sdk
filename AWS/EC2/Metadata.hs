@@ -55,7 +55,7 @@ version = "/latest"
 query :: String -> IO [ByteString]
 query path = runResourceT $ do
     req <- liftIO $ parseUrl (base <> path)
-    mgr <- liftIO $ newManager def
+    mgr <- liftIO $ newManager conduitManagerSettings
     res <- http req mgr
     responseBody res $$+- CB.lines =$ CL.consume
 
@@ -155,7 +155,7 @@ userdata = ignore $
 queryRaw :: String -> IO ByteString
 queryRaw path = runResourceT $ do
     req <- liftIO $ parseUrl (base <> path)
-    mgr <- liftIO $ newManager def
+    mgr <- liftIO $ newManager conduitManagerSettings
     res <- http req mgr
     mconcat <$> (responseBody res $$+- CL.consume)
 
