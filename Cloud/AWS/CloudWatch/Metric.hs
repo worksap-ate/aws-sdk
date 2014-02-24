@@ -10,11 +10,11 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Conduit
 import Control.Applicative
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser (members, nodata)
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 import Cloud.AWS.CloudWatch.Types
 
 dimensionFiltersParam :: [DimensionFilter] -> QueryParam

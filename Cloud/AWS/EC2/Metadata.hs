@@ -35,7 +35,8 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BC
 import Data.Text (Text)
 import Data.Conduit
-import Network.HTTP.Conduit hiding (path)
+import Network.HTTP.Conduit (HttpException)
+import qualified Network.HTTP.Conduit as HTTP
 import Control.Monad.IO.Class (liftIO)
 import Data.Monoid
 import Control.Applicative
@@ -44,7 +45,7 @@ import Control.Exception
 import qualified Data.Conduit.Binary as CB
 import qualified Data.Conduit.List as CL
 
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.ToText (toText)
 
 base :: String
 base = "http://169.254.169.254"
@@ -54,10 +55,10 @@ version = "/latest"
 
 query :: String -> IO [ByteString]
 query path = runResourceT $ do
-    req <- liftIO $ parseUrl (base <> path)
-    mgr <- liftIO $ newManager conduitManagerSettings
-    res <- http req mgr
-    responseBody res $$+- CB.lines =$ CL.consume
+    req <- liftIO $ HTTP.parseUrl (base <> path)
+    mgr <- liftIO $ HTTP.newManager HTTP.conduitManagerSettings
+    res <- HTTP.http req mgr
+    HTTP.responseBody res $$+- CB.lines =$ CL.consume
 
 latestVersion :: IO Text
 latestVersion = toText . last . init <$> query ""
@@ -154,10 +155,10 @@ userdata = ignore $
 
 queryRaw :: String -> IO ByteString
 queryRaw path = runResourceT $ do
-    req <- liftIO $ parseUrl (base <> path)
-    mgr <- liftIO $ newManager conduitManagerSettings
-    res <- http req mgr
-    mconcat <$> (responseBody res $$+- CL.consume)
+    req <- liftIO $ HTTP.parseUrl (base <> path)
+    mgr <- liftIO $ HTTP.newManager HTTP.conduitManagerSettings
+    res <- HTTP.http req mgr
+    mconcat <$> (HTTP.responseBody res $$+- CL.consume)
 
 identity :: String -> IO Text
 identity name =

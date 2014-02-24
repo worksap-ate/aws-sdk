@@ -46,11 +46,12 @@ import Control.Exception.Lifted as E
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement)
+import Cloud.AWS.Lib.ToText (ToText(toText))
+
 import Cloud.AWS.Class
 import Cloud.AWS.Credential
 import Cloud.AWS.Lib.Parser (sinkError, sinkResponse)
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement)
-import Cloud.AWS.Lib.ToText
 import Cloud.AWS.EC2.Types (Filter)
 
 #ifdef DEBUG

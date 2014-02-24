@@ -29,12 +29,13 @@ import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Map as Map
 import Control.Monad
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), elementM, element, ElementPath)
+
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.Lib.FromText (fromText)
-import Cloud.AWS.Lib.Parser.Unordered
 import Cloud.AWS.Lib.ToText (toText)
 
 ------------------------------------------------------------

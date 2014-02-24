@@ -12,6 +12,8 @@ module Cloud.AWS.RDS.Internal
     , elements'
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
+import qualified Cloud.AWS.Lib.Parser.Unordered as U
 import Control.Applicative
 import qualified Control.Monad.Reader as Reader
 import qualified Control.Monad.State as State
@@ -25,8 +27,6 @@ import qualified Text.XML.Stream.Parse as XmlP
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.Lib.Parser
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, elementConsumer, element, (.<))
-import qualified Cloud.AWS.Lib.Parser.Unordered as U
 import Cloud.AWS.Lib.ToText (toText)
 import Cloud.AWS.RDS.Types hiding (Event)
 
@@ -55,7 +55,7 @@ rdsQueryOnlyMetadata action params = do
     rs <- lift $ requestQuery settings ctx action params apiVersion sinkError
     e <- lift $ rs
         $$+- XmlP.parseBytes XmlP.def
-        =$ elementConsumer
+        =$ U.elementConsumer
     rid <- lift $ sinkResponseOnlyMetadata (toText action) e
     State.put ctx { lastRequestId = Just rid }
     return ()
@@ -66,7 +66,7 @@ sinkResponseOnlyMetadata
     -> XmlElement
     -> m RequestId
 sinkResponseOnlyMetadata action =
-    element (action <> "Response") sinkResponseMetadata
+    U.element (action <> "Response") sinkResponseMetadata
 
 elements :: (MonadThrow m, Applicative m)
     => Text
@@ -97,7 +97,7 @@ dbSubnetGroupSink xml = DBSubnetGroup
     subnetConv xml' = Subnet
         <$> xml' .< "SubnetStatus"
         <*> xml' .< "SubnetIdentifier"
-        <*> element "SubnetAvailabilityZone" avConv xml'
+        <*> U.element "SubnetAvailabilityZone" avConv xml'
     avConv xml'' = AvailabilityZone
         <$> xml'' .< "Name"
         <*> xml'' .< "ProvisionedIopsCapable"

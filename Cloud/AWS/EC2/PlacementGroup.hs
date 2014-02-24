@@ -9,10 +9,11 @@ import Control.Applicative ((<$>), (<*>), Applicative)
 import Data.Conduit
 import Data.Text (Text)
 
+import Cloud.AWS.Lib.Parser.Unordered ((.<), XmlElement)
+
 import Cloud.AWS.EC2.Internal (EC2, itemConduit, itemsPath)
 import Cloud.AWS.EC2.Query (ec2Query, ec2QuerySource)
 import Cloud.AWS.EC2.Types (Filter, PlacementGroup(..), PlacementGroupStrategy(..))
-import Cloud.AWS.Lib.Parser.Unordered ((.<), XmlElement)
 import Cloud.AWS.Lib.Query ((|=), (|.#=), filtersParam)
 
 describePlacementGroups

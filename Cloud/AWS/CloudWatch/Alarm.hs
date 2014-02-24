@@ -11,6 +11,7 @@ module Cloud.AWS.CloudWatch.Alarm
     , setAlarmState
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content)
 import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
@@ -19,7 +20,6 @@ import Data.Time (UTCTime)
 import Cloud.AWS.CloudWatch.Internal
 import Cloud.AWS.CloudWatch.Types
 import Cloud.AWS.Lib.Parser (members, nodata)
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content)
 import Cloud.AWS.Lib.Query
 
 describeAlarms

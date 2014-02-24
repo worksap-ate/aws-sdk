@@ -16,11 +16,12 @@ import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, element, (.<))
+
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser.Unordered
 
 describeVolumes
     :: (MonadResource m, MonadBaseControl IO m)

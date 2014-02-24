@@ -27,8 +27,9 @@ import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), convertConduit, element, elements, ElementPath, tag, (.-), elementM, end)
+
 import Cloud.AWS.Class
-import Cloud.AWS.Lib.Parser.Unordered
 import Cloud.AWS.EC2.Types
 
 initialEC2Context :: HTTP.Manager -> AWSContext

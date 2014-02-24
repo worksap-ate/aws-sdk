@@ -14,10 +14,11 @@ module Cloud.AWS.EC2.NetworkInterfaceAttribute
 import Data.Text (Text)
 import Data.Conduit (MonadBaseControl, MonadResource)
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, element, (.<))
+
 import Cloud.AWS.EC2.Internal (EC2, groupSetConv, networkInterfaceAttachmentConv)
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.EC2.Types (Group, NetworkInterfaceAttachment(..))
-import Cloud.AWS.Lib.Parser.Unordered
 
 describeNetworkInterfaceDescription
     :: (MonadBaseControl IO m, MonadResource m)

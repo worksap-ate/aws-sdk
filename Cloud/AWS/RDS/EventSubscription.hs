@@ -8,11 +8,11 @@ module Cloud.AWS.RDS.EventSubscription
     , addSourceIdentifierToSubscription
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content, element)
 import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content, element)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (EventSubscription(..), SourceType)

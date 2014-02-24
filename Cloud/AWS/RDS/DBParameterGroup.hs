@@ -11,11 +11,11 @@ module Cloud.AWS.RDS.DBParameterGroup
     , describeEngineDefaultParameters
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM)
 import Control.Applicative
 import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM)
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#.))
 import Cloud.AWS.RDS.Internal (RDS, rdsQueryOnlyMetadata, rdsQuery, elements, elements')
 import Cloud.AWS.RDS.Types hiding (Event)

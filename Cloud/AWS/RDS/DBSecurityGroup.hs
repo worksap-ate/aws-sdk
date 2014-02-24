@@ -8,12 +8,12 @@ module Cloud.AWS.RDS.DBSecurityGroup
     , revokeDBSecurityGroupIngress
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 import Control.Applicative
 import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 import Cloud.AWS.Lib.Query ((|=), (|=?))
 import Cloud.AWS.RDS.Internal (RDS, rdsQueryOnlyMetadata, rdsQuery, elements)
 import Cloud.AWS.RDS.Types hiding (Event)

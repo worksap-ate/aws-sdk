@@ -6,11 +6,11 @@ module Cloud.AWS.RDS.Tag
     , removeTagsFromResource
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (Tag(..))

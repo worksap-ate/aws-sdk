@@ -3,10 +3,9 @@ module Cloud.AWS.CloudWatch.Types
     where
 
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Cloud.AWS.Lib.FromText
-import Cloud.AWS.Lib.ToText
+import Cloud.AWS.Lib.FromText (deriveFromText)
+import Cloud.AWS.Lib.ToText (deriveToText, ToText(toText))
 
 data Metric = Metric
     { metricDimensions :: [Dimension]
@@ -42,13 +41,7 @@ data Statistic
     | StatisticMinimum
   deriving (Show, Eq, Read)
 
-instance ToText Statistic where
-    toText StatisticAverage     = "Average"
-    toText StatisticSum         = "Sum"
-    toText StatisticSampleCount = "SampleCount"
-    toText StatisticMaximum     = "Maximum"
-    toText StatisticMinimum     = "Minimum"
-
+deriveToText "Statistic" ["Average", "Sum", "SampleCount", "Maximum", "Minimum"]
 deriveFromText "Statistic" ["Average", "Sum", "SampleCount", "Maximum", "Minimum"]
 
 allStatistics :: [Statistic]
@@ -72,11 +65,7 @@ data StateValue
     | StateValueInsufficientData
   deriving (Show, Eq, Read)
 
-instance ToText StateValue where
-    toText StateValueOk = "OK"
-    toText StateValueAlarm = "ALARM"
-    toText StateValueInsufficientData = "INSUFFICIENT_DATA"
-
+deriveToText "StateValue" ["OK", "ALARM", "INSUFFICIENT_DATA"]
 deriveFromText "StateValue" ["OK", "ALARM", "INSUFFICIENT_DATA"]
 
 data ComparisonOperator
@@ -86,8 +75,12 @@ data ComparisonOperator
     | LessThanOrEqualToThreshold
   deriving (Show, Eq, Read)
 
-instance ToText ComparisonOperator where
-    toText = T.pack . show
+deriveToText "ComparisonOperator"
+    [ "GreaterThanOrEqualToThreshold"
+    , "GreaterThanThreshold"
+    , "LessThanThreshold"
+    , "LessThanOrEqualToThreshold"
+    ]
 
 deriveFromText "ComparisonOperator"
     [ "GreaterThanOrEqualToThreshold"

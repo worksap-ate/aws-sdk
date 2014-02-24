@@ -18,9 +18,10 @@ import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.XML.Types (Event)
 
-import Cloud.AWS.Class
 import Cloud.AWS.Lib.Parser.Unordered
     (XmlElement, elements, element, elementM, (.<), elementConsumer)
+
+import Cloud.AWS.Class
 
 type RequestId = Text
 

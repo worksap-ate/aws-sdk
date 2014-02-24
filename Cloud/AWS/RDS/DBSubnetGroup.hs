@@ -7,10 +7,10 @@ module Cloud.AWS.RDS.DBSubnetGroup
     , modifyDBSubnetGroup
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (element)
 import Data.Conduit
 import Data.Text (Text)
 
-import Cloud.AWS.Lib.Parser.Unordered (element)
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#=))
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types (DBSubnetGroup)

@@ -10,10 +10,11 @@ import Control.Applicative ((<$>), (<*>), Applicative)
 import Data.Conduit
 import Data.Text (Text)
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM)
+
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Query
 import Cloud.AWS.EC2.Types
-import Cloud.AWS.Lib.Parser.Unordered
 
 describeConversionTasks
     :: (MonadResource m, MonadBaseControl IO m)

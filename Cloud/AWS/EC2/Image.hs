@@ -14,11 +14,12 @@ import Data.Conduit
 import Control.Applicative
 import Control.Monad (join)
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, elementM, content, (.<))
+
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Params
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser.Unordered
 
 describeImages
     :: (MonadResource m, MonadBaseControl IO m)

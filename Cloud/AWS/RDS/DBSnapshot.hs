@@ -10,9 +10,9 @@ module Cloud.AWS.RDS.DBSnapshot
 import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 
 import Cloud.AWS.RDS.Types hiding (Event)
 import Cloud.AWS.RDS.Internal

@@ -18,9 +18,9 @@ import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
 import Data.Maybe (catMaybes, fromMaybe)
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM, content)
 
 import Cloud.AWS.Lib.Query
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM, content)
 
 import Cloud.AWS.RDS.Types hiding (Event)
 import Cloud.AWS.RDS.Internal

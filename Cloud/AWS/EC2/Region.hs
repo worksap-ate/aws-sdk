@@ -9,10 +9,11 @@ import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
 
+import Cloud.AWS.Lib.Parser.Unordered ((.<))
+
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser.Unordered
 
 describeRegions
     :: (MonadResource m, MonadBaseControl IO m)

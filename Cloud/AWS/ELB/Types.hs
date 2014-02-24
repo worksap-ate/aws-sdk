@@ -4,7 +4,7 @@ module Cloud.AWS.ELB.Types
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Cloud.AWS.Lib.FromText
+import Cloud.AWS.Lib.FromText (deriveFromText)
 
 data LoadBalancer = LoadBalancer
     { loadBalancerSecurityGroups :: [Text]

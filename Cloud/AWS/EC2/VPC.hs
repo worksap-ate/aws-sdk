@@ -35,10 +35,11 @@ import Data.Conduit
 import Data.IP (IPv4, AddrRange)
 import Control.Applicative
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, elementM, element, (.<))
+
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser.Unordered
 
 ------------------------------------------------------------
 -- attachInternetGateway

@@ -14,10 +14,11 @@ import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), elementM, content)
+
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types
 import Cloud.AWS.EC2.Query
-import Cloud.AWS.Lib.Parser.Unordered
 
 describeSnapshots
     :: (MonadResource m, MonadBaseControl IO m)

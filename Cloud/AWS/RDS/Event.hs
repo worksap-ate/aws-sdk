@@ -5,12 +5,12 @@ module Cloud.AWS.RDS.Event
     , describeEventCategories
     ) where
 
+import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content)
 import Control.Applicative
 import Data.Conduit
 import Data.Text (Text)
 import Data.Time (UTCTime)
 
-import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content)
 import Cloud.AWS.Lib.Query
 import Cloud.AWS.RDS.Internal
 import Cloud.AWS.RDS.Types
