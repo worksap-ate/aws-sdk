@@ -41,7 +41,11 @@ import qualified Data.Map as Map
 import Data.Map (Map)
 import Network.HTTP.Conduit (HttpException)
 import qualified Network.HTTP.Types as H
+#if MIN_VERSION_tls(1,2,0)
 import Network.TLS (TLSException)
+#else
+import Network.TLS (HandshakeFailed)
+#endif
 import qualified Data.Digest.Pure.SHA as SHA
 import qualified Data.ByteString.Base64 as BASE
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -305,5 +309,9 @@ exceptionTransform e
     awse = fromException e :: Maybe AWSException
     xmle = fromException e :: Maybe XmlException
     httpe = fromException e :: Maybe HttpException
+#if MIN_VERSION_tls(1,2,0)
     tlse  = fromException e :: Maybe TLSException
+#else
+    tlse  = fromException e :: Maybe HandshakeFailed
+#endif
     ioe   = fromException e :: Maybe IOException
