@@ -12,7 +12,9 @@ module AWS.Lib.Query
     , (|=), (|.)
     , (|=?), (|.?)
     , (|.#=), (|.#.)
+#if !MIN_VERSION_conduit(1,0,16)
     , ($=+)
+#endif
     , requestQuery
     , commonQuery
     , exceptionTransform
@@ -31,7 +33,9 @@ import Data.Maybe
 import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Conduit
+#if !MIN_VERSION_conduit(1,0,16)
 import qualified Data.Conduit.Internal as CI
+#endif
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
 import Text.XML.Stream.Parse (XmlException)
@@ -210,13 +214,13 @@ clientError
 clientError status rsrc errSink =
     rsrc $$+- XmlP.parseBytes XmlP.def =$ errSink status
 
+#if !MIN_VERSION_conduit(1,0,16)
 ($=+) :: MonadIO m
     => ResumableSource m a
     -> Conduit a m b
     -> m (ResumableSource m b)
-a $=+ b = do
-    (sa, fa) <- unwrapResumable a
-    return $ CI.ResumableSource (sa $= b) fa
+CI.ResumableSource src final $=+ cond = CI.ResumableSource (src $= conduit) final
+#endif
 
 requestQuery
     :: (MonadResource m, MonadBaseControl IO m)
@@ -243,9 +247,9 @@ requestQuery settings ctx action params ver errSink = do
     let st = H.statusCode $ HTTP.responseStatus response
     if st < 400
 #ifdef DEBUG
-        then body $=+ conduitLog "aws-sdk.log" url
+        then return $ body $=+ conduitLog "aws-sdk.log" url
         else do
-            body' <- body $=+ conduitLog "aws-sdk-error.log" url
+            let body' = body $=+ conduitLog "aws-sdk-error.log" url
             clientError st body' $ errSink action
             fail "not reached"
 #else

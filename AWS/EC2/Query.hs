@@ -79,10 +79,11 @@ ec2QuerySource' action params token cond = do
     ctx <- State.get
     (src1, rid) <- lift $ E.handle exceptionTransform $ do
         response <- requestQuery settings ctx action params' apiVersion sinkError
-        res <- response $=+ XmlP.parseBytes XmlP.def
-        res $$++ sinkRequestId
+        response
+            $=+ XmlP.parseBytes XmlP.def
+            $$++ sinkRequestId
     State.put ctx{lastRequestId = rid}
-    lift $ src1 $=+ (cond >> nextToken)
+    return $ src1 $=+ (cond >> nextToken)
   where
     params' = ("NextToken" |=? token) : params
 
