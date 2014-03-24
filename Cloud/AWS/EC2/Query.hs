@@ -59,7 +59,7 @@ ec2Query action params conv = do
     ctx <- State.get
     e <- lift $ E.handle exceptionTransform $ do
         response <- requestQuery settings ctx action params apiVersion sinkError
-        res <- response $=+ XmlP.parseBytes XmlP.def
+        let res = response $=+ XmlP.parseBytes XmlP.def
         res $$+- elementConsumer
     (o, rid) <- lift $ element (toText action <> "Response") conv' e
     State.put ctx{lastRequestId = rid}
@@ -94,11 +94,12 @@ ec2QuerySource' action params token path cond = do
     ctx <- State.get
     src <- lift $ E.handle exceptionTransform $ do
         response <- requestQuery settings ctx action params' apiVersion sinkError
-        res <- response $=+ XmlP.parseBytes XmlP.def
-        res $=+ elementConduit path'
+        return $ response
+            $=+ XmlP.parseBytes XmlP.def
+            $=+ elementConduit path'
     (src', rid) <- lift $ src $$++ sinkReqId
     State.put ctx{lastRequestId = rid}
-    lift $ src' $=+ (cond >> nextToken)
+    return $ src' $=+ (cond >> nextToken)
   where
     params' = ("NextToken" |=? token) : params
     path' = tag (action <> "Response") .= [ end "requestId", end "nextToken", path ]
