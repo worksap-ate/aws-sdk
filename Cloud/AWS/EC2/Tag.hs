@@ -9,6 +9,7 @@ module Cloud.AWS.EC2.Tag
 import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 
 import Cloud.AWS.EC2.Internal
 import Cloud.AWS.EC2.Types

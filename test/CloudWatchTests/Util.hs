@@ -3,8 +3,8 @@ module CloudWatchTests.Util
     )
     where
 
+import Control.Monad.Trans.Resource(ResourceT, runResourceT)
 import Data.Text (Text)
-import Data.Conduit (ResourceT, runResourceT)
 
 import Cloud.AWS.CloudWatch
 

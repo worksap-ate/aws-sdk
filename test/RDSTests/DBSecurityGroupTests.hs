@@ -7,7 +7,7 @@ module RDSTests.DBSecurityGroupTests
 
 import Control.Applicative ((<$>))
 import Control.Monad.IO.Class (liftIO)
-import Data.Conduit
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Data.Text (Text)
 import Test.Hspec
 

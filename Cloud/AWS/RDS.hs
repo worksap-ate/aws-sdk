@@ -27,9 +27,9 @@ module Cloud.AWS.RDS
     ) where
 
 import Data.Text (Text)
-import Data.Conduit
 import Control.Monad.IO.Class (MonadIO)
 import qualified Control.Monad.State as State
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import qualified Network.HTTP.Conduit as HTTP
 import Data.Monoid ((<>))
 

@@ -12,7 +12,7 @@ module Cloud.AWS.EC2.NetworkInterfaceAttribute
    ) where
 
 import Data.Text (Text)
-import Data.Conduit (MonadBaseControl, MonadResource)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, element, (.<))
 

@@ -7,6 +7,7 @@ module Cloud.AWS.EC2.ConversionTask
     ) where
 
 import Control.Applicative ((<$>), (<*>), Applicative)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.Conduit
 import Data.Text (Text)
 

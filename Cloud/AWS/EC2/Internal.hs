@@ -21,6 +21,7 @@ module Cloud.AWS.EC2.Internal
 
 import Control.Monad (join)
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Trans.Resource (MonadThrow, MonadBaseControl)
 import qualified Network.HTTP.Conduit as HTTP
 import Data.ByteString.Char8 ()
 import Control.Applicative

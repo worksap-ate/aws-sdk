@@ -4,7 +4,7 @@ module ELBTests.Util
     where
 
 import Data.Text (Text)
-import Data.Conduit (ResourceT, runResourceT)
+import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 
 import Cloud.AWS.ELB
 

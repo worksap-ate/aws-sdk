@@ -8,7 +8,7 @@ module Cloud.AWS.RDS.Tag
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 import Control.Applicative
-import Data.Conduit
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.Text (Text)
 
 import Cloud.AWS.Lib.Query

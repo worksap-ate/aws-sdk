@@ -13,7 +13,7 @@ module Cloud.AWS.RDS.DBParameterGroup
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, elementM)
 import Control.Applicative
-import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.Text (Text)
 
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#.))

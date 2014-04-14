@@ -18,6 +18,7 @@ import Control.Applicative
 import qualified Control.Monad.Reader as Reader
 import qualified Control.Monad.State as State
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit

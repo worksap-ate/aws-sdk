@@ -10,7 +10,7 @@ module Cloud.AWS.RDS.DBSecurityGroup
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 import Control.Applicative
-import Data.Conduit (MonadBaseControl, MonadResource, MonadThrow)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 

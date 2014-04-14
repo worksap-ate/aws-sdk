@@ -5,8 +5,8 @@ module Cloud.AWS.CloudWatch.Internal
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<))
 import Control.Applicative
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.ByteString (ByteString)
-import Data.Conduit
 
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query

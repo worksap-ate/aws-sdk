@@ -32,6 +32,7 @@ module EC2Tests.Util
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Resource (ResourceT, runResourceT, MonadResource, MonadBaseControl)
 import Control.Applicative
 import qualified Control.Exception.Lifted as E
 import Data.Text (Text)

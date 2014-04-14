@@ -8,7 +8,7 @@ module Cloud.AWS.RDS.DBSubnetGroup
     ) where
 
 import Cloud.AWS.Lib.Parser.Unordered (element)
-import Data.Conduit
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Data.Text (Text)
 
 import Cloud.AWS.Lib.Query ((|=), (|=?), (|.#=))

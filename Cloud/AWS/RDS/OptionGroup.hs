@@ -10,7 +10,7 @@ module Cloud.AWS.RDS.OptionGroup
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element, content)
 import Control.Applicative
-import Data.Conduit
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.Text (Text)
 
 import Cloud.AWS.Lib.Query

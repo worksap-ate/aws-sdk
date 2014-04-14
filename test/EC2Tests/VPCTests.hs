@@ -6,7 +6,7 @@ module EC2Tests.VPCTests
     where
 
 import Control.Applicative ((<$>))
-import Data.Conduit (MonadBaseControl, MonadResource)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Data.Text (Text)
 import Data.List (find)
 import Test.Hspec

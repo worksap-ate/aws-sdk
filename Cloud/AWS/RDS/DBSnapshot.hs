@@ -8,8 +8,8 @@ module Cloud.AWS.RDS.DBSnapshot
     ) where
 
 import Data.Text (Text)
-import Data.Conduit
 import Control.Applicative
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), element)
 
 import Cloud.AWS.Lib.Query

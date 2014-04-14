@@ -14,6 +14,7 @@ import Data.Text (Text)
 import Data.IP (IPv4)
 import Data.Conduit
 import Control.Applicative
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 
 import Cloud.AWS.Lib.Parser.Unordered ((.<))
 

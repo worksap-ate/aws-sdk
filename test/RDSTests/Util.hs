@@ -15,10 +15,9 @@ module RDSTests.Util
 import qualified Control.Concurrent as CC
 import qualified Control.Exception.Lifted as E
 import Control.Monad.IO.Class (liftIO, MonadIO)
-import Data.Conduit (MonadBaseControl, MonadResource)
+import Control.Monad.Trans.Resource (ResourceT, runResourceT, MonadResource, MonadBaseControl)
 import Data.List (find)
 import Data.Text (Text)
-import Data.Conduit (ResourceT, runResourceT)
 
 import Cloud.AWS.RDS
 import Cloud.AWS.RDS.Types

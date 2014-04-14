@@ -8,6 +8,7 @@ module Cloud.AWS.EC2.PlacementGroup
 import Control.Applicative ((<$>), (<*>), Applicative)
 import Data.Conduit
 import Data.Text (Text)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 
 import Cloud.AWS.Lib.Parser.Unordered ((.<), XmlElement)
 

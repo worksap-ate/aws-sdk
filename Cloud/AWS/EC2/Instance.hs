@@ -25,6 +25,7 @@ module Cloud.AWS.EC2.Instance
 import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Map as Map
 import Control.Monad

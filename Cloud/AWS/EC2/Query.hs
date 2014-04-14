@@ -16,6 +16,7 @@ import Data.XML.Types (Event)
 import Data.Conduit
 import qualified Text.XML.Stream.Parse as XmlP
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
 import Control.Exception.Lifted as E

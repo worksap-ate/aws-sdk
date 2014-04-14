@@ -38,6 +38,7 @@ import Data.Conduit
 import Network.HTTP.Conduit (HttpException)
 import qualified Network.HTTP.Conduit as HTTP
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Resource (runResourceT)
 import Data.Monoid
 import Control.Applicative
 import Control.Exception

@@ -5,9 +5,10 @@ module EC2Tests.NetworkInterfaceAttributeTests
 
 import Data.Maybe (fromMaybe, catMaybes)
 import Data.Text (Text)
-import Data.Conduit (($$+-), MonadBaseControl, MonadResource)
+import Data.Conduit (($$+-))
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Test.Hspec
 
 import Cloud.AWS.EC2

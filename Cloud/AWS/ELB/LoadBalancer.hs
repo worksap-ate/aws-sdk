@@ -27,8 +27,8 @@ module Cloud.AWS.ELB.LoadBalancer
     ) where
 
 import Data.Text (Text, empty)
-import Data.Conduit
 import Control.Applicative hiding (empty)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, (.<), content, element, elementM)
 
 import Cloud.AWS.Lib.Parser (members)

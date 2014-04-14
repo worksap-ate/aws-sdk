@@ -19,6 +19,7 @@ import Prelude hiding (head)
 import Safe
 import qualified Control.Concurrent as CC
 import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Applicative

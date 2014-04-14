@@ -5,7 +5,7 @@ module RDSTests.DBInstanceTests
     )
     where
 
-import Data.Conduit
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Data.Monoid ((<>))
 import Data.Text (Text)
 import Test.Hspec

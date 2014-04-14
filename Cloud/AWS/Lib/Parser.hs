@@ -14,6 +14,7 @@ import Control.Applicative
 import Control.Monad.Trans (lift)
 import Data.ByteString (ByteString)
 import Data.Conduit
+import Control.Monad.Trans.Resource (MonadThrow)
 import Data.Monoid ((<>))
 import Data.Text (Text)
 import Data.XML.Types (Event)

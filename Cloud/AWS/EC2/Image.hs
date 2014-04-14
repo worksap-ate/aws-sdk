@@ -13,6 +13,7 @@ import Data.Text (Text)
 import Data.Conduit
 import Control.Applicative
 import Control.Monad (join)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement, elementM, content, (.<))
 

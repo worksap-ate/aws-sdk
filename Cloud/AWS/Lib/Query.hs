@@ -12,9 +12,6 @@ module Cloud.AWS.Lib.Query
     , (|=), (|.)
     , (|=?), (|.?)
     , (|.#=), (|.#.)
-#if !MIN_VERSION_conduit(1,0,16)
-    , ($=+)
-#endif
     , requestQuery
     , commonQuery
     , exceptionTransform
@@ -32,9 +29,6 @@ import Data.Maybe
 import Data.Monoid
 import Data.XML.Types (Event(..))
 import Data.Conduit
-#if !MIN_VERSION_conduit(1,0,16)
-import qualified Data.Conduit.Internal as CI
-#endif
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
 import Text.XML.Stream.Parse (XmlException)
@@ -50,6 +44,7 @@ import Network.TLS (HandshakeFailed)
 #endif
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Control.Exception.Lifted as E
 import qualified Control.Monad.State as State
 import qualified Control.Monad.Reader as Reader
@@ -199,12 +194,6 @@ clientError
     -> m a
 clientError status rsrc errSink =
     rsrc $$+- XmlP.parseBytes XmlP.def =$ errSink status
-
-#if !MIN_VERSION_conduit(1,0,16)
-($=+) :: MonadIO m
-    => ResumableSource m a -> Conduit a m b -> ResumableSource m b
-CI.ResumableSource src final $=+ cond = CI.ResumableSource (src $= cond) final
-#endif
 
 requestQuery
     :: (MonadResource m, MonadBaseControl IO m)

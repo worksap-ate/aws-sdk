@@ -5,11 +5,11 @@ module ELBTests.LoadBalancerTests
     where
 
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 import Test.Hspec
 import qualified Control.Exception.Lifted as E
-import Data.Conduit (MonadBaseControl, MonadResource)
 
 import Cloud.AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..), Instance(..))
 import Cloud.AWS.ELB

@@ -122,7 +122,9 @@ library
                    , base64-bytestring >= 1.0.0.0
                    , bytestring
                    , http-types
-                   , conduit >= 1.0.0
+                   , conduit >= 1.1.0
+                   , conduit-extra >= 1.1.0
+                   , resourcet >= 1.1.0
                    , transformers
                    , time
                    , old-locale
@@ -164,6 +166,7 @@ test-suite test-ec2
     build-depends: base
                  , aws-sdk
                  , conduit
+                 , resourcet
                  , text
                  , transformers
                  , hspec
@@ -190,6 +193,7 @@ test-suite test-vpc
     build-depends: base
                  , aws-sdk
                  , conduit
+                 , resourcet
                  , text
                  , transformers
                  , hspec
@@ -216,6 +220,7 @@ test-suite test-rds
     build-depends: base
                  , aws-sdk
                  , conduit
+                 , resourcet
                  , text
                  , transformers
                  , hspec
@@ -240,6 +245,7 @@ test-suite test-elb
     build-depends: base
                  , aws-sdk
                  , conduit
+                 , resourcet
                  , text
                  , transformers
                  , hspec
@@ -264,6 +270,7 @@ test-suite test-cw
     build-depends: base
                  , aws-sdk
                  , conduit
+                 , resourcet
                  , text
                  , transformers
                  , hspec

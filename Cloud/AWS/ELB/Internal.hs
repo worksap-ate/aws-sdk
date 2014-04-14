@@ -4,8 +4,8 @@ module Cloud.AWS.ELB.Internal
     where
 
 import Cloud.AWS.Lib.Parser.Unordered (XmlElement)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Data.ByteString (ByteString)
-import Data.Conduit
 
 import Cloud.AWS.Class
 import Cloud.AWS.Lib.Query

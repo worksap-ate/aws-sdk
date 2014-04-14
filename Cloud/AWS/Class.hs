@@ -37,9 +37,9 @@ import Control.Monad.Trans.Control
     , defaultLiftBaseWith
     , defaultRestoreM
     )
+import Control.Monad.Trans.Resource (monadThrow)
 import Control.Exception (Exception)
 import Data.Typeable (Typeable)
-import Data.Conduit (MonadThrow, monadThrow)
 import Text.XML.Stream.Parse (XmlException)
 
 import qualified Network.HTTP.Conduit as HTTP

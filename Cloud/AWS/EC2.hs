@@ -42,8 +42,8 @@ module Cloud.AWS.EC2
     , module Cloud.AWS.EC2.ConversionTask
     ) where
 
-import Data.Conduit
 import qualified Control.Monad.State as State
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 
