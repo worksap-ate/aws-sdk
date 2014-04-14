@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, CPP #-}
 module AWSTests.EC2Tests.Util
     ( testEC2
     , testEC2'
@@ -29,6 +29,9 @@ module AWSTests.EC2Tests.Util
     )
     where
 
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource, ResourceT, runResourceT)
+#endif
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)

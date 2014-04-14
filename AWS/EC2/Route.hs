@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards, CPP #-}
 module AWS.EC2.Route
     ( createRoute
     , deleteRoute
@@ -6,7 +6,11 @@ module AWS.EC2.Route
     ) where
 
 import Data.ByteString (ByteString)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#else
 import Data.Conduit (MonadBaseControl, MonadResource)
+#endif
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 

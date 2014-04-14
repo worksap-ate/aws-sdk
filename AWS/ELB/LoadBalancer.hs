@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards, CPP #-}
 
 module AWS.ELB.LoadBalancer
     ( describeLoadBalancers
@@ -27,6 +27,9 @@ module AWS.ELB.LoadBalancer
     ) where
 
 import Data.Text (Text)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.Conduit
 import Control.Applicative
 import Data.XML.Types (Event(..))

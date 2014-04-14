@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWSTests.RDSTests.DBSnapshotTests
     ( runDBSnapshotTests
@@ -7,7 +7,11 @@ module AWSTests.RDSTests.DBSnapshotTests
 
 import Control.Applicative ((<$>))
 import Control.Monad.IO.Class (liftIO)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#else
 import Data.Conduit
+#endif
 import Data.Text (Text)
 import Test.Hspec
 

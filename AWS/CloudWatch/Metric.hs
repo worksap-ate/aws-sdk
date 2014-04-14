@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards, CPP #-}
 
 module AWS.CloudWatch.Metric
     ( listMetrics
@@ -6,6 +6,9 @@ module AWS.CloudWatch.Metric
     , putMetricData
     ) where
 
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Conduit

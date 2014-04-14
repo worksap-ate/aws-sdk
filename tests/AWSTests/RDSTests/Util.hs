@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWSTests.RDSTests.Util
     ( testRDS
@@ -12,10 +12,13 @@ module AWSTests.RDSTests.Util
 import qualified Control.Concurrent as CC
 import qualified Control.Exception.Lifted as E
 import Control.Monad.IO.Class (liftIO, MonadIO)
-import Data.Conduit (MonadBaseControl, MonadResource)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource, ResourceT, runResourceT)
+#else
+import Data.Conduit (MonadBaseControl, MonadResource, ResourceT, runResourceT)
+#endif
 import Data.List (find)
 import Data.Text (Text)
-import Data.Conduit (ResourceT, runResourceT)
 
 import AWS
 import AWS.RDS

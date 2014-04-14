@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWS.RDS.EventSubscription
     ( describeEventSubscriptions
@@ -9,6 +9,9 @@ module AWS.RDS.EventSubscription
     ) where
 
 import Control.Applicative ((<$>), (<*>))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.Conduit
 import Data.Text (Text)
 import Data.XML.Types (Event)

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWS.RDS.DBSubnetGroup
     ( describeDBSubnetGroups
@@ -7,7 +7,11 @@ module AWS.RDS.DBSubnetGroup
     ) where
 
 import Control.Applicative ((<$>))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
+#else
 import Data.Conduit
+#endif
 import Data.Text (Text)
 
 import AWS.Lib.Parser (element)

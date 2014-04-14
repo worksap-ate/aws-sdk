@@ -1,11 +1,17 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
+
 module AWSTests.EC2Tests.NetworkInterfaceAttributeTests
     ( runNetworkInterfaceAttributeTests
     ) where
 
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+import Data.Conduit (($$+-))
+#else
 import Data.Conduit (($$+-), MonadBaseControl, MonadResource)
+#endif
 import qualified Data.Conduit.List as CL
 import Control.Monad.Trans.Class (lift)
 import Test.Hspec

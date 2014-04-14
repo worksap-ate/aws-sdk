@@ -1,15 +1,19 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 module AWSTests.ELBTests.LoadBalancerTests
     ( runLoadBalancerTests
     )
     where
 
 import Control.Monad.IO.Class (liftIO)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#else
+import Data.Conduit (MonadBaseControl, MonadResource)
+#endif
 import Data.IP (AddrRange, IPv4)
 import Data.Text (Text)
 import Test.Hspec
 import qualified Control.Exception.Lifted as E
-import Data.Conduit (MonadBaseControl, MonadResource)
 
 import AWS.EC2.Types (Vpc(..), Subnet(..), InternetGateway(..), Instance(..))
 import AWS.ELB

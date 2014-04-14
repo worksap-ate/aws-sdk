@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, PatternGuards, TupleSections #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, PatternGuards, TupleSections, CPP #-}
 
 module AWSTests.EC2Tests.VPCTests
     ( runVpcTests
@@ -6,7 +6,11 @@ module AWSTests.EC2Tests.VPCTests
     where
 
 import Control.Applicative ((<$>))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#else
 import Data.Conduit (MonadBaseControl, MonadResource)
+#endif
 import Data.Text (Text)
 import Data.List (find)
 import Test.Hspec

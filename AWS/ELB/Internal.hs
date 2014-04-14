@@ -1,9 +1,12 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.ELB.Internal
     where
 
 import Data.ByteString (ByteString)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
+#endif
 import Data.Conduit
 import Data.XML.Types (Event(..))
 

@@ -6,6 +6,7 @@
  , DeriveDataTypeable
  , ExistentialQuantification
  , StandaloneDeriving
+ , CPP
  #-}
 
 module AWS.Class
@@ -36,9 +37,14 @@ import Control.Monad.Trans.Control
     , defaultLiftBaseWith
     , defaultRestoreM
     )
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (monadThrow)
+#endif
 import Control.Exception (Exception)
 import Data.Typeable (Typeable)
+#if !MIN_VERSION_conduit(1,1,0)
 import Data.Conduit (MonadThrow, monadThrow)
+#endif
 import Text.XML.Stream.Parse (XmlException)
 
 import qualified Network.HTTP.Conduit as HTTP

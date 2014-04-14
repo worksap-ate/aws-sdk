@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.RDS.DBSnapshot
     ( describeDBSnapshots
@@ -8,6 +8,9 @@ module AWS.RDS.DBSnapshot
     ) where
 
 import Data.Text (Text)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.Conduit
 import Control.Applicative
 import Data.XML.Types (Event(..))

@@ -1,11 +1,15 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWSTests.RDSTests.DBInstanceTests
     ( runDBInstanceTests
     )
     where
 
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#else
 import Data.Conduit
+#endif
 import Data.Text (Text)
 import Test.Hspec
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards, CPP #-}
 module AWS.EC2.ConversionTask
     ( describeConversionTasks
     , cancelConversionTask
@@ -7,6 +7,9 @@ module AWS.EC2.ConversionTask
     ) where
 
 import Control.Applicative ((<$>), (<*>))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadBaseControl, MonadResource)
+#endif
 import Data.Conduit
 import Data.Text (Text)
 import Data.XML.Types (Event)

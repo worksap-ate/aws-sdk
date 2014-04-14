@@ -1,10 +1,14 @@
+{-# LANGUAGE CPP #-}
+
 module AWSTests.CloudWatchTests.Util
     ( testCloudWatch
     )
     where
 
 import Data.Text (Text)
-import Data.Conduit (ResourceT, runResourceT)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (ResourceT, runResourceT)
+#endif
 
 import AWS
 import AWS.CloudWatch

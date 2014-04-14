@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.RDS
     ( -- * RDS Environment
@@ -25,7 +25,11 @@ module AWS.RDS
     ) where
 
 import Data.Text (Text)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#else
 import Data.Conduit
+#endif
 import Control.Monad.IO.Class (MonadIO)
 import qualified Control.Monad.State as State
 import qualified Network.HTTP.Conduit as HTTP

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards, CPP #-}
 
 module AWS.RDS.DBInstance
     ( describeDBInstances
@@ -11,6 +11,9 @@ module AWS.RDS.DBInstance
 
 import Data.Text (Text)
 import Data.Conduit
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Control.Applicative
 import Data.XML.Types (Event(..))
 import Data.Maybe (catMaybes)

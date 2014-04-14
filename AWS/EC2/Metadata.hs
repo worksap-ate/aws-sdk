@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | EC2 Meta-data service.
 --   This is available to use within EC2/VPC instance.
 module AWS.EC2.Metadata
@@ -37,6 +39,9 @@ import Data.Text (Text)
 import Data.Conduit
 import Network.HTTP.Conduit hiding (path)
 import Control.Monad.IO.Class (liftIO)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (runResourceT)
+#endif
 import Data.Monoid
 import Control.Applicative
 import Control.Exception

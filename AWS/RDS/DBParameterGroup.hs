@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWS.RDS.DBParameterGroup
     ( describeDBParameterGroups
@@ -7,7 +7,12 @@ module AWS.RDS.DBParameterGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+import Data.Conduit (Consumer)
+#else
 import Data.Conduit (Consumer, MonadBaseControl, MonadResource, MonadThrow)
+#endif
 import Data.Text (Text)
 import Data.XML.Types (Event)
 

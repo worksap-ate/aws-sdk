@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWS.EC2.Image
     ( describeImages
@@ -14,6 +14,9 @@ import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
 import Control.Monad (join)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadBaseControl, MonadResource)
+#endif
 
 import AWS.EC2.Internal
 import AWS.EC2.Types

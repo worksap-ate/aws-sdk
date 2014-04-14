@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.EC2
     ( -- * EC2 Environment
@@ -42,7 +41,11 @@ module AWS.EC2
     , module AWS.EC2.ConversionTask
     ) where
 
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#else
 import Data.Conduit
+#endif
 import qualified Control.Monad.State as State
 import Data.Text (Text)
 import Data.ByteString (ByteString)

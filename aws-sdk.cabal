@@ -1,5 +1,5 @@
 name:                aws-sdk
-version:             0.12.3
+version:             0.12.4
 synopsis:            AWS SDK for Haskell
 description: AWS (Amazon Web Services) sdk for Haskell.
              .
@@ -25,6 +25,9 @@ cabal-version:       >=1.8
 flag debug
     description: enable debug logging
     default: False
+
+flag conduit-1-1
+    default:     True
 
 library
   exposed-modules:   AWS
@@ -121,7 +124,6 @@ library
                    , base64-bytestring >= 1.0.0.0
                    , bytestring
                    , http-types
-                   , conduit >= 1.0.0
                    , transformers
                    , time
                    , old-locale
@@ -142,6 +144,12 @@ library
                    , parallel
                    , iproute >= 1.2.9
                    , tls
+  if flag(conduit-1-1)
+    build-depends:   conduit >= 1.1.0
+                   , conduit-extra >= 1.1.0
+                   , resourcet >= 1.1.0
+  else
+    build-depends:   conduit >= 1.0.0 && < 1.1.0
 
 test-suite test
     type:              exitcode-stdio-1.0
@@ -153,7 +161,6 @@ test-suite test
     extensions: OverloadedStrings
     build-depends: base
                  , aws-sdk
-                 , conduit
                  , text
                  , monad-control
                  , transformers
@@ -166,6 +173,11 @@ test-suite test
                  , tls
                  , time
                  , random
+  if flag(conduit-1-1)
+    build-depends:   conduit >= 1.1.0
+                   , resourcet >= 1.1.0
+  else
+    build-depends:   conduit >= 1.0.0 && < 1.1.0
 
 source-repository head
     type:            git

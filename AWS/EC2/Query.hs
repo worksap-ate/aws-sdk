@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.EC2.Query
     ( ec2Query
@@ -13,6 +13,9 @@ import           Data.ByteString (ByteString)
 import           Data.ByteString.Lazy.Char8 ()
 
 import Data.XML.Types (Event(..))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadBaseControl, MonadResource)
+#endif
 import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Text.XML.Stream.Parse as XmlP

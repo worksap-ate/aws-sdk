@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, CPP #-}
 
 module AWS.EC2.Util
     ( list
@@ -19,6 +19,9 @@ import Prelude hiding (head)
 import Safe
 import qualified Control.Concurrent as CC
 import Control.Monad.IO.Class (liftIO, MonadIO)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+#endif
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Applicative

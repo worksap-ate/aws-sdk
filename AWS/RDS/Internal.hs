@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.RDS.Internal
     ( apiVersion
@@ -17,6 +17,9 @@ import Control.Applicative ((<$>), (<*>))
 import qualified Control.Monad.Reader as Reader
 import qualified Control.Monad.State as State
 import Control.Monad.Trans.Class (lift)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit

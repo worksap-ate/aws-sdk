@@ -1,9 +1,12 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, RecordWildCards, CPP #-}
 
 module AWS.CloudWatch.Internal
     where
 
 import Control.Applicative
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Conduit

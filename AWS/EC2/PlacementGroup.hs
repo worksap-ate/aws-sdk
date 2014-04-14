@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 module AWS.EC2.PlacementGroup
     ( describePlacementGroups
     , createPlacementGroup
@@ -6,6 +6,9 @@ module AWS.EC2.PlacementGroup
     ) where
 
 import Control.Applicative ((<$>), (<*>))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadBaseControl, MonadResource)
+#endif
 import Data.Conduit
 import Data.Text (Text)
 import Data.XML.Types (Event)

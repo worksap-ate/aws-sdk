@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWS.RDS.Event
     ( describeEvents
@@ -6,6 +6,9 @@ module AWS.RDS.Event
     ) where
 
 import Control.Applicative ((<$>), (<*>))
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.Conduit
 import Data.Text (Text)
 import Data.Time (UTCTime)

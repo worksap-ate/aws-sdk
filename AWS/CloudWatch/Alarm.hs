@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards, CPP #-}
 module AWS.CloudWatch.Alarm
     ( describeAlarms
     , describeAlarmsForMetric
@@ -11,6 +11,9 @@ module AWS.CloudWatch.Alarm
     ) where
 
 import Control.Applicative
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadResource, MonadBaseControl)
+#endif
 import Data.Conduit
 import Data.Text (Text)
 import Data.Time (UTCTime)

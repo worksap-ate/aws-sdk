@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, OverloadedStrings, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE RankNTypes, OverloadedStrings, TemplateHaskell, FlexibleInstances, CPP #-}
 
 module AWS.Lib.FromText
     ( FromText(..)
@@ -14,7 +14,11 @@ module AWS.Lib.FromText
 
 import Control.Applicative ((<$>))
 import Control.Monad
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow)
+#else
 import Data.Conduit (MonadThrow)
+#endif
 import Data.IP (IPv4, AddrRange)
 import Data.Monoid ((<>))
 import Data.Text (Text)

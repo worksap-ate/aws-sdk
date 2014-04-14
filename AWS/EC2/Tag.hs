@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWS.EC2.Tag
     ( describeTags
@@ -7,8 +7,13 @@ module AWS.EC2.Tag
     ) where
 
 import Data.Text (Text)
-import Data.Conduit
 import Control.Applicative
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+import Data.Conduit (ResumableSource)
+#else
+import Data.Conduit
+#endif
 
 import AWS.EC2.Internal
 import AWS.EC2.Types

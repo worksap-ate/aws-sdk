@@ -1,5 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes, ScopedTypeVariables, CPP #-}
 
 module AWS.EC2.Internal
     ( module AWS.Class
@@ -19,6 +18,9 @@ module AWS.EC2.Internal
 
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Trans.Class (lift)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow)
+#endif
 import qualified Network.HTTP.Conduit as HTTP
 import Data.ByteString.Char8 ()
 import Control.Applicative

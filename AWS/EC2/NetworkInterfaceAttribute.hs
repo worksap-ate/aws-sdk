@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, Rank2Types #-}
+{-# LANGUAGE FlexibleContexts, Rank2Types, CPP #-}
 module AWS.EC2.NetworkInterfaceAttribute
    ( describeNetworkInterfaceDescription
    , describeNetworkInterfaceGroupSet
@@ -12,7 +12,12 @@ module AWS.EC2.NetworkInterfaceAttribute
    ) where
 
 import Data.Text (Text)
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadBaseControl, MonadResource)
+import Data.Conduit (Consumer)
+#else
 import Data.Conduit (Consumer, MonadBaseControl, MonadResource)
+#endif
 import Data.XML.Types (Event)
 
 import AWS.EC2.Internal (EC2, groupSetSink, networkInterfaceAttachmentSink)

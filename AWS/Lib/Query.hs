@@ -36,6 +36,9 @@ import Data.Conduit
 #if !MIN_VERSION_conduit(1,0,16)
 import qualified Data.Conduit.Internal as CI
 #endif
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadResource, MonadBaseControl)
+#endif
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
 import Text.XML.Stream.Parse (XmlException)

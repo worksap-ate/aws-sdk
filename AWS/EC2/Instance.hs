@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, CPP #-}
 
 module AWS.EC2.Instance
     ( describeInstances
@@ -22,6 +22,9 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadBaseControl, MonadResource)
+#endif
 import Data.Maybe (fromMaybe, fromJust)
 import qualified Data.Map as Map
 import Control.Monad

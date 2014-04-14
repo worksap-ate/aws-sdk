@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes, ScopedTypeVariables, FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP #-}
 
 module AWS.Lib.Parser
     ( RequestId
@@ -24,6 +25,9 @@ import Data.XML.Types (Event(..), Name(..))
 import Data.ByteString (ByteString)
 import Data.Char (isSpace)
 import Data.Conduit
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow)
+#endif
 import qualified Data.Conduit.List as CL
 import qualified Data.Text as T
 import qualified Text.XML.Stream.Parse as XML

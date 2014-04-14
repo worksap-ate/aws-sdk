@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, CPP #-}
 
 module AWS.EC2.KeyPair
     ( describeKeyPairs
@@ -12,6 +12,9 @@ import Data.Text (Text)
 import Data.XML.Types (Event)
 import Data.Conduit
 import Control.Applicative
+#if MIN_VERSION_conduit(1,1,0)
+import Control.Monad.Trans.Resource (MonadThrow, MonadBaseControl, MonadResource)
+#endif
 
 import AWS.EC2.Internal
 import AWS.EC2.Types
