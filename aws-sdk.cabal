@@ -28,12 +28,6 @@ flag debug
 
 library
   exposed-modules:   Cloud.AWS
-                   , Cloud.AWS.CloudWatch
-                   , Cloud.AWS.CloudWatch.Types
-  other-modules:     Cloud.AWS.Util
-                   , Cloud.AWS.CloudWatch.Internal
-                   , Cloud.AWS.CloudWatch.Metric
-                   , Cloud.AWS.CloudWatch.Alarm
   ghc-options:       -Wall
                      -fno-warn-unused-do-bind
   if flag(debug)
@@ -79,6 +73,7 @@ library
                    , aws-sdk-ec2
                    , aws-sdk-elb
                    , aws-sdk-rds
+                   , aws-sdk-cloudwatch
 
 source-repository head
     type:            git
@@ -204,6 +199,7 @@ test-suite test-cw
     extensions: OverloadedStrings
     build-depends: base
                  , aws-sdk
+                 , aws-sdk-cloudwatch
                  , conduit
                  , resourcet
                  , text

@@ -65,8 +65,8 @@ library
   build-depends:       base ==4.*
                      , aws-sdk-core
                      , aws-sdk-lib
-                     , aws-sdk-text-converter
-                     , aws-sdk-xml-unordered
+                     , aws-sdk-text-converter >=0.3
+                     , aws-sdk-xml-unordered >=0.3
                      , bytestring
                      , text
                      , mtl
@@ -80,7 +80,7 @@ library
                      , http-conduit >= 2.0.0
                      , xml-conduit >= 1.1.0.3
                      , xml-types
-                     , iproute
+                     , iproute >= 1.2.9
                      , containers
                      , base64-bytestring >= 1.0.0.0
                      , time

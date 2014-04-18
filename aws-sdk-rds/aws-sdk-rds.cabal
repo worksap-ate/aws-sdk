@@ -40,11 +40,11 @@ library
   build-depends:       base >=4.6 && <4.7
                      , aws-sdk-core
                      , aws-sdk-lib
-                     , aws-sdk-xml-unordered
-                     , aws-sdk-text-converter
+                     , aws-sdk-text-converter >=0.3
+                     , aws-sdk-xml-unordered >=0.3
                      , text
                      , bytestring
-                     , iproute
+                     , iproute >= 1.2.9
                      , safe
                      , time
                      , mtl

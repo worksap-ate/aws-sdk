@@ -21,6 +21,7 @@ library
   build-depends:       base ==4.*
                      , tls
                      , aws-sdk-core
+                     , aws-sdk-xml-unordered >=0.3
                      , aws-sdk-xml-unordered
                      , xml-types
                      , text
@@ -28,7 +29,7 @@ library
                      , conduit >= 1.1
                      , bytestring
                      , mtl
-                     , aws-sdk-text-converter
+                     , aws-sdk-text-converter >=0.3
                      , lifted-base
                      , transformers
                      , http-types

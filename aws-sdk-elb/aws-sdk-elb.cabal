@@ -27,7 +27,7 @@ library
                      , mtl
                      , transformers
                      , text
-                     , aws-sdk-text-converter
+                     , aws-sdk-text-converter >=0.3
                      , time
                      , bytestring
-                     , aws-sdk-xml-unordered
+                     , aws-sdk-xml-unordered >=0.3
