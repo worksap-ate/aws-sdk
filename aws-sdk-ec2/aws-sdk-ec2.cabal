@@ -1,0 +1,86 @@
+name:                aws-sdk-ec2
+version:             1.0
+-- synopsis:            
+-- description:         
+license:             BSD3
+license-file:        LICENSE
+author:              Yusuke Nomura
+maintainer:          yunomu@gmail.com
+-- copyright:           
+category:            Distributed Computing, Cloud, AWS
+build-type:          Simple
+-- extra-source-files:  
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Cloud.AWS.EC2
+                     , Cloud.AWS.EC2.Types
+                     , Cloud.AWS.EC2.Util
+                     , Cloud.AWS.EC2.Metadata
+  other-modules:       Cloud.AWS.EC2.Internal
+                     , Cloud.AWS.EC2.Address
+                     , Cloud.AWS.EC2.AvailabilityZone
+                     , Cloud.AWS.EC2.ConversionTask
+                     , Cloud.AWS.EC2.Image
+                     , Cloud.AWS.EC2.Instance
+                     , Cloud.AWS.EC2.Volume
+                     , Cloud.AWS.EC2.KeyPair
+                     , Cloud.AWS.EC2.Route
+                     , Cloud.AWS.EC2.RouteTable
+                     , Cloud.AWS.EC2.Snapshot
+                     , Cloud.AWS.EC2.SecurityGroup
+                     , Cloud.AWS.EC2.Subnets
+                     , Cloud.AWS.EC2.Query
+                     , Cloud.AWS.EC2.Region
+                     , Cloud.AWS.EC2.VPC
+                     , Cloud.AWS.EC2.Acl
+                     , Cloud.AWS.EC2.NetworkInterface
+                     , Cloud.AWS.EC2.NetworkInterfaceAttribute
+                     , Cloud.AWS.EC2.Tag
+                     , Cloud.AWS.EC2.Params
+                     , Cloud.AWS.EC2.PlacementGroup
+                     , Cloud.AWS.EC2.Types.Acl
+                     , Cloud.AWS.EC2.Types.Address
+                     , Cloud.AWS.EC2.Types.AvailabilityZone
+                     , Cloud.AWS.EC2.Types.ConversionTask
+                     , Cloud.AWS.EC2.Types.Common
+                     , Cloud.AWS.EC2.Types.Image
+                     , Cloud.AWS.EC2.Types.Instance
+                     , Cloud.AWS.EC2.Types.KeyPair
+                     , Cloud.AWS.EC2.Types.NetworkInterface
+                     , Cloud.AWS.EC2.Types.PlacementGroup
+                     , Cloud.AWS.EC2.Types.Region
+                     , Cloud.AWS.EC2.Types.Route
+                     , Cloud.AWS.EC2.Types.RouteTable
+                     , Cloud.AWS.EC2.Types.SecurityGroup
+                     , Cloud.AWS.EC2.Types.Snapshot
+                     , Cloud.AWS.EC2.Types.SpotInstance
+                     , Cloud.AWS.EC2.Types.Subnets
+                     , Cloud.AWS.EC2.Types.Tag
+                     , Cloud.AWS.EC2.Types.VPC
+                     , Cloud.AWS.EC2.Types.Volume
+  default-extensions:  OverloadedStrings
+  default-language:    Haskell2010
+  ghc-options:         -Wall -fno-warn-unused-do-bind
+  build-depends:       base ==4.*
+                     , aws-sdk-core
+                     , aws-sdk-lib
+                     , aws-sdk-text-converter
+                     , aws-sdk-xml-unordered
+                     , bytestring
+                     , text
+                     , mtl
+                     , transformers
+                     , lifted-base
+                     , parallel
+                     , safe
+                     , resourcet >= 1.1
+                     , conduit >= 1.1
+                     , conduit-extra >= 1.1
+                     , http-conduit >= 2.0.0
+                     , xml-conduit >= 1.1.0.3
+                     , xml-types
+                     , iproute
+                     , containers
+                     , base64-bytestring >= 1.0.0.0
+                     , time

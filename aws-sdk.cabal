@@ -28,58 +28,12 @@ flag debug
 
 library
   exposed-modules:   Cloud.AWS
-                   , Cloud.AWS.EC2
-                   , Cloud.AWS.EC2.Types
-                   , Cloud.AWS.EC2.Util
-                   , Cloud.AWS.EC2.Metadata
                    , Cloud.AWS.RDS
                    , Cloud.AWS.RDS.Types
                    , Cloud.AWS.RDS.Util
                    , Cloud.AWS.CloudWatch
                    , Cloud.AWS.CloudWatch.Types
   other-modules:     Cloud.AWS.Util
-                   , Cloud.AWS.EC2.Internal
-                   , Cloud.AWS.EC2.Address
-                   , Cloud.AWS.EC2.AvailabilityZone
-                   , Cloud.AWS.EC2.ConversionTask
-                   , Cloud.AWS.EC2.Image
-                   , Cloud.AWS.EC2.Instance
-                   , Cloud.AWS.EC2.Volume
-                   , Cloud.AWS.EC2.KeyPair
-                   , Cloud.AWS.EC2.Route
-                   , Cloud.AWS.EC2.RouteTable
-                   , Cloud.AWS.EC2.Snapshot
-                   , Cloud.AWS.EC2.SecurityGroup
-                   , Cloud.AWS.EC2.Subnets
-                   , Cloud.AWS.EC2.Query
-                   , Cloud.AWS.EC2.Region
-                   , Cloud.AWS.EC2.VPC
-                   , Cloud.AWS.EC2.Acl
-                   , Cloud.AWS.EC2.NetworkInterface
-                   , Cloud.AWS.EC2.NetworkInterfaceAttribute
-                   , Cloud.AWS.EC2.Tag
-                   , Cloud.AWS.EC2.Params
-                   , Cloud.AWS.EC2.PlacementGroup
-                   , Cloud.AWS.EC2.Types.Acl
-                   , Cloud.AWS.EC2.Types.Address
-                   , Cloud.AWS.EC2.Types.AvailabilityZone
-                   , Cloud.AWS.EC2.Types.ConversionTask
-                   , Cloud.AWS.EC2.Types.Common
-                   , Cloud.AWS.EC2.Types.Image
-                   , Cloud.AWS.EC2.Types.Instance
-                   , Cloud.AWS.EC2.Types.KeyPair
-                   , Cloud.AWS.EC2.Types.NetworkInterface
-                   , Cloud.AWS.EC2.Types.PlacementGroup
-                   , Cloud.AWS.EC2.Types.Region
-                   , Cloud.AWS.EC2.Types.Route
-                   , Cloud.AWS.EC2.Types.RouteTable
-                   , Cloud.AWS.EC2.Types.SecurityGroup
-                   , Cloud.AWS.EC2.Types.Snapshot
-                   , Cloud.AWS.EC2.Types.SpotInstance
-                   , Cloud.AWS.EC2.Types.Subnets
-                   , Cloud.AWS.EC2.Types.Tag
-                   , Cloud.AWS.EC2.Types.VPC
-                   , Cloud.AWS.EC2.Types.Volume
                    , Cloud.AWS.RDS.Internal
                    , Cloud.AWS.RDS.DBInstance
                    , Cloud.AWS.RDS.DBParameterGroup
@@ -144,6 +98,7 @@ library
                    , aws-sdk-xml-unordered ==0.3.*
                    , aws-sdk-core
                    , aws-sdk-lib
+                   , aws-sdk-ec2
                    , aws-sdk-elb
 
 source-repository head
@@ -160,6 +115,7 @@ test-suite test-ec2
     extensions: OverloadedStrings
     build-depends: base
                  , aws-sdk
+                 , aws-sdk-ec2
                  , conduit
                  , resourcet
                  , text
@@ -187,6 +143,7 @@ test-suite test-vpc
     extensions: OverloadedStrings
     build-depends: base
                  , aws-sdk
+                 , aws-sdk-ec2
                  , conduit
                  , resourcet
                  , text
@@ -214,6 +171,7 @@ test-suite test-rds
     extensions: OverloadedStrings
     build-depends: base
                  , aws-sdk
+                 , aws-sdk-ec2
                  , conduit
                  , resourcet
                  , text
@@ -239,6 +197,7 @@ test-suite test-elb
     extensions: OverloadedStrings
     build-depends: base
                  , aws-sdk
+                 , aws-sdk-ec2
                  , aws-sdk-elb
                  , conduit
                  , resourcet
