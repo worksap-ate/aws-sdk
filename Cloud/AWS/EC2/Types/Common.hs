@@ -22,6 +22,8 @@ import Cloud.AWS.Lib.ToText (deriveToText)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 
+import Cloud.AWS.Lib.Query (Filter)
+
 data Architecture
     = I386
     | X86_64
@@ -38,8 +40,6 @@ instance FromText EC2Return where
     fromText t
         | t == "true" = return EC2Success
         | otherwise   = return $ EC2Error t
-
-type Filter = (Text, [Text])
 
 data Group = Group
     { groupId :: Maybe Text

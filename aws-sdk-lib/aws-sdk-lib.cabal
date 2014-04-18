@@ -1,0 +1,39 @@
+name:                aws-sdk-lib
+version:             1.0
+-- synopsis:            
+-- description:         
+license:             BSD3
+license-file:        LICENSE
+author:              Yusuke Nomura
+maintainer:          yunomu@gmail.com
+-- copyright:           
+category:            AWS, Cloud, Distributed Computing
+build-type:          Simple
+-- extra-source-files:  
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Cloud.AWS.Lib.Parser
+                     , Cloud.AWS.Lib.Query
+  default-extensions:  OverloadedStrings
+  default-language:    Haskell2010
+  ghc-options:         -Wall -fno-warn-unused-do-bind
+  build-depends:       base ==4.*
+                     , tls
+                     , aws-sdk-core
+                     , aws-sdk-xml-unordered
+                     , xml-types
+                     , text
+                     , resourcet >= 1.1
+                     , conduit >= 1.1
+                     , bytestring
+                     , mtl
+                     , aws-sdk-text-converter
+                     , lifted-base
+                     , transformers
+                     , http-types
+                     , ec2-signature >= 3.1
+                     , http-conduit >= 2.0.0
+                     , old-locale
+                     , time
+                     , xml-conduit >= 1.1.0.3

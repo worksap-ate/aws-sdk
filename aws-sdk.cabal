@@ -40,8 +40,6 @@ library
                    , Cloud.AWS.CloudWatch
                    , Cloud.AWS.CloudWatch.Types
   other-modules:     Cloud.AWS.Util
-                   , Cloud.AWS.Credential
-                   , Cloud.AWS.Class
                    , Cloud.AWS.EC2.Internal
                    , Cloud.AWS.EC2.Address
                    , Cloud.AWS.EC2.AvailabilityZone
@@ -84,8 +82,6 @@ library
                    , Cloud.AWS.EC2.Types.Tag
                    , Cloud.AWS.EC2.Types.VPC
                    , Cloud.AWS.EC2.Types.Volume
-                   , Cloud.AWS.Lib.Parser
-                   , Cloud.AWS.Lib.Query
                    , Cloud.AWS.RDS.Internal
                    , Cloud.AWS.RDS.DBInstance
                    , Cloud.AWS.RDS.DBParameterGroup
@@ -150,6 +146,8 @@ library
                    , ec2-signature >= 3.1
                    , aws-sdk-text-converter >=0.3
                    , aws-sdk-xml-unordered ==0.3.*
+                   , aws-sdk-core
+                   , aws-sdk-lib
 
 source-repository head
     type:            git

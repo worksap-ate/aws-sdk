@@ -1,0 +1,35 @@
+name:                aws-sdk-core
+version:             1.0
+-- synopsis:            
+-- description:         
+license:             BSD3
+license-file:        LICENSE
+author:              Yusuke Nomura
+maintainer:          yunomu@gmail.com
+-- copyright:           
+category:            AWS, Cloud, Distributed Computing
+build-type:          Simple
+-- extra-source-files:  
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Cloud.AWS.Class
+                     , Cloud.AWS.Credential
+  default-extensions:  OverloadedStrings
+  default-language:    Haskell2010
+  ghc-options:         -Wall -fno-warn-unused-do-bind
+  build-depends:       base ==4.*
+                     , parsec
+                     , simple-config >= 1.1.1.0
+                     , filepath
+                     , directory
+                     , bytestring
+                     , io-choice
+                     , text
+                     , http-conduit >= 2.0.0
+                     , xml-conduit >= 1.1.0.3
+                     , resourcet >= 1.1
+                     , monad-control
+                     , transformers
+                     , transformers-base
+                     , mtl

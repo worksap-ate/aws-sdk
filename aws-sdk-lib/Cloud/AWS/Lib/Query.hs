@@ -55,11 +55,12 @@ import Cloud.AWS.Lib.ToText (ToText(toText))
 import Cloud.AWS.Class
 import Cloud.AWS.Credential
 import Cloud.AWS.Lib.Parser (sinkError, sinkResponse)
-import Cloud.AWS.EC2.Types (Filter)
 
 #ifdef DEBUG
 import qualified System.IO as IO
 #endif
+
+type Filter = (Text, [Text])
 
 data QueryParam
     = Leaf Text Text
