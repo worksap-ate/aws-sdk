@@ -1,0 +1,55 @@
+name:                aws-sdk-rds
+version:             1.0
+-- synopsis:            
+-- description:         
+license:             BSD3
+license-file:        LICENSE
+author:              Yusuke Nomura
+maintainer:          yunomu@gmail.com
+-- copyright:           
+category:            Distributed Computing, Cloud, AWS
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Cloud.AWS.RDS
+                     , Cloud.AWS.RDS.Types
+                     , Cloud.AWS.RDS.Util
+  other-modules:       Cloud.AWS.RDS.Internal
+                     , Cloud.AWS.RDS.DBInstance
+                     , Cloud.AWS.RDS.DBParameterGroup
+                     , Cloud.AWS.RDS.DBSecurityGroup
+                     , Cloud.AWS.RDS.DBSnapshot
+                     , Cloud.AWS.RDS.DBSubnetGroup
+                     , Cloud.AWS.RDS.Event
+                     , Cloud.AWS.RDS.EventSubscription
+                     , Cloud.AWS.RDS.OptionGroup
+                     , Cloud.AWS.RDS.Tag
+                     , Cloud.AWS.RDS.Types.DBInstance
+                     , Cloud.AWS.RDS.Types.DBParameterGroup
+                     , Cloud.AWS.RDS.Types.DBSecurityGroup
+                     , Cloud.AWS.RDS.Types.DBSnapshot
+                     , Cloud.AWS.RDS.Types.DBSubnetGroup
+                     , Cloud.AWS.RDS.Types.Event
+                     , Cloud.AWS.RDS.Types.EventSubscription
+                     , Cloud.AWS.RDS.Types.OptionGroup
+                     , Cloud.AWS.RDS.Types.Tag
+  default-extensions:  OverloadedStrings
+  default-language:    Haskell2010
+  ghc-options:         -Wall -fno-warn-unused-do-bind
+  build-depends:       base >=4.6 && <4.7
+                     , aws-sdk-core
+                     , aws-sdk-lib
+                     , aws-sdk-xml-unordered
+                     , aws-sdk-text-converter
+                     , text
+                     , bytestring
+                     , iproute
+                     , safe
+                     , time
+                     , mtl
+                     , transformers
+                     , resourcet >= 1.1
+                     , conduit >= 1.1
+                     , http-conduit >= 2.0.0
+                     , xml-conduit >= 1.1.0.3

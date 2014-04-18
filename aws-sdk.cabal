@@ -28,31 +28,9 @@ flag debug
 
 library
   exposed-modules:   Cloud.AWS
-                   , Cloud.AWS.RDS
-                   , Cloud.AWS.RDS.Types
-                   , Cloud.AWS.RDS.Util
                    , Cloud.AWS.CloudWatch
                    , Cloud.AWS.CloudWatch.Types
   other-modules:     Cloud.AWS.Util
-                   , Cloud.AWS.RDS.Internal
-                   , Cloud.AWS.RDS.DBInstance
-                   , Cloud.AWS.RDS.DBParameterGroup
-                   , Cloud.AWS.RDS.DBSecurityGroup
-                   , Cloud.AWS.RDS.DBSnapshot
-                   , Cloud.AWS.RDS.DBSubnetGroup
-                   , Cloud.AWS.RDS.Event
-                   , Cloud.AWS.RDS.EventSubscription
-                   , Cloud.AWS.RDS.OptionGroup
-                   , Cloud.AWS.RDS.Tag
-                   , Cloud.AWS.RDS.Types.DBInstance
-                   , Cloud.AWS.RDS.Types.DBParameterGroup
-                   , Cloud.AWS.RDS.Types.DBSecurityGroup
-                   , Cloud.AWS.RDS.Types.DBSnapshot
-                   , Cloud.AWS.RDS.Types.DBSubnetGroup
-                   , Cloud.AWS.RDS.Types.Event
-                   , Cloud.AWS.RDS.Types.EventSubscription
-                   , Cloud.AWS.RDS.Types.OptionGroup
-                   , Cloud.AWS.RDS.Types.Tag
                    , Cloud.AWS.CloudWatch.Internal
                    , Cloud.AWS.CloudWatch.Metric
                    , Cloud.AWS.CloudWatch.Alarm
@@ -100,6 +78,7 @@ library
                    , aws-sdk-lib
                    , aws-sdk-ec2
                    , aws-sdk-elb
+                   , aws-sdk-rds
 
 source-repository head
     type:            git
@@ -172,6 +151,7 @@ test-suite test-rds
     build-depends: base
                  , aws-sdk
                  , aws-sdk-ec2
+                 , aws-sdk-rds
                  , conduit
                  , resourcet
                  , text
