@@ -35,8 +35,6 @@ library
                    , Cloud.AWS.RDS
                    , Cloud.AWS.RDS.Types
                    , Cloud.AWS.RDS.Util
-                   , Cloud.AWS.ELB
-                   , Cloud.AWS.ELB.Types
                    , Cloud.AWS.CloudWatch
                    , Cloud.AWS.CloudWatch.Types
   other-modules:     Cloud.AWS.Util
@@ -101,8 +99,6 @@ library
                    , Cloud.AWS.RDS.Types.EventSubscription
                    , Cloud.AWS.RDS.Types.OptionGroup
                    , Cloud.AWS.RDS.Types.Tag
-                   , Cloud.AWS.ELB.Internal
-                   , Cloud.AWS.ELB.LoadBalancer
                    , Cloud.AWS.CloudWatch.Internal
                    , Cloud.AWS.CloudWatch.Metric
                    , Cloud.AWS.CloudWatch.Alarm
@@ -148,6 +144,7 @@ library
                    , aws-sdk-xml-unordered ==0.3.*
                    , aws-sdk-core
                    , aws-sdk-lib
+                   , aws-sdk-elb
 
 source-repository head
     type:            git
@@ -242,6 +239,7 @@ test-suite test-elb
     extensions: OverloadedStrings
     build-depends: base
                  , aws-sdk
+                 , aws-sdk-elb
                  , conduit
                  , resourcet
                  , text
