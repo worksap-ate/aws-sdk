@@ -132,7 +132,7 @@ library
                    , xml-conduit >= 1.1.0.3
                    , xml-types
                    , text
-                   , monad-control
+                   , monad-control >= 1.0.0.0
                    , safe
                    , simple-config >= 1.1.1.0
                    , parsec
