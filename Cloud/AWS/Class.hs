@@ -111,9 +111,11 @@ instance MonadTrans (AWS c)
   where
     lift = AWST . lift . lift
 
+data StAWS a c = StAWS { unStAWS :: (a, c) }
+
 instance MonadTransControl (AWS c)
   where
-    newtype StT (AWS c) a = StAWS { unStAWS :: (a, c) }
+    type StT (AWS c) a = StAWS a c
     liftWith f = AWST . StateT $ \s -> ReaderT $ \r ->
         liftM (\x -> (x, s))
             (f $ \a -> liftM StAWS
@@ -122,11 +124,10 @@ instance MonadTransControl (AWS c)
         = AWST . StateT . const . ReaderT . const . liftM unStAWS
 
 instance MonadBaseControl base m => MonadBaseControl base (AWS c m)
-  where
-    newtype StM (AWS c m) a
-        = StMAWS { unStMAWS :: ComposeSt (AWS c) m a }
-    liftBaseWith = defaultLiftBaseWith StMAWS
-    restoreM = defaultRestoreM unStMAWS
+   where
+     type StM (AWS c m) a = ComposeSt (AWS c) m a
+     liftBaseWith = defaultLiftBaseWith
+     restoreM = defaultRestoreM
 
 runAWS :: MonadIO m
     => (HTTP.Manager -> c)
