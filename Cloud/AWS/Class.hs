@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving
+ , CPP
  , TypeFamilies
  , FlexibleInstances
  , MultiParamTypeClasses
@@ -111,6 +112,21 @@ instance MonadTrans (AWS c)
   where
     lift = AWST . lift . lift
 
+#if MIN_VERSION_monad_control(1,0,0)
+
+instance MonadTransControl (AWS c) where
+    type StT (AWS c) a = (a, c)
+    liftWith f = AWST . StateT $ \s -> ReaderT $ \r ->
+        liftM (\x -> (x, s))
+            (f $ \a -> R.runReaderT (S.runStateT (runAWST a) s) r)
+    restoreT = AWST . StateT . const . ReaderT . const
+
+instance MonadBaseControl base m => MonadBaseControl base (AWS c m) where
+    type StM (AWS c m) a = ComposeSt (AWS c) m a
+    liftBaseWith = defaultLiftBaseWith
+    restoreM = defaultRestoreM
+
+#else
 instance MonadTransControl (AWS c)
   where
     newtype StT (AWS c) a = StAWS { unStAWS :: (a, c) }
@@ -128,12 +144,14 @@ instance MonadBaseControl base m => MonadBaseControl base (AWS c m)
     liftBaseWith = defaultLiftBaseWith StMAWS
     restoreM = defaultRestoreM unStMAWS
 
+#endif
+
 runAWS :: MonadIO m
     => (HTTP.Manager -> c)
     -> AWS c m a
     -> m a
 runAWS ctx app = do
-    mgr <- liftIO $ HTTP.newManager HTTP.conduitManagerSettings
+    mgr <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
     cred <- liftIO $ loadCredential
     runAWSwithManager mgr ctx (defaultSettings cred) app
 
