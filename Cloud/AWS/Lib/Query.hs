@@ -33,7 +33,7 @@ import qualified Network.HTTP.Conduit as HTTP
 import qualified Text.XML.Stream.Parse as XmlP
 import Text.XML.Stream.Parse (XmlException)
 import Data.Time (UTCTime, formatTime, getCurrentTime)
-import System.Locale (defaultTimeLocale, iso8601DateFormat)
+import Data.Time.Locale.Compat (defaultTimeLocale, iso8601DateFormat)
 import Network.HTTP.Conduit (HttpException)
 import qualified Network.HTTP.Rest.Signature.EC2 as Sign
 import qualified Network.HTTP.Types as H
