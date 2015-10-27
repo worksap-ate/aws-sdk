@@ -127,7 +127,7 @@ library
                    , resourcet >= 1.1.0
                    , transformers
                    , time
-                   , old-locale
+                   , time-locale-compat
                    , http-conduit >= 2.0.0
                    , xml-conduit >= 1.1.0.3
                    , xml-types
